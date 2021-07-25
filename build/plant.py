@@ -4,6 +4,7 @@ import numpy as np
 import pygame
 
 GAME_SPEED = 1
+gram_mol = 0.5124299411
 WIN = 1
 pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
 leaves = [(pygame.image.load("../assets/leaves/leaf_{index}.png".format(index=i)), pivot_pos[i]) for i in range(0, 7)]
@@ -25,6 +26,7 @@ class Plant:
         self.x = pos[0]
         self.y = pos[1]
         self.model = model
+        self.model.objective = "leaf_AraCore_Biomass_tx"
         self.growth_rate = 0
         self.soil_moisture = soil_moisture
         self.upgrade_points = 0
@@ -44,7 +46,7 @@ class Plant:
         self.action = Action(select_organ=self.set_target_organ, add_leave=self.organs[0].activate_add_leaf, add_stem=None)
         self.recalc_growth_rate()
         # Fix env constraints
-        self.model.reactions.get_by_id("leaf_Photon_tx").bounds = (0,200)
+        self.model.reactions.get_by_id("leaf_Photon_tx").bounds = (0,self.get_leaf_photon())
 
         # Autotroph environment
         '''
@@ -65,23 +67,25 @@ class Plant:
         #self.model.add_cons_vars([NGAM])
         '''
 
-    def get_maintainance_cost_day(self):
+    def get_maintainance_cost_hour(self):
         # 1000ms ingame are 4 min realtime  -> factor 240
         # use fixed until working numbers
-        NADPH_cost_gramm = 2.56 * 0.50718 * self.get_biomass()
-        ATP_cost_gramm = 7.27 * 0.744416 * self.get_biomass()
+        #NADPH_cost_gramm = 2.56 * 0.50718 * self.get_biomass()
+        #ATP_cost_gramm = 7.27 * 0.744416 * self.get_biomass()
 
-        cost_day = NADPH_cost_gramm + ATP_cost_gramm
+        #cost_day = NADPH_cost_gramm + ATP_cost_gramm
         # use fixed until model is right
+        maintenance = 0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound + 2.7851
         return 0.01
 
     def set_reaction_bound(self, reaction, ub, lb):
         self.model.reactions.get_by_id(reaction).bounds = (ub, lb)
 
     def get_growth_rate(self):
-        growth_rate = self.growth_rate
-        if self.use_starch:
-            growth_rate -= self.organs[3].get_rate()
+        growth_rate = 0
+        for i in range(0,3):
+            print(i)
+            growth_rate += self.organs[i].growth_rate
         return growth_rate
 
     def get_leaf_photon(self):
@@ -106,7 +110,7 @@ class Plant:
     # necessary?
     def activate_starch_resource(self):
         # Todo check number max Starch consumption
-        max_starch_out = self.organs[3].starch_max * self.organs[3].percentage/100
+        max_starch_out = self.organs[3].max_drain
         self.use_starch = True
         self.model.reactions.get_by_id("root_Starch_in_tx").bounds = (0, max_starch_out)
         self.recalc_growth_rate()
@@ -134,7 +138,7 @@ class Plant:
 
     def recalc_growth_rate(self):
 
-        self.set_reaction_bound('leaf_Photon_tx', 0,self.get_leaf_photon())
+        self.set_reaction_bound('leaf_Photon_tx', 0, self.get_leaf_photon())
 
         '''
         MAINTAINANCE GETS BIGGER WITH MASS
@@ -186,25 +190,28 @@ class Plant:
         #  Todo check if slim_optimize is sufficient
         solution = self.model.slim_optimize()
         # growth rate in hours
-        self.growth_rate = solution
+        self.growth_rate = solution/60/60*240
+
         # grwoth_rate in seconds to fit the ingame timer, current facor 240 ingame to real time
         #growth_rate = self.growth_rate / 3600 * 240
         # --> use fixed until model is fine
-        maintainance_cost_sec = (self.get_maintainance_cost_day()/24/60/60*240)
-
-        #self.growth_rate = 0.02 * (self.get_leaf_photon()/200)
+        maintainance_cost_sec = (self.get_maintainance_cost_hour()/60/60*240)
+        self.growth_rate = self.growth_rate - maintainance_cost_sec
+        #print('GROWTH_RATE_1:', self.growth_rate, ' MAINTAIN: ', maintainance_cost_sec, self.get_leaf_photon())
 
         if self.use_starch:
-            self.growth_rate += self.organs[3].max_drain
+            self.growth_rate += self.organs[3].max_drain * self.organs[3].percentage/100
+
+        #print('GROWTH_RATE_2:', self.growth_rate, ' MAINTAIN: ', maintainance_cost_sec)
 
         for organ in self.organs:
-            organ.recalc_growth_rate(self.growth_rate, maintainance_cost_sec)
+            organ.recalc_growth_rate(self.growth_rate)
 
     def grow(self):
         if self.use_starch:
             self.organs[3].drain()
-        for organ in self.organs:
-            organ.grow()
+        for i in range(0,3):
+            self.organs[i].grow()
 
     def set_target_organ(self, target):
         self.target_organ = self.organs[target-1]
@@ -268,8 +275,7 @@ class Organ:
             thresholds = [10, 15, 20, 25, 30, 35, 40]
         self.x = x
         self.y = y
-        self.starch = 0
-        self.starch_max = 100
+        self.starch = 100
         self.callback = callback
         self.image = image
         self.pivot = pivot
@@ -287,9 +293,8 @@ class Organ:
     def set_percentage(self, percentage):
         self.percentage = percentage
 
-    def recalc_growth_rate(self, growth_rate, maintainance_cost_sec):
-        print('GROWTH_RATE:', growth_rate, ' MAINTAIN: ', maintainance_cost_sec)
-        self.growth_rate = (growth_rate * self.percentage/100)
+    def recalc_growth_rate(self, growth_rate):
+        self.growth_rate = growth_rate * self.percentage/100
 
     def add_growth_target(self, point=None):
         if point is None:
@@ -314,7 +319,7 @@ class Organ:
         '''
         growthrate -> sliderval
         '''
-        self.mass += self.growth_rate * GAME_SPEED
+        self.mass += self.growth_rate * gram_mol * self.mass * GAME_SPEED
         # if reached a certain mass, gain one exp point, increase threshold
         if self.mass > self.thresholds[self.active_threshold]:
             #self.add_growth_target()
@@ -450,10 +455,10 @@ class Starch(Organ):
             self.mass = self.thresholds[self.active_threshold]
             pass
         else:
-            self.mass = self.mass + self.growth_rate * GAME_SPEED
+            self.mass += self.growth_rate * GAME_SPEED
 
-    def recalc_growth_rate(self, growth_rate, maintainance_sec):
-        self.growth_rate = growth_rate - maintainance_sec
+    def recalc_growth_rate(self, growth_rate):
+        self.growth_rate = growth_rate
 
     def drain(self):
         delta = self.mass - self.max_drain * self.percentage/100
