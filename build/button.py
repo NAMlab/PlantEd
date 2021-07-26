@@ -11,7 +11,7 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # You can draw and update all sprites in a group by
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
+    def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
                  image=None, border_w=None):
         super().__init__()
         self.border_w = int(w / 10) if not border_w else border_w
@@ -24,9 +24,9 @@ class Button(pygame.sprite.Sprite):
             self.clicked_image.blit(image.copy(), (0, 0))
         else:
             self.button_image.fill(button_color)
-            self.button_image.fill(button_color)
-            self.button_image.fill(button_color)
-        pygame.draw.rect(self.hover_image, WHITE_TRANSPARENT, self.hover_image.get_rect(), self.border_w)
+            self.hover_image.fill(button_color)
+            self.clicked_image.fill(button_color)
+        pygame.draw.rect(self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w)
         pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w)
         if text and font:
             text_surf = font.render(text, True, text_color)
@@ -36,7 +36,7 @@ class Button(pygame.sprite.Sprite):
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
         # This function will be called when the button gets pressed.
-        self.callback = callback
+        self.callbacks = callbacks
         self.button_down = False
 
     def handle_event(self, event):
@@ -47,7 +47,7 @@ class Button(pygame.sprite.Sprite):
         elif event.type == pygame.MOUSEBUTTONUP:
             # If the rect collides with the mouse pos.
             if self.rect.collidepoint(event.pos) and self.button_down:
-                for callback in self.callback:
+                for callback in self.callbacks:
                     callback()  # Call the function.
                 self.image = self.hover_image
             self.button_down = False

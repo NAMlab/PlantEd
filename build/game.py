@@ -11,6 +11,7 @@ from button import Button, RadioButton, Slider, SliderGroup, ToggleButton
 from particle import ParticleSystem, PointParticleSystem
 from animation import OneShotAnimation, MoveAnimation
 import os, sys
+from tool_tip import ToolTipManager, ToolTip
 import random
 
 currentdir = os.path.abspath('..')
@@ -263,6 +264,9 @@ class GameScene(Scene):
         self.particle_systems.append(self.starch_particle)
         self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[3, 3], active=False)
         self.particle_systems.append(self.can_particle_system)
+
+        self.tool_tip_manager = ToolTipManager([ToolTip(700,300,100,200,["Make sure to", "use starch"], self.sfont, button_group=self.button_sprites, point=(-50,20))])
+
         # start growth every second
         pygame.time.set_timer(GROWTH, 1000)
         #self.init()
@@ -357,9 +361,7 @@ class GameScene(Scene):
         self.draw_particle_systems(screen)
         self.draw_organ_ui(screen)
 
-        for rect in self.screen_changes:
-            pygame.display.update(rect)
-            self.screen_changes.remove(rect)
+        self.tool_tip_manager.draw(screen)
 
         if self.use_watering_can:
             mouse_pos = pygame.mouse.get_pos()
