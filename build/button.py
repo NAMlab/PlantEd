@@ -286,18 +286,21 @@ class Slider():
     def draw(self, screen):
         if not self.visible:
             return
+        slider_color = self.slider_color if self.active else (0,0,0,128)
         w = self.w if self.w >= self.slider_w else self.slider_w
         border = pygame.Surface((w, self.h), pygame.SRCALPHA)
         # line
         pygame.draw.rect(border, self.color, (w / 2 - self.w / 2, self.slider_h/2, self.w, self.h-self.slider_h))
 
         # draw slider
-        pygame.draw.rect(border, self.slider_color, self.get_slider_rect_local())
+        pygame.draw.rect(border, slider_color, self.get_slider_rect_local())
         msg = self.font.render("{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0))
         border.blit(msg, msg.get_rect(center=self.get_slider_rect_local().center))
         screen.blit(border, (self.x, self.y))
 
     def handle_event(self, event):
+        if not self.active:
+            return
         rect =self.get_slider_rect_global()
         hover = rect.collidepoint(pygame.mouse.get_pos())
 

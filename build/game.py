@@ -239,7 +239,7 @@ class GameScene(Scene):
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
             self.button_sprites.add(rb)
-        radioButtons[0].button_down = True
+        radioButtons[2].button_down = True
         #self.button = Button(600, 600, 64, 64, [self.plant.get_actions().add_leave] , FONT, text="Add Leave")
         #self.button_sprites.add(Button(600, 600, 64, 64, [self.activate_watering_can()] , FONT, text="Activate Can"))
 
@@ -247,13 +247,16 @@ class GameScene(Scene):
         toggle_starch_button = ToggleButton(460, 385, 150, 40, [self.toggle_starch_as_resource], FONT, "Use Energy Depot")
         self.plant.organs[3].toggle_button = toggle_starch_button
         self.button_sprites.add(toggle_starch_button)
-        self.sliders.append(Slider((100, 140, 15, 200), FONT, (50, 20), organ=self.plant.organs[0], plant=self.plant))
-        self.sliders.append(Slider((180, 140, 15, 200), FONT, (50, 20), organ=self.plant.organs[1], plant=self.plant))
-        self.sliders.append(Slider((260, 140, 15, 200), FONT, (50, 20), organ=self.plant.organs[2], plant=self.plant, percent=100))
+        self.leaf_slider = Slider((100, 140, 15, 200), FONT, (50, 20), organ=self.plant.organs[0], plant=self.plant, active=False)
+        self.stem_slider = Slider((180, 140, 15, 200), FONT, (50, 20), organ=self.plant.organs[1], plant=self.plant, active=False)
+        self.root_slider = Slider((260, 140, 15, 200), FONT, (50, 20), organ=self.plant.organs[2], plant=self.plant, percent=100)
+        self.sliders.append(self.leaf_slider)
+        self.sliders.append(self.stem_slider)
+        self.sliders.append(self.root_slider)
         SliderGroup([slider for slider in self.sliders], 100)
         self.sliders.append(Slider((536, 70, 15, 200), FONT, (50, 20), organ=self.plant.organs[3], plant=self.plant))
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
-        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.plant.get_growth_rate()*20, images=[photo_energy], speed=(2,0), callback=self.plant.get_growth_rate)
+        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.plant.get_growth_rate()*20, images=[photo_energy], speed=(2,0), callback=self.plant.get_leaf_photon)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
         self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organs[3].get_rate)
         self.particle_systems.append(self.photosynthesis_particle)
@@ -328,6 +331,11 @@ class GameScene(Scene):
         #for animation in self.animations:
             #animation.update()
         self.plant.update()
+        # beware of ugly
+        if self.plant.get_biomass() > self.plant.seedling.max and not self.stem_slider.active:
+            self.stem_slider.active = True
+        if self.plant.organs[1].active_threshold >= 2 and not self.leaf_slider.active:
+            self.leaf_slider.active = True
         for slider in self.sliders:
             slider.update()
         for system in self.particle_systems:
@@ -544,7 +552,7 @@ class GameScene(Scene):
 
         exp_width = 128
         pygame.draw.rect(s, (color[0], color[1], color[2], 128), Rect(100, 600, exp_width, 15), border_radius=0)
-        needed_exp = self.plant.target_organ.thresholds[self.plant.target_organ.active_threshold]
+        needed_exp = self.plant.target_organ.get_threshold()
         exp = self.plant.target_organ.mass / needed_exp
         width = int(exp_width / 1 * exp)
         pygame.draw.rect(s, (255, 255, 255), Rect(100, 600, width, 15), border_radius=0)  # exp
@@ -556,7 +564,7 @@ class GameScene(Scene):
         pygame.draw.rect(s, (color[0], color[1], color[2], 128),(245, 490, 400, 125), border_radius=3)
 
         # growth_rate in seconds
-        growth_rate = FONT.render("Growth Rate /h {:.5f}".format(self.plant.target_organ.growth_rate), True, (0, 0, 0))
+        growth_rate = FONT.render("Growth Rate /s {:.5f}".format(self.plant.target_organ.growth_rate), True, (0, 0, 0))
         s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
 
         # upgrade_points
