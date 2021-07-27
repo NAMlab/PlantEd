@@ -265,7 +265,8 @@ class GameScene(Scene):
         self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[3, 3], active=False)
         self.particle_systems.append(self.can_particle_system)
 
-        self.tool_tip_manager = ToolTipManager([ToolTip(700,300,100,200,["Make sure to", "use starch"], self.sfont, button_group=self.button_sprites, point=(-50,20))])
+        self.tool_tip_manager = ToolTipManager([ToolTip(700,300,100,200,["Make sure to", "use starch"], self.sfont, button_group=self.button_sprites, callback=self.plant.get_biomass, mass=20, point=(-50,20)),
+                                                ToolTip(900,300,100,200,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, callback=self.plant.get_biomass, mass=50, point=(50,20))])
 
         # start growth every second
         pygame.time.set_timer(GROWTH, 1000)
@@ -344,6 +345,7 @@ class GameScene(Scene):
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
+        self.tool_tip_manager.update()
 
     def render(self, screen):
         self.draw_background(screen)

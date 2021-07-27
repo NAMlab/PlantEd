@@ -5,21 +5,31 @@ from button import Button
 class ToolTipManager:
     def __init__(self, tool_tips):
         self.tool_tips = tool_tips
-        self.current_tip = self.tool_tips[0] if tool_tips else None
+        self.current_tip = 0 if tool_tips else -1
+        if self.current_tip >= 0:
+            self.tool_tips[self.current_tip].activate()
 
     def draw(self, screen):
-        self.current_tip.draw(screen)
+        self.tool_tips[self.current_tip].draw(screen)
+
+    def update(self):
+        if self.tool_tips[self.current_tip].check_condition():
+            if len(self.tool_tips) > self.current_tip:
+                self.current_tip += 1
+                self.tool_tips[self.current_tip].activate()
 
 
 class ToolTip:
-    def __init__(self, x, y, w, h, lines, font, button_group, color=(255, 255, 255, 128), done=False, point=None):
+    def __init__(self, x, y, w, h, lines, font, button_group, callback=None, mass=-1, color=(255, 255, 255, 128), done=False, point=None):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
+        self.mass = mass
         self.color = color
         self.done = done
         self.font = font
+        self.callback = callback    #has to return bool, good practice or stupid?
         # maybe ugly, but smart to prevent ugly boxes, thus not ugly
         self.text, self.w, min_h = self.make_text(lines)
         self.h = min_h * (len(self.text)+1) + 20    # h equals all lines, button and buffer 20
@@ -28,10 +38,18 @@ class ToolTip:
         self.button = Button(self.x, self.y + (self.h - min_h), self.w, min_h, [self.deactivate], self.font,
                         text='Got it', border_w=5)
         self.button_group = button_group
-        self.button_group.add(self.button)
 
     def update(self):
         pass
+
+    def check_condition(self):
+        result = False
+        if self.done:
+            if self.callback and self.mass > -1:
+                result = True if self.callback() > self.mass else False
+            else:
+                result = True
+        return result
 
     def make_text(self, lines):
         text = []
@@ -49,12 +67,16 @@ class ToolTip:
         self.button_group.remove(self.button)
         self.done = True
 
+    def activate(self):
+        self.button_group.add(self.button)
+
     def set_triangle(self, point):
-        self.triangle.append((point[0]+50, point[1]))
         if point[0] < 0:
+            self.triangle.append((point[0] + 50, point[1]))
             self.triangle.append((50, self.h/3))
             self.triangle.append((50, self.h/3*2))
         else:
+            self.triangle.append((point[0] + self.w + 50, point[1]))
             self.triangle.append((self.w+50, self.h/3))
             self.triangle.append((self.w+50, self.h/3*2))
 
@@ -63,10 +85,8 @@ class ToolTip:
             return
         box = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
         pygame.draw.rect(box,self.color, (0,0,self.w,self.h), border_radius=5)
-
         init_x = 10
         init_y = 10
-
         for text in self.text:
             text_rect = text.get_rect(topleft=(init_x, init_y))
             box.blit(text, text_rect)
