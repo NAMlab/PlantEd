@@ -5,11 +5,8 @@ from pygame import Rect
 
 
 class Particle:
-    def __init__(self, x, y, lifetime=None, color=(0,0,0), speed=[0,0], direction=None, size=10, image=None, apply_gravity=False):
-        self.speed = [speed[0] + random.randint(0, 2), speed[1] - random.randint(0, 1)]
-        self.direction = direction
-        if not direction:
-            self.direction = [random.randint(0, 20) / 10 - 1, 2]
+    def __init__(self, x, y, lifetime=None, color=(0,0,0), speed=[0.0,0.0], size=10, image=None, apply_gravity=False):
+        self.speed = speed
         self.image = image
         self.x = x
         self.y = y
@@ -20,10 +17,14 @@ class Particle:
         self.active = True
 
     def move(self, dt):
-        self.x += self.direction[0] * self.speed[0]
-        self.y += self.direction[1] * self.speed[1]
+        self.x += self.speed[0] * dt * 60
+        self.y += self.speed[1] * dt * 60
         if self.apply_gravity:
-            self.direction[1] = self.direction[1]+0.1
+            self.speed[1] = self.speed[1]+0.1
+            if abs(self.speed[0]) > 0:
+                self.speed[0] = self.speed[0] - 0.2 * self.speed[0]/abs(self.speed[0])
+            else:
+                self.speed[0] = 0
         if self.lifetime:
             delta = self.lifetime - 0.2
             if delta > 0:
@@ -31,11 +32,7 @@ class Particle:
             else:
                 self.lifetime = 0
                 self.active = False
-        delta = self.speed[0] -0.1
-        if delta > 0:
-            self.speed[0] -= 0.1
-        else:
-            self.speed[0] = 0
+
 
 
 class PointsParticle(Particle):
@@ -67,14 +64,19 @@ class PointsParticle(Particle):
 
 class ParticleSystem:
     def __init__(self, max_particles, spawn_box=Rect(0, 0, 0, 0), boundary_box=None, color=(0, 0, 0),
-                 direction=None, lifetime=None, apply_gravity=False, speed=[5,0],
-                 images=[], despawn_images=[], despawn_animation=None, active=True):
+                 direction=None, size=10, lifetime=None, apply_gravity=False, speed=None,
+                 images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True):
+        if speed is None:
+            speed = [0.0, 0.0]
         self.apply_gravity = apply_gravity
         self.boundary_box = boundary_box if not None else Rect(0, 0, 0, 0)
         self.lifetime = lifetime
+        self.spread = spread
         self.images = images
         self.despawn_images = despawn_images
         self.particles = 0
+        self.size = size
+        self.once = once
         self.speed=speed
         self.max_particles = max_particles
         self.spawn_box = spawn_box
@@ -91,33 +93,36 @@ class ParticleSystem:
             image = None
             if self.images:
                 image = self.images[random.randint(0, len(self.images)-1)]
-            self.particles.append(Particle(x, y, color=self.color, direction=self.direction, image=image, speed=self.speed, apply_gravity=True, lifetime=self.lifetime))
+            speed = self.speed.copy()
+            speed[1] = speed[1] + (random.randint(0,20)-10)/10
+            if self.spread:
+                if self.spread[0] > 0:
+                    speed[0] = (speed[0] + ((random.randint(0,20)-10)/10)*self.spread[0])
+                if self.spread[1] > 0:
+                    speed[1] = (speed[1] + ((random.randint(0,20)-10)/10)*self.spread[1])
+
+            self.particles.append(Particle(x, y, color=self.color, image=image, speed=speed, size=self.size, apply_gravity=self.apply_gravity, lifetime=self.lifetime))
             self.particle_counter += 1
         for particle in self.particles:
             if self.check_boundaries(particle):
                 particle.move(dt)
             else:
+                if self.despawn_animation:
+                    self.despawn_animation(self.despawn_images,100,(particle.x,particle.y))
                 self.particles.remove(particle)
         self.particles = [particle for particle in self.particles if particle.active == True]
-        self.particle_counter = len(self.particles)
+        if not self.once:
+            self.particle_counter = len(self.particles)
 
     def check_boundaries(self, particle):
         if self.boundary_box:
-            if self.boundary_box.collidepoint(particle.x, particle.y):
+            #if self.boundary_box.collidepoint(particle.x, particle.y):
+            if particle.y < self.boundary_box[1]+self.boundary_box[3] + random.randint(0,100)-50:
                 return True
             else:
                 return False
         else:
             return True
-        '''if particle.x < self.boundary_box[0] or particle.x > self.boundary_box[0] - self.boundary_box[2]:
-            return False
-        if particle.y < self.boundary_box[1]:
-            return False
-        if particle.y > self.boundary_box[1] + self.boundary_box[3] - random.randint(0, 200):
-            self.despawn_animation(self.despawn_images, 600, (particle.x, particle.y))
-            return False
-        else:
-            return True'''
 
     def calc_spawn(self):
         x = random.randint(self.spawn_box[0], self.spawn_box[0] + self.spawn_box[2])
@@ -129,7 +134,11 @@ class ParticleSystem:
             if particle.image:
                 screen.blit(particle.image, (particle.x, particle.y))
             else:
-                pygame.draw.circle(screen, particle.color, (particle.x, particle.y), particle.lifetime)
+                if particle.lifetime != None:
+                    size = particle.lifetime
+                else:
+                    size = particle.size
+                pygame.draw.circle(screen, particle.color, (particle.x, particle.y), size)
 
 
 class PointParticleSystem(ParticleSystem):

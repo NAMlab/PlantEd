@@ -12,7 +12,7 @@ from particle import ParticleSystem, PointParticleSystem
 from animation import OneShotAnimation, MoveAnimation
 import os, sys
 from tool_tip import ToolTipManager, ToolTip
-import random
+from weather import Environment
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -58,14 +58,6 @@ def get_image(path):
                 _image_library[path] = image
         return image
 
-# init drop sprites
-drops = [pygame.transform.scale(get_image("rain/raindrop0.png"), (20, 20)),
-                 pygame.transform.scale(get_image("rain/raindrop1.png"), (20, 20)),
-                 pygame.transform.scale(get_image("rain/raindrop2.png"), (20, 20))]
-splash = [pygame.transform.scale(get_image("rain/raindrop_splash0.png"), (20, 20)),
-                  pygame.transform.scale(get_image("rain/raindrop_splash1.png"), (20, 20)),
-                  pygame.transform.scale(get_image("rain/raindrop_splash2.png"), (20, 20)),
-                  pygame.transform.scale(get_image("rain/raindrop_splash3.png"), (20, 20))]
 #menu_plant = pygame.transform.scale(pygame.image.load("plant_complete.png"), (500, 800))
 menu_plant = [get_image("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
 can = get_image("watering_can_outlined.png")   # pygame.transform.scale(pygame.image.load("watering_can.png"),(128,128)).convert_alpha()
@@ -123,8 +115,7 @@ class TitleScene(object):
         pygame.mouse.set_visible(False)
         self.particle_systems.append(
             ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE ,apply_gravity=True,
-                           speed=[3,3], active = False))
-
+                           speed=[0,5], spread=[3,0], active = False))
         self.text1 = self.font.render('PlantEd', True, (255, 255, 255))
         self.water_plant_text = self.sfont.render('> water plant to start <', True, (255, 255, 255))
         self.start_game_text = self.sfont.render('> press space to start <', True, (255, 255, 255))
@@ -223,6 +214,7 @@ class GameScene(Scene):
         self.sfont = pygame.font.SysFont('Arial', 32)
         self._running = True
         self.plant = Plant(plant_pos)
+        self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.particle_systems = []
         self.sprites = pygame.sprite.Group()
         self.button_sprites = pygame.sprite.Group()
@@ -262,7 +254,7 @@ class GameScene(Scene):
         self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organs[3].get_rate)
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
-        self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[3, 3], active=False)
+        self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
         self.particle_systems.append(self.can_particle_system)
 
         self.tool_tip_manager = ToolTipManager([ToolTip(700,300,100,200,["Make sure to", "use starch"], self.sfont, button_group=self.button_sprites, callback=self.plant.get_biomass, mass=20, point=(-50,20)),
@@ -341,14 +333,19 @@ class GameScene(Scene):
             self.stem_slider.active = True
         if self.plant.organs[1].active_threshold >= 2 and not self.leaf_slider.active:
             self.leaf_slider.active = True
+
+        #check day_night, sun_intensity
+
         for slider in self.sliders:
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
+        self.environment.update(dt, self.get_day_time(), self.get_sun_intensity())
         self.tool_tip_manager.update()
 
     def render(self, screen):
         self.draw_background(screen)
+        self.environment.draw_background(screen)
         # currently used for drops
         for sprite in self.sprites:
         # sprites are able to cancle themselves, OneShotAnimation / Animation (loop)
@@ -362,6 +359,8 @@ class GameScene(Scene):
 
         self.draw_particle_systems(screen)
         self.draw_organ_ui(screen)
+
+        self.environment.draw_foreground(screen)
 
         self.tool_tip_manager.draw(screen)
         self.button_sprites.draw(screen)
@@ -730,8 +729,8 @@ def main():
         dt = timer.tick(60)/1000.0
 
 
-        #fps = str(int(timer.get_fps()))
-        #fps_text = FONT.render(fps, False, (255,255,255))
+        fps = str(int(timer.get_fps()))
+        fps_text = FONT.render(fps, False, (255,255,255))
         #print(fps)
 
         #print(fps)
@@ -744,7 +743,7 @@ def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
-        #screen.blit(fps_text, (800, 30))
+        screen.blit(fps_text, (800, 30))
         #pygame.display.flip()
         pygame.display.update()
 
