@@ -14,13 +14,13 @@ class ToolTipManager:
 
     def update(self):
         if self.tool_tips[self.current_tip].check_condition():
-            if len(self.tool_tips) > self.current_tip:
+            if len(self.tool_tips)-1 > self.current_tip:
                 self.current_tip += 1
                 self.tool_tips[self.current_tip].activate()
 
 
 class ToolTip:
-    def __init__(self, x, y, w, h, lines, font, button_group, callback=None, mass=-1, color=(255, 255, 255, 128), done=False, point=None):
+    def __init__(self, x, y, w, h, lines, font, button_group, callback=None, mass=-1, color=(245, 245, 245, 255), done=False, point=None):
         self.x = x
         self.y = y
         self.w = w

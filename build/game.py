@@ -358,12 +358,13 @@ class GameScene(Scene):
         self.draw_plant(screen)
         self.darken_display_daytime(screen) # --> find smth better
         self.sprites.draw(screen)
-        self.button_sprites.draw(screen)
+
 
         self.draw_particle_systems(screen)
         self.draw_organ_ui(screen)
 
         self.tool_tip_manager.draw(screen)
+        self.button_sprites.draw(screen)
 
         if self.use_watering_can:
             mouse_pos = pygame.mouse.get_pos()
