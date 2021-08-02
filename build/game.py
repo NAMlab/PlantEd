@@ -3,6 +3,7 @@ import ctypes
 import pygame
 from pygame.locals import *
 import numpy as np
+import random
 from itertools import repeat
 from scipy.interpolate import interp1d
 
@@ -32,8 +33,8 @@ SCREEN_WIDTH = 1920# 1536
 SCREEN_HEIGHT = 1080# 864
 plant_pos = (SCREEN_WIDTH - SCREEN_WIDTH/4, SCREEN_HEIGHT - SCREEN_HEIGHT/5)
 
-FONT = pygame.font.SysFont('arialblack', 14)
-TITLE_FONT = pygame.font.SysFont('arialblack', 20)
+FONT = pygame.font.SysFont('arial', 24)
+TITLE_FONT = pygame.font.SysFont('arialblack', 24)
 
 GREEN = (19, 155, 23)
 BLUE = (75, 75, 200)
@@ -61,12 +62,12 @@ def get_image(path):
         return image
 
 def shake():
-    s = -1
+    s = -1  # looks unnecessary but maybe cool, int((random.randint(0,1)-0.5)*2)
     for _ in range(0, 3):
         for x in range(0, 20, 5):
-            yield (0, x * s)
+            yield (x * -1, x * s)
         for x in range(20, 0, 5):
-            yield (0, x * s)
+            yield (x * -1, x * s)
         s *= -1
     while True:
         yield (0, 0)
@@ -210,7 +211,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(TitleScene())
+        self.go_to(GameScene(0))
 
     def go_to(self, scene):
         self.scene = scene
@@ -225,8 +226,8 @@ class GameScene(Scene):
         self.offset = repeat((0, 0))
         self.screen_changes = [pygame.Rect(0,0,SCREEN_WIDTH, SCREEN_HEIGHT)]
         self.manager = None
-        self.font = pygame.font.SysFont('Arial', 56)
-        self.sfont = pygame.font.SysFont('Arial', 32)
+        self.font = TITLE_FONT  #pygame.font.SysFont('Arial', 24)
+        self.sfont = FONT   #pygame.font.SysFont('Arial', 14)
         self._running = True
         self.plant = Plant(plant_pos)
         self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -251,8 +252,8 @@ class GameScene(Scene):
         #self.button = Button(600, 600, 64, 64, [self.plant.get_actions().add_leave] , FONT, text="Add Leave")
         #self.button_sprites.add(Button(600, 600, 64, 64, [self.activate_watering_can()] , FONT, text="Activate Can"))
 
-        self.button_sprites.add(ToggleButton(100, 385, 210, 40, [], FONT, "Activate C3 Photosynthese", pressed=True, fixed=True))
-        toggle_starch_button = ToggleButton(460, 385, 150, 40, [self.toggle_starch_as_resource], FONT, "Use Energy Depot")
+        self.button_sprites.add(ToggleButton(100, 385, 210, 40, [], FONT, "Photosysnthesis", pressed=True, fixed=True))
+        toggle_starch_button = ToggleButton(460, 385, 150, 40, [self.toggle_starch_as_resource], FONT, "Drain Starch")
         self.plant.organs[3].toggle_button = toggle_starch_button
         self.button_sprites.add(toggle_starch_button)
         self.leaf_slider = Slider((100, 140, 15, 200), FONT, (50, 20), organ=self.plant.organs[0], plant=self.plant, active=False)
@@ -273,7 +274,7 @@ class GameScene(Scene):
         self.particle_systems.append(self.can_particle_system)
 
         self.tool_tip_manager = ToolTipManager(
-            [ToolTip(700,300,0,0,["Make sure to", "use starch"], self.sfont, button_group=self.button_sprites, mass=0, point=(-50,20)),
+            [ToolTip(700,300,0,0,["Make sure to", "use starch"], self.sfont, self.font, button_group=self.button_sprites, mass=0, point=(-50,20)),
              ToolTip(900,300,0,0,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, mass=10, point=(50,20)),
              ToolTip(900,600,0,0,["Whats up people?"], self.sfont, button_group=self.button_sprites, mass=15, point=(50,20),)],
             callback=self.plant.get_biomass,)
@@ -528,12 +529,17 @@ class GameScene(Scene):
 
         # draw starch details
         lvl_pos = Rect(530, 270, 64, 64)
-        if drain_icon:
-            s.blit(drain_icon, (lvl_pos[0],lvl_pos[1]))
-        else:
-            pygame.draw.rect(s, (color[0], color[1], color[2], 128), lvl_pos, border_radius=5)
-        starch_lvl = FONT.render("Drain", True, (0, 0, 0))  # title
-        s.blit(starch_lvl, starch_lvl.get_rect(center=lvl_pos.center))
+        #pygame.draw.rect(s, (color[0], color[1], color[2], 128), lvl_pos, border_radius=5)
+        # linecolor white to red for flow
+        # rgb--> color[0]
+        green = blue = int(255 - self.plant.organs[3].percentage / 100 * 255)
+        alpha = int(255-blue/2)
+        for i in range(0,3):
+            pygame.draw.line(s, (255, green, blue, alpha), (545, 280+i*10), (560, 300+i*10), width=4)
+            pygame.draw.line(s, (255, green, blue, alpha), (575, 280+i*10), (560, 300+i*10), width=4)
+
+        #starch_lvl = FONT.render("Drain", True, (0, 0, 0))  # title
+        #s.blit(starch_lvl, starch_lvl.get_rect(center=lvl_pos.center))
 
         # draw starch pool
         pool_height = 180

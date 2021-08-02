@@ -24,14 +24,12 @@ class ToolTipManager:
         if self.callback:
             biomass = self.callback()
             for tip in self.tool_tips:
-                if tip.done:
-                    return
-                if tip.mass < biomass:
+                if tip.mass < biomass and not tip.done:
                     tip.activate()
 
 
 class ToolTip:
-    def __init__(self, x, y, w, h, lines, font, button_group, headfont=None, mass=-1, color=(245, 245, 245, 255), active=False, point=None):
+    def __init__(self, x, y, w, h, lines, font, headfont=None, button_group=None, mass=-1, color=(245, 245, 245, 255), active=False, point=None):
         self.x = x
         self.y = y
         self.w = w
@@ -60,7 +58,7 @@ class ToolTip:
         min_w = 0
         for i in range (0,len(lines)):
             if i == 0 and self.headfont:
-                single_line = self.font.render(lines[i], True, (0, 0, 0))
+                single_line = self.headfont.render(lines[i], True, (0, 0, 0))
             else:
                 single_line = self.font.render(lines[i], True, (0, 0, 0))
             min_w = max(min_w,single_line.get_width())+50

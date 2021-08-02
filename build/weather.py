@@ -32,7 +32,7 @@ class Environment:
         '''
         self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH/3*2, 0),
                                     boundary_box=Rect(SCREEN_WIDTH/3,0,SCREEN_WIDTH/3*2,SCREEN_HEIGHT-250),
-                                    color=(0,0,100), apply_gravity=False, speed=[0, 5],
+                                    color=(0,0,100), apply_gravity=True, speed=[0, 8],
                                     active=True, images=self.drops, despawn_images=self.splash, despawn_animation=self.add_animation)
 
 
