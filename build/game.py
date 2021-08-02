@@ -3,6 +3,7 @@ import ctypes
 import pygame
 from pygame.locals import *
 import numpy as np
+from itertools import repeat
 from scipy.interpolate import interp1d
 
 from build import plant
@@ -23,6 +24,7 @@ pygame.init()
 ctypes.windll.user32.SetProcessDPIAware()
 true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
+tmp_screen = pygame.display.set_mode(true_res, pygame.SRCALPHA)
 GROWTH = 24
 RECALC = 25
 WIN = 1
@@ -57,6 +59,17 @@ def get_image(path):
                 image = pygame.image.load(canonicalized_path).convert_alpha()
                 _image_library[path] = image
         return image
+
+def shake():
+    s = -1
+    for _ in range(0, 3):
+        for x in range(0, 20, 5):
+            yield (0, x * s)
+        for x in range(20, 0, 5):
+            yield (0, x * s)
+        s *= -1
+    while True:
+        yield (0, 0)
 
 #menu_plant = pygame.transform.scale(pygame.image.load("plant_complete.png"), (500, 800))
 menu_plant = [get_image("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
@@ -108,13 +121,14 @@ class TitleScene(object):
         self.particle_systems = []
         self.watering_can = can
         self.plant_size = 0
+        self.offset = repeat((0, 0))
         self.max_plant_size = 100
         self.images = menu_plant
         self.image = self.images[0]
         self.mouse_pos = pygame.mouse.get_pos()
         pygame.mouse.set_visible(False)
         self.particle_systems.append(
-            ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE ,apply_gravity=True,
+            ParticleSystem(40, spawn_box=Rect(self.mouse_pos[0], self.mouse_pos[1], 0, 0), lifetime=8, color=BLUE ,apply_gravity=True,
                            speed=[0,5], spread=[3,0], active = False))
         self.text1 = self.font.render('PlantEd', True, (255, 255, 255))
         self.water_plant_text = self.sfont.render('> water plant to start <', True, (255, 255, 255))
@@ -123,16 +137,17 @@ class TitleScene(object):
 
     def render(self, screen):
 
-        screen.fill((50, 50, 50))
-        screen.blit(self.image, self.centre)
+        tmp_screen.fill((50, 50, 50))
+        tmp_screen.blit(self.image, self.centre)
 
-        screen.blit(self.text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
-        screen.blit(self.text2, (SCREEN_WIDTH/2-self.water_plant_text.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
+        tmp_screen.blit(self.text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
+        tmp_screen.blit(self.text2, (SCREEN_WIDTH/2-self.water_plant_text.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
 
         for system in self.particle_systems:
             if system.active:
                 system.draw(screen)
-        screen.blit(self.watering_can, (self.mouse_pos[0],self.mouse_pos[1]-100))
+        tmp_screen.blit(self.watering_can, (self.mouse_pos[0],self.mouse_pos[1]-100))
+        screen.blit(tmp_screen, next(self.offset))
 
     def update(self, dt):
         step = self.max_plant_size / (len(self.images))
@@ -156,14 +171,13 @@ class TitleScene(object):
                 pygame.quit()
                 sys.exit()
             if e.type == MOUSEBUTTONDOWN:
-                self.particle_systems[0].active = True
+                self.particle_systems[0].activate()
                 self.watering_can = can_tilted
             if e.type == MOUSEMOTION:
                 self.mouse_pos = pygame.mouse.get_pos()
                 self.particle_systems[0].spawn_box = pygame.Rect(self.mouse_pos[0], self.mouse_pos[1], 0, 0)
             if e.type == MOUSEBUTTONUP:
-                self.particle_systems[0].active = False
-                self.particle_systems[0].particles.clear()
+                self.particle_systems[0].deactivate()
                 self.watering_can = can
 
 
@@ -208,6 +222,7 @@ class GameScene(Scene):
         pygame.mouse.set_visible(True)
         self.width = SCREEN_WIDTH
         self.height = SCREEN_HEIGHT
+        self.offset = repeat((0, 0))
         self.screen_changes = [pygame.Rect(0,0,SCREEN_WIDTH, SCREEN_HEIGHT)]
         self.manager = None
         self.font = pygame.font.SysFont('Arial', 56)
@@ -257,8 +272,10 @@ class GameScene(Scene):
         self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
         self.particle_systems.append(self.can_particle_system)
 
-        self.tool_tip_manager = ToolTipManager([ToolTip(700,300,100,200,["Make sure to", "use starch"], self.sfont, button_group=self.button_sprites, callback=self.plant.get_biomass, mass=20, point=(-50,20)),
-                                                ToolTip(900,300,100,200,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, callback=self.plant.get_biomass, mass=50, point=(50,20))])
+        self.tool_tip_manager = ToolTipManager(
+            [ToolTip(700,300,100,200,["Make sure to", "use starch"], self.sfont, button_group=self.button_sprites, callback=self.plant.get_biomass, mass=0, point=(-50,20)),
+             ToolTip(900,300,100,200,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, callback=self.plant.get_biomass, mass=10, point=(50,20)),
+             ToolTip(900,600,100,200,["Whats up people?"], self.sfont, button_group=self.button_sprites, callback=self.plant.get_biomass, mass=15, point=(50,20),)])
 
         # start growth every second
         pygame.time.set_timer(GROWTH, 1000)
@@ -298,6 +315,7 @@ class GameScene(Scene):
             if e.type == KEYDOWN and e.key == K_SPACE:
                 self.manager.go_to(GameScene(0))
             if e.type == KEYDOWN and e.key == K_a:
+                self.offset = shake()
                 self.plant.soil_moisture = self.plant.soil_moisture + 1
             if e.type == KEYDOWN and e.key == K_d:
                 self.plant.soil_moisture = self.plant.soil_moisture - 1
@@ -344,30 +362,34 @@ class GameScene(Scene):
         self.tool_tip_manager.update()
 
     def render(self, screen):
-        self.draw_background(screen)
-        self.environment.draw_background(screen)
+        self.draw_background(tmp_screen)
+        self.environment.draw_background(tmp_screen)
         # currently used for drops
         for sprite in self.sprites:
         # sprites are able to cancle themselves, OneShotAnimation / Animation (loop)
             if not sprite.update():
                 self.sprites.remove(sprite)
 
-        self.draw_plant(screen)
-        self.darken_display_daytime(screen) # --> find smth better
-        self.sprites.draw(screen)
+        self.draw_plant(tmp_screen)
+        self.darken_display_daytime(tmp_screen) # --> find smth better
+        self.sprites.draw(tmp_screen)
 
 
-        self.draw_particle_systems(screen)
-        self.draw_organ_ui(screen)
+        self.draw_particle_systems(tmp_screen)
+        self.draw_organ_ui(tmp_screen)
 
-        self.environment.draw_foreground(screen)
+        self.environment.draw_foreground(tmp_screen)
 
-        self.tool_tip_manager.draw(screen)
-        self.button_sprites.draw(screen)
+        self.tool_tip_manager.draw(tmp_screen)
+        self.button_sprites.draw(tmp_screen)
 
         if self.use_watering_can:
             mouse_pos = pygame.mouse.get_pos()
-            screen.blit(can, (mouse_pos))
+            tmp_screen.blit(can, (mouse_pos))
+
+        screen.blit(tmp_screen, next(self.offset))
+
+
 
     def exit(self):
         self.manager.go_to(CustomScene("You win!"))

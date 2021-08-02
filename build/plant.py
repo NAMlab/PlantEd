@@ -25,7 +25,7 @@ class Plant:
     ROOTS = 3
     STARCH = 4
 
-    def __init__(self, pos, soil_moisture=100, model=cobra.io.read_sbml_model("whole_plant.sbml"), biomass=0.1):
+    def __init__(self, pos, soil_moisture=100, model=cobra.io.read_sbml_model("whole_plant.sbml")):
         self.x = pos[0]
         self.y = pos[1]
         self.model = model

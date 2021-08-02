@@ -89,20 +89,11 @@ class ParticleSystem:
 
     def update(self, dt):
         if self.particle_counter < self.max_particles and self.active:
-            x, y = self.calc_spawn()
-            image = None
-            if self.images:
-                image = self.images[random.randint(0, len(self.images)-1)]
-            speed = self.speed.copy()
-            speed[1] = speed[1] + (random.randint(0,20)-10)/10
-            if self.spread:
-                if self.spread[0] > 0:
-                    speed[0] = (speed[0] + ((random.randint(0,20)-10)/10)*self.spread[0])
-                if self.spread[1] > 0:
-                    speed[1] = (speed[1] + ((random.randint(0,20)-10)/10)*self.spread[1])
-
-            self.particles.append(Particle(x, y, color=self.color, image=image, speed=speed, size=self.size, apply_gravity=self.apply_gravity, lifetime=self.lifetime))
-            self.particle_counter += 1
+            if self.once:
+                while(self.particle_counter < self.max_particles and self.active):
+                    self.generate_particle()
+            else:
+                self.generate_particle()
         for particle in self.particles:
             if self.check_boundaries(particle):
                 particle.move(dt)
@@ -113,6 +104,24 @@ class ParticleSystem:
         self.particles = [particle for particle in self.particles if particle.active == True]
         if not self.once:
             self.particle_counter = len(self.particles)
+
+    def generate_particle(self):
+        x, y = self.calc_spawn()
+        image = None
+        if self.images:
+            image = self.images[random.randint(0, len(self.images) - 1)]
+        speed = self.speed.copy()
+        speed[1] = speed[1] + (random.randint(0, 20) - 10) / 10
+        if self.spread:
+            if self.spread[0] > 0:
+                speed[0] = (speed[0] + ((random.randint(0, 20) - 10) / 10) * self.spread[0])
+            if self.spread[1] > 0:
+                speed[1] = (speed[1] + ((random.randint(0, 20) - 10) / 10) * self.spread[1])
+
+        self.particles.append(
+            Particle(x, y, color=self.color, image=image, speed=speed, size=self.size, apply_gravity=self.apply_gravity,
+                     lifetime=self.lifetime))
+        self.particle_counter += 1
 
     def check_boundaries(self, particle):
         if self.boundary_box:
@@ -128,6 +137,17 @@ class ParticleSystem:
         x = random.randint(self.spawn_box[0], self.spawn_box[0] + self.spawn_box[2])
         y = random.randint(self.spawn_box[1], self.spawn_box[1] + self.spawn_box[3])
         return x, y
+
+    def deactivate(self):
+        self.particle_counter = 0
+        self.active = False
+        self.particles.clear()
+
+    def activate(self):
+        if self.once:
+            self.particle_counter = 0
+            self.particles.clear()
+        self.active = True
 
     def draw(self, screen):
         for particle in self.particles:

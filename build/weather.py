@@ -57,14 +57,10 @@ class Environment:
         self.sprites.draw(screen)
 
     def activate_rain(self):
-        self.rain.particles.clear()
-        self.rain.active = True
-        self.rain.max_particles = 100
+        self.rain.deactivate()
 
     def deactivate_rain(self):
-        self.rain.active = False
-        self.rain.max_particles = 0
-        self.rain.particles.clear()
+        self.rain.deactivate()
 
 
     def add_animation(self, images, duration, pos, speed=1):
