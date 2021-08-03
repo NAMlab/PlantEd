@@ -47,10 +47,14 @@ class ToolTip:
         self.set_triangle(point) if point else None
         self.button = Button(self.x, self.y + (self.h - 50), self.w, 50, [self.deactivate], self.font,
                         text='Got iiiit', border_w=5)
-        self.button_group = button_group
+        #self.button_group = button_group.copy()
 
     def update(self):
         pass
+
+    def handle_event(self, e):
+        if self.active:
+            self.button.handle_event(e)
 
     def make_text(self, lines):
         text = []
@@ -61,20 +65,20 @@ class ToolTip:
                 single_line = self.headfont.render(lines[i], True, (0, 0, 0))
             else:
                 single_line = self.font.render(lines[i], True, (0, 0, 0))
-            min_w = max(min_w,single_line.get_width())+50
-            min_h = min_h + single_line.get_height()*1.5
+            min_w = max(min_w,single_line.get_width())
+            min_h = min_h + single_line.get_height()*1.1
             text.append(single_line)
-        w = max(min_w, self.w)
+        w = max(min_w, self.w)+10
         h = max(min_h, self.w)
-        return text, w, h + 50
+        return text, w, h + 75
 
     def deactivate(self):
-        self.button_group.remove(self.button)
+        #self.button_group.remove(self.button)
         self.active = False
         self.done = True
 
     def activate(self):
-        self.button_group.add(self.button)
+        #self.button_group.add(self.button)
         self.active = True
 
     def set_triangle(self, point):
@@ -92,14 +96,16 @@ class ToolTip:
             return
         box = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
         pygame.draw.rect(box,self.color, (0,0,self.w,self.h), border_radius=5)
-        init_x = 10
-        init_y = 10
+        init_x = self.w/2
+        init_y = int(self.text[0].get_height()*1.1/2)+10
         for text in self.text:
-            text_rect = text.get_rect(topleft=(init_x, init_y))
+            text_rect = text.get_rect(center=(init_x, init_y))
             box.blit(text, text_rect)
-            init_y += text.get_height()
+            init_y += int(text.get_height()*1.1)
         if self.triangle:
             box_extra = pygame.Surface((self.w+100, self.h), pygame.SRCALPHA)
             pygame.draw.polygon(box_extra, self.color, self.triangle)
             screen.blit(box_extra, (self.x-50,self.y))
         screen.blit(box, (self.x, self.y))
+        screen.blit(self.button.image, (self.button.rect[0], self.button.rect[1]))
+        #self.button_group.draw(screen)

@@ -274,9 +274,16 @@ class GameScene(Scene):
         self.particle_systems.append(self.can_particle_system)
 
         self.tool_tip_manager = ToolTipManager(
-            [ToolTip(700,300,0,0,["Make sure to", "use starch"], self.sfont, self.font, button_group=self.button_sprites, mass=0, point=(-50,20)),
-             ToolTip(900,300,0,0,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, mass=10, point=(50,20)),
-             ToolTip(900,600,0,0,["Whats up people?"], self.sfont, button_group=self.button_sprites, mass=15, point=(50,20),)],
+            [ToolTip(855,150,0,0,["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant."], self.sfont, self.font, button_group=self.button_sprites, mass=0),
+             ToolTip(655,380,0,0,["Your seed has no Leaves yet.", "Use Your Starch Deposit", "But don't waste it"], self.sfont, button_group=self.button_sprites, mass=0, point=(-45,30)),
+             ToolTip(370,140,0,0,["These are your main 3 Organs.", "Select them for Details.", "Once your roots are big enough", "your are able to grow a stem!"], self.sfont, button_group=self.button_sprites, mass=1, point=(-40,0)),
+             ToolTip(240,230,0,0,["You can fill up", "your starch deposit", "instead of growing"], self.sfont, button_group=self.button_sprites, mass=3, point=(50,20)),
+             ToolTip(300,300,0,0,["Grow your stem", "to get your first leaves", "The biomass can be", "split up between all organs."], self.sfont, button_group=self.button_sprites, mass=6, point=(-50,20)),
+             ToolTip(685,450,0,0,["One leaf can be added"," for each skillpoint", "But remember to keep", "the stem big enough"], self.sfont, button_group=self.button_sprites, mass=20, point=(-50,20)),
+             ToolTip(850,300,0,0,["Congratulations, you reached", " 30gr of plant mass"], self.sfont, button_group=self.button_sprites, mass=30, point=(50,20)),
+             ToolTip(1100,300,0,0,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, mass=0, point=(50,20)),
+             ToolTip(1100,300,0,0,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, mass=0, point=(50,20)),
+             ToolTip(1000,600,0,0,["Whats up people?"], self.sfont, button_group=self.button_sprites, mass=0, point=(50,20),)],
             callback=self.plant.get_biomass,)
 
         # start growth every second
@@ -321,11 +328,11 @@ class GameScene(Scene):
                 self.plant.soil_moisture = self.plant.soil_moisture + 1
             if e.type == KEYDOWN and e.key == K_d:
                 self.plant.soil_moisture = self.plant.soil_moisture - 1
-            if e.type == MOUSEBUTTONDOWN and self.use_watering_can:
-                self.can = can_tilted
-                self.can_particle_system.particles.clear()
-                self.can_particle_system.active = True
-                return
+            if e.type == MOUSEBUTTONDOWN: #and self.use_watering_can:
+                #self.can = can_tilted
+                #self.can_particle_system.particles.clear()
+                #self.can_particle_system.active = True
+                print(pygame.mouse.get_pos())
             if e.type == MOUSEBUTTONUP and self.use_watering_can:
                 self.can_particle_system.active = False
                 self.can = can
@@ -335,6 +342,8 @@ class GameScene(Scene):
             for slider in self.sliders:
                 slider.handle_event(e)
             self.plant.handle_event(e)
+            for tips in self.tool_tip_manager.tool_tips:
+                tips.handle_event(e)
 
             '''if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                  self.plant.organs[0].add_growth_target(pygame.mouse.get_pos())
@@ -381,9 +390,10 @@ class GameScene(Scene):
         self.draw_organ_ui(tmp_screen)
 
         self.environment.draw_foreground(tmp_screen)
+        self.button_sprites.draw(tmp_screen)
 
         self.tool_tip_manager.draw(tmp_screen)
-        self.button_sprites.draw(tmp_screen)
+
 
         if self.use_watering_can:
             mouse_pos = pygame.mouse.get_pos()
