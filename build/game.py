@@ -249,7 +249,7 @@ class GameScene(Scene):
             rb.setRadioButtons(radioButtons)
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
-        #self.button = Button(600, 600, 64, 64, [self.plant.get_actions().add_leave] , FONT, text="Add Leave")
+        self.add_leaf_button = Button(523, 503, 100, 40, [self.plant.get_actions().add_leave] , FONT, text="Buy Leaf")
         #self.button_sprites.add(Button(600, 600, 64, 64, [self.activate_watering_can()] , FONT, text="Activate Can"))
 
         self.button_sprites.add(ToggleButton(100, 385, 210, 40, [], FONT, "Photosysnthesis", pressed=True, fixed=True))
@@ -263,7 +263,7 @@ class GameScene(Scene):
         self.sliders.append(self.stem_slider)
         self.sliders.append(self.root_slider)
         SliderGroup([slider for slider in self.sliders], 100)
-        self.sliders.append(Slider((536, 70, 15, 200), FONT, (50, 20), organ=self.plant.organs[3], plant=self.plant))
+        self.sliders.append(Slider((536, 70, 15, 200), FONT, (50, 20), organ=self.plant.organs[3], plant=self.plant, percent=100))
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
         self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.plant.get_growth_rate()*20, images=[photo_energy], speed=(2,0), callback=self.plant.get_leaf_photon)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
@@ -277,14 +277,14 @@ class GameScene(Scene):
             [ToolTip(855,150,0,0,["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant."], self.sfont, self.font, button_group=self.button_sprites, mass=0),
              ToolTip(655,380,0,0,["Your seed has no Leaves yet.", "Use Your Starch Deposit", "But don't waste it"], self.sfont, button_group=self.button_sprites, mass=0, point=(-45,30)),
              ToolTip(370,140,0,0,["These are your main 3 Organs.", "Select them for Details.", "Once your roots are big enough", "your are able to grow a stem!"], self.sfont, button_group=self.button_sprites, mass=1, point=(-40,0)),
-             ToolTip(240,230,0,0,["You can fill up", "your starch deposit", "instead of growing"], self.sfont, button_group=self.button_sprites, mass=3, point=(50,20)),
              ToolTip(300,300,0,0,["Grow your stem", "to get your first leaves", "The biomass can be", "split up between all organs."], self.sfont, button_group=self.button_sprites, mass=6, point=(-50,20)),
-             ToolTip(685,450,0,0,["One leaf can be added"," for each skillpoint", "But remember to keep", "the stem big enough"], self.sfont, button_group=self.button_sprites, mass=20, point=(-50,20)),
+             ToolTip(685,450,0,0,["One leaf can be added"," for each skillpoint", "But remember to keep", "the stem big enough"], self.sfont, button_group=self.button_sprites, mass=10, point=(-50,20)),
+             ToolTip(240, 230, 0, 0, ["You can fill up", "your starch deposit", "instead of growing"], self.sfont, button_group=self.button_sprites, mass=15, point=(50, 20)),
              ToolTip(850,300,0,0,["Congratulations, you reached", " 30gr of plant mass"], self.sfont, button_group=self.button_sprites, mass=30, point=(50,20)),
-             ToolTip(1100,300,0,0,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, mass=0, point=(50,20)),
-             ToolTip(1100,300,0,0,["I have to", "restore your honor"], self.sfont, button_group=self.button_sprites, mass=0, point=(50,20)),
-             ToolTip(1000,600,0,0,["Whats up people?"], self.sfont, button_group=self.button_sprites, mass=0, point=(50,20),)],
-            callback=self.plant.get_biomass,)
+             ToolTip(1100,300,0,0,["50 Gramms!"], self.sfont, button_group=self.button_sprites, mass=50, point=(50,20)),
+             ToolTip(1100,300,0,0,["100 Gramms!"], self.sfont, button_group=self.button_sprites, mass=100, point=(50,20)),
+             ToolTip(1000,600,0,0,["You son of a b*tch did it!" "200 Gramms, thats game"], self.sfont, button_group=self.button_sprites, mass=200, point=(50,20),)],
+            callback=self.plant.get_biomass)
 
         # start growth every second
         pygame.time.set_timer(GROWTH, 1000)
@@ -313,7 +313,6 @@ class GameScene(Scene):
         # set growth timer
 
 
-
     def handle_events(self, event):
         for e in event:
             if e.type == GROWTH:
@@ -328,11 +327,11 @@ class GameScene(Scene):
                 self.plant.soil_moisture = self.plant.soil_moisture + 1
             if e.type == KEYDOWN and e.key == K_d:
                 self.plant.soil_moisture = self.plant.soil_moisture - 1
-            if e.type == MOUSEBUTTONDOWN: #and self.use_watering_can:
+            #if e.type == MOUSEBUTTONDOWN: #and self.use_watering_can:
                 #self.can = can_tilted
                 #self.can_particle_system.particles.clear()
                 #self.can_particle_system.active = True
-                print(pygame.mouse.get_pos())
+                #print(pygame.mouse.get_pos())
             if e.type == MOUSEBUTTONUP and self.use_watering_can:
                 self.can_particle_system.active = False
                 self.can = can
@@ -564,6 +563,16 @@ class GameScene(Scene):
 
         #pygame.draw.rect()
 
+
+        # overal stats
+        # plant health?
+        # plant size
+        # plant mass
+        # leaf area, mass
+        # skillpoints
+        # temp
+
+
         # headbox
         pygame.draw.rect(s, (color[0], color[1], color[2], 180), Rect(60, 450, w - 60, 30), border_radius=3)
         leave_title = TITLE_FONT.render("Organ", True, (0, 0, 0))  # title
@@ -571,16 +580,18 @@ class GameScene(Scene):
         if self.plant.target_organ.type == self.plant.LEAVES:
             image = leaf_icon_big
             #self.button_sprites.add(self.button)
-
+            self.button_sprites.remove(self.add_leaf_button)
             #color = HUNTER_GREEN
             #s.fill((color[0], color[1], color[2], 128))
         elif self.plant.target_organ.type == self.plant.STEM:
             image = stem_icon_big#pygame.transform.scale(stem_icon, (128, 128))
+            self.button_sprites.add(self.add_leaf_button)
             # self.button_sprites.remove(self.button)
             #color = HUNTER_GREEN
             #s.fill((color[0], color[1], color[2], 128))
         elif self.plant.target_organ.type == self.plant.ROOTS:
             image = root_icon_big #pygame.transform.scale(root_icon, (128,128))
+            self.button_sprites.remove(self.add_leaf_button)
             #self.button_sprites.remove(self.button)
             #text_soil_moisture = FONT.render("{}".format(self.plant.soil_moisture),
             #                              True, (0, 0, 0))
@@ -589,6 +600,7 @@ class GameScene(Scene):
             #s.blit(text_soil_moisture, dest=(60, 80))  # Todo change x, y
         elif self.plant.target_organ.type == self.plant.STARCH:
             image = starch_icon_big #pygame.transform.scale(starch_icon, (128,128))
+            self.button_sprites.remove(self.add_leaf_button)
 
         # draw plant image + exp + lvl + rate + mass
         s.blit(image, (100,490))

@@ -16,8 +16,6 @@ beans = []
 for bean in beans_big:
     beans.append(pygame.transform.scale(bean, (int(bean.get_width()/3), int(bean.get_height()/3))))
 
-from collections import namedtuple
-Leave = namedtuple("leave", "x, y, image, offset_x, offset_y")
 
 class Plant:
     LEAVES = 1
@@ -33,11 +31,10 @@ class Plant:
         self.growth_rate = 0
         self.soil_moisture = soil_moisture
         self.upgrade_points = 0
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAVES, self.set_target_organ, leaves, mass=0.01)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, stem[0], stem[1], mass=0.01, leaf = organ_leaf)
-        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, roots[0], roots[1], mass=1)
-        organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self.deactivate_starch_resource, None)
-        organ_starch.mass = 100
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAVES, self.set_target_organ, leaves, mass=0, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
+        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, roots[0], roots[1], mass=5, active=True)
+        organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self.deactivate_starch_resource, None, mass=30, active=True)
         self.seedling = Seedling(self.x, self.y, beans, 6)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_starch]
         #self.organs[1].targets = [(699, 821), (713, 801), (706, 778), (709, 741)]    # set up initial growth targets for STEM
@@ -239,6 +236,11 @@ class Plant:
             self.upgrade_points += organ.upgrade_points
         if self.upgrade_points > 10:
             pygame.time.set_timer(pygame.event.Event(WIN, message="You Won", duration=1), 500, True)
+        if self.get_biomass() > self.seedling.max-1 and not self.organs[1].active:
+            self.organs[1].activate()
+            if self.get_biomass() > self.seedling.max and not self.organs[0].active:
+                print("activate_leaves")
+                self.organs[0].activate()
 
     def handle_event(self, event):
         for organ in self.organs:
@@ -246,10 +248,10 @@ class Plant:
 
     def draw(self, screen):
         self.draw_seedling(screen)
-        if self.get_biomass() > self.seedling.max-1:
-            self.organs[2].draw(screen)
-            if self.get_biomass() > self.seedling.max:
-                self.organs[1].draw(screen)
+        if self.get_biomass() < self.seedling.max:
+            return
+        for organ in self.organs:
+            organ.draw(screen)
 
     def draw_seedling(self, screen):
         self.seedling.draw(screen, self.get_biomass())
@@ -268,19 +270,20 @@ class Seedling:
         screen.blit(self.images[index], (self.x, self.y))
 
 class Organ:
-    def __init__(self, x, y, name, organ_type,callback=None, image=None, pivot=None, mass=1.0, growth_rate=0, thresholds=None, rect=None):
+    def __init__(self, x, y, name, organ_type,callback=None, image=None, pivot=None, mass=1.0, growth_rate=0, thresholds=None, rect=None, active=False):
         if thresholds is None:
-            thresholds = [10, 15, 20, 25, 30, 35, 40]
+            thresholds = [1, 2, 20, 25, 30, 35, 40]
         self.x = x
         self.y = y
-        self.starch = 100
         self.callback = callback
         self.base_image = image
         self.image = image
         self.pivot = pivot
+        self.active = active
         self.name = name
         self.type = organ_type
         self.mass = mass
+        self.base_mass = 1
         self.growth_rate = growth_rate
         self.percentage = 0
         self.thresholds = thresholds
@@ -316,6 +319,8 @@ class Organ:
         return [rect]
 
     def grow(self):
+        if not self.active:
+            return
         '''
         growthrate -> sliderval
         '''
@@ -349,13 +354,18 @@ class Organ:
     def add_target(self, pos):
         self.targets.append((pos[0], pos[1]))
 
+    def activate(self):
+        self.mass = self.base_mass
+        self.active = True
+
     def draw(self, screen):
         if not self.pivot:
             self.pivot = (0,0)
-        if self.image:
+        if self.image and self.active:
             screen.blit(self.image,(self.x - self.pivot[0], self.y - self.pivot[1]))
 
     def update_image_size(self, factor=5, base=40):
+        print(self.type)
         if self.image:
             ratio = self.image.get_height()/self.image.get_width()
             width = (self.active_threshold + factor) * base
@@ -375,9 +385,9 @@ class Organ:
 
 
 class Leaf(Organ):
-    def __init__(self, x, y, name, organ_type, callback, images, mass):
-        super().__init__(x, y, name, organ_type, mass=mass)
+    def __init__(self, x, y, name, organ_type, callback, images, mass, active):
         self.leaves = []
+        super().__init__(x, y, name, organ_type, mass=mass, active=active, thresholds=[1,2,3,4,5,6,7,8,9,10,20,30,40])
         self.callback = callback
         self.images = images
         self.can_add_leaf = False
@@ -387,57 +397,96 @@ class Leaf(Organ):
             return
         self.can_add_leaf = True
 
+    def grow(self):
+        growth_per_leaf = (self.growth_rate * gram_mol * self.get_mass() * GAME_SPEED)/len(self.leaves) if len(self.leaves) > 0 else 0
+        for leaf in self.leaves:
+            leaf["mass"] += growth_per_leaf
+        # if reached a certain mass, gain one exp point, increase threshold
+        self.mass = self.get_mass()
+        if self.mass > self.thresholds[self.active_threshold]:
+            #self.add_growth_target()
+            self.reach_threshold()
+            #self.active_threshold = self.thresholds[self.thresholds.index(self.active_threshold) + 1]
+
+    def get_mass(self):
+        return sum([leaf["mass"] for leaf in self.leaves])+self.base_mass # basemass for seedling leaves
+
     def append_leaf(self, pos):
-        if not self.active_threshold >= len(self.targets):
-            return
-        if pos[0] - self.x -   10 < 0:
-            random_int = random.randrange(0,len(leaves)-1,2)
-            image = leaves[random_int]
-            offset = pivot_pos[random_int]
+        #if not self.active_threshold >= len(self.targets):
+        #    return
+        if pos[0] - self.x < 0:
+            image_id = random.randrange(0,len(leaves)-1,2)
+            image = leaves[image_id]
+            offset = pivot_pos[image_id]
         else:
-            random_int = random.randrange(1,len(leaves),2)
-            image = leaves[random_int]
-            offset = pivot_pos[random_int]
-        self.leaves.append(Leave(pos[0], pos[1], image[0], offset[0], offset[1]))
+            image_id = random.randrange(1,len(leaves),2)
+            image = leaves[image_id]
+            offset = pivot_pos[image_id]
+        leaf = {"x": pos[0],
+                "y": pos[1],
+                "image": image[0],
+                "offset_x": offset[0],
+                "offset_y": offset[1],
+                "mass": 0.0001,
+                "base_image_id": image_id,
+                "growth_index": self.active_threshold} # to get relative size, depending on current threshold - init threshold
+        self.update_leaf_image(leaf, init=True)
+        self.leaves.append(leaf)
         self.can_add_leaf = False
 
     def get_rect(self):
-        return [leave.image.get_rect(topleft=(leave.x, leave.y)) for leave in self.leaves]
+        return [leaf["image"].get_rect(topleft=(leaf["x"], leaf["y"])) for leaf in self.leaves]
 
     # depending on the mean height of all leaves, 0 .. 1000
     def get_mean_leaf_height(self):
-        return sum(self.y - leaf.y for leaf in self.leaves)/len(self.leaves) if len(self.leaves) > 0 else 0
+        return sum(self.y - leaf["y"] for leaf in self.leaves)/len(self.leaves) if len(self.leaves) > 0 else 0
 
-    def update_image_size(self, factor=8, base=3):
-        return
-        leave_size = int((self.active_threshold + base) * factor)
-        for leave in self.leaves:
-            old_size = leave.image.get_rect(topleft=(leave.x, leave.y))
-            scaled_leaf = pygame.transform.scale(leave.image, (leave_size, leave_size))
-            new_size = scaled_leaf.get_rect(topleft=(leave.x, leave.y))
-            ratio = (new_size[2] / old_size[2], new_size[3] / old_size[3])
-            leave.offset_x = leave.offset_x * ratio[0]
-            leave.offset_y = leave.offset_y * ratio[1]
-            leave.image = scaled_leaf
+    def update_image_size(self, factor=10, base=30):
+        if not self.leaves:
+            return
+        for leaf in self.leaves:
+            self.update_leaf_image(leaf, factor, base)
+
+    def update_leaf_image(self, leaf, factor=10, base=30, init=False):
+        base_image = leaves[leaf["base_image_id"]][0]
+        base_offset = leaves[leaf["base_image_id"]][1]
+        ratio = base_image.get_height() / base_image.get_width()
+        threshold = self.active_threshold - leaf["growth_index"] if not init else 0
+        new_width = (threshold * factor) + base
+        new_height = int(new_width * ratio)
+        new_width = int(new_width)
+        leaf["offset_x"] = base_offset[0] * (new_width / base_image.get_width())
+        leaf["offset_y"] = base_offset[1] * (new_height / base_image.get_height())
+        leaf["image"] = pygame.transform.scale(base_image, (new_width, new_height))
 
     def draw(self, screen):
         for leaf in self.leaves:
-            screen.blit(leaf.image, (leaf.x-leaf.offset_x, leaf.y-leaf.offset_y))
+            screen.blit(leaf["image"], (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))
 
 
 class Root(Organ):
-    def __init__(self, x, y, name, organ_type, callback, image, pivot, mass):
-        super().__init__(x, y, name, organ_type, callback, image, pivot, mass=mass)
+    def __init__(self, x, y, name, organ_type, callback, image, pivot, mass, active):
+        super().__init__(x, y, name, organ_type, callback, image, pivot, mass=mass, active=active)
 
     def update_image_size(self, factor=5, base=25):
         super().update_image_size(factor, base)
 
 class Stem(Organ):
-    def __init__(self, x, y, name, organ_type, callback, image, pivot, leaf, mass):
-        super().__init__(x, y, name, organ_type, callback, image, pivot, mass=mass)
+    def __init__(self, x, y, name, organ_type, callback, image, pivot, leaf, mass, active):
+        super().__init__(x, y, name, organ_type, callback, image, pivot, mass=mass, active=active)
         self.leaf = leaf
 
     def handle_event(self, event):
+        if event.type == pygame.MOUSEMOTION:
+            if self.leaf.can_add_leaf:
+                for rect in self.get_rect():
+                    if rect.collidepoint(event.pos):
+                        if event.pos[0] - self.x < 0:
+                            self.highlight = (event.pos, (255,255,255,128))
+                        else:
+                            self.highlight = (event.pos, (0,0,0,128))
+            else:
+                self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
             # point = (event.pos[0] - (root_size / 2) - (root_size / 10), event.pos[1])
             # print("point:", event.pos, " rect:", rect, "rootS:", root_size)
@@ -445,6 +494,7 @@ class Stem(Organ):
             for rect in self.get_rect():
                 if rect.collidepoint(event.pos):
                     if self.leaf.can_add_leaf:
+                        self.upgrade_points -= 1
                         self.leaf.append_leaf(event.pos)
                         return
                     self.callback(self.type)  # Call the function.
@@ -452,12 +502,26 @@ class Stem(Organ):
     def update_image_size(self, factor=3, base=5):
         super().update_image_size(factor, base)
 
+    def draw(self, screen):
+        super().draw(screen)
+        if self.highlight:
+            pygame.draw.circle(screen, self.highlight[1],(self.highlight[0][0], self.highlight[0][1]), 10)
+
+    def get_rect(self):
+        if self.image:
+            x = (self.x - self.pivot[0] if self.pivot else self.x) -10
+            y = self.y - self.pivot[1] if self.pivot else self.y
+            rect = pygame.Rect(x, y, self.image.get_width()+20, self.image.get_height())
+        else:
+            rect = pygame.Rect(0,0,0,0)
+        return [rect]
+
 class Starch(Organ):
     '''
     @thresholds are capacities at given lvl
     '''
-    def __init__(self, x, y, name, organ_type, callback, image):
-        super().__init__(x, y, name, organ_type, callback, image, thresholds=[100, 200, 300, 400])
+    def __init__(self, x, y, name, organ_type, callback, image, mass, active):
+        super().__init__(x, y, name, organ_type, callback, image, mass=mass, active=active, thresholds=[30, 50, 80, 160, 320])
         self.max_drain = 0.1
         self.toggle_button = None
 
@@ -481,6 +545,9 @@ class Starch(Organ):
 
     def get_rate(self):
         return self.max_drain * self.percentage/100
+
+    def draw(self, screen):
+        pass
 
 
 class Action:
