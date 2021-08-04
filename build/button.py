@@ -107,10 +107,7 @@ class ToggleButton(pygame.sprite.Sprite):
                         self.button_down = True
                     for callback in self.callback:
                         callback()  # Call the function.
-            #elif event.type == pygame.MOUSEBUTTONUP:
-                # If the rect collides with the mouse pos.
-                #if self.rect.collidepoint(event.pos):
-                    #pass
+
     def activate(self):
         self.button_down = True
         self.image = self.clicked_image

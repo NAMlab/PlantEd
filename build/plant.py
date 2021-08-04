@@ -37,7 +37,6 @@ class Plant:
         organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self.deactivate_starch_resource, None, mass=30, active=True)
         self.seedling = Seedling(self.x, self.y, beans, 6)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_starch]
-        #self.organs[1].targets = [(699, 821), (713, 801), (706, 778), (709, 741)]    # set up initial growth targets for STEM
         self.target_organ = self.organs[2]
         self.produce_biomass = True
         self.use_starch = False
@@ -70,7 +69,6 @@ class Plant:
         # use fixed until working numbers
         #NADPH_cost_gramm = 2.56 * 0.50718 * self.get_biomass()
         #ATP_cost_gramm = 7.27 * 0.744416 * self.get_biomass()
-
         #cost_day = NADPH_cost_gramm + ATP_cost_gramm
         # use fixed until model is right
         maintenance = 0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound + 2.7851
@@ -103,8 +101,6 @@ class Plant:
         else:
             pass
 
-    # get resources from  starch pool
-    # necessary?
     def activate_starch_resource(self):
         # Todo check number max Starch consumption
         max_starch_out = self.organs[3].max_drain
@@ -117,7 +113,6 @@ class Plant:
         self.model.reactions.get_by_id("root_Starch_in_tx").bounds = (0, 0)
         self.recalc_growth_rate()
 
-    # growth rate = biomass in organs
     def activate_biomass_objective(self):
         if self.produce_biomass:
             pass
@@ -137,10 +132,7 @@ class Plant:
 
         self.set_reaction_bound('leaf_Photon_tx', 0, self.get_leaf_photon())
 
-        '''
-        MAINTAINANCE GETS BIGGER WITH MASS
-        :return:
-        '''
+        # MAINTAINANCE HAS TO GET BIGGER WITH MASS
         '''
         medium = self.model.medium
         # adjust photon lvl --> leaf_Photon_tx
@@ -162,42 +154,21 @@ class Plant:
         # adjust Water --> root_H2O, leaf_H2O
         medium['root_H2O_tx'] = 18.2
         self.model.medium = medium
-
         # get constraints - mean light lvl, nutrition
-        
-        Sensitivity Analysis
-        --> check biomass function for compounds, remove unnecessary ones from both tx and biomass
-        use this to model    {'leaf_Photon_tx': 1000.0,  0 .. 1000 linear, dpeending on height
-         'leaf_CO2_tx': 1000.0,     0 .. 120max .. 1000
-         'leaf_O2_tx': 1000.0,      no impact
-         'root_Ca_tx': 1000.0,      no impact, high humidity or cold temperatures, can induce calcium deficiency
-        use this to model    'root_H2O_tx': 1000.0,     0 .. 110max .. 1000, dry days reduce water
-         'root_CO2_tx': 1000.0,     no impact
-         'root_O2_tx': 1000.0,      0 .. 1max .. 1000
-         'root_Pi_tx': 1000.0,      no impact, Phosphate, only source --> no need maybe in biomass
-         'root_Mg_tx': 1000.0,      no impact
-         'root_Nitrate_tx': 1000.0, no impact
-         'root_SO4_tx': 1000.0,     no impact
-         'root_NH4_tx': 1000.0,     0 .. 1max .. 1000
-         'root_K_tx': 1000.0}       no impact
-        :return:
         '''
 
         # model solution fba
-        #  Todo check if slim_optimize is sufficient
         solution = self.model.slim_optimize()
-        # growth rate in hours
-        self.growth_rate = solution/60/60*240
+
+        self.growth_rate = solution/60/60*240   # growth rate in hours
 
         # grwoth_rate in seconds to fit the ingame timer, current facor 240 ingame to real time
-        #growth_rate = self.growth_rate / 3600 * 240
         # --> use fixed until model is fine
         maintainance_cost_sec = (self.get_maintainance_cost_hour()/60/60*240)
         self.growth_rate = self.growth_rate - maintainance_cost_sec
 
         if self.use_starch:
             self.growth_rate += self.organs[3].max_drain * self.organs[3].percentage/100
-
         for organ in self.organs:
             organ.recalc_growth_rate(self.growth_rate)
 
@@ -239,7 +210,6 @@ class Plant:
         if self.get_biomass() > self.seedling.max-1 and not self.organs[1].active:
             self.organs[1].activate()
             if self.get_biomass() > self.seedling.max and not self.organs[0].active:
-                print("activate_leaves")
                 self.organs[0].activate()
 
     def handle_event(self, event):
@@ -268,6 +238,7 @@ class Seedling:
         if index >= len(self.images):
             index = len(self.images)-1
         screen.blit(self.images[index], (self.x, self.y))
+
 
 class Organ:
     def __init__(self, x, y, name, organ_type,callback=None, image=None, pivot=None, mass=1.0, growth_rate=0, thresholds=None, rect=None, active=False):
@@ -299,16 +270,6 @@ class Organ:
     def recalc_growth_rate(self, growth_rate):
         self.growth_rate = growth_rate * self.percentage/100
 
-    def add_growth_target(self, point=None):
-        if point is None:
-            point = (random.randint(-10, 10), random.randint(1, 10))
-        # no duplicate y allowed
-        for target in self.targets:
-            if point[1] >= target[1]:
-                return False
-        self.targets.append(point)
-        return True
-
     def get_rect(self):
         if self.image:
             x = self.x - self.pivot[0] if self.pivot else self.x
@@ -321,15 +282,10 @@ class Organ:
     def grow(self):
         if not self.active:
             return
-        '''
-        growthrate -> sliderval
-        '''
         self.mass += self.growth_rate * gram_mol * self.mass * GAME_SPEED
         # if reached a certain mass, gain one exp point, increase threshold
         if self.mass > self.thresholds[self.active_threshold]:
-            #self.add_growth_target()
             self.reach_threshold()
-            #self.active_threshold = self.thresholds[self.thresholds.index(self.active_threshold) + 1]
 
     def reach_threshold(self):
         if self.active_threshold >= len(self.thresholds)-1:
@@ -341,9 +297,6 @@ class Organ:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
-            # point = (event.pos[0] - (root_size / 2) - (root_size / 10), event.pos[1])
-            # print("point:", event.pos, " rect:", rect, "rootS:", root_size)
-            # If the rect collides with the mouse pos.
             for rect in self.get_rect():
                 if rect.collidepoint(event.pos):
                     self.callback(self.type)
@@ -365,7 +318,6 @@ class Organ:
             screen.blit(self.image,(self.x - self.pivot[0], self.y - self.pivot[1]))
 
     def update_image_size(self, factor=5, base=40):
-        print(self.type)
         if self.image:
             ratio = self.image.get_height()/self.image.get_width()
             width = (self.active_threshold + factor) * base
@@ -374,14 +326,14 @@ class Organ:
             self.pivot = (self.pivot[0] * (width/self.image.get_width()), self.pivot[1] * (height/self.image.get_height()))
             self.image = pygame.transform.scale(self.base_image, (width, height))
 
-            '''old_size = self.image.get_size()
-            organ_size_ratio = old_size[1] / old_size[0]
-            image_size = int((self.active_threshold + factor) * base)
-            scaled_image = pygame.transform.scale(self.image, (image_size, int(image_size * organ_size_ratio)))
-            new_size = scaled_image.get_size()
-            old_new_ratio = (new_size[0] / old_size[0], new_size[1] / old_size[1])
-            self.pivot = (self.pivot[0] * old_new_ratio[0], self.pivot[1] * old_new_ratio[1])
-            self.image = scaled_image'''
+    '''def add_growth_target(self, point=None):    # unused
+            if point is None:
+                point = (random.randint(-10, 10), random.randint(1, 10))
+            for target in self.targets:
+                if point[1] >= target[1]:   # no duplicate y allowed
+                    return False
+            self.targets.append(point)
+            return True'''
 
 
 class Leaf(Organ):
@@ -404,16 +356,12 @@ class Leaf(Organ):
         # if reached a certain mass, gain one exp point, increase threshold
         self.mass = self.get_mass()
         if self.mass > self.thresholds[self.active_threshold]:
-            #self.add_growth_target()
             self.reach_threshold()
-            #self.active_threshold = self.thresholds[self.thresholds.index(self.active_threshold) + 1]
 
     def get_mass(self):
         return sum([leaf["mass"] for leaf in self.leaves])+self.base_mass # basemass for seedling leaves
 
     def append_leaf(self, pos):
-        #if not self.active_threshold >= len(self.targets):
-        #    return
         if pos[0] - self.x < 0:
             image_id = random.randrange(0,len(leaves)-1,2)
             image = leaves[image_id]
@@ -437,7 +385,7 @@ class Leaf(Organ):
     def get_rect(self):
         return [leaf["image"].get_rect(topleft=(leaf["x"], leaf["y"])) for leaf in self.leaves]
 
-    # depending on the mean height of all leaves, 0 .. 1000
+    # depending on the mean height of all leaves, 0 .. 1000, -> TODO: mass to PLA better
     def get_mean_leaf_height(self):
         return sum(self.y - leaf["y"] for leaf in self.leaves)/len(self.leaves) if len(self.leaves) > 0 else 0
 
@@ -488,16 +436,13 @@ class Stem(Organ):
             else:
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
-            # point = (event.pos[0] - (root_size / 2) - (root_size / 10), event.pos[1])
-            # print("point:", event.pos, " rect:", rect, "rootS:", root_size)
-            # If the rect collides with the mouse pos.
             for rect in self.get_rect():
                 if rect.collidepoint(event.pos):
                     if self.leaf.can_add_leaf:
                         self.upgrade_points -= 1
                         self.leaf.append_leaf(event.pos)
                         return
-                    self.callback(self.type)  # Call the function.
+                    self.callback(self.type)
 
     def update_image_size(self, factor=3, base=5):
         super().update_image_size(factor, base)
@@ -549,7 +494,7 @@ class Starch(Organ):
     def draw(self, screen):
         pass
 
-
+# looks stupid
 class Action:
     def __init__(self, select_organ, add_stem, add_leave):
         self.select_organ = select_organ

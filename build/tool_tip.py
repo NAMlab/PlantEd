@@ -46,8 +46,7 @@ class ToolTip:
         self.triangle = []
         self.set_triangle(point) if point else None
         self.button = Button(self.x, self.y + (self.h - 50), self.w, 50, [self.deactivate], self.font,
-                        text='Got iiiit', border_w=5)
-        #self.button_group = button_group.copy()
+                        text='OK', border_w=5)
 
     def update(self):
         pass
@@ -73,12 +72,10 @@ class ToolTip:
         return text, w, h + 75
 
     def deactivate(self):
-        #self.button_group.remove(self.button)
         self.active = False
         self.done = True
 
     def activate(self):
-        #self.button_group.add(self.button)
         self.active = True
 
     def set_triangle(self, point):
@@ -108,4 +105,3 @@ class ToolTip:
             screen.blit(box_extra, (self.x-50,self.y))
         screen.blit(box, (self.x, self.y))
         screen.blit(self.button.image, (self.button.rect[0], self.button.rect[1]))
-        #self.button_group.draw(screen)
