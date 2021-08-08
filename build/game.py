@@ -75,7 +75,10 @@ starch_icon_big = pygame.transform.scale(starch_icon, (128,128)).convert_alpha()
 drain_icon = get_image("drain_icon.png").convert_alpha()
 photo_energy = pygame.transform.scale(get_image("photo_energy.png"),(15,15)).convert_alpha()
 starch_energy = pygame.transform.scale(get_image("starch_energy.png"),(15,15)).convert_alpha()
-pygame.mixer.music.load('../assets/plopp.wav')
+#pygame.mixer.music.load()
+water_sound = pygame.mixer.Sound('../assets/water_can.mp3')
+pygame.mixer.music.load('../assets/background_music.mp3')
+pygame.mixer.music.play(-1,0)
 
 
 class Scene(object):
@@ -303,8 +306,11 @@ class GameScene(Scene):
                         self.watering_can["image"] = can_tilted
                         self.watering_can["pouring"] = True
                         self.can_particle_system.activate()
+                        pygame.mixer.Sound.play(water_sound, -1)
                 if e.type == MOUSEBUTTONUP:
+                    self.watering_can["image"] = can
                     self.can_particle_system.deactivate()
+                    pygame.mixer.Sound.stop(water_sound)
                     self.watering_can["pouring"] = False
                 if e.type == MOUSEMOTION:
                     x,y = pygame.mouse.get_pos()
@@ -344,7 +350,6 @@ class GameScene(Scene):
         # watering can
         if self.watering_can["pouring"]:
             self.watering_can["amount"] -= 1
-            print(self.watering_can["amount"])
             if self.watering_can["amount"] <= 0:
                 self.deactivate_watering_can()
 
@@ -454,6 +459,7 @@ class GameScene(Scene):
         pygame.mouse.set_visible(False)
 
     def deactivate_watering_can(self):
+        pygame.mixer.Sound.stop(water_sound)
         self.can_particle_system.deactivate()
         self.watering_can["image"] = can
         self.watering_can["active"] = False

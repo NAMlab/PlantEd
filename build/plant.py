@@ -2,6 +2,7 @@ import cobra.test
 import random
 import pygame
 
+pygame.init()
 GAME_SPEED = 1
 gram_mol = 0.5124299411
 WIN = 1
@@ -14,6 +15,7 @@ beans_big = [pygame.image.load("../assets/bean_growth/bean_{}.png".format(index)
 beans = []
 for bean in beans_big:
     beans.append(pygame.transform.scale(bean, (int(bean.get_width()/3), int(bean.get_height()/3))))
+plopp = pygame.mixer.Sound('../assets/plopp.wav')
 
 
 class Plant:
@@ -290,7 +292,7 @@ class Organ:
         self.plant.upgrade_points += 1
         self.level += 1
         self.update_image_size()
-        pygame.mixer.music.play(0)
+        pygame.mixer.Sound.play(plopp)
         self.active_threshold += 1
 
     def handle_event(self, event):
