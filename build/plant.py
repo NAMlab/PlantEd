@@ -1,6 +1,5 @@
 import cobra.test
 import random
-import numpy as np
 import pygame
 
 GAME_SPEED = 1
@@ -31,10 +30,10 @@ class Plant:
         self.growth_rate = 0
         self.soil_moisture = soil_moisture
         self.upgrade_points = 0
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAVES, self.set_target_organ, leaves, mass=0, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
-        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, roots[0], roots[1], mass=5, active=True)
-        organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self.deactivate_starch_resource, None, mass=30, active=True)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAVES, self.set_target_organ, self, leaves, mass=0, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
+        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=5, active=True)
+        organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self.deactivate_starch_resource, self, None, mass=30, active=True)
         self.seedling = Seedling(self.x, self.y, beans, 6)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_starch]
         self.target_organ = self.organs[2]
@@ -202,11 +201,8 @@ class Plant:
         return self.action
 
     def update(self):
-        self.upgrade_points = 0
-        for organ in self.organs:
-            self.upgrade_points += organ.upgrade_points
-        if self.upgrade_points > 10:
-            pygame.time.set_timer(pygame.event.Event(WIN, message="You Won", duration=1), 500, True)
+        #if self.upgrade_points > 10:
+        #    pygame.time.set_timer(pygame.event.Event(WIN, message="You Won", duration=1), 500, True)
         if self.get_biomass() > self.seedling.max-1 and not self.organs[1].active:
             self.organs[1].activate()
             if self.get_biomass() > self.seedling.max and not self.organs[0].active:
@@ -241,12 +237,13 @@ class Seedling:
 
 
 class Organ:
-    def __init__(self, x, y, name, organ_type,callback=None, image=None, pivot=None, mass=1.0, growth_rate=0, thresholds=None, rect=None, active=False):
+    def __init__(self, x, y, name, organ_type,callback=None, plant=None, image=None, pivot=None, mass=1.0, growth_rate=0, thresholds=None, rect=None, active=False):
         if thresholds is None:
             thresholds = [1, 2, 20, 25, 30, 35, 40]
         self.x = x
         self.y = y
         self.callback = callback
+        self.plant = plant
         self.base_image = image
         self.image = image
         self.pivot = pivot
@@ -259,7 +256,7 @@ class Organ:
         self.percentage = 0
         self.thresholds = thresholds
         self.active_threshold = 0
-        self.upgrade_points = 0
+        self.level = 0
         self.targets = []
         self.rect = rect
         self.update_image_size()
@@ -290,7 +287,8 @@ class Organ:
     def reach_threshold(self):
         if self.active_threshold >= len(self.thresholds)-1:
             return
-        self.upgrade_points += 1
+        self.plant.upgrade_points += 1
+        self.level += 1
         self.update_image_size()
         pygame.mixer.music.play(0)
         self.active_threshold += 1
@@ -337,9 +335,9 @@ class Organ:
 
 
 class Leaf(Organ):
-    def __init__(self, x, y, name, organ_type, callback, images, mass, active):
+    def __init__(self, x, y, name, organ_type, callback, plant, images, mass, active):
         self.leaves = []
-        super().__init__(x, y, name, organ_type, mass=mass, active=active, thresholds=[1,2,3,4,5,6,7,8,9,10,20,30,40])
+        super().__init__(x, y, name, organ_type, plant=plant, mass=mass, active=active, thresholds=[1,2,3,4,5,6,7,8,9,10,20,30,40])
         self.callback = callback
         self.images = images
         self.can_add_leaf = False
@@ -413,44 +411,70 @@ class Leaf(Organ):
 
 
 class Root(Organ):
-    def __init__(self, x, y, name, organ_type, callback, image, pivot, mass, active):
-        super().__init__(x, y, name, organ_type, callback, image, pivot, mass=mass, active=active)
+    def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, mass, active):
+        super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
 
     def update_image_size(self, factor=5, base=25):
         super().update_image_size(factor, base)
 
 class Stem(Organ):
-    def __init__(self, x, y, name, organ_type, callback, image, pivot, leaf, mass, active):
-        super().__init__(x, y, name, organ_type, callback, image, pivot, mass=mass, active=active)
+    def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, leaf, mass, active):
         self.leaf = leaf
+        self.highlight = None
+        super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
             if self.leaf.can_add_leaf:
-                for rect in self.get_rect():
-                    if rect.collidepoint(event.pos):
-                        if event.pos[0] - self.x < 0:
-                            self.highlight = (event.pos, (255,255,255,128))
-                        else:
-                            self.highlight = (event.pos, (0,0,0,128))
+                mouse_pos = pygame.mouse.get_pos()
+                if self.get_rect()[0].collidepoint(mouse_pos):
+                    print("collide")
+                    global_x, global_y = pygame.mouse.get_pos()
+                    global_pos = (global_x, global_y)
+                    x = self.get_image_mask_x(self.get_local_pos(global_pos), self.image)
+                    if x is not None:
+                        x, y = self.get_global_pos((x,global_pos[1]))
+                        self.highlight = [x, y]
+
+                    # print(self.highlight)
             else:
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
             for rect in self.get_rect():
                 if rect.collidepoint(event.pos):
                     if self.leaf.can_add_leaf:
-                        self.upgrade_points -= 1
-                        self.leaf.append_leaf(event.pos)
+                        self.plant.upgrade_points -= 1
+                        if self.highlight:
+                            self.leaf.append_leaf(self.highlight)
                         return
                     self.callback(self.type)
 
     def update_image_size(self, factor=3, base=5):
         super().update_image_size(factor, base)
+        if self.leaf:
+            for leaf in self.leaf.leaves:
+                self.reassign_leaf_x(leaf)
+
+    def get_local_pos(self, pos):
+        print(pos, self.x, self.y)
+        print(int(pos[0]-(self.x-self.pivot[0])),int(pos[1]-(self.y-self.pivot[1])))
+        return (int(pos[0]-(self.x-self.pivot[0])),int(pos[1]-(self.y-self.pivot[1])))
+
+    def get_global_pos(self, pos):
+        return (int(pos[0]+self.x), int(pos[1]+self.y))
+
+    def reassign_leaf_x(self, leaf):
+        pass
+        #pos = self.get_image_border_at_pos((leaf["x"], leaf["y"]), leaf["image"], self.get_rect(), 10)
+        #leaf["x"] = pos[0]
+        #leaf["y"] = pos[1]
+
 
     def draw(self, screen):
         super().draw(screen)
         if self.highlight:
-            pygame.draw.circle(screen, self.highlight[1],(self.highlight[0][0], self.highlight[0][1]), 10)
+            size = 10
+            pygame.draw.circle(screen, (255,255,255),(self.highlight[0], self.highlight[1]-size/2), size)
 
     def get_rect(self):
         if self.image:
@@ -461,12 +485,37 @@ class Stem(Organ):
             rect = pygame.Rect(0,0,0,0)
         return [rect]
 
+    # buffer is useful for a bigger hitbox, with same img borders
+    def get_image_mask_x(self, pos, image):
+        print(pos)
+        x = None
+        rect = image.get_rect()
+        print(rect)
+        middle = int(rect[2]/2)
+        i = 0
+        if pos[0] < middle and pos[0] > 0:
+            # left
+            print("left")
+            for i in range(rect[0], rect[2], 1):
+                if (image.get_at((i, pos[1]))[3] != 0):
+                    x = i
+                    break
+        elif pos[0] > middle and pos[0] < rect[2]:
+            # right
+            print("right")
+            for i in range(rect[2], rect[0], -1):
+                if (image.get_at((i, pos[1]))[3] != 0):
+                    x = i
+                    break
+        print(x)
+        return x
+
 class Starch(Organ):
     '''
     @thresholds are capacities at given lvl
     '''
-    def __init__(self, x, y, name, organ_type, callback, image, mass, active):
-        super().__init__(x, y, name, organ_type, callback, image, mass=mass, active=active, thresholds=[30, 50, 80, 160, 320])
+    def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active):
+        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[30, 50, 80, 160, 320])
         self.max_drain = 0.1
         self.toggle_button = None
 

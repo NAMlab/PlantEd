@@ -12,8 +12,10 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None):
+                 image=None, border_w=None, post_hover_message=None, hover_message=None):
         super().__init__()
+        self.posted = False
+        self.post_hover_message = post_hover_message
         self.border_w = int(w / 10) if not border_w else border_w
         self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
@@ -38,6 +40,12 @@ class Button(pygame.sprite.Sprite):
         # This function will be called when the button gets pressed.
         self.callbacks = callbacks
         self.button_down = False
+        if post_hover_message and hover_message:
+            self.posted = False
+            hover_message = font.render(hover_message, True, text_color)
+            self.hover_message = pygame.Surface((hover_message.get_width()+10, hover_message.get_height()+10), pygame.SRCALPHA)
+            self.hover_message.fill(WHITE_TRANSPARENT)
+            self.hover_message.blit(hover_message, (5,5))
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -55,8 +63,21 @@ class Button(pygame.sprite.Sprite):
             collided = self.rect.collidepoint(event.pos)
             if collided and not self.button_down:
                 self.image = self.hover_image
+                if not self.posted and self.post_hover_message:
+                    self.posted = True
+                    self.post_hover_message(self.hover_message)
             elif not collided and not self.button_down:
+                if self.post_hover_message and self.posted:
+                    self.posted = False
+                    self.post_hover_message(None)
                 self.image = self.button_image
+
+
+class Item_Button(Button):
+    def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK, image=None, border_w=None, item_index=-1):
+        super().__init__(x, y, w, h, callbacks, font, text, button_color, text_color, image, border_w)
+        self.item_index = item_index
+
 
 class ToggleButton(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,

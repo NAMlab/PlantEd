@@ -61,6 +61,7 @@ def shake():
 
 menu_plant = [get_image("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
 can = get_image("watering_can_outlined.png")
+can_icon = pygame.transform.scale(can, (64,64)).convert_alpha()
 can_tilted = get_image("watering_can_outlined_tilted.png")
 background = pygame.transform.scale(get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
 leaf_icon = get_image("leaf_small.png").convert_alpha()
@@ -100,6 +101,7 @@ class TitleScene(object):
         self.particle_systems = []
         self.watering_can = can
         self.plant_size = 0
+        self.plant_growth_pos = []
         self.offset = repeat((0, 0))
         self.max_plant_size = 100
         self.images = menu_plant
@@ -119,7 +121,6 @@ class TitleScene(object):
         tmp_screen.blit(self.image, self.centre)
         tmp_screen.blit(self.text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
         tmp_screen.blit(self.text2, (SCREEN_WIDTH/2-self.water_plant_text.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
-
         for system in self.particle_systems:
             if system.active:
                 system.draw(screen)
@@ -147,6 +148,8 @@ class TitleScene(object):
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
+            if e.type == KEYDOWN and e.key == K_a:
+                self.offset = shake()
             if e.type == MOUSEBUTTONDOWN:
                 self.particle_systems[0].activate()
                 self.watering_can = can_tilted
@@ -202,6 +205,7 @@ class GameScene(Scene):
         self.offset = repeat((0, 0))
         self.screen_changes = [pygame.Rect(0,0,SCREEN_WIDTH, SCREEN_HEIGHT)]
         self.manager = None
+        self.hover_message = None
         self.font = TITLE_FONT  #pygame.font.SysFont('Arial', 24)
         self.sfont = FONT   #pygame.font.SysFont('Arial', 14)
         self._running = True
@@ -211,9 +215,27 @@ class GameScene(Scene):
         self.sprites = pygame.sprite.Group()
         self.button_sprites = pygame.sprite.Group()
         self.sliders = []
+        self.items = []
         self.animations = []
-        self.use_watering_can = False
+        self.watering_can = {"active": False,
+                             "button": Button(780, 260, 64, 64, [self.activate_watering_can], self.sfont,
+                                              image=can_icon, post_hover_message=self.post_hover_message, hover_message="Water Your Plant, Cost: 1"),
+                             "image": can,
+                             "amount": 0,
+                             "pouring": False}
         self.can = can
+
+        #(660, 250, 200, 350)
+        add_leaf_button = Button(676, 260, 64, 64, [self.plant.get_actions().add_leave], self.sfont,
+                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1")
+        self.items.append({"name": "add_leaf",
+                           "button": add_leaf_button,
+                           "cost": 1})
+        self.button_sprites.add(add_leaf_button)
+        self.items.append({"name": "can",
+                           "button": self.watering_can["button"],
+                           "cost": 1})
+        self.button_sprites.add(self.watering_can["button"])
 
         radioButtons = [
             RadioButton(100, 70, 64, 64, [self.plant.set_target_organ_leaf, self.activate_biomass_objective], FONT, image=leaf_icon),
@@ -225,7 +247,7 @@ class GameScene(Scene):
             rb.setRadioButtons(radioButtons)
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
-        self.add_leaf_button = Button(523, 503, 100, 40, [self.plant.get_actions().add_leave] , self.sfont, text="Buy Leaf")
+        #self.add_leaf_button = Button(523, 503, 100, 40, [self.plant.get_actions().add_leave] , self.sfont, text="Buy Leaf")
         #self.button_sprites.add(Button(600, 600, 64, 64, [self.activate_watering_can()] , self.sfont, text="Activate Can"))
 
         self.button_sprites.add(ToggleButton(100, 385, 210, 40, [], self.sfont, "Photosysnthesis", pressed=True, fixed=True))
@@ -246,7 +268,8 @@ class GameScene(Scene):
         self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organs[3].get_rate)
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
-        self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
+        #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
+        self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE,apply_gravity=True,speed=[0, 5], spread=[3, 0], active=False)
         self.particle_systems.append(self.can_particle_system)
 
         self.tool_tip_manager = ToolTipManager(
@@ -272,22 +295,25 @@ class GameScene(Scene):
                 self.manager.go_to(TitleScene())
             if e.type == KEYDOWN and e.key == K_SPACE:
                 self.manager.go_to(GameScene(0))
+            for button in self.button_sprites:
+                # all button_sprites handle their events
+                button.handle_event(e)
+            if self.watering_can["active"]:
+                if e.type == MOUSEBUTTONDOWN:
+                        self.watering_can["image"] = can_tilted
+                        self.watering_can["pouring"] = True
+                        self.can_particle_system.activate()
+                if e.type == MOUSEBUTTONUP:
+                    self.can_particle_system.deactivate()
+                    self.watering_can["pouring"] = False
+                if e.type == MOUSEMOTION:
+                    x,y = pygame.mouse.get_pos()
+                    self.can_particle_system.spawn_box = Rect(x,y+100,0,0)
             if e.type == KEYDOWN and e.key == K_a:
                 self.offset = shake()
                 self.plant.soil_moisture = self.plant.soil_moisture + 1
             if e.type == KEYDOWN and e.key == K_d:
                 self.plant.soil_moisture = self.plant.soil_moisture - 1
-            #if e.type == MOUSEBUTTONDOWN: #and self.use_watering_can:
-                #self.can = can_tilted
-                #self.can_particle_system.particles.clear()
-                #self.can_particle_system.active = True
-                #print(pygame.mouse.get_pos())
-            if e.type == MOUSEBUTTONUP and self.use_watering_can:
-                self.can_particle_system.active = False
-                self.can = can
-            for button in self.button_sprites:
-                # all button_sprites handle their events
-                button.handle_event(e)
             for slider in self.sliders:
                 slider.handle_event(e)
             self.plant.handle_event(e)
@@ -314,6 +340,14 @@ class GameScene(Scene):
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
+
+        # watering can
+        if self.watering_can["pouring"]:
+            self.watering_can["amount"] -= 1
+            print(self.watering_can["amount"])
+            if self.watering_can["amount"] <= 0:
+                self.deactivate_watering_can()
+
         self.environment.update(dt, self.get_day_time(), self.get_sun_intensity())
         self.tool_tip_manager.update()
 
@@ -333,9 +367,15 @@ class GameScene(Scene):
         self.button_sprites.draw(tmp_screen)
         self.tool_tip_manager.draw(tmp_screen)
 
-        if self.use_watering_can:
+        if self.hover_message:
+            x,y = pygame.mouse.get_pos()
+            tmp_screen.blit(self.hover_message, (x+10,y))
+
+        if self.watering_can["active"]:
             mouse_pos = pygame.mouse.get_pos()
-            tmp_screen.blit(can, (mouse_pos))
+            normalized_amount = (self.watering_can["image"].get_width()/100)*self.watering_can["amount"] # for max 100 amount
+            pygame.draw.rect(tmp_screen, (255,255,255), (mouse_pos[0], mouse_pos[1],normalized_amount, 20))
+            tmp_screen.blit(self.watering_can["image"], (mouse_pos))
         screen.blit(tmp_screen, next(self.offset))
 
     def exit(self):
@@ -343,6 +383,12 @@ class GameScene(Scene):
 
     def die(self):
         self.manager.go_to(CustomScene("You lose!"))
+
+    def post_hover_message(self, message):
+        self.hover_message = message if message else None
+
+
+
 
     def activate_starch_objective(self):
         # change particle system to follow new lines
@@ -398,13 +444,21 @@ class GameScene(Scene):
     def get_sun_intensity(self):
         return (np.sin(np.pi/2-np.pi/5+((pygame.time.get_ticks()/(1000 * 60)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
 
+    # buy can basically
     def activate_watering_can(self):
-        self.use_watering_can = True
+        if self.plant.upgrade_points <= 0:
+            return
+        self.plant.upgrade_points -= 1
+        self.watering_can["active"] = True
+        self.watering_can["amount"] = 100
         pygame.mouse.set_visible(False)
 
     def deactivate_watering_can(self):
-        self.use_watering_can = False
-        pygame.mouse.set_visible(False)
+        self.can_particle_system.deactivate()
+        self.watering_can["image"] = can
+        self.watering_can["active"] = False
+        self.watering_can["amount"] = 0
+        pygame.mouse.set_visible(True)
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))
@@ -440,22 +494,23 @@ class GameScene(Scene):
         screen.blit(background, (0,0))
 
     def draw_organ_ui(self, screen):
-        color = (255, 255, 255)
+        white = (255, 255, 255)
+        white_transparent = (255, 255, 255, 128)
         # new surface to get alpha
-        s = pygame.Surface((SCREEN_WIDTH / 3, SCREEN_HEIGHT), pygame.SRCALPHA)
+        s = pygame.Surface((SCREEN_WIDTH / 2, SCREEN_HEIGHT), pygame.SRCALPHA)
         w,h = s.get_size()
 
         # headbox
-        pygame.draw.rect(s, (color[0], color[1], color[2], 180), Rect(60, 10, w - 60, 30), border_radius=3)
+        pygame.draw.rect(s, (255, 255, 255, 180), Rect(60, 10, 580, 30), border_radius=3)
         production_text = self.font.render("Production", True, (0, 0, 0))  # title
-        s.blit(production_text, dest=(w/2-production_text.get_size()[0]/2, 10))
+        s.blit(production_text, dest=(290-production_text.get_size()[0]/2, 10))
 
         for slider in self.sliders:
             slider.draw(screen)
 
         # draw life tax
         life_tax_pos = Rect(360, 230, 64, 64)
-        pygame.draw.rect(s, (color[0], color[1], color[2], 128), life_tax_pos, border_radius=5)
+        pygame.draw.rect(s, white_transparent, life_tax_pos, border_radius=5)
         starch_lvl = self.sfont.render("TAX", True, (0, 0, 0))  # title
         s.blit(starch_lvl, starch_lvl.get_rect(center=life_tax_pos.center))
 
@@ -472,11 +527,11 @@ class GameScene(Scene):
         # draw starch pool
         pool_height = 180
         pool_rect = Rect(476, 150, 32, pool_height)
-        pygame.draw.rect(s, (color[0], color[1], color[2], 128), pool_rect, border_radius=3)
+        pygame.draw.rect(s, white_transparent, pool_rect, border_radius=3)
         pool_limit = self.plant.organs[3].get_threshold()
         pool_level = self.plant.organs[3].mass * pool_height/pool_limit
         pool_rect = Rect(pool_rect[0], pool_rect[1]+pool_height-pool_level, 32, pool_level)
-        pygame.draw.rect(s, color, pool_rect, border_radius=3)
+        pygame.draw.rect(s, white, pool_rect, border_radius=3)
         pool_level_text = self.sfont.render("{:.0f}".format(self.plant.organs[3].mass), True, (0, 0, 0))  # title
         s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))
 
@@ -487,48 +542,73 @@ class GameScene(Scene):
         # leaf area, mass
         # skillpoints
         # temp
+        pygame.draw.rect(s, (255,255,255,180), (660, 10, 200, 30), border_radius=3)
+        plant_text = self.font.render("Plant Name", True, (0, 0, 0))  # title
+        s.blit(plant_text, dest=(760-plant_text.get_size()[0]/2, 10))
+
+        pygame.draw.rect(s, white_transparent, (660, 50, 200, 150), border_radius=3)
+
+        # biomass
+        biomass_text = self.sfont.render("Plant Mass:", True, (0, 0, 0))
+        s.blit(biomass_text, dest=(670, 60))
+        biomass = self.sfont.render("{:.4f}".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
+        s.blit(biomass, dest=(860-biomass.get_width()-5, 60))
+
+        # skillpoints
+        biomass_text = self.sfont.render("Chloroplast:", True, (0, 0, 0))
+        s.blit(biomass_text, dest=(670, 90))
+        biomass = self.sfont.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
+        s.blit(biomass, dest=(860-biomass.get_width()-5, 90))
+
+        # shop
+        pygame.draw.rect(s, (255, 255, 255, 180), (660, 210, 200, 30), border_radius=3)
+        shop_text = self.font.render("Shop", True, (0, 0, 0))  # title
+        s.blit(shop_text, dest=(760 - shop_text.get_size()[0] / 2, 210))
+
+        pygame.draw.rect(s, white_transparent, (660, 250, 200, 370), border_radius=3)
+        #items
+
+
 
         # headbox
-        pygame.draw.rect(s, (color[0], color[1], color[2], 180), Rect(60, 450, w - 60, 30), border_radius=3)
+        pygame.draw.rect(s, (255, 255, 255, 180), Rect(60, 450, 580, 30), border_radius=3)
         leave_title = self.font.render("Organ", True, (0, 0, 0))  # title
-        s.blit(leave_title, dest=(w / 2 - leave_title.get_size()[0] / 2, 450))
+        s.blit(leave_title, dest=(290 - leave_title.get_size()[0] / 2, 450))
         if self.plant.target_organ.type == self.plant.LEAVES:
             image = leaf_icon_big
             #self.button_sprites.add(self.button)
-            self.button_sprites.remove(self.add_leaf_button)
         elif self.plant.target_organ.type == self.plant.STEM:
             image = stem_icon_big
-            self.button_sprites.add(self.add_leaf_button)
         elif self.plant.target_organ.type == self.plant.ROOTS:
             image = root_icon_big
-            self.button_sprites.remove(self.add_leaf_button)
         elif self.plant.target_organ.type == self.plant.STARCH:
             image = starch_icon_big
-            self.button_sprites.remove(self.add_leaf_button)
 
         # draw plant image + exp + lvl + rate + mass
         s.blit(image, (100,490))
 
         exp_width = 128
-        pygame.draw.rect(s, (color[0], color[1], color[2], 128), Rect(100, 600, exp_width, 15), border_radius=0)
+        pygame.draw.rect(s, white_transparent, Rect(100, 600, exp_width, 25), border_radius=0)
         needed_exp = self.plant.target_organ.get_threshold()
         exp = self.plant.target_organ.mass / needed_exp
         width = int(exp_width / 1 * exp)
-        pygame.draw.rect(s, (255, 255, 255), Rect(100, 600, width, 15), border_radius=0)  # exp
+        pygame.draw.rect(s, (255, 255, 255), Rect(100, 600, width, 25), border_radius=0)  # exp
         text_organ_mass = self.font.render("{:.2f} / {threshold}".format(self.plant.target_organ.mass,
                                                                     threshold=self.plant.target_organ.get_threshold()),
                                       True, (0, 0, 0))
         s.blit(text_organ_mass, dest=(105, 596))  # Todo change x, y
 
-        pygame.draw.rect(s, (color[0], color[1], color[2], 128),(245, 490, 400, 125), border_radius=3)
+        pygame.draw.rect(s, white_transparent,(245, 490, 400, 125), border_radius=3)
 
         # growth_rate in seconds
         growth_rate = self.sfont.render("Growth Rate /s {:.5f}".format(self.plant.target_organ.growth_rate), True, (0, 0, 0))
         s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
 
-        # upgrade_points
-        upgrade_points = self.sfont.render("Skill Points {:.0f}".format(self.plant.target_organ.upgrade_points), True, (0, 0, 0))
-        s.blit(upgrade_points, dest=(245, 525))
+        # level
+        pygame.draw.circle(s, white_transparent, (100, 510,), 20)
+        pygame.draw.circle(s, white, (100, 510,), 20, width=3)
+        level = self.sfont.render("{:.0f}".format(self.plant.target_organ.level), True, (0, 0, 0))
+        s.blit(level, (100-level.get_width()/2,510-level.get_height()/2))
 
         # mass
         mass = self.sfont.render("Organ Mass {:.5f}".format(self.plant.target_organ.mass), True, (0, 0, 0))
