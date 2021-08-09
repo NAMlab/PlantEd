@@ -12,9 +12,10 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, post_hover_message=None, hover_message=None):
+                 image=None, border_w=None, post_hover_message=None, hover_message=None, button_sound=None):
         super().__init__()
         self.posted = False
+        self.button_sound = button_sound
         self.post_hover_message = post_hover_message
         self.border_w = int(w / 10) if not border_w else border_w
         self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
@@ -51,6 +52,8 @@ class Button(pygame.sprite.Sprite):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 self.image = self.clicked_image
+                if self.button_sound:
+                    pygame.mixer.Sound.play(self.button_sound)
                 self.button_down = True
         elif event.type == pygame.MOUSEBUTTONUP:
             # If the rect collides with the mouse pos.

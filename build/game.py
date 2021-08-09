@@ -77,6 +77,7 @@ photo_energy = pygame.transform.scale(get_image("photo_energy.png"),(15,15)).con
 starch_energy = pygame.transform.scale(get_image("starch_energy.png"),(15,15)).convert_alpha()
 #pygame.mixer.music.load()
 water_sound = pygame.mixer.Sound('../assets/water_can.mp3')
+click_sound = pygame.mixer.Sound('../assets/button_klick.mp3')
 pygame.mixer.music.load('../assets/background_music.mp3')
 pygame.mixer.music.play(-1,0)
 
@@ -222,7 +223,8 @@ class GameScene(Scene):
         self.animations = []
         self.watering_can = {"active": False,
                              "button": Button(780, 260, 64, 64, [self.activate_watering_can], self.sfont,
-                                              image=can_icon, post_hover_message=self.post_hover_message, hover_message="Water Your Plant, Cost: 1"),
+                                              image=can_icon, post_hover_message=self.post_hover_message,
+                                              hover_message="Water Your Plant, Cost: 1", button_sound=click_sound),
                              "image": can,
                              "amount": 0,
                              "pouring": False}

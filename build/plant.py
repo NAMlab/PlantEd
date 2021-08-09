@@ -241,7 +241,7 @@ class Seedling:
 class Organ:
     def __init__(self, x, y, name, organ_type,callback=None, plant=None, image=None, pivot=None, mass=1.0, growth_rate=0, thresholds=None, rect=None, active=False):
         if thresholds is None:
-            thresholds = [1, 2, 20, 25, 30, 35, 40]
+            thresholds = [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
         self.x = x
         self.y = y
         self.callback = callback
@@ -361,8 +361,10 @@ class Leaf(Organ):
     def get_mass(self):
         return sum([leaf["mass"] for leaf in self.leaves])+self.base_mass # basemass for seedling leaves
 
-    def append_leaf(self, pos):
-        if pos[0] - self.x < 0:
+    def append_leaf(self, highlight):
+        pos = (highlight[0], highlight[1])
+        dir = highlight[2]
+        if dir < 0:
             image_id = random.randrange(0,len(leaves)-1,2)
             image = leaves[image_id]
             offset = pivot_pos[image_id]
@@ -377,6 +379,7 @@ class Leaf(Organ):
                 "offset_y": offset[1],
                 "mass": 0.0001,
                 "base_image_id": image_id,
+                "direction": dir,
                 "growth_index": self.active_threshold} # to get relative size, depending on current threshold - init threshold
         self.update_leaf_image(leaf, init=True)
         self.leaves.append(leaf)
@@ -430,15 +433,15 @@ class Stem(Organ):
             if self.leaf.can_add_leaf:
                 mouse_pos = pygame.mouse.get_pos()
                 if self.get_rect()[0].collidepoint(mouse_pos):
-                    print("collide")
                     global_x, global_y = pygame.mouse.get_pos()
                     global_pos = (global_x, global_y)
-                    x = self.get_image_mask_x(self.get_local_pos(global_pos), self.image)
+                    x, dir = self.get_image_mask_x(self.get_local_pos(global_pos), self.image)
                     if x is not None:
-                        x, y = self.get_global_pos((x,global_pos[1]))
-                        self.highlight = [x, y]
-
-                    # print(self.highlight)
+                        x = self.get_global_x(x)
+                        if self.pivot:
+                            print("pivot", self.pivot)
+                            x -= self.pivot[0]
+                        self.highlight = [x, global_y, dir]
             else:
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
@@ -458,59 +461,67 @@ class Stem(Organ):
                 self.reassign_leaf_x(leaf)
 
     def get_local_pos(self, pos):
-        print(pos, self.x, self.y)
-        print(int(pos[0]-(self.x-self.pivot[0])),int(pos[1]-(self.y-self.pivot[1])))
         return (int(pos[0]-(self.x-self.pivot[0])),int(pos[1]-(self.y-self.pivot[1])))
 
-    def get_global_pos(self, pos):
-        return (int(pos[0]+self.x), int(pos[1]+self.y))
+    def get_global_x(self, x):
+        return int(x+self.x)
 
     def reassign_leaf_x(self, leaf):
-        pass
-        #pos = self.get_image_border_at_pos((leaf["x"], leaf["y"]), leaf["image"], self.get_rect(), 10)
-        #leaf["x"] = pos[0]
-        #leaf["y"] = pos[1]
+        global_pos = (leaf["x"], leaf["y"])
+        dir = leaf["direction"]
+        rect = self.image.get_rect()
+        init_x = 0
+        if dir > 0:
+            init_x = rect[2]-1
+        local_pos = self.get_local_pos(global_pos)
+        x, dir = self.get_image_mask_x((init_x, local_pos[1]), self.image)
+        if x:
+            leaf["x"] = self.get_global_x(x)-self.pivot[0]
 
 
     def draw(self, screen):
         super().draw(screen)
+        pygame.draw.rect(screen, (0,0,0), self.get_rect()[0], width=2)
         if self.highlight:
             size = 10
-            pygame.draw.circle(screen, (255,255,255),(self.highlight[0], self.highlight[1]-size/2), size)
+            pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size, width=int(size/3))
+            pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size/3)
+
+
 
     def get_rect(self):
         if self.image:
-            x = (self.x - self.pivot[0] if self.pivot else self.x) -10
+            x = (self.x - self.pivot[0] if self.pivot else self.x) -15
             y = self.y - self.pivot[1] if self.pivot else self.y
-            rect = pygame.Rect(x, y, self.image.get_width()+20, self.image.get_height())
+            rect = pygame.Rect(x, y, self.image.get_width()+30, self.image.get_height())
         else:
             rect = pygame.Rect(0,0,0,0)
         return [rect]
 
     # buffer is useful for a bigger hitbox, with same img borders
     def get_image_mask_x(self, pos, image):
-        print(pos)
         x = None
+        dir = 0
         rect = image.get_rect()
-        print(rect)
         middle = int(rect[2]/2)
         i = 0
-        if pos[0] < middle and pos[0] > 0:
+        if pos[0] < middle: # and pos[0] > 0:
             # left
-            print("left")
-            for i in range(rect[0], rect[2], 1):
+            dir = -1
+            for i in range(rect[0], rect[2]-1, 1):
+                #print(i, pos[1], ' image: ', image.get_rect(), image.get_at((i, pos[1])))
                 if (image.get_at((i, pos[1]))[3] != 0):
                     x = i
                     break
-        elif pos[0] > middle and pos[0] < rect[2]:
+        elif pos[0] > middle: #and pos[0] < rect[2]:
             # right
-            print("right")
-            for i in range(rect[2], rect[0], -1):
+            dir = 1
+            for i in range(rect[2]-1, rect[0], -1):
+                #print(i, pos[1], ' image: ', image.get_rect(), image.get_at((i, pos[1])))
                 if (image.get_at((i, pos[1]))[3] != 0):
                     x = i
                     break
-        print(x)
-        return x
+        return x, dir
 
 class Starch(Organ):
     '''
