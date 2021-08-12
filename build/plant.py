@@ -19,64 +19,24 @@ plopp = pygame.mixer.Sound('../assets/plopp.wav')
 
 
 class Plant:
-    LEAVES = 1
+    LEAF = 1
     STEM = 2
     ROOTS = 3
     STARCH = 4
 
-    def __init__(self, pos, soil_moisture=100, model=cobra.io.read_sbml_model("whole_plant.sbml")):
+    def __init__(self, pos):
         self.x = pos[0]
         self.y = pos[1]
-        self.model = model
-        self.model.objective = "leaf_AraCore_Biomass_tx"
-        self.growth_rate = 0
-        self.soil_moisture = soil_moisture
+        self.growth_rate = 0    # in seconds ingame second = second * 240
         self.upgrade_points = 0
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAVES, self.set_target_organ, self, leaves, mass=0, active=False)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=5, active=True)
-        organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self.deactivate_starch_resource, self, None, mass=30, active=True)
+        #organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self.deactivate_starch_resource, self, None, mass=30, active=True)
         self.seedling = Seedling(self.x, self.y, beans, 6)
-        self.organs = [organ_leaf, organ_stem, organ_root, organ_starch]
+        self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
-        self.produce_biomass = True
-        self.use_starch = False
-        self.action = Action(select_organ=self.set_target_organ, add_leave=self.organs[0].activate_add_leaf, add_stem=None)
-        self.recalc_growth_rate()
         # Fix env constraints
-        self.model.reactions.get_by_id("leaf_Photon_tx").bounds = (0,self.get_leaf_photon())
-
-        # Autotroph environment
-        '''
-        ATP = (
-                0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound
-                + 2.7851
-        )
-        # Creating Constraint object
-        NGAM = self.model.problem.Constraint(
-            (
-                    model.reactions.get_by_id("leaf_ATPase_tx").flux_expression
-                    + model.reactions.get_by_id("root_ATPase_tx").flux_expression
-                    + model.reactions.get_by_id("stem_ATPase_tx").flux_expression
-            ),
-            ub=ATP,
-            lb=ATP,
-        )
-        #self.model.add_cons_vars([NGAM])
-        '''
-
-    def get_maintainance_cost_hour(self):
-        # 1000ms ingame are 4 min realtime  -> factor 240
-        # use fixed until working numbers
-        #NADPH_cost_gramm = 2.56 * 0.50718 * self.get_biomass()
-        #ATP_cost_gramm = 7.27 * 0.744416 * self.get_biomass()
-        #cost_day = NADPH_cost_gramm + ATP_cost_gramm
-        # use fixed until model is right
-        maintenance = 0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound + 2.7851
-        return 0.01
-
-    def set_reaction_bound(self, reaction, ub, lb):
-        self.model.reactions.get_by_id(reaction).bounds = (ub, lb)
 
     def get_growth_rate(self):
         growth_rate = 0
@@ -84,44 +44,9 @@ class Plant:
             growth_rate += self.organs[i].growth_rate
         return growth_rate
 
-    def get_leaf_photon(self):
-        # Projected Leaf Area (PLA) translates to mass
-        max_mass = self.organs[0].thresholds[-1]
-        photon = self.organs[0].mass/max_mass * 0.2 # 0.2 is arbitrary max
-        return photon
-
-    # growth rate = starch in pool rate
-    def activate_starch_objective(self):
-        # switches the objective function to burn starch
-        if self.produce_biomass:
-            self.produce_biomass = False
-            self.model.objective = "root_Starch_out_tx"
-            self.model.reactions.get_by_id("root_Starch_out_tx").bounds = (0, 1000)
-            # make biomass irreversivble
-            self.recalc_growth_rate()
-        else:
-            pass
-
-    def activate_starch_resource(self):
-        # Todo check number max Starch consumption
-        max_starch_out = self.organs[3].max_drain
-        self.use_starch = True
-        self.model.reactions.get_by_id("root_Starch_in_tx").bounds = (0, max_starch_out)
-        self.recalc_growth_rate()
-
-    def deactivate_starch_resource(self):
-        self.use_starch = False
-        self.model.reactions.get_by_id("root_Starch_in_tx").bounds = (0, 0)
-        self.recalc_growth_rate()
-
-    def activate_biomass_objective(self):
-        if self.produce_biomass:
-            pass
-        else:
-            self.produce_biomass = True
-            self.model.objective = "leaf_AraCore_Biomass_tx"
-            self.model.reactions.get_by_id("root_Starch_out_tx").bounds = (0, 0)
-            # make biomass reversible
+    def update_growth_rate(self, growth_rate):
+        for organ in self.organs:
+            organ.update_growth_rate(growth_rate)
 
     def get_biomass(self):
         biomass = 0
@@ -129,82 +54,31 @@ class Plant:
             biomass += organ.mass
         return biomass - self.organs[3].mass
 
-    def recalc_growth_rate(self):
-
-        self.set_reaction_bound('leaf_Photon_tx', 0, self.get_leaf_photon())
-
-        # MAINTAINANCE HAS TO GET BIGGER WITH MASS
-        '''
-        medium = self.model.medium
-        # adjust photon lvl --> leaf_Photon_tx
-        x = 196.7 / self.y  # factor to get lumen from y -> y * x = Lumen
-        lumen = self.organs[0].get_mean_leaf_height() * x
-        # medium['leaf_Photon_tx'] = lumen   # currently no other source of energy
-
-        # adjust soil moistureness --> root_H2O
-        root_h2o = 120/100*self.soil_moisture   # gamevalue_max, modelvalue_max, actual gamevalue
-        medium['root_H2O_tx'] = root_h2o
-
-        # adjust carbondioxide --> leaf_CO2, root_CO2
-        medium['leaf_CO2_tx'] = 20
-        medium['root_CO2_tx'] = 0   # Todo ask about how to inspect the flow better, by how much can root_CO2 replace leaf_CO2
-
-        # adjust NO3 --> root_Nitrate
-        medium['root_Nitrate_tx'] = 0.5
-
-        # adjust Water --> root_H2O, leaf_H2O
-        medium['root_H2O_tx'] = 18.2
-        self.model.medium = medium
-        # get constraints - mean light lvl, nutrition
-        '''
-
-        # model solution fba
-        solution = self.model.slim_optimize()
-
-        self.growth_rate = solution/60/60*240   # growth rate in hours
-
-        # grwoth_rate in seconds to fit the ingame timer, current facor 240 ingame to real time
-        # --> use fixed until model is fine
-        maintainance_cost_sec = (self.get_maintainance_cost_hour()/60/60*240)
-        self.growth_rate = self.growth_rate - maintainance_cost_sec
-
-        if self.use_starch:
-            self.growth_rate += self.organs[3].max_drain * self.organs[3].percentage/100
-        for organ in self.organs:
-            organ.recalc_growth_rate(self.growth_rate)
+    # Projected Leaf Area (PLA)
+    def get_PLA(self):
+        # 0.03152043208186226
+        return self.organs[0].get_mass() * 0.03152043208186226
 
     def grow(self):
-        if self.use_starch:
-            self.organs[3].drain()
-        for i in range(0,3):
-            self.organs[i].grow()
+        for organ in self.organs:
+            organ.grow()
 
     def set_target_organ(self, target):
-        self.target_organ = self.organs[target-1]
-        self.recalc_growth_rate()
+        self.target_organ = self.organs[target - 1]
 
     def set_target_organ_leaf(self):
         self.target_organ = self.organs[0]
-        self.recalc_growth_rate()
 
     def set_target_organ_stem(self):
         self.target_organ = self.organs[1]
-        self.recalc_growth_rate()
 
     def set_target_organ_root(self):
         self.target_organ = self.organs[2]
-        self.recalc_growth_rate()
 
     def set_target_organ_starch(self):
         self.target_organ = self.organs[3]
-        self.recalc_growth_rate()
-
-    def get_actions(self):
-        return self.action
 
     def update(self):
-        #if self.upgrade_points > 10:
-        #    pygame.time.set_timer(pygame.event.Event(WIN, message="You Won", duration=1), 500, True)
         if self.get_biomass() > self.seedling.max-1 and not self.organs[1].active:
             self.organs[1].activate()
             if self.get_biomass() > self.seedling.max and not self.organs[0].active:
@@ -223,6 +97,7 @@ class Plant:
 
     def draw_seedling(self, screen):
         self.seedling.draw(screen, self.get_biomass())
+
 
 class Seedling:
     def __init__(self, x, y, images, max):
@@ -253,20 +128,18 @@ class Organ:
         self.name = name
         self.type = organ_type
         self.mass = mass
-        self.base_mass = 1
+        self.base_mass = 0.02
         self.growth_rate = growth_rate
         self.percentage = 0
         self.thresholds = thresholds
         self.active_threshold = 0
         self.level = 0
-        self.targets = []
-        self.rect = rect
         self.update_image_size()
 
     def set_percentage(self, percentage):
         self.percentage = percentage
 
-    def recalc_growth_rate(self, growth_rate):
+    def update_growth_rate(self, growth_rate):
         self.growth_rate = growth_rate * self.percentage/100
 
     def get_rect(self):
@@ -304,9 +177,6 @@ class Organ:
     def get_threshold(self):
         return self.thresholds[self.active_threshold]
 
-    def add_target(self, pos):
-        self.targets.append((pos[0], pos[1]))
-
     def activate(self):
         self.mass = self.base_mass
         self.active = True
@@ -326,15 +196,6 @@ class Organ:
             self.pivot = (self.pivot[0] * (width/self.image.get_width()), self.pivot[1] * (height/self.image.get_height()))
             self.image = pygame.transform.scale(self.base_image, (width, height))
 
-    '''def add_growth_target(self, point=None):    # unused
-            if point is None:
-                point = (random.randint(-10, 10), random.randint(1, 10))
-            for target in self.targets:
-                if point[1] >= target[1]:   # no duplicate y allowed
-                    return False
-            self.targets.append(point)
-            return True'''
-
 
 class Leaf(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, images, mass, active):
@@ -345,7 +206,7 @@ class Leaf(Organ):
         self.can_add_leaf = False
 
     def activate_add_leaf(self):
-        if not self.active_threshold >= len(self.targets):
+        if not self.active_threshold >= len(self.leaves):
             return
         self.can_add_leaf = True
 
@@ -439,7 +300,6 @@ class Stem(Organ):
                     if x is not None:
                         x = self.get_global_x(x)
                         if self.pivot:
-                            print("pivot", self.pivot)
                             x -= self.pivot[0]
                         self.highlight = [x, global_y, dir]
             else:
@@ -487,8 +347,6 @@ class Stem(Organ):
             pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size, width=int(size/3))
             pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size/3)
 
-
-
     def get_rect(self):
         if self.image:
             x = (self.x - self.pivot[0] if self.pivot else self.x) -15
@@ -523,10 +381,10 @@ class Stem(Organ):
                     break
         return x, dir
 
-class Starch(Organ):
-    '''
-    @thresholds are capacities at given lvl
-    '''
+'''class Starch(Organ):
+    
+    thresholds are capacities at given lvl
+
     def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active):
         super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[30, 50, 80, 160, 320])
         self.max_drain = 0.1
@@ -554,7 +412,7 @@ class Starch(Organ):
         return self.max_drain * self.percentage/100
 
     def draw(self, screen):
-        pass
+        pass'''
 
 # looks stupid
 class Action:
@@ -562,4 +420,92 @@ class Action:
         self.select_organ = select_organ
         self.add_stem = add_stem
         self.add_leave = add_leave
+
+
+
+
+'''
+
+    # growth rate = starch in pool rate
+    def activate_starch_objective(self):
+        # switches the objective function to burn starch
+        if self.produce_biomass:
+            self.produce_biomass = False
+            self.model.objective = "root_Starc_out_thx"
+            self.model.reactions.get_by_id("root_Starch_out_tx").bounds = (0, 1000)
+            # make biomass irreversivble
+            self.recalc_growth_rate()
+        else:
+            pass
+
+    def activate_starch_resource(self):
+        # Todo check number max Starch consumption
+        max_starch_out = self.organs[3].max_drain
+        self.use_starch = True
+        self.model.reactions.get_by_id("root_Starch_in_tx").bounds = (0, max_starch_out)
+        self.recalc_growth_rate()
+
+    def deactivate_starch_resource(self):
+        self.use_starch = False
+        self.model.reactions.get_by_id("root_Starch_in_tx").bounds = (0, 0)
+        self.recalc_growth_rate()
+
+    def activate_biomass_objective(self):
+        if self.produce_biomass:
+            pass
+        else:
+            self.produce_biomass = True
+            self.model.objective = "leaf_AraCore_Biomass_tx"
+            self.model.reactions.get_by_id("root_Starch_out_tx").bounds = (0, 0)
+            # make biomass reversible
+
+    def recalc_growth_rate(self):
+
+        self.set_reaction_bound('leaf_Photon_tx', 0, self.get_leaf_photon())
+
+        # MAINTAINANCE HAS TO GET BIGGER WITH MASS
+        
+        medium = self.model.medium
+        # adjust photon lvl --> leaf_Photon_tx
+        x = 196.7 / self.y  # factor to get lumen from y -> y * x = Lumen
+        lumen = self.organs[0].get_mean_leaf_height() * x
+        # medium['leaf_Photon_tx'] = lumen   # currently no other source of energy
+
+        # adjust soil moistureness --> root_H2O
+        root_h2o = 120/100*self.soil_moisture   # gamevalue_max, modelvalue_max, actual gamevalue
+        medium['root_H2O_tx'] = root_h2o
+
+        # adjust carbondioxide --> leaf_CO2, root_CO2
+        medium['leaf_CO2_tx'] = 20
+        medium['root_CO2_tx'] = 0   # Todo ask about how to inspect the flow better, by how much can root_CO2 replace leaf_CO2
+
+        # adjust NO3 --> root_Nitrate
+        medium['root_Nitrate_tx'] = 0.5
+
+        # adjust Water --> root_H2O, leaf_H2O
+        medium['root_H2O_tx'] = 18.2
+        self.model.medium = medium
+        # get constraints - mean light lvl, nutrition
+        
+
+        model solution fba
+        solution = self.model.optimize()
+
+        # get fluxes for H2O, N, CO2
+        # deduct from resources, when growing
+
+        self.growth_rate = solution.objective_value/60/60*240   # growth rate in hours --> seconds
+
+        # grwoth_rate in seconds to fit the ingame timer, current facor 240 ingame to real time
+        # --> use fixed until model is fine
+        maintainance_cost_sec = (self.get_maintainance_cost_hour()/60/60*240)
+        self.growth_rate = self.growth_rate - maintainance_cost_sec
+
+        if self.use_starch:
+            pass
+            # starch already in the model
+            #self.growth_rate += self.organs[3].max_drain * self.organs[3].percentage/100
+        for organ in self.organs:
+            organ.recalc_growth_rate(self.growth_rate)
+'''
 

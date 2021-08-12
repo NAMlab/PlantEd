@@ -15,23 +15,26 @@ WIND = USEREVENT + 4
 
 
 class Environment:
-    def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT):
+    def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT, plant, nitrate, water):
         self.w = SCREEN_WIDTH
         self.h = SCREEN_HEIGHT
+        self.plant = plant
         self.sprites = pygame.sprite.Group()
         self.animations = []
+
         # init drop sprites
-        self.drops = [pygame.transform.scale(pygame.image.load("../assets/rain/raindrop{}.png".format(i)).convert_alpha(),(20, 20)) for i in range(0, 3)]
-        self.splash = [pygame.transform.scale(pygame.image.load("../assets/rain/raindrop_splash{}.png".format(i)).convert_alpha(),(20, 20)) for i in range(0, 4)]
-        self.sun = [pygame.transform.scale(pygame.image.load("../assets/sun/sun_face_{}.png".format(i)),(512, 512)).convert_alpha() for i in range(0, 5)]
+        drops = [pygame.transform.scale(pygame.image.load("../assets/rain/raindrop{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 3)]
+        splash = [pygame.transform.scale(pygame.image.load("../assets/rain/raindrop_splash{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 4)]
+        self.sun = [pygame.transform.scale(pygame.image.load("../assets/sun/sun_face_{}.png".format(i)), (512, 512)).convert_alpha() for i in range(0, 5)]
 
         self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH/3*2, 0),
                                     boundary_box=Rect(SCREEN_WIDTH/3,0,SCREEN_WIDTH/3*2,SCREEN_HEIGHT-250),
                                     color=(0,0,100), apply_gravity=True, speed=[0, 8],
-                                    active=True, images=self.drops, despawn_images=self.splash, despawn_animation=self.add_animation)
+                                    active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)
 
 
     def update(self, dt, game_time, sun_intensity):
+        self.update_rates()
         self.sun_intensity = sun_intensity
         self.game_time = game_time
         for animation in self.animations:
@@ -44,7 +47,7 @@ class Environment:
 
     def draw_background(self, screen):
         # sun-->Photon_intensity, moon, water_lvl
-        sun_index = 0#max(int(self.sun_intensity*len(sun)),4)
+        sun_index = min(int(self.sun_intensity*len(self.sun)),4)
         screen.blit(self.sun[sun_index], (self.w/4*3, 0))
 
     def draw_foreground(self, screen):

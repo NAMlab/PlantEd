@@ -214,7 +214,7 @@ class GameScene(Scene):
         self.sfont = FONT   #pygame.font.SysFont('Arial', 14)
         self._running = True
         self.plant = Plant(plant_pos)
-        self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, 0, 0)
         self.particle_systems = []
         self.sprites = pygame.sprite.Group()
         self.button_sprites = pygame.sprite.Group()
@@ -394,9 +394,6 @@ class GameScene(Scene):
     def post_hover_message(self, message):
         self.hover_message = message if message else None
 
-
-
-
     def activate_starch_objective(self):
         # change particle system to follow new lines
         if self.plant.produce_biomass:
@@ -434,7 +431,6 @@ class GameScene(Scene):
             self.starch_particle.particle_counter = 0
             self.starch_particle.particles.clear()
             self.plant.activate_biomass_objective()
-
 
     def get_day_time(self):
         # one day rl: ticks*60*60*24, ingame: ticks*6*60
@@ -576,8 +572,6 @@ class GameScene(Scene):
         pygame.draw.rect(s, white_transparent, (660, 250, 200, 370), border_radius=3)
         #items
 
-
-
         # headbox
         pygame.draw.rect(s, (255, 255, 255, 180), Rect(60, 450, 580, 30), border_radius=3)
         leave_title = self.font.render("Organ", True, (0, 0, 0))  # title
@@ -621,6 +615,9 @@ class GameScene(Scene):
         # mass
         mass = self.sfont.render("Organ Mass {:.5f}".format(self.plant.target_organ.mass), True, (0, 0, 0))
         s.blit(mass, dest=(245, 550))
+
+        # nitrat_intake, total nitrat left
+        # water_intake, total water left
 
         # clock
         hours, minutes = self.get_day_time()
