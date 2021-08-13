@@ -398,13 +398,13 @@ class Starch(Organ):
         self.toggle_button = None
 
     def grow(self):
-        delta = self.mass * self.growth_rate*GAME_SPEED
+        delta = self.growth_rate*GAME_SPEED
         if delta >= self.thresholds[self.active_threshold]:
             self.mass = self.thresholds[self.active_threshold]
         else:
             self.mass += delta
 
-    def recalc_growth_rate(self, growth_rate):
+    def update_growth_rate(self, growth_rate):
         self.growth_rate = growth_rate
 
     def drain(self):
