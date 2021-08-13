@@ -270,7 +270,7 @@ class GameScene(Scene):
         SliderGroup([slider for slider in self.sliders], 100)
         self.sliders.append(Slider((536, 70, 15, 200), self.sfont, (50, 20), organ=self.plant.organ_starch, plant=self.plant, percent=100))
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
-        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.plant.get_growth_rate()*20, images=[photo_energy], speed=(2,0), callback=self.model.get_rate)
+        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.model.get_rate()*1000, images=[photo_energy], speed=(2,0), callback=self.model.get_rate)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
         self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.model.get_rate)
         self.particle_systems.append(self.photosynthesis_particle)
@@ -388,7 +388,7 @@ class GameScene(Scene):
 
     def activate_starch_objective(self):
         # change particle system to follow new lines
-        if self.model.model.objective == STARCH_OUT:
+        if self.model.objective == BIOMASS:
             photosysnthesis_lines = self.photosynthesis_particle.points
             photosysnthesis_lines[3] = [430, 100]
             self.photosynthesis_particle.change_points(photosysnthesis_lines)
@@ -409,10 +409,10 @@ class GameScene(Scene):
         else:
             self.starch_particle.active = True
             self.model.activate_starch_resource()
-        self.plant.update_growth_rate(self.model.get_rate())
+        self.plant.update_growth_rates(self.model.get_rates())
 
     def activate_biomass_objective(self):
-        if not self.model.model.objective == BIOMASS:
+        if self.model.objective == STARCH_OUT:
             photosysnthesis_lines = self.photosynthesis_particle.points
             photosysnthesis_lines[3] = [330, 100]
             self.photosynthesis_particle.change_points(photosysnthesis_lines)

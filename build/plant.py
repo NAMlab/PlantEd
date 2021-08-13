@@ -29,7 +29,7 @@ class Plant:
         self.y = pos[1]
         self.upgrade_points = 0
         self.model = model
-        self.growth_rate = self.model.get_rate()  # in seconds ingame second = second * 240
+        self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=5, active=True)
@@ -45,9 +45,11 @@ class Plant:
             growth_rate += self.organs[i].growth_rate
         return growth_rate
 
-    def update_growth_rate(self, growth_rate):
+    def update_growth_rates(self, growth_rate):
         for organ in self.organs:
-            organ.update_growth_rate(growth_rate)
+            organ.update_growth_rate(growth_rate[0])
+        self.organ_starch.update_growth_rate(growth_rate[1])
+        self.organ_starch.starch_intake = growth_rate[2]
 
     def get_biomass(self):
         biomass = 0
@@ -61,8 +63,11 @@ class Plant:
         return self.organs[0].get_mass() * 0.03152043208186226
 
     def grow(self):
+        self.update_growth_rates(self.model.get_rates())
         for organ in self.organs:
             organ.grow()
+        self.organ_starch.grow()
+        self.organ_starch.drain()
 
     def set_target_organ(self, target):
         self.target_organ = self.organs[target - 1]
@@ -88,6 +93,7 @@ class Plant:
     def handle_event(self, event):
         for organ in self.organs:
             organ.handle_event(event)
+        #self.organ_starch.handle_event(event) not necessary, no visible starch
 
     def draw(self, screen):
         self.draw_seedling(screen)
@@ -388,7 +394,7 @@ class Stem(Organ):
 class Starch(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active):
         super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[30, 50, 80, 160, 320])
-        self.max_drain = 0.1
+        self.starch_intake = 0
         self.toggle_button = None
 
     def grow(self):
@@ -402,12 +408,12 @@ class Starch(Organ):
         self.growth_rate = growth_rate
 
     def drain(self):
-        delta = self.mass - self.max_drain * self.percentage/100
+        delta = self.mass - self.starch_intake * self.percentage/100
         if delta < 0:
             self.mass = 0
             self.toggle_button()
         else:
             self.mass = delta
 
-    def get_rate(self):
-        return self.max_drain * self.percentage/100
+    def get_intake(self):
+        return self.starch_intake * self.percentage/100

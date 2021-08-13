@@ -20,15 +20,17 @@ class DynamicModel:
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
-        self.starch_pool = 0
         self.max_nitrate_intake_low = 0.0012    # based on paper
         self.max_nitrate_intake_high = 0.05     # based on paper
         # copies of intake rates to drain form pools
         self.nitrate_intake = 0                 # Michaelis–Menten equation: gDW(root) Vmax ~ 0.00336 mol g DW−1 day−1
         #self.photon_intake = 0                  # 300micromol /m2 s * PLA(gDW * slope)
         self.water_intake = 0
-        self.starch_intake = 0
-        self.starch_rate = 1
+        self.starch_intake = 0                  # actual starch consumption
+        self.starch_intake_max = 10            # upper bound for init consumption
+
+        # growth rates for each objective
+        self.starch_rate = 0
         self.biomass_rate = 0
 
         self.init_constraints()
@@ -36,7 +38,7 @@ class DynamicModel:
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
-        self.set_bounds(NITRATE, (0, self.max_nitrate_intake_low))
+        self.set_bounds(NITRATE, (0, self.max_nitrate_intake_high))
         self.set_bounds(PHOTON, (0, 0))
 
     def calc_growth_rate(self):
@@ -45,15 +47,20 @@ class DynamicModel:
         # update bounds
         if self.objective == BIOMASS:
             self.biomass_rate = solution.objective_value
+            self.starch_rate = 0
         elif self.objective == STARCH_OUT:
             self.starch_rate = solution.objective_value
-        self.water_intake = self.get_flux(WATER)[1]
-        self.nitrate_intake = self.get_flux(NITRATE)[1]
-        self.starch_intake = self.get_flux(STARCH_IN)[1]
+            self.biomass_rate = 0
+        self.water_intake = self.get_flux(WATER)
+        self.nitrate_intake = self.get_flux(NITRATE)
+        self.starch_intake = self.get_flux(STARCH_IN)
         print(self.model.objective, self.get_rate(), "Water: ", self.water_intake, "N: ", self.nitrate_intake, "starch: ", self.starch_intake)
 
     def get_flux(self, reaction):
-        return self.model.reactions.get_by_id(reaction).bounds
+        return self.model.reactions.get_by_id(reaction).flux
+
+    def get_rates(self):
+        return (self.biomass_rate, self.starch_rate, self.starch_intake)
 
     def get_rate(self):
         if self.objective == BIOMASS:
@@ -81,10 +88,11 @@ class DynamicModel:
             self.objective = STARCH_OUT
             self.set_bounds(STARCH_OUT, (0, 1000))
             self.model.objective = STARCH_OUT
+        self.calc_growth_rate()
 
     def activate_starch_resource(self):
         self.use_starch = True
-        self.set_bounds(STARCH_IN, (0, self.starch_rate))
+        self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
         self.calc_growth_rate()
 
     def deactivate_starch_resource(self):
@@ -93,7 +101,5 @@ class DynamicModel:
         self.calc_growth_rate()
 
     def update_pools(self):
-        if self.use_starch:
-            self.starch_pool -= self.starch_intake
         self.nitrate_pool -= self.nitrate_intake
         self.water_pool -= self.water_intake

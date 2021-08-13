@@ -177,7 +177,7 @@ class PointParticleSystem(ParticleSystem):
 
     def update(self, dt):
         if self.callback:
-            self.set_max_particles(int(self.callback()*5*30))
+            self.set_max_particles(int(self.callback()*1000))
 
         if self.particle_counter < self.max_particles and random.randint(0,10) < 1 and self.active:
             self.particle_counter += 1
