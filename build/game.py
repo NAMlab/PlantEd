@@ -10,6 +10,7 @@ from animation import OneShotAnimation
 import os, sys
 from tool_tip import ToolTipManager, ToolTip
 from weather import Environment
+from dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -213,7 +214,8 @@ class GameScene(Scene):
         self.font = TITLE_FONT  #pygame.font.SysFont('Arial', 24)
         self.sfont = FONT   #pygame.font.SysFont('Arial', 14)
         self._running = True
-        self.plant = Plant(plant_pos)
+        self.model = DynamicModel()
+        self.plant = Plant(plant_pos, self.model)
         self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, 0, 0)
         self.particle_systems = []
         self.sprites = pygame.sprite.Group()
@@ -231,7 +233,7 @@ class GameScene(Scene):
         self.can = can
 
         #(660, 250, 200, 350)
-        add_leaf_button = Button(676, 260, 64, 64, [self.plant.get_actions().add_leave], self.sfont,
+        add_leaf_button = Button(676, 260, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
                                  image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1")
         self.items.append({"name": "add_leaf",
                            "button": add_leaf_button,
@@ -257,7 +259,7 @@ class GameScene(Scene):
 
         self.button_sprites.add(ToggleButton(100, 385, 210, 40, [], self.sfont, "Photosysnthesis", pressed=True, fixed=True))
         toggle_starch_button = ToggleButton(460, 385, 150, 40, [self.toggle_starch_as_resource], self.sfont, "Drain Starch")
-        self.plant.organs[3].toggle_button = toggle_starch_button
+        self.plant.organ_starch.toggle_button = toggle_starch_button
         self.button_sprites.add(toggle_starch_button)
         self.leaf_slider = Slider((100, 140, 15, 200), self.sfont, (50, 20), organ=self.plant.organs[0], plant=self.plant, active=False)
         self.stem_slider = Slider((180, 140, 15, 200), self.sfont, (50, 20), organ=self.plant.organs[1], plant=self.plant, active=False)
@@ -266,11 +268,11 @@ class GameScene(Scene):
         self.sliders.append(self.stem_slider)
         self.sliders.append(self.root_slider)
         SliderGroup([slider for slider in self.sliders], 100)
-        self.sliders.append(Slider((536, 70, 15, 200), self.sfont, (50, 20), organ=self.plant.organs[3], plant=self.plant, percent=100))
+        self.sliders.append(Slider((536, 70, 15, 200), self.sfont, (50, 20), organ=self.plant.organ_starch, plant=self.plant, percent=100))
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
-        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.plant.get_growth_rate()*20, images=[photo_energy], speed=(2,0), callback=self.plant.get_leaf_photon)
+        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.plant.get_growth_rate()*20, images=[photo_energy], speed=(2,0), callback=self.model.get_rate)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
-        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organs[3].get_rate)
+        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.model.get_rate)
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
         #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
@@ -278,22 +280,23 @@ class GameScene(Scene):
         self.particle_systems.append(self.can_particle_system)
 
         self.tool_tip_manager = ToolTipManager(
-            [ToolTip(855,150,0,0,["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant."], self.sfont, self.font, button_group=self.button_sprites, mass=0),
-             ToolTip(655,380,0,0,["Your seed has no Leaves yet.", "Use Your Starch Deposit", "But don't waste it"], self.sfont, button_group=self.button_sprites, mass=0, point=(-45,30)),
-             ToolTip(370,140,0,0,["These are your main 3 Organs.", "Select them for Details.", "Once your roots are big enough", "your are able to grow a stem!"], self.sfont, button_group=self.button_sprites, mass=1, point=(-40,0)),
-             ToolTip(300,300,0,0,["Grow your stem", "to get your first leaves", "The biomass can be", "split up between all organs."], self.sfont, button_group=self.button_sprites, mass=6, point=(-50,20)),
-             ToolTip(685,450,0,0,["One leaf can be added"," for each skillpoint", "But remember to keep", "the stem big enough"], self.sfont, button_group=self.button_sprites, mass=10, point=(-50,20)),
-             ToolTip(240, 230, 0, 0, ["You can fill up", "your starch deposit", "instead of growing"], self.sfont, button_group=self.button_sprites, mass=15, point=(50, 20)),
-             ToolTip(850,300,0,0,["Congratulations, you reached", " 30gr of plant mass"], self.sfont, button_group=self.button_sprites, mass=30, point=(50,20)),
-             ToolTip(1100,300,0,0,["50 Gramms!"], self.sfont, button_group=self.button_sprites, mass=50, point=(50,20)),
-             ToolTip(1100,300,0,0,["100 Gramms!"], self.sfont, button_group=self.button_sprites, mass=100, point=(50,20)),
-             ToolTip(1000,600,0,0,["You son of a b*tch did it!" "200 Gramms, thats game"], self.sfont, button_group=self.button_sprites, mass=200, point=(50,20),)],
+            [ToolTip(855,150,0,0,["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant."], self.sfont, self.font, mass=0),
+             ToolTip(655,380,0,0,["Your seed has no Leaves yet.", "Use Your Starch Deposit", "But don't waste it"], self.sfont, mass=0, point=(-45,30)),
+             ToolTip(370,140,0,0,["These are your main 3 Organs.", "Select them for Details.", "Once your roots are big enough", "your are able to grow a stem!"], self.sfont, mass=1, point=(-40,0)),
+             ToolTip(300,300,0,0,["Grow your stem", "to get your first leaves", "The biomass can be", "split up between all organs."], self.sfont, mass=6, point=(-50,20)),
+             ToolTip(685,450,0,0,["One leaf can be added"," for each skillpoint", "But remember to keep", "the stem big enough"], self.sfont, mass=10, point=(-50,20)),
+             ToolTip(240, 230, 0, 0, ["You can fill up", "your starch deposit", "instead of growing"], self.sfont, mass=15, point=(50, 20)),
+             ToolTip(850,300,0,0,["Congratulations, you reached", " 30gr of plant mass"], self.sfont, mass=30, point=(50,20)),
+             ToolTip(1100,300,0,0,["50 Gramms!"], self.sfont, mass=50, point=(50,20)),
+             ToolTip(1100,300,0,0,["100 Gramms!"], self.sfont, mass=100, point=(50,20)),
+             ToolTip(1000,600,0,0,["You son of a b*tch did it!" "200 Gramms, thats game"], self.sfont, mass=200, point=(50,20),)],
             callback=self.plant.get_biomass)
         pygame.time.set_timer(GROWTH, 1000)
 
     def handle_events(self, event):
         for e in event:
             if e.type == GROWTH:
+                self.model.update_pools()
                 self.plant.grow()
             if e.type == QUIT: raise SystemExit("QUIT")
             if e.type == KEYDOWN and e.key == K_ESCAPE:
@@ -327,10 +330,6 @@ class GameScene(Scene):
             self.plant.handle_event(e)
             for tips in self.tool_tip_manager.tool_tips:
                 tips.handle_event(e)
-            '''
-            if e.type == WIN:
-                print("you won")
-                self.exit()'''
 
     def update(self, dt):
         #for animation in self.animations:
@@ -341,8 +340,6 @@ class GameScene(Scene):
             self.stem_slider.active = True
         if self.plant.organs[1].active_threshold >= 2 and not self.leaf_slider.active:
             self.leaf_slider.active = True
-
-        #check day_night, sun_intensity
 
         for slider in self.sliders:
             slider.update()
@@ -355,7 +352,6 @@ class GameScene(Scene):
             if self.watering_can["amount"] <= 0:
                 self.deactivate_watering_can()
 
-        self.environment.update(dt, self.get_day_time(), self.get_sun_intensity())
         self.tool_tip_manager.update()
 
     def render(self, screen):
@@ -365,10 +361,11 @@ class GameScene(Scene):
             if not sprite.update():
                 self.sprites.remove(sprite)
 
-        self.draw_plant(tmp_screen)
+        self.plant.draw(screen)
         #self.darken_display_daytime(tmp_screen) # --> find smth better
         self.sprites.draw(tmp_screen)
-        self.draw_particle_systems(tmp_screen)
+        for system in self.particle_systems:
+            system.draw(tmp_screen)
         self.draw_organ_ui(tmp_screen)
         self.environment.draw_foreground(tmp_screen)
         self.button_sprites.draw(tmp_screen)
@@ -385,18 +382,13 @@ class GameScene(Scene):
             tmp_screen.blit(self.watering_can["image"], (mouse_pos))
         screen.blit(tmp_screen, next(self.offset))
 
-    def exit(self):
-        self.manager.go_to(CustomScene("You win!"))
-
-    def die(self):
-        self.manager.go_to(CustomScene("You lose!"))
 
     def post_hover_message(self, message):
         self.hover_message = message if message else None
 
     def activate_starch_objective(self):
         # change particle system to follow new lines
-        if self.plant.produce_biomass:
+        if self.model.model.objective == STARCH_OUT:
             photosysnthesis_lines = self.photosynthesis_particle.points
             photosysnthesis_lines[3] = [430, 100]
             self.photosynthesis_particle.change_points(photosysnthesis_lines)
@@ -407,19 +399,20 @@ class GameScene(Scene):
             self.starch_particle.change_points(starch_lines)
             self.starch_particle.particle_counter = 0
             self.starch_particle.particles.clear()
-            self.plant.activate_starch_objective()
+            self.model.set_objective(STARCH_OUT)
 
     def toggle_starch_as_resource(self):
         self.starch_particle.particles.clear()
-        if self.plant.use_starch:
+        if self.model.use_starch:
             self.starch_particle.active = False
-            self.plant.deactivate_starch_resource()
+            self.model.deactivate_starch_resource()
         else:
             self.starch_particle.active = True
-            self.plant.activate_starch_resource()
+            self.model.activate_starch_resource()
+        self.plant.update_growth_rate(self.model.get_rate())
 
     def activate_biomass_objective(self):
-        if not self.plant.produce_biomass:
+        if not self.model.model.objective == BIOMASS:
             photosysnthesis_lines = self.photosynthesis_particle.points
             photosysnthesis_lines[3] = [330, 100]
             self.photosynthesis_particle.change_points(photosysnthesis_lines)
@@ -430,22 +423,7 @@ class GameScene(Scene):
             self.starch_particle.change_points(starch_lines)
             self.starch_particle.particle_counter = 0
             self.starch_particle.particles.clear()
-            self.plant.activate_biomass_objective()
-
-    def get_day_time(self):
-        # one day rl: ticks*60*60*24, ingame: ticks*6*60
-        # one hour rl: ticks*60*60, ingame: ticks*6*60/24
-        # one minute rl: ticks*60, ingame: ticks*6/24
-        ticks = pygame.time.get_ticks()
-        day = 1000*60
-        hour = day/24
-        min = hour/60
-        hours = (ticks % day) / hour
-        minutes = (ticks % hour) / min
-        return hours, minutes
-
-    def get_sun_intensity(self):
-        return (np.sin(np.pi/2-np.pi/5+((pygame.time.get_ticks()/(1000 * 60)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
+            self.model.set_objective(BIOMASS)
 
     # buy can basically
     def activate_watering_can(self):
@@ -468,7 +446,7 @@ class GameScene(Scene):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))
 
     def set_growth_target_leaves(self):
-        self.plant.target_organ = self.plant.LEAVES
+        self.plant.target_organ = self.plant.LEAF
 
     def set_growth_target_stem(self):
         self.plant.target_organ = self.plant.STEM
@@ -479,19 +457,6 @@ class GameScene(Scene):
     def draw_particle_systems(self, screen):
         for system in self.particle_systems:
             system.draw(screen)
-
-    def darken_display_daytime(self, screen):
-        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        day_time = (((self.get_sun_intensity() + 1) / 2) * 128)
-        return day_time
-
-    def draw_leave(self, screen, pos, size, rot, color):
-        leave_surface = pygame.Surface((size[0], size[1]))
-        surface = leave_surface.convert_alpha()  # check if necessary
-        surface.fill((0, 0, 0, 0))  # "
-        pygame.draw.ellipse(surface, color, Rect(0, 0, leave_surface.get_width(), leave_surface.get_height()))
-        surface = pygame.transform.rotate(surface, rot)
-        screen.blit(surface, (pos[0], pos[1] - surface.get_bounding_rect().height))
 
     def draw_background(self, screen):
         screen.fill(SKY_BLUE)
@@ -522,7 +487,7 @@ class GameScene(Scene):
         lvl_pos = Rect(530, 270, 64, 64)
         # linecolor white to red for flow
         # rgb--> color[0]
-        green = blue = int(255 - self.plant.organs[3].percentage / 100 * 255)
+        green = blue = int(255 - self.plant.organ_starch.percentage / 100 * 255)
         alpha = int(255-blue/2)
         for i in range(0,3):
             pygame.draw.line(s, (255, green, blue, alpha), (545, 280+i*10), (560, 300+i*10), width=4)
@@ -532,11 +497,11 @@ class GameScene(Scene):
         pool_height = 180
         pool_rect = Rect(476, 150, 32, pool_height)
         pygame.draw.rect(s, white_transparent, pool_rect, border_radius=3)
-        pool_limit = self.plant.organs[3].get_threshold()
-        pool_level = self.plant.organs[3].mass * pool_height/pool_limit
+        pool_limit = self.plant.organ_starch.get_threshold()
+        pool_level = self.plant.organ_starch.mass * pool_height/pool_limit
         pool_rect = Rect(pool_rect[0], pool_rect[1]+pool_height-pool_level, 32, pool_level)
         pygame.draw.rect(s, white, pool_rect, border_radius=3)
-        pool_level_text = self.sfont.render("{:.0f}".format(self.plant.organs[3].mass), True, (0, 0, 0))  # title
+        pool_level_text = self.sfont.render("{:.0f}".format(self.plant.organ_starch.mass), True, (0, 0, 0))  # title
         s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))
 
         # overal stats
@@ -576,7 +541,7 @@ class GameScene(Scene):
         pygame.draw.rect(s, (255, 255, 255, 180), Rect(60, 450, 580, 30), border_radius=3)
         leave_title = self.font.render("Organ", True, (0, 0, 0))  # title
         s.blit(leave_title, dest=(290 - leave_title.get_size()[0] / 2, 450))
-        if self.plant.target_organ.type == self.plant.LEAVES:
+        if self.plant.target_organ.type == self.plant.LEAF:
             image = leaf_icon_big
             #self.button_sprites.add(self.button)
         elif self.plant.target_organ.type == self.plant.STEM:
@@ -615,41 +580,17 @@ class GameScene(Scene):
         # mass
         mass = self.sfont.render("Organ Mass {:.5f}".format(self.plant.target_organ.mass), True, (0, 0, 0))
         s.blit(mass, dest=(245, 550))
-
-        # nitrat_intake, total nitrat left
-        # water_intake, total water left
-
-        # clock
-        hours, minutes = self.get_day_time()
-        output_string = "{0:02}:{1:02}".format(int(hours), int(minutes))
-        clock_text = self.sfont.render(output_string, True, (0, 0, 0))
-        screen.blit(clock_text, clock_text.get_rect(center=(SCREEN_WIDTH/2,20)))
-
-        day_time = ((self.get_sun_intensity() + 1) / 2)
-        sun_intensity = self.sfont.render("{:.2}".format(day_time), True, (0, 0, 0))
-        screen.blit(sun_intensity, sun_intensity.get_rect(center=(SCREEN_WIDTH / 2+100, 20)))
         screen.blit(s, (0, 0))
-
-    def draw_time_line(self, screen):
-        # draw a simple grey line with 90° crosses
-        line_length = int(self.width/2)
-        surface = pygame.Surface((line_length, int(self.height/10)), pygame.SRCALPHA)
-        pygame.draw.line(surface, (169, 169, 169, 100),
-                         (0, int(self.height / 20)),
-                         (line_length, int(self.height / 20)),
-                         width=2)
-        for i in range(0, 9):
-            pygame.draw.line(surface, (169, 169, 169, 100),
-                             (i*line_length/9+1, int(self.height / 20)-10),
-                             (i*line_length/9+1, int(self.height / 20)+10),
-                             width=2)
-        screen.blit(surface, (self.width/2, 0))
-
-    def draw_plant(self, screen):
-        self.plant.draw(screen)
 
     def on_cleanup(self):
         pygame.quit()
+
+
+    def exit(self):
+        self.manager.go_to(CustomScene("You win!"))
+
+    def die(self):
+        self.manager.go_to(CustomScene("You lose!"))
 
 
 def main():

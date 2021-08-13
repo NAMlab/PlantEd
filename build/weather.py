@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from particle import ParticleSystem
 from animation import OneShotAnimation
+import numpy as np
 
 SUN = USEREVENT + 1
 RAIN = USEREVENT + 2
@@ -33,10 +34,7 @@ class Environment:
                                     active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)
 
 
-    def update(self, dt, game_time, sun_intensity):
-        self.update_rates()
-        self.sun_intensity = sun_intensity
-        self.game_time = game_time
+    def update(self, dt):
         for animation in self.animations:
             animation.update()
         self.rain.update(dt)
@@ -46,9 +44,10 @@ class Environment:
                 self.sprites.remove(sprite) # dumb to remove during iteration, maybe don't
 
     def draw_background(self, screen):
+        pass
         # sun-->Photon_intensity, moon, water_lvl
-        sun_index = min(int(self.sun_intensity*len(self.sun)),4)
-        screen.blit(self.sun[sun_index], (self.w/4*3, 0))
+        #sun_index = min(int(self.sun_intensity*len(self.sun)),4)
+        #screen.blit(self.sun[sun_index], (self.w/4*3, 0))
 
     def draw_foreground(self, screen):
         self.rain.draw(screen)
@@ -56,6 +55,36 @@ class Environment:
 
     def activate_rain(self):
         self.rain.deactivate()
+
+    def get_day_time(self):
+        ticks = pygame.time.get_ticks()
+        day = 1000*60
+        hour = day/24
+        min = hour/60
+        hours = (ticks % day) / hour
+        minutes = (ticks % hour) / min
+        return hours, minutes
+
+    '''def darken_display_daytime(self, screen):
+        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        day_time = (((self.get_sun_intensity() + 1) / 2) * 128)
+        return day_time'''
+
+    def draw_clock(self, screen):
+        # clock
+        hours, minutes = self.get_day_time()
+        output_string = "{0:02}:{1:02}".format(int(hours), int(minutes))
+        clock_text = self.sfont.render(output_string, True, (0, 0, 0))
+        screen.blit(clock_text, clock_text.get_rect(center=(self.w / 2, 20)))
+
+        day_time = ((self.get_sun_intensity() + 1) / 2)
+        sun_intensity = self.sfont.render("{:.2}".format(day_time), True, (0, 0, 0))
+        screen.blit(sun_intensity, sun_intensity.get_rect(center=(self.w / 2 + 100, 20)))
+
+
+    def get_sun_intensity(self):
+        return (np.sin(np.pi/2-np.pi/5+((pygame.time.get_ticks()/(1000 * 60)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
+
 
     def deactivate_rain(self):
         self.rain.deactivate()

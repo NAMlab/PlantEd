@@ -29,7 +29,7 @@ class ToolTipManager:
 
 
 class ToolTip:
-    def __init__(self, x, y, w, h, lines, font, headfont=None, button_group=None, mass=-1, color=(245, 245, 245, 255), active=False, point=None):
+    def __init__(self, x, y, w, h, lines, font, headfont=None, mass=-1, color=(245, 245, 245, 255), active=False, point=None):
         self.x = x
         self.y = y
         self.w = w
@@ -42,7 +42,6 @@ class ToolTip:
         self.headfont = headfont
         # maybe ugly, but smart to prevent ugly boxes, thus not ugly
         self.text, self.w, self.h = self.make_text(lines)
-        #self.h = min_h * (len(self.text)+1) + 20    # h equals all lines, button and buffer 20
         self.triangle = []
         self.set_triangle(point) if point else None
         self.button = Button(self.x, self.y + (self.h - 50), self.w, 50, [self.deactivate], self.font,
