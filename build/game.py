@@ -234,7 +234,7 @@ class GameScene(Scene):
 
         #(660, 250, 200, 350)
         add_leaf_button = Button(676, 260, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
-                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1")
+                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", button_sound=click_sound)
         self.items.append({"name": "add_leaf",
                            "button": add_leaf_button,
                            "cost": 1})
@@ -270,9 +270,9 @@ class GameScene(Scene):
         SliderGroup([slider for slider in self.sliders], 100)
         self.sliders.append(Slider((536, 70, 15, 200), self.sfont, (50, 20), organ=self.plant.organ_starch, plant=self.plant, percent=100))
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
-        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.model.get_rate()*1000, images=[photo_energy], speed=(2,0), callback=self.model.get_rate)
+        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.plant.get_growth_rate(), images=[photo_energy], speed=(2,0), callback=self.plant.get_growth_rate)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
-        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.model.get_rate)
+        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake())
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
         #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)

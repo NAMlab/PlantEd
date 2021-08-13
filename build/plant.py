@@ -149,6 +149,9 @@ class Organ:
     def update_growth_rate(self, growth_rate):
         self.growth_rate = self.mass * gram_mol * growth_rate * self.percentage/100
 
+    def get_rate(self):
+        return self.growth_rate
+
     def get_rect(self):
         if self.image:
             x = self.x - self.pivot[0] if self.pivot else self.x
@@ -213,7 +216,7 @@ class Leaf(Organ):
         self.can_add_leaf = False
 
     def activate_add_leaf(self):
-        if not self.active_threshold >= len(self.leaves):
+        if self.active_threshold >= len(self.leaves):
             return
         self.can_add_leaf = True
 

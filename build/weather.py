@@ -19,6 +19,8 @@ class Environment:
     def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT, plant, nitrate, water):
         self.w = SCREEN_WIDTH
         self.h = SCREEN_HEIGHT
+        self.font = pygame.font.SysFont('Arial', 56)
+        self.sfont = pygame.font.SysFont('Arial', 32)
         self.plant = plant
         self.sprites = pygame.sprite.Group()
         self.animations = []
@@ -44,12 +46,12 @@ class Environment:
                 self.sprites.remove(sprite) # dumb to remove during iteration, maybe don't
 
     def draw_background(self, screen):
-        pass
         # sun-->Photon_intensity, moon, water_lvl
-        #sun_index = min(int(self.sun_intensity*len(self.sun)),4)
-        #screen.blit(self.sun[sun_index], (self.w/4*3, 0))
+        sun_index = min(int((self.get_sun_intensity()+1)/2*len(self.sun)),4)
+        screen.blit(self.sun[sun_index], (self.w/4*3, 0))
 
     def draw_foreground(self, screen):
+        self.draw_clock(screen)
         self.rain.draw(screen)
         self.sprites.draw(screen)
 
@@ -85,10 +87,8 @@ class Environment:
     def get_sun_intensity(self):
         return (np.sin(np.pi/2-np.pi/5+((pygame.time.get_ticks()/(1000 * 60)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
 
-
     def deactivate_rain(self):
         self.rain.deactivate()
-
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))

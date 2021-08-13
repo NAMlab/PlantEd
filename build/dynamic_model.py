@@ -54,7 +54,7 @@ class DynamicModel:
         self.water_intake = self.get_flux(WATER)
         self.nitrate_intake = self.get_flux(NITRATE)
         self.starch_intake = self.get_flux(STARCH_IN)
-        print(self.model.objective, self.get_rate(), "Water: ", self.water_intake, "N: ", self.nitrate_intake, "starch: ", self.starch_intake)
+        #print(self.model.objective, self.get_rate(), "Water: ", self.water_intake, "N: ", self.nitrate_intake, "starch: ", self.starch_intake)
 
     def get_flux(self, reaction):
         return self.model.reactions.get_by_id(reaction).flux
