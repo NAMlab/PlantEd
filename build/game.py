@@ -6,11 +6,12 @@ from itertools import repeat
 from plant import Plant
 from button import Button, RadioButton, Slider, SliderGroup, ToggleButton
 from particle import ParticleSystem, PointParticleSystem
-from animation import OneShotAnimation
+from animation import OneShotAnimation, Animation
 import os, sys
 from tool_tip import ToolTipManager, ToolTip
 from weather import Environment
 from dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
+from eagle import Eagle, QuickTimeEvent
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -76,9 +77,13 @@ starch_icon_big = pygame.transform.scale(starch_icon, (128,128)).convert_alpha()
 drain_icon = get_image("drain_icon.png").convert_alpha()
 photo_energy = pygame.transform.scale(get_image("photo_energy.png"),(15,15)).convert_alpha()
 starch_energy = pygame.transform.scale(get_image("starch_energy.png"),(15,15)).convert_alpha()
+eagle_img = [pygame.transform.scale(get_image("bird/Eagle Normal_{}.png".format(i)), (128,128)) for i in range(1,20)]
+danger_eagle_icon = pygame.transform.scale(get_image("danger_bird.png"),(128,128))
 #pygame.mixer.music.load()
 water_sound = pygame.mixer.Sound('../assets/water_can.mp3')
 click_sound = pygame.mixer.Sound('../assets/button_klick.mp3')
+eagle_flap = pygame.mixer.Sound('../assets/eagle_flap.mp3')
+eagle_screech = pygame.mixer.Sound('../assets/eagle_screech.mp3')
 pygame.mixer.music.load('../assets/background_music.mp3')
 pygame.mixer.music.play(-1,0)
 
@@ -223,6 +228,8 @@ class GameScene(Scene):
         self.sliders = []
         self.items = []
         self.animations = []
+        self.quick_time_events = []
+        self.entities = []
         self.watering_can = {"active": False,
                              "button": Button(780, 260, 64, 64, [self.activate_watering_can], self.sfont,
                                               image=can_icon, post_hover_message=self.post_hover_message,
@@ -306,6 +313,8 @@ class GameScene(Scene):
             for button in self.button_sprites:
                 # all button_sprites handle their events
                 button.handle_event(e)
+            for quick_time_event in self.quick_time_events:
+                quick_time_event.handle_event(e)
             if self.watering_can["active"]:
                 if e.type == MOUSEBUTTONDOWN:
                         self.watering_can["image"] = can_tilted
@@ -322,9 +331,11 @@ class GameScene(Scene):
                     self.can_particle_system.spawn_box = Rect(x,y+100,0,0)
             if e.type == KEYDOWN and e.key == K_a:
                 self.offset = shake()
-                self.plant.soil_moisture = self.plant.soil_moisture + 1
-            if e.type == KEYDOWN and e.key == K_d:
-                self.plant.soil_moisture = self.plant.soil_moisture - 1
+                eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
+                              Animation(eagle_img, 500), 40, action_sound=eagle_flap)
+                self.entities.append(eagle)
+                self.quick_time_events.append(
+                    QuickTimeEvent((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), 5, eagle, danger_eagle_icon, self.entities, eagle_screech))
             for slider in self.sliders:
                 slider.handle_event(e)
             self.plant.handle_event(e)
@@ -332,8 +343,11 @@ class GameScene(Scene):
                 tips.handle_event(e)
 
     def update(self, dt):
-        #for animation in self.animations:
-            #animation.update()
+        for animation in self.animations:
+            animation.update()
+        for quick_time_event in self.quick_time_events:
+            quick_time_event.update()
+        self.quick_time_events = [quick_time_event for quick_time_event in self.quick_time_events if quick_time_event.active]
         self.plant.update()
         # beware of ugly
         if self.plant.get_biomass() > self.plant.seedling.max and not self.stem_slider.active:
@@ -345,6 +359,9 @@ class GameScene(Scene):
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
+
+        for entity in self.entities:
+            entity.update()
 
         # watering can
         if self.watering_can["pouring"]:
@@ -361,9 +378,16 @@ class GameScene(Scene):
             if not sprite.update():
                 self.sprites.remove(sprite)
 
+        for animation in self.animations:
+            screen.blit(animation.image, animation.pos)
+
         self.plant.draw(screen)
         #self.darken_display_daytime(tmp_screen) # --> find smth better
         self.sprites.draw(tmp_screen)
+        for quick_time_event in self.quick_time_events:
+            quick_time_event.draw(screen)
+        for entity in self.entities:
+            entity.draw(screen)
         for system in self.particle_systems:
             system.draw(tmp_screen)
         self.draw_organ_ui(tmp_screen)

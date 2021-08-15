@@ -41,6 +41,10 @@ class DynamicModel:
         self.set_bounds(NITRATE, (0, self.max_nitrate_intake_high))
         self.set_bounds(PHOTON, (0, 0))
 
+        # Literature ATP NADPH: 7.27 and 2.56 mmol gDW−1 day−1
+        atp = 0.00727 /24
+        nadhp = 0.00256 /24
+
     def calc_growth_rate(self):
         # calc current objective rate
         solution = self.model.optimize()

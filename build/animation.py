@@ -27,7 +27,7 @@ class OneShotAnimation(pygame.sprite.Sprite):
         return True
 
 class Animation(pygame.sprite.Sprite):
-    def __init__(self, images, duration, pos, speed=1):
+    def __init__(self, images, duration, pos=[0,0], speed=1):
         super(Animation, self).__init__()
         self.pos = pos
         self.rect = Rect(pos[0], pos[1], 10, 10)
