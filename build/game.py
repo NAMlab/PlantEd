@@ -79,6 +79,9 @@ photo_energy = pygame.transform.scale(get_image("photo_energy.png"),(15,15)).con
 starch_energy = pygame.transform.scale(get_image("starch_energy.png"),(15,15)).convert_alpha()
 eagle_img = [pygame.transform.scale(get_image("bird/Eagle Normal_{}.png".format(i)), (128,128)) for i in range(1,20)]
 danger_eagle_icon = pygame.transform.scale(get_image("danger_bird.png"),(128,128))
+scarecrow = get_image("scarecrow.png")
+scarecrow_icon = pygame.transform.scale(scarecrow, (64,64)).convert_alpha()
+chloroplast_icon = pygame.transform.scale(get_image("chloroplast.png"), (20,20)).convert_alpha()
 #pygame.mixer.music.load()
 water_sound = pygame.mixer.Sound('../assets/water_can.mp3')
 click_sound = pygame.mixer.Sound('../assets/button_klick.mp3')
@@ -233,23 +236,21 @@ class GameScene(Scene):
         self.watering_can = {"active": False,
                              "button": Button(780, 260, 64, 64, [self.activate_watering_can], self.sfont,
                                               image=can_icon, post_hover_message=self.post_hover_message,
-                                              hover_message="Water Your Plant, Cost: 1", button_sound=click_sound),
+                                              hover_message="Water Your Plant, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound),
                              "image": can,
                              "amount": 0,
                              "pouring": False}
-        self.can = can
-
-        #(660, 250, 200, 350)
-        add_leaf_button = Button(676, 260, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
-                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", button_sound=click_sound)
-        self.items.append({"name": "add_leaf",
-                           "button": add_leaf_button,
-                           "cost": 1})
-        self.button_sprites.add(add_leaf_button)
-        self.items.append({"name": "can",
-                           "button": self.watering_can["button"],
-                           "cost": 1})
         self.button_sprites.add(self.watering_can["button"])
+
+        add_leaf_button = Button(676, 260, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
+                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", hover_message_image=chloroplast_icon, button_sound=click_sound)
+        self.button_sprites.add(add_leaf_button)
+        scarecrow_button = Button(676, 334, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
+                                 image=scarecrow_icon, post_hover_message=self.post_hover_message,
+                                 hover_message="Buy a scarecrow, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound)
+        self.button_sprites.add(add_leaf_button)
+        self.button_sprites.add(scarecrow_button)
+
 
         radioButtons = [
             RadioButton(100, 70, 64, 64, [self.plant.set_target_organ_leaf, self.activate_biomass_objective], FONT, image=leaf_icon),
@@ -551,7 +552,8 @@ class GameScene(Scene):
         biomass_text = self.sfont.render("Chloroplast:", True, (0, 0, 0))
         s.blit(biomass_text, dest=(670, 90))
         biomass = self.sfont.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(biomass, dest=(860-biomass.get_width()-5, 90))
+        s.blit(chloroplast_icon, (860-biomass.get_width()-7, 93))
+        s.blit(biomass, dest=(860-biomass.get_width()-26, 90))
 
         # shop
         pygame.draw.rect(s, (255, 255, 255, 180), (660, 210, 200, 30), border_radius=3)

@@ -12,11 +12,12 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, post_hover_message=None, hover_message=None, button_sound=None):
+                 image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None, button_sound=None):
         super().__init__()
         self.posted = False
         self.button_sound = button_sound
         self.post_hover_message = post_hover_message
+        self.hover_message_image = hover_message_image
         self.border_w = int(w / 10) if not border_w else border_w
         self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
@@ -44,9 +45,14 @@ class Button(pygame.sprite.Sprite):
         if post_hover_message and hover_message:
             self.posted = False
             hover_message = font.render(hover_message, True, text_color)
-            self.hover_message = pygame.Surface((hover_message.get_width()+10, hover_message.get_height()+10), pygame.SRCALPHA)
+            w = hover_message.get_width()+10
+            if self.hover_message_image:
+                w += hover_message_image.get_width() +10
+            self.hover_message = pygame.Surface((w, hover_message.get_height()+10), pygame.SRCALPHA)
             self.hover_message.fill(WHITE_TRANSPARENT)
             self.hover_message.blit(hover_message, (5,5))
+            if self.hover_message_image:
+                self.hover_message.blit(self.hover_message_image,(hover_message.get_width()+10, 8))
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -351,7 +357,7 @@ class SliderGroup:
 
     def change_percentage(self, slider):
         # @slider: slider that changed
-        while self.max_sum < self.slider_sum()-0.1:
+        while self.max_sum < self.slider_sum()-0.1 or self.max_sum > self.slider_sum()+1:
             # special case, if max is smaller than 100%
             if slider.get_percentage() > self.max_sum:
                 slider.set_percentage(self.max_sum)

@@ -1,6 +1,8 @@
 import pygame
 import random
 from button import Button
+from particle import ParticleSystem
+from pygame import Rect
 # spawns a button or interactable. If the player reacts fast, nothing happens. Else spawn hazard
 class QuickTimeEvent:
     def __init__(self, pos, react_time, eagle, image, entities, quick_sound=None, font=None, text=None):
@@ -13,7 +15,6 @@ class QuickTimeEvent:
         if quick_sound:
             pygame.mixer.Sound.play(quick_sound)
         self.entities = entities
-
 
     def handle_event(self, e):
         if self.active:
@@ -28,8 +29,9 @@ class QuickTimeEvent:
                 self.react_time -= 1
 
     def deactivate(self):
-        self.active = False
         self.entities.remove(self.eagle)
+        self.active = False
+
 
     def draw(self, screen):
         if not self.active:
