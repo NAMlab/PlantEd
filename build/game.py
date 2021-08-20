@@ -16,7 +16,6 @@ from eagle import Eagle, QuickTimeEvent
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
-
 pygame.init()
 ctypes.windll.user32.SetProcessDPIAware()
 true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
@@ -24,7 +23,7 @@ screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF,
 tmp_screen = pygame.display.set_mode(true_res, pygame.SRCALPHA)
 GROWTH = 24
 RECALC = 25
-WIN = 1
+WIN = pygame.USEREVENT+1
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 plant_pos = (SCREEN_WIDTH - SCREEN_WIDTH/4, SCREEN_HEIGHT - SCREEN_HEIGHT/5)
@@ -66,13 +65,13 @@ can = get_image("watering_can_outlined.png")
 can_icon = pygame.transform.scale(can, (64,64)).convert_alpha()
 can_tilted = get_image("watering_can_outlined_tilted.png")
 background = pygame.transform.scale(get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
-leaf_icon = get_image("leaf_small.png").convert_alpha()
+leaf_icon = get_image("leaf_small.png")
 leaf_icon_big = pygame.transform.scale(leaf_icon, (128,128)).convert_alpha()
-stem_icon = get_image("stem_small.png").convert_alpha()
+stem_icon = get_image("stem_small.png")
 stem_icon_big = pygame.transform.scale(stem_icon, (128,128)).convert_alpha()
-root_icon = get_image("roots_small.png").convert_alpha()
+root_icon = get_image("roots_small.png")
 root_icon_big = pygame.transform.scale(root_icon, (128,128)).convert_alpha()
-starch_icon = get_image("starch.png").convert_alpha()
+starch_icon = get_image("starch.png")
 starch_icon_big = pygame.transform.scale(starch_icon, (128,128)).convert_alpha()
 drain_icon = get_image("drain_icon.png").convert_alpha()
 photo_energy = pygame.transform.scale(get_image("photo_energy.png"),(15,15)).convert_alpha()
@@ -88,7 +87,7 @@ click_sound = pygame.mixer.Sound('../assets/button_klick.mp3')
 eagle_flap = pygame.mixer.Sound('../assets/eagle_flap.mp3')
 eagle_screech = pygame.mixer.Sound('../assets/eagle_screech.mp3')
 pygame.mixer.music.load('../assets/background_music.mp3')
-pygame.mixer.music.play(-1,0)
+#pygame.mixer.music.play(-1,0)
 
 
 class Scene(object):
@@ -175,21 +174,20 @@ class TitleScene(object):
 
 
 class CustomScene(object):
-    def __init__(self, text):
-        self.text = text
+    def __init__(self):
         super(CustomScene, self).__init__()
         self.font = pygame.font.SysFont('Arial', 56)
         self.sfont = pygame.font.SysFont('Arial', 32)
         self.centre = (SCREEN_WIDTH, SCREEN_HEIGHT/2)
+        self.text1 = self.font.render('PlantEd', True, (255,255,255))
+        self.text2 = self.font.render('YOU WON!', True, (255,255,255))
+        self.text3 = self.sfont.render('> press any key to continue <', True, (255,255,255))
 
     def render(self, screen):
-        screen.fill((0, 0, 0))
-        text1 = self.font.render('PlantEd', True, (0, 0, 0))
-        text2 = self.sfont.render('YOU WON!', True, (0, 0, 0))
-        text3 = self.sfont.render('> press any key to continue <', True, (0, 0, 0))
-        screen.blit(text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
-        screen.blit(text2, (SCREEN_WIDTH/8, SCREEN_HEIGHT/6))
-        screen.blit(text3, (SCREEN_WIDTH/2-text3.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
+        screen.fill((50, 50, 50))
+        screen.blit(self.text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
+        screen.blit(self.text2, (SCREEN_WIDTH/2-self.text2.get_width()/2, SCREEN_HEIGHT/2))
+        screen.blit(self.text3, (SCREEN_WIDTH/2-self.text3.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
 
     def update(self, dt):
         pass
@@ -224,7 +222,7 @@ class GameScene(Scene):
         self._running = True
         self.model = DynamicModel()
         self.plant = Plant(plant_pos, self.model)
-        self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, 0, 0)
+        self.environment = Environment(get_image,SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, 0, 0)
         self.particle_systems = []
         self.sprites = pygame.sprite.Group()
         self.button_sprites = pygame.sprite.Group()
@@ -241,16 +239,14 @@ class GameScene(Scene):
                              "amount": 0,
                              "pouring": False}
         self.button_sprites.add(self.watering_can["button"])
-
         add_leaf_button = Button(676, 260, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
                                  image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", hover_message_image=chloroplast_icon, button_sound=click_sound)
         self.button_sprites.add(add_leaf_button)
-        scarecrow_button = Button(676, 334, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
-                                 image=scarecrow_icon, post_hover_message=self.post_hover_message,
-                                 hover_message="Buy a scarecrow, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound)
+        #scarecrow_button = Button(676, 334, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
+        #                         image=scarecrow_icon, post_hover_message=self.post_hover_message,
+        #                         hover_message="Buy a scarecrow, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound)
         self.button_sprites.add(add_leaf_button)
-        self.button_sprites.add(scarecrow_button)
-
+        #self.button_sprites.add(scarecrow_button)
 
         radioButtons = [
             RadioButton(100, 70, 64, 64, [self.plant.set_target_organ_leaf, self.activate_biomass_objective], FONT, image=leaf_icon),
@@ -307,6 +303,7 @@ class GameScene(Scene):
                 self.model.update_pools()
                 self.plant.grow()
             if e.type == QUIT: raise SystemExit("QUIT")
+            if e.type == WIN: self.manager.go_to(CustomScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.manager.go_to(TitleScene())
             if e.type == KEYDOWN and e.key == K_SPACE:
@@ -350,6 +347,7 @@ class GameScene(Scene):
             quick_time_event.update()
         self.quick_time_events = [quick_time_event for quick_time_event in self.quick_time_events if quick_time_event.active]
         self.plant.update()
+        self.environment.update(dt)
         # beware of ugly
         if self.plant.get_biomass() > self.plant.seedling.max and not self.stem_slider.active:
             self.stem_slider.active = True
@@ -373,8 +371,11 @@ class GameScene(Scene):
         self.tool_tip_manager.update()
 
     def render(self, screen):
-        self.draw_background(tmp_screen)
+        #self.draw_background(tmp_screen)
         self.environment.draw_background(tmp_screen)
+
+        # TODO: use for all lists, make more beautiful
+        # loop through list of lists
         for sprite in self.sprites:
             if not sprite.update():
                 self.sprites.remove(sprite)
@@ -405,6 +406,7 @@ class GameScene(Scene):
             normalized_amount = (self.watering_can["image"].get_width()/100)*self.watering_can["amount"] # for max 100 amount
             pygame.draw.rect(tmp_screen, (255,255,255), (mouse_pos[0], mouse_pos[1],normalized_amount, 20))
             tmp_screen.blit(self.watering_can["image"], (mouse_pos))
+        screen.blit(tmp_screen, next(self.offset))
         screen.blit(tmp_screen, next(self.offset))
 
 

@@ -3,9 +3,9 @@ import random
 import pygame
 
 pygame.init()
-GAME_SPEED = 1
+GAME_SPEED = 10
 gram_mol = 0.5124299411
-WIN = 1
+WIN = pygame.USEREVENT+1
 pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
 leaves = [(pygame.image.load("../assets/leaves/leaf_{index}.png".format(index=i)), pivot_pos[i]) for i in range(0, 7)]
 stem = (pygame.image.load("../assets/stem.png"),(15,1063))
@@ -30,8 +30,8 @@ class Plant:
         self.upgrade_points = 0
         self.model = model
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=1, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=1, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=5, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=30, active=True)
         self.seedling = Seedling(self.x, self.y, beans, 6)
@@ -44,6 +44,13 @@ class Plant:
         for i in range(0,3):
             growth_rate += self.organs[i].growth_rate
         return growth_rate
+
+    def check_organ_level(self):
+        lvl = 0
+        for organ in self.organs:
+            lvl += organ.level
+        if lvl >= 10:
+            pygame.event.post(pygame.event.Event(WIN))
 
     def update_growth_rates(self, growth_rate):
         for organ in self.organs:
@@ -135,7 +142,7 @@ class Organ:
         self.name = name
         self.type = organ_type
         self.mass = mass
-        self.base_mass = 0.02
+        self.base_mass = 3
         self.growth_rate = growth_rate
         self.percentage = 0
         self.thresholds = thresholds
@@ -174,6 +181,8 @@ class Organ:
             return
         self.plant.upgrade_points += 1
         self.level += 1
+        self.plant.check_organ_level()
+        self.plant
         self.update_image_size()
         pygame.mixer.Sound.play(plopp)
         self.active_threshold += 1
@@ -216,9 +225,9 @@ class Leaf(Organ):
         self.can_add_leaf = False
 
     def activate_add_leaf(self):
-        if self.active_threshold >= len(self.leaves):
-            return
-        self.can_add_leaf = True
+        #ugly but has to work for now, maybe move activate_add_leave to plant and check there
+        if self.plant.organs[1].active_threshold >= len(self.leaves):
+            self.can_add_leaf = True
 
     def update_growth_rate(self, growth_rate):
         self.growth_rate = self.get_mass() * gram_mol * growth_rate * self.percentage/100
@@ -414,7 +423,7 @@ class Starch(Organ):
         delta = self.mass - self.starch_intake * self.percentage/100
         if delta < 0:
             self.mass = 0
-            self.toggle_button()
+            self.toggle_button.deactivate()
         else:
             self.mass = delta
 

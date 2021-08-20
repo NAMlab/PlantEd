@@ -41,6 +41,22 @@ class DynamicModel:
         self.set_bounds(NITRATE, (0, self.max_nitrate_intake_high))
         self.set_bounds(PHOTON, (0, 0))
 
+        '''forced_ATP = (
+                0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound
+                + 2.7851
+        )
+        # This ensures that the sum of the three ATP are always forced_ATP
+        multi_ATPase = self.model.problem.Constraint(
+            (
+                    self.model.reactions.get_by_id("leaf_ATPase_tx").flux_expression
+                    + self.model.reactions.get_by_id("root_ATPase_tx").flux_expression
+                    + self.model.reactions.get_by_id("stem_ATPase_tx").flux_expression
+            ),
+            ub=forced_ATP,
+            lb=forced_ATP,
+        )
+        self.model.add_cons_vars([multi_ATPase])'''
+
         # Literature ATP NADPH: 7.27 and 2.56 mmol gDW−1 day−1
         atp = 0.00727 /24
         nadhp = 0.00256 /24
@@ -55,13 +71,14 @@ class DynamicModel:
         elif self.objective == STARCH_OUT:
             self.starch_rate = solution.objective_value
             self.biomass_rate = 0
-        self.water_intake = self.get_flux(WATER)
-        self.nitrate_intake = self.get_flux(NITRATE)
-        self.starch_intake = self.get_flux(STARCH_IN)
+        self.water_intake = solution.fluxes[WATER]#self.get_flux(WATER)
+        self.nitrate_intake = solution.fluxes[NITRATE]#self.get_flux(NITRATE)
+        self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         #print(self.model.objective, self.get_rate(), "Water: ", self.water_intake, "N: ", self.nitrate_intake, "starch: ", self.starch_intake)
 
     def get_flux(self, reaction):
-        return self.model.reactions.get_by_id(reaction).flux
+        pass
+        #return self.model.reactions.get_by_id(reaction).flux
 
     def get_rates(self):
         return (self.biomass_rate, self.starch_rate, self.starch_intake)
