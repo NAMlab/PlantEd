@@ -39,19 +39,20 @@ class QuickTimeEvent:
         screen.blit(self.button.image, (self.button.rect[0],self.button.rect[1]))
 
 
-
 # eagles are generated and destroyed, they are no supposed to live long
 class Eagle:
-    def __init__(self, screen_width, screen_height, target, animation=None, speed=1, action_sound=None):
+    def __init__(self, screen_width, screen_height, target_leaf, animation=None, speed=1, action_sound=None, callback=None):
         self.active = False
         self.speed = speed
         self.animation = animation
         self.width = animation.image.get_width()
         self.x = screen_width
-        self.y = target[1]
-        self.target = target
+        self.y = target_leaf["y"]-self.width/2
+        self.callback = callback
+        self.target_leaf = target_leaf
         self.direction = (-1,0)
         self.action_sound = action_sound
+        self.eaten = False
 
     def update(self):
         if self.active:
@@ -74,3 +75,6 @@ class Eagle:
         self.x += self.direction[0]*self.speed
         if self.x < 0-self.width:
             self.active = False
+        if Rect(self.x, self.y, self.width, self.width).collidepoint(self.target_leaf["x"],self.target_leaf["y"]) and not self.eaten:
+            self.callback(self.target_leaf)
+            self.eaten = True

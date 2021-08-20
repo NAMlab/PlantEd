@@ -329,11 +329,14 @@ class GameScene(Scene):
                     self.can_particle_system.spawn_box = Rect(x,y+100,0,0)
             if e.type == KEYDOWN and e.key == K_a:
                 self.offset = shake()
-                eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
-                              Animation(eagle_img, 500), 40, action_sound=eagle_flap)
-                self.entities.append(eagle)
-                self.quick_time_events.append(
-                    QuickTimeEvent((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), 5, eagle, danger_eagle_icon, self.entities, eagle_screech))
+                leaf=None
+                if len(self.plant.organs[0].leaves) > 0:
+                    leaf = self.plant.organs[0].get_random_leave()
+                    eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf,Animation(eagle_img, 500), 40,
+                                  action_sound=eagle_flap, callback=self.plant.organs[0].remove_leaf)
+                    self.entities.append(eagle)
+                    self.quick_time_events.append(
+                        QuickTimeEvent((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), 5, eagle, danger_eagle_icon, self.entities, eagle_screech))
             for slider in self.sliders:
                 slider.handle_event(e)
             self.plant.handle_event(e)

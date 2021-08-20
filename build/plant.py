@@ -49,7 +49,7 @@ class Plant:
         lvl = 0
         for organ in self.organs:
             lvl += organ.level
-        if lvl >= 10:
+        if lvl >= 20:
             pygame.event.post(pygame.event.Event(WIN))
 
     def update_growth_rates(self, growth_rate):
@@ -228,6 +228,19 @@ class Leaf(Organ):
         #ugly but has to work for now, maybe move activate_add_leave to plant and check there
         if self.plant.organs[1].active_threshold >= len(self.leaves):
             self.can_add_leaf = True
+
+    def remove_leaf(self, leaf=None):
+        if not leaf:
+            leaf = self.get_random_leave()
+        print(self.mass)
+        self.leaves.remove(leaf)
+
+
+    def get_random_leave(self):
+        if len(leaves) > 0:
+            return self.leaves[random.randint(0,len(self.leaves)-1)]
+        else:
+            return None
 
     def update_growth_rate(self, growth_rate):
         self.growth_rate = self.get_mass() * gram_mol * growth_rate * self.percentage/100
