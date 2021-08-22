@@ -10,21 +10,27 @@ NITRATE = "root_Nitrate_tx"
 WATER = "root_H2O_tx"
 PHOTON = "leaf_Photon_tx"
 
+# mol
+Vmax = 0.00336
+max_nitrate_pool_low = 0.0012    # based on paper
+max_nitrate_pool_high = 0.05
+Km = 0.0004
+
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, model=cobra.io.read_sbml_model("whole_plant.sbml")):
+    def __init__(self, plant_mass=None, model=cobra.io.read_sbml_model("whole_plant.sbml")):
         self.model = model
+        self.plant_mass = plant_mass
         self.use_starch = False
-        # model.objective can be changed by this simple string, but not compared, workaround: self.objective
+        # model.objective can be changed by this string, but not compared, workaround: self.objective
         self.objective = BIOMASS
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
-        self.max_nitrate_intake_low = 0.0012    # based on paper
-        self.max_nitrate_intake_high = 0.05     # based on paper
+             # based on paper
         # copies of intake rates to drain form pools
         self.nitrate_intake = 0                 # Michaelis–Menten equation: gDW(root) Vmax ~ 0.00336 mol g DW−1 day−1
-        #self.photon_intake = 0                  # 300micromol /m2 s * PLA(gDW * slope)
+        self.photon_intake = 0                  # 300micromol /m2 s * PLA(gDW * slope)
         self.water_intake = 0
         self.starch_intake = 0                  # actual starch consumption
         self.starch_intake_max = 10            # upper bound for init consumption
@@ -38,8 +44,10 @@ class DynamicModel:
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
-        self.set_bounds(NITRATE, (0, self.max_nitrate_intake_high))
-        self.set_bounds(PHOTON, (0, 0))
+        self.nitrate_pool = max_nitrate_pool_low
+        self.water_pool = 10
+        self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.01)))
+        self.set_bounds(PHOTON, (0, 0.003))
 
         '''forced_ATP = (
                 0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound
@@ -71,17 +79,21 @@ class DynamicModel:
         elif self.objective == STARCH_OUT:
             self.starch_rate = solution.objective_value
             self.biomass_rate = 0
+        # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth
         self.water_intake = solution.fluxes[WATER]#self.get_flux(WATER)
         self.nitrate_intake = solution.fluxes[NITRATE]#self.get_flux(NITRATE)
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
-        #print(self.model.objective, self.get_rate(), "Water: ", self.water_intake, "N: ", self.nitrate_intake, "starch: ", self.starch_intake)
-
-    def get_flux(self, reaction):
-        pass
-        #return self.model.reactions.get_by_id(reaction).flux
+        self.photon_intake = solution.fluxes[PHOTON]
 
     def get_rates(self):
         return (self.biomass_rate, self.starch_rate, self.starch_intake)
+
+    def get_nitrate_intake(self, mass):
+        # Michaelis-Menten Kinetics
+        # v = Vmax*S/Km+S, v=intake speed, Vmax=max Intake, Km=Where S that v=Vmax/2, S=Substrate Concentration
+        # Literature: Vmax ~ 0.00336 mol g DW−1 day−1, KM = 0.4 mmol,  S = 50 mmol and 1.2 mmol (high, low)
+        # day --> sec (240 real sec = 1 ingame sec)
+        return max(((Vmax*self.nitrate_pool)/(Km+self.nitrate_pool))*mass/23/60/60*240,0) #day
 
     def get_rate(self):
         if self.objective == BIOMASS:
@@ -121,6 +133,21 @@ class DynamicModel:
         self.set_bounds(STARCH_IN, (0, 0))
         self.calc_growth_rate()
 
+    def update(self, mass, PLA, sun_intensity):
+        self.update_bounds(mass, PLA*sun_intensity)
+        self.update_pools()
+        self.calc_growth_rate()
+        #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
+
     def update_pools(self):
         self.nitrate_pool -= self.nitrate_intake
         self.water_pool -= self.water_intake
+        #print(self.nitrate_pool, self.water_pool)
+
+    def update_bounds(self, PLA, mass):
+        # update photon intake based on sun_intensity
+        # update nitrate inteake based on Substrate Concentration
+        # update water, co2? maybe later in dev
+        #print(self.get_nitrate_intake(), self.plant_mass())
+        self.set_bounds(NITRATE,(0,self.get_nitrate_intake(mass)))
+        self.set_bounds(PHOTON,(0,PLA))

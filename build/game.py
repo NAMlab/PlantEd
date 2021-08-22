@@ -300,7 +300,7 @@ class GameScene(Scene):
     def handle_events(self, event):
         for e in event:
             if e.type == GROWTH:
-                self.model.update_pools()
+                self.model.update(self.plant.get_biomass(), self.plant.get_PLA(), max(self.environment.get_sun_intensity(),0))
                 self.plant.grow()
             if e.type == QUIT: raise SystemExit("QUIT")
             if e.type == WIN: self.manager.go_to(CustomScene())
@@ -329,7 +329,6 @@ class GameScene(Scene):
                     self.can_particle_system.spawn_box = Rect(x,y+100,0,0)
             if e.type == KEYDOWN and e.key == K_a:
                 self.offset = shake()
-                leaf=None
                 if len(self.plant.organs[0].leaves) > 0:
                     leaf = self.plant.organs[0].get_random_leave()
                     eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf,Animation(eagle_img, 500), 40,
@@ -599,7 +598,7 @@ class GameScene(Scene):
         pygame.draw.rect(s, white_transparent,(245, 490, 400, 125), border_radius=3)
 
         # growth_rate in seconds
-        growth_rate = self.sfont.render("Growth Rate /s {:.5f}".format(self.plant.target_organ.growth_rate), True, (0, 0, 0))
+        growth_rate = self.sfont.render("Growth Rate /h {:.10f}".format(self.plant.target_organ.growth_rate*60*60), True, (0, 0, 0)) #hourly
         s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
 
         # level
@@ -609,7 +608,7 @@ class GameScene(Scene):
         s.blit(level, (100-level.get_width()/2,510-level.get_height()/2))
 
         # mass
-        mass = self.sfont.render("Organ Mass {:.5f}".format(self.plant.target_organ.mass), True, (0, 0, 0))
+        mass = self.sfont.render("Organ Mass in mg, DW {:.10f}".format(self.plant.target_organ.mass*1000), True, (0, 0, 0))
         s.blit(mass, dest=(245, 550))
         screen.blit(s, (0, 0))
 

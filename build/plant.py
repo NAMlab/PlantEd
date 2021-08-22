@@ -30,9 +30,9 @@ class Plant:
         self.upgrade_points = 0
         self.model = model
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=1, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=1, leaf = organ_leaf, active=False)
-        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=5, active=True)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0.01, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0.01, leaf = organ_leaf, active=False)
+        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=0.01, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=30, active=True)
         self.seedling = Seedling(self.x, self.y, beans, 6)
         self.organs = [organ_leaf, organ_stem, organ_root]
@@ -67,7 +67,7 @@ class Plant:
     # Projected Leaf Area (PLA)
     def get_PLA(self):
         # 0.03152043208186226
-        return self.organs[0].get_mass() * 0.03152043208186226
+        return self.organs[0].get_mass() * 0.03152043208186226 if len(self.organs[0].leaves) > 0 else 0
 
     def grow(self):
         self.update_growth_rates(self.model.get_rates())
@@ -128,7 +128,7 @@ class Seedling:
 
 
 class Organ:
-    def __init__(self, x, y, name, organ_type,callback=None, plant=None, image=None, pivot=None, mass=1.0, growth_rate=0, thresholds=None, rect=None, active=False):
+    def __init__(self, x, y, name, organ_type,callback=None, plant=None, image=None, pivot=None, mass=0.01, growth_rate=0, thresholds=None, rect=None, active=False):
         if thresholds is None:
             thresholds = [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
         self.x = x
@@ -142,7 +142,7 @@ class Organ:
         self.name = name
         self.type = organ_type
         self.mass = mass
-        self.base_mass = 3
+        self.base_mass = 0.01
         self.growth_rate = growth_rate
         self.percentage = 0
         self.thresholds = thresholds

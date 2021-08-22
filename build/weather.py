@@ -134,7 +134,7 @@ class Environment:
 
     def get_day_time(self):
         ticks = pygame.time.get_ticks()
-        day = 1000*60
+        day = 1000*60*6
         hour = day/24
         min = hour/60
         hours = (ticks % day) / hour
@@ -159,7 +159,7 @@ class Environment:
 
 
     def get_sun_intensity(self):
-        return -(np.sin(np.pi/2-np.pi/5+((pygame.time.get_ticks()/(1000 * 60)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
+        return -(np.sin(np.pi/2-np.pi/5+((pygame.time.get_ticks()/(1000 * 60 * 6)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))
