@@ -33,7 +33,7 @@ class Plant:
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0.01, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0.01, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=0.01, active=True)
-        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=30, active=True)
+        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=0.005, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 6)
         self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
@@ -416,10 +416,10 @@ class Stem(Organ):
         return x, dir
 
 class Starch(Organ):
-    def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active):
-        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[30, 50, 80, 160, 320])
-        self.starch_intake = 0
+    def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active, model):
+        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[0.01,0.1,1,10])
         self.toggle_button = None
+        self.model = model
 
     def grow(self):
         delta = self.growth_rate*GAME_SPEED
@@ -432,7 +432,7 @@ class Starch(Organ):
         self.growth_rate = growth_rate
 
     def drain(self):
-        delta = self.mass - self.starch_intake * self.percentage/100
+        delta = self.mass - self.model.get_rates()[2] * self.percentage/100
         if delta < 0:
             self.mass = 0
             self.toggle_button.deactivate()
@@ -440,4 +440,4 @@ class Starch(Organ):
             self.mass = delta
 
     def get_intake(self):
-        return self.starch_intake * self.percentage/100
+        return self.model.get_rates()[2] * self.percentage/100

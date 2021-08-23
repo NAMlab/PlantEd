@@ -1,6 +1,6 @@
 import pygame
 from pygame.locals import *
-from particle import ParticleSystem
+from particle import ParticleSystem, StillParticles
 from animation import OneShotAnimation, Animation
 import numpy as np
 import gradient
@@ -26,8 +26,9 @@ gust = [pygame.transform.scale(pygame.image.load("../assets/wind/gust_{}.png".fo
 
 
 class Environment:
-    def __init__(self, get_image, SCREEN_WIDTH, SCREEN_HEIGHT, plant, nitrate, water):
+    def __init__(self, get_image, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water):
         self.w = SCREEN_WIDTH
+        self.model = model
         self.background = pygame.transform.scale(get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.sun_pos_noon = (1300,0)
@@ -51,6 +52,10 @@ class Environment:
                                     color=(0,0,100), apply_gravity=True, speed=[0, 8],
                                     active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)
 
+        self.nitrate = StillParticles(100, spawn_box=Rect(1200,900,400,190),
+                                    boundary_box=Rect(1200,900,400,190),
+                                    color=(0,0,0), speed=[0, 0], callback=self.model.get_nitrate_pool,
+                                    active=True, size=5, once=True)
         self.blow_wind()
 
 
@@ -58,6 +63,7 @@ class Environment:
         for animation in self.animations:
             animation.update()
         #self.rain.update(dt)
+        self.nitrate.update(dt)
         for sprite in self.sprites:
             # sprites are able to cancle themselves, OneShotAnimation / Animation (loop)
             if not sprite.update():
@@ -97,6 +103,7 @@ class Environment:
     def draw_foreground(self, screen):
         self.draw_clock(screen)
         self.rain.draw(screen)
+        self.nitrate.draw(screen)
         self.sprites.draw(screen)
 
     def activate_rain(self):

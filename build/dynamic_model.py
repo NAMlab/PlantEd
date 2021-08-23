@@ -88,6 +88,13 @@ class DynamicModel:
     def get_rates(self):
         return (self.biomass_rate, self.starch_rate, self.starch_intake)
 
+    def get_nitrate_pool(self):
+        return self.nitrate_pool
+
+    def increase_nitrate_pool(self, amount):
+        self.nitrate_pool += amount
+        print(self.nitrate_pool)
+
     def get_nitrate_intake(self, mass):
         # Michaelis-Menten Kinetics
         # v = Vmax*S/Km+S, v=intake speed, Vmax=max Intake, Km=Where S that v=Vmax/2, S=Substrate Concentration
@@ -142,12 +149,11 @@ class DynamicModel:
     def update_pools(self):
         self.nitrate_pool -= self.nitrate_intake
         self.water_pool -= self.water_intake
-        #print(self.nitrate_pool, self.water_pool)
+        # starch gets handled separatly in Organ Starch
 
     def update_bounds(self, mass, photon_in):
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
-        #print(self.get_nitrate_intake(), self.plant_mass())
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(mass)))
         self.set_bounds(PHOTON,(0,photon_in))
