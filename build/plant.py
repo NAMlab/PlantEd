@@ -232,7 +232,6 @@ class Leaf(Organ):
     def remove_leaf(self, leaf=None):
         if not leaf:
             leaf = self.get_random_leave()
-        print(self.mass)
         self.leaves.remove(leaf)
 
 

@@ -47,7 +47,7 @@ class DynamicModel:
         self.nitrate_pool = max_nitrate_pool_low
         self.water_pool = 10
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.01)))
-        self.set_bounds(PHOTON, (0, 0.003))
+        self.set_bounds(PHOTON, (0, 0))
 
         '''forced_ATP = (
                 0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound
@@ -74,10 +74,10 @@ class DynamicModel:
         solution = self.model.optimize()
         # update bounds
         if self.objective == BIOMASS:
-            self.biomass_rate = solution.objective_value
+            self.biomass_rate = solution.objective_value/60/60*240 # make it every ingame second
             self.starch_rate = 0
         elif self.objective == STARCH_OUT:
-            self.starch_rate = solution.objective_value
+            self.starch_rate = solution.objective_value/60/60*240 # make it every ingame second
             self.biomass_rate = 0
         # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth
         self.water_intake = solution.fluxes[WATER]#self.get_flux(WATER)
@@ -144,10 +144,10 @@ class DynamicModel:
         self.water_pool -= self.water_intake
         #print(self.nitrate_pool, self.water_pool)
 
-    def update_bounds(self, PLA, mass):
+    def update_bounds(self, mass, photon_in):
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
         #print(self.get_nitrate_intake(), self.plant_mass())
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(mass)))
-        self.set_bounds(PHOTON,(0,PLA))
+        self.set_bounds(PHOTON,(0,photon_in))
