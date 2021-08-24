@@ -78,8 +78,8 @@ photo_energy = pygame.transform.scale(get_image("photo_energy.png"),(15,15)).con
 starch_energy = pygame.transform.scale(get_image("starch_energy.png"),(15,15)).convert_alpha()
 eagle_img = [pygame.transform.scale(get_image("bird/Eagle Normal_{}.png".format(i)), (128,128)) for i in range(1,20)]
 danger_eagle_icon = pygame.transform.scale(get_image("danger_bird.png"),(128,128))
-scarecrow = get_image("scarecrow.png")
-scarecrow_icon = pygame.transform.scale(scarecrow, (64,64)).convert_alpha()
+scarecrow = pygame.transform.scale(get_image("scarecrow.png"), (256,256)).convert_alpha()
+scarecrow_icon = pygame.transform.scale(get_image("scarecrow.png"), (64,64)).convert_alpha()
 chloroplast_icon = pygame.transform.scale(get_image("chloroplast.png"), (20,20)).convert_alpha()
 blue_grain = (get_image("blue_grain_0.png"))
 blue_grain_bag = (get_image("blue_grain_bag.png"))
@@ -90,7 +90,7 @@ eagle_flap = pygame.mixer.Sound('../assets/eagle_flap.mp3')
 gravel = pygame.mixer.Sound('../assets/gravel.mp3')
 eagle_screech = pygame.mixer.Sound('../assets/eagle_screech.mp3')
 pygame.mixer.music.load('../assets/background_music.mp3')
-#pygame.mixer.music.play(-1,0)
+pygame.mixer.music.play(-1,0)
 
 
 class Scene(object):
@@ -258,11 +258,13 @@ class GameScene(Scene):
         add_leaf_button = Button(676, 260, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
                                  image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", hover_message_image=chloroplast_icon, button_sound=click_sound)
         self.button_sprites.add(add_leaf_button)
-        #scarecrow_button = Button(676, 334, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
-        #                         image=scarecrow_icon, post_hover_message=self.post_hover_message,
-        #                         hover_message="Buy a scarecrow, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound)
+        self.scarecrow = {"active": False,
+                          "button": Button(676, 334, 64, 64, [self.activate_scarecrow], self.sfont,
+                                 image=scarecrow_icon, post_hover_message=self.post_hover_message,
+                                 hover_message="Buy a scarecrow, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound),
+                          "effect": None}
         self.button_sprites.add(add_leaf_button)
-        #self.button_sprites.add(scarecrow_button)
+        self.button_sprites.add(self.scarecrow["button"])
 
         radioButtons = [
             RadioButton(100, 70, 64, 64, [self.plant.set_target_organ_leaf, self.activate_biomass_objective], FONT, image=leaf_icon),
@@ -356,7 +358,7 @@ class GameScene(Scene):
 
             if e.type == KEYDOWN and e.key == K_a:
                 self.offset = shake()
-                if len(self.plant.organs[0].leaves) > 0:
+                if not len(self.plant.organs[0].leaves) > 0:
                     leaf = self.plant.organs[0].get_random_leave()
                     eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf,Animation(eagle_img, 500), 40,
                                   action_sound=eagle_flap, callback=self.plant.organs[0].remove_leaf)
@@ -422,6 +424,8 @@ class GameScene(Scene):
         for system in self.particle_systems:
             system.draw(tmp_screen)
         self.draw_organ_ui(tmp_screen)
+        if self.scarecrow["active"]:
+            screen.blit(scarecrow, (1050,580))
         self.environment.draw_foreground(tmp_screen)
         self.button_sprites.draw(tmp_screen)
         self.tool_tip_manager.draw(tmp_screen)
@@ -509,6 +513,9 @@ class GameScene(Scene):
         self.plant.upgrade_points -= 1'''
         pygame.mouse.set_visible(False)
         self.blue_grain["active"] = True
+
+    def activate_scarecrow(self):
+        self.scarecrow["active"] = True
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))
