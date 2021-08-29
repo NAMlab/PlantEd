@@ -11,6 +11,9 @@ leaves = [(pygame.image.load("../assets/leaves/leaf_{index}.png".format(index=i)
 stem = (pygame.image.load("../assets/stem.png"),(15,1063))
 roots = (pygame.image.load("../assets/roots.png"),(387, 36))
 
+thorn_l = (pygame.image.load("../assets/thorn_l.png"))
+thorn_r = (pygame.image.load("../assets/thorn_r.png"))
+
 beans_big = [pygame.image.load("../assets/bean_growth/bean_{}.png".format(index)) for index in range(0,6)]
 beans = []
 for bean in beans_big:
@@ -30,8 +33,8 @@ class Plant:
         self.upgrade_points = 0
         self.model = model
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0.01, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0.01, leaf = organ_leaf, active=False)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=1.01, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=1.01, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=6.01, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=0.005, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 6)
@@ -321,7 +324,22 @@ class Stem(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, leaf, mass, active):
         self.leaf = leaf
         self.highlight = None
+        self.thorns = []
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
+
+        for i in range(1,9):
+            y = int(i * self.image.get_height() / 10)
+            x, dir = self.get_image_mask_x((int(y),random.randint(0,self.image.get_width())), self.image)
+            self.add_thorn((x+self.x-self.pivot[0],y+self.y-self.pivot[1]), dir)
+
+    def add_thorn(self, pos, dir):
+        if dir > 0:
+            image = thorn_r
+        else:
+            image = thorn_l
+        self.thorns.append({"position": pos,
+                            "image" : image})
+
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
@@ -380,6 +398,8 @@ class Stem(Organ):
             size = 10
             pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size, width=int(size/3))
             pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size/3)
+        for thorn in self.thorns:
+            screen.blit(thorn["image"], thorn["position"])
 
     def get_rect(self):
         if self.image:

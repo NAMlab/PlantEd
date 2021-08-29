@@ -5,10 +5,11 @@ from animation import OneShotAnimation, Animation
 import numpy as np
 import gradient
 import random
+import config
 
-SUN = 0
-RAIN = 1
-CLOUD = 2
+SUN = pygame.USEREVENT+1
+RAIN = pygame.USEREVENT+2
+CLOUD = pygame.USEREVENT+3
 
 color = (0, 0, 0)
 orange = (137, 77, 0)
@@ -30,15 +31,18 @@ class Environment:
         self.w = SCREEN_WIDTH
         self.model = model
         self.background = pygame.transform.scale(get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
+        self.background_moist = pygame.transform.scale(get_image("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.sun_pos_noon = (1300,0)
         self.sun_pos_night = (500,SCREEN_HEIGHT-200)
         self.sun_pos = (0,0)
+        self.rain_rate = 0.001
         self.font = pygame.font.SysFont('Arial', 56)
         self.sfont = pygame.font.SysFont('Arial', 32)
         self.plant = plant
         self.sprites = pygame.sprite.Group()
         self.animations = []
+        self.weather_events = []
         self.state = SUN # mask for weather 0sun,1rain,2cloud
         self.star_pos_size = [((random.randint(0,SCREEN_WIDTH), random.randint(0,SCREEN_HEIGHT/2)), random.randint(0,10)) for i in range(0,50)]
 
@@ -51,6 +55,7 @@ class Environment:
                                     boundary_box=Rect(SCREEN_WIDTH/3,0,SCREEN_WIDTH/3*2,SCREEN_HEIGHT-250),
                                     color=(0,0,100), apply_gravity=True, speed=[0, 8],
                                     active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)
+        self.rain.activate()
 
         self.nitrate = StillParticles(100, spawn_box=Rect(1200,900,400,190),
                                     boundary_box=Rect(1200,900,400,190),
@@ -62,8 +67,10 @@ class Environment:
     def update(self, dt):
         for animation in self.animations:
             animation.update()
-        #self.rain.update(dt)
+        self.rain.update(dt)
         self.nitrate.update(dt)
+        if self.rain.active:
+            self.model.water_pool += self.rain_rate
         for sprite in self.sprites:
             # sprites are able to cancle themselves, OneShotAnimation / Animation (loop)
             if not sprite.update():
@@ -98,6 +105,10 @@ class Environment:
         #    s.blit(animation.image, animation.pos)
         screen.blit(s, (0, 0))
         screen.blit(self.background, (0, 0))
+        if self.model.water_pool > 0:
+            background_moist = self.background_moist.copy()
+            background_moist.set_alpha(int(self.model.water_pool/self.model.max_water_pool*255))
+            screen.blit(background_moist, (0,0))
 
 
     def draw_foreground(self, screen):
@@ -138,6 +149,12 @@ class Environment:
     #
     def handle_weather_event(self):
         pass
+
+    def add_weather_event(self, event):
+        time_start = event["time"]
+        timer_event = event["type"]
+        pygame.time.set_timer(timer_event, time_start)
+        self.weather_events.append(config.rain)
 
     def get_day_time(self):
         ticks = pygame.time.get_ticks()

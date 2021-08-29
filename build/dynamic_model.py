@@ -27,6 +27,7 @@ class DynamicModel:
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
+        self.max_water_pool = 0.1
              # based on paper
         # copies of intake rates to drain form pools
         self.nitrate_intake = 0                 # Michaelis–Menten equation: gDW(root) Vmax ~ 0.00336 mol g DW−1 day−1
@@ -45,7 +46,7 @@ class DynamicModel:
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
         self.nitrate_pool = max_nitrate_pool_low
-        self.water_pool = 10
+        self.water_pool = 0.1
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.01)))
         self.set_bounds(PHOTON, (0, 0))
 
@@ -70,7 +71,13 @@ class DynamicModel:
         nadhp = 0.00256 /24
 
     def calc_growth_rate(self):
+        # transporter
+
         # calc current objective rate
+        # constraints to restrict transfer flows
+        # 5g Root, (0,5) mol/h/g Nitrate -> 0.001g Stem, 1000 mol/h/g
+        # vNitrateRoot * RootMass = vNitrateStem * StemMass
+        #
         solution = self.model.optimize()
         # update bounds
         if self.objective == BIOMASS:
@@ -156,4 +163,4 @@ class DynamicModel:
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(mass)))
-        self.set_bounds(PHOTON,(0,photon_in))
+        self.set_bounds(PHOTON,(0,100))

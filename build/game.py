@@ -82,6 +82,7 @@ scarecrow = pygame.transform.scale(get_image("scarecrow.png"), (256,256)).conver
 scarecrow_icon = pygame.transform.scale(get_image("scarecrow.png"), (64,64)).convert_alpha()
 chloroplast_icon = pygame.transform.scale(get_image("chloroplast.png"), (20,20)).convert_alpha()
 blue_grain = (get_image("blue_grain_0.png"))
+#danger_energy = (get_image("danger_energy.png"))
 blue_grain_bag = (get_image("blue_grain_bag.png"))
 #pygame.mixer.music.load()
 water_sound = pygame.mixer.Sound('../assets/water_can.mp3')
@@ -90,7 +91,7 @@ eagle_flap = pygame.mixer.Sound('../assets/eagle_flap.mp3')
 gravel = pygame.mixer.Sound('../assets/gravel.mp3')
 eagle_screech = pygame.mixer.Sound('../assets/eagle_screech.mp3')
 pygame.mixer.music.load('../assets/background_music.mp3')
-pygame.mixer.music.play(-1,0)
+#pygame.mixer.music.play(-1,0)
 
 
 class Scene(object):
@@ -240,6 +241,7 @@ class GameScene(Scene):
                                               hover_message="Water Your Plant, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound),
                              "image": can,
                              "amount": 0,
+                             "rate": 0.1,
                              "pouring": False}
         self.blue_grain = {"active": False,
                            "button": Button(780, 344, 64,64, [self.activate_blue_grain], self.sfont,
@@ -250,8 +252,8 @@ class GameScene(Scene):
                            "effect": self.model.increase_nitrate_pool, #0.5mg
                            "system": ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 50, 50),
                                                     boundary_box=Rect(0,0, SCREEN_WIDTH, SCREEN_HEIGHT-220),
-                                                    lifetime=20, size=8, color=BLUE,apply_gravity=True,speed=[0, 3],
-                                                    spread=[9,0], active=False, once=True, size_over_lifetime=False)}
+                                                    lifetime=20, size=8, color=BLUE,apply_gravity=True,speed=[0, 5],
+                                                    spread=[6,0], active=False, once=True, size_over_lifetime=False)}
         self.button_sprites.add(self.blue_grain["button"])
         self.button_sprites.add(self.watering_can["button"])
         self.particle_systems.append(self.blue_grain["system"])
@@ -358,7 +360,7 @@ class GameScene(Scene):
 
             if e.type == KEYDOWN and e.key == K_a:
                 self.offset = shake()
-                if not len(self.plant.organs[0].leaves) > 0:
+                if len(self.plant.organs[0].leaves) > 0:
                     leaf = self.plant.organs[0].get_random_leave()
                     eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf,Animation(eagle_img, 500), 40,
                                   action_sound=eagle_flap, callback=self.plant.organs[0].remove_leaf)
@@ -395,7 +397,8 @@ class GameScene(Scene):
 
         # watering can
         if self.watering_can["pouring"]:
-            self.watering_can["amount"] -= 1
+            self.watering_can["amount"] -= self.watering_can["rate"]
+            self.model.water_pool += self.watering_can["rate"]
             if self.watering_can["amount"] <= 0:
                 self.deactivate_watering_can()
 
@@ -436,7 +439,7 @@ class GameScene(Scene):
 
         if self.watering_can["active"]:
             mouse_pos = pygame.mouse.get_pos()
-            normalized_amount = (self.watering_can["image"].get_width()/100)*self.watering_can["amount"] # for max 100 amount
+            normalized_amount = (self.watering_can["image"].get_width()/10)*self.watering_can["amount"] # for max 100 amount
             pygame.draw.rect(tmp_screen, (255,255,255), (mouse_pos[0], mouse_pos[1],normalized_amount, 20))
             tmp_screen.blit(self.watering_can["image"], (mouse_pos))
         if self.blue_grain["active"]:
@@ -496,7 +499,7 @@ class GameScene(Scene):
             return
         self.plant.upgrade_points -= 1
         self.watering_can["active"] = True
-        self.watering_can["amount"] = 100
+        self.watering_can["amount"] = 10
         pygame.mouse.set_visible(False)
 
     def deactivate_watering_can(self):
@@ -505,6 +508,7 @@ class GameScene(Scene):
         self.watering_can["image"] = can
         self.watering_can["active"] = False
         self.watering_can["amount"] = 0
+        self.watering_can["pouring"] = False
         pygame.mouse.set_visible(True)
 
     def activate_blue_grain(self):
@@ -560,13 +564,11 @@ class GameScene(Scene):
 
         # draw starch details
         lvl_pos = Rect(530, 270, 64, 64)
-        # linecolor white to red for flow
-        # rgb--> color[0]
-        green = blue = int(255 - self.plant.organ_starch.percentage / 100 * 255)
-        alpha = int(255-blue/2)
-        for i in range(0,3):
-            pygame.draw.line(s, (255, green, blue, alpha), (545, 280+i*10), (560, 300+i*10), width=4)
-            pygame.draw.line(s, (255, green, blue, alpha), (575, 280+i*10), (560, 300+i*10), width=4)
+        # linecolor white to red for flow, 0 -> 0, 0.1 -> 1,
+        num_arrows = int((self.plant.organ_starch.percentage)/100 * 3)
+        for i in range(0,num_arrows+1):
+            pygame.draw.line(s, (255, 0, 0), (545, 280+i*10), (560, 300+i*10), width=4)
+            pygame.draw.line(s, (255, 0, 0), (575, 280+i*10), (560, 300+i*10), width=4)
 
         # draw starch pool
         pool_height = 180
@@ -580,7 +582,7 @@ class GameScene(Scene):
         s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))
 
         # overal stats
-        # plant health?
+        # plant health? -> infeasable will damage plant
         # plant size
         # plant mass
         # leaf area, mass
@@ -599,18 +601,30 @@ class GameScene(Scene):
         s.blit(biomass, dest=(860-biomass.get_width()-5, 60))
 
         # skillpoints
-        biomass_text = self.sfont.render("Chloroplast:", True, (0, 0, 0))
-        s.blit(biomass_text, dest=(670, 90))
-        biomass = self.sfont.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(chloroplast_icon, (860-biomass.get_width()-7, 93))
-        s.blit(biomass, dest=(860-biomass.get_width()-26, 90))
+        skillpoints_text = self.sfont.render("Chloroplast:", True, (0, 0, 0))
+        s.blit(skillpoints_text, dest=(670, 90))
+        skillpoints = self.sfont.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
+        s.blit(chloroplast_icon, (860-skillpoints.get_width()-7, 93))
+        s.blit(skillpoints, dest=(860-skillpoints.get_width()-26, 90))
+
+        # water
+        water_level_text = self.sfont.render("Water:", True, (0, 0, 0))
+        s.blit(water_level_text, dest=(670, 120))
+        water_level = self.sfont.render("{:.2f}".format(self.model.water_pool), True, (0, 0, 0))  # title
+        s.blit(water_level, dest=(860 - water_level.get_width(), 120))
+
+        # nitrate
+        nitrate_level_text = self.sfont.render("Nitrate:", True, (0, 0, 0))
+        s.blit(nitrate_level_text, dest=(670, 150))
+        nitrate_level = self.sfont.render("{:.2f}".format(self.model.nitrate_pool*1000), True, (0, 0, 0))  # title
+        s.blit(nitrate_level, dest=(860 - nitrate_level.get_width(), 150))
 
         # shop
         pygame.draw.rect(s, (255, 255, 255, 180), (660, 210, 200, 30), border_radius=3)
         shop_text = self.font.render("Shop", True, (0, 0, 0))  # title
         s.blit(shop_text, dest=(760 - shop_text.get_size()[0] / 2, 210))
 
-        pygame.draw.rect(s, white_transparent, (660, 250, 200, 370), border_radius=3)
+        pygame.draw.rect(s, white_transparent, (660, 250, 200, 175), border_radius=3)
         #items
 
         # headbox
