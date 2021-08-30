@@ -7,9 +7,9 @@ import gradient
 import random
 import config
 
-SUN = pygame.USEREVENT+1
-RAIN = pygame.USEREVENT+2
-CLOUD = pygame.USEREVENT+3
+SUN = 0
+RAIN = 1
+CLOUD = 2
 
 color = (0, 0, 0)
 orange = (137, 77, 0)
@@ -23,6 +23,8 @@ SCREEN_HEIGHT = 1080
 # caused by: time
 # draw: background, clouds, sun, moon, wind, birds, rain
 gust = [pygame.transform.scale(pygame.image.load("../assets/wind/gust_{}.png".format(i)),(960,540)) for i in range(0,5)]
+rain_sound = pygame.mixer.Sound("../assets/rain/rain_sound.mp3")
+rain_sound.set_volume(0.05)
 
 
 
@@ -50,23 +52,27 @@ class Environment:
         drops = [pygame.transform.scale(pygame.image.load("../assets/rain/raindrop{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 3)]
         splash = [pygame.transform.scale(pygame.image.load("../assets/rain/raindrop_splash{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 4)]
         self.sun = [pygame.transform.scale(pygame.image.load("../assets/sun/sun_face_{}.png".format(i)), (512, 512)).convert_alpha() for i in range(0, 5)]
-
-        self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH/3*2, 0),
+        self.cloud = pygame.transform.scale(pygame.image.load("../assets/cloud.png"),(420,240)).convert_alpha()
+        self.cloud_dark = pygame.transform.scale(pygame.image.load("../assets/cloud_dark.png"),(420,240)).convert_alpha()
+        self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH / 2, 50, SCREEN_WIDTH/3*2, 0),
                                     boundary_box=Rect(SCREEN_WIDTH/3,0,SCREEN_WIDTH/3*2,SCREEN_HEIGHT-250),
-                                    color=(0,0,100), apply_gravity=True, speed=[0, 8],
+                                    color=(0,0,100), apply_gravity=True, speed=[0, 18],
                                     active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)
-        self.rain.activate()
 
         self.nitrate = StillParticles(100, spawn_box=Rect(1200,900,400,190),
                                     boundary_box=Rect(1200,900,400,190),
                                     color=(0,0,0), speed=[0, 0], callback=self.model.get_nitrate_pool,
                                     active=True, size=5, once=True)
-        self.blow_wind()
+        self.weather_events.append(config.rain0)
+        self.weather_events.append(config.sun0)
+        self.weather_events.append(config.rain1)
+        self.weather_events.append(config.cloud0)
 
 
     def update(self, dt):
         for animation in self.animations:
             animation.update()
+        self.handle_weather_events()
         self.rain.update(dt)
         self.nitrate.update(dt)
         if self.rain.active:
@@ -82,7 +88,6 @@ class Environment:
             y = (self.sun_pos_night[1] + (self.sun_pos_noon[1]-self.sun_pos_night[1])*sun_intensity)
             self.sun_pos = (x,y)
 
-
     def draw_background(self, screen):
         s = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         # sun-->Photon_intensity, moon, water_lvl
@@ -91,7 +96,6 @@ class Environment:
             color = gradient.get_color(orange, blue, sun_intensity)
             if self.state == SUN:
                 # sun_intensity 0, 1 -->
-
                 sun_index = min(max(int(self.get_sun_intensity() * len(self.sun)),0),4)
                 s.blit(self.sun[sun_index], self.sun_pos)
         else:
@@ -100,6 +104,16 @@ class Environment:
             for pos in self.star_pos_size:
                 pygame.draw.circle(s, (255,255,255, abs(sun_intensity)*128), pos[0], pos[1])
                 pygame.draw.circle(s, (255,255,255, abs(sun_intensity)*180), pos[0], max(pos[1]-5,0))
+        if self.state == CLOUD:
+            s.blit(self.cloud, (900, 30))
+            s.blit(self.cloud, (1400, 10))
+            s.blit(self.cloud, (1200, -40))
+        if self.state == RAIN:
+            s.blit(self.cloud_dark, (900, 10))
+            s.blit(self.cloud_dark, (1300, 0))
+            s.blit(self.cloud_dark, (1100, -50))
+            s.blit(self.cloud_dark, (1550, -20))
+
         screen.fill(color)
         #for animation in self.animations:
         #    s.blit(animation.image, animation.pos)
@@ -110,51 +124,34 @@ class Environment:
             background_moist.set_alpha(int(self.model.water_pool/self.model.max_water_pool*255))
             screen.blit(background_moist, (0,0))
 
-
     def draw_foreground(self, screen):
         self.draw_clock(screen)
         self.rain.draw(screen)
         self.nitrate.draw(screen)
         self.sprites.draw(screen)
 
-    def activate_rain(self):
-        self.state = 1
-        self.rain.activate()
+    def handle_weather_events(self):
+        time = config.get_time()
 
-    def deactivate_rain(self):
-        self.rain.deactivate()
+        for event in self.weather_events:
+            if event["start_time"] <= time:
+                self.start_event(event)
 
-    def activate_clouds(self):
-        self.state = 2
-        pass
-
-    def deactivate_clouds(self):
-        pass
-
-    def activate_sun(self):
-        self.state = 0
-        pass
-
-    def deactivate_sun(self):
-        pass
-
-    def blow_wind(self):
-        pass
-        #self.animations.append(Animation(gust, 2000, (500,400)))
-        #decrease temp
-        # wind animation
-
-    # on event
-    # deactivate all -> acitvate selected filter
-    #
-    def handle_weather_event(self):
-        pass
-
-    def add_weather_event(self, event):
-        time_start = event["time"]
-        timer_event = event["type"]
-        pygame.time.set_timer(timer_event, time_start)
-        self.weather_events.append(config.rain)
+    def start_event(self, event):
+        self.state = event["type"]
+        print(self.state, event)
+        self.model.temp += event["delta_temp"]
+        if self.state == RAIN:
+            pygame.mixer.Sound.play(rain_sound, -1)
+            self.rain.activate()
+        elif self.state == SUN:
+            pygame.mixer.Sound.stop(rain_sound)
+            self.rain.deactivate()
+        elif self.state == CLOUD:
+            pygame.mixer.Sound.stop(rain_sound)
+            self.rain.deactivate()
+            pass
+        self.weather_events.remove(event)
 
     def get_day_time(self):
         ticks = pygame.time.get_ticks()
@@ -164,11 +161,6 @@ class Environment:
         hours = (ticks % day) / hour
         minutes = (ticks % hour) / min
         return hours, minutes
-
-    '''def darken_display_daytime(self, screen):
-        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        day_time = (((self.get_sun_intensity() + 1) / 2) * 128)
-        return day_time'''
 
     def draw_clock(self, screen):
         # clock
@@ -180,7 +172,6 @@ class Environment:
         day_time = self.get_sun_intensity()
         sun_intensity = self.sfont.render("{:.2}".format(day_time), True, (0, 0, 0))
         screen.blit(sun_intensity, sun_intensity.get_rect(center=(self.w / 2 + 100, 20)))
-
 
     def get_sun_intensity(self):
         return -(np.sin(np.pi/2-np.pi/5+((pygame.time.get_ticks()/(1000 * 60 * 6)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval

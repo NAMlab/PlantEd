@@ -28,6 +28,7 @@ class DynamicModel:
         self.nitrate_pool = 0
         self.water_pool = 0
         self.max_water_pool = 0.1
+        self.temp = 20 # degree ceclsius
              # based on paper
         # copies of intake rates to drain form pools
         self.nitrate_intake = 0                 # Michaelis–Menten equation: gDW(root) Vmax ~ 0.00336 mol g DW−1 day−1
@@ -100,7 +101,6 @@ class DynamicModel:
 
     def increase_nitrate_pool(self, amount):
         self.nitrate_pool += amount
-        print(self.nitrate_pool)
 
     def get_nitrate_intake(self, mass):
         # Michaelis-Menten Kinetics

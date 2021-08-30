@@ -1,14 +1,22 @@
 import pygame
+
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
 # settings: HARD, INTERMEDIATE, EASY, Graphics - not yet
 #
-SUN = pygame.USEREVENT+1
-RAIN = pygame.USEREVENT+2
-CLOUD = pygame.USEREVENT+3
+SUN = 0
+RAIN = 1
+CLOUD = 2
 
 GAMESPEED = 1
-GROWTH_TICK_RATE = 1000 # in ms
+GROWTH_TICK_RATE = 1000  # in ms
+
+STARTTIME = 0
+
+
+def get_time():
+    return pygame.time.get_ticks() - STARTTIME
+
 
 # PLANT
 
@@ -29,13 +37,13 @@ GROWTH_TICK_RATE = 1000 # in ms
 # GAMETIME
 
 # SAVEGAME OBJECTS
-    # ORGANS
-    # LEAF
-    #STEM
-    # ROOTS
-    # STARCH
+# ORGANS
+# LEAF
+# STEM
+# ROOTS
+# STARCH
 
-    # SHOPITEMS
+# SHOPITEMS
 
 # TOOLTIPPS
 
@@ -44,7 +52,18 @@ GROWTH_TICK_RATE = 1000 # in ms
 # BUTTONS
 
 # EVENTS
-rain = {"type": RAIN,
-        "time": 1000*60*60, #miliseconds
-        "duration": 10000, #in milliseconds
-        "delta_temp": -5} #temperature in celsius
+rain0 = {"type": RAIN,
+        "start_time": 1000 * 5,  # miliseconds
+        "delta_temp": -5}  # temperature in celsius
+
+sun0 = {"type": SUN,
+        "start_time": 1000 * 30,  # miliseconds
+        "delta_temp": 5}  # temperature in celsius
+
+rain1 = {"type": RAIN,
+        "start_time": 1000 * 35,  # miliseconds
+        "delta_temp": 5}  # temperature in celsius
+
+cloud0 = {"type": CLOUD,
+        "start_time": 1000 * 60,  # miliseconds
+        "delta_temp": 5}  # temperature in celsius

@@ -19,6 +19,7 @@ beans = []
 for bean in beans_big:
     beans.append(pygame.transform.scale(bean, (int(bean.get_width()/3), int(bean.get_height()/3))))
 plopp = pygame.mixer.Sound('../assets/plopp.wav')
+plopp.set_volume(0.4)
 
 
 class Plant:

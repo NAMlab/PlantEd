@@ -86,12 +86,18 @@ blue_grain = (get_image("blue_grain_0.png"))
 blue_grain_bag = (get_image("blue_grain_bag.png"))
 #pygame.mixer.music.load()
 water_sound = pygame.mixer.Sound('../assets/water_can.mp3')
+water_sound.set_volume(0.1)
 click_sound = pygame.mixer.Sound('../assets/button_klick.mp3')
+click_sound.set_volume(0.8)
 eagle_flap = pygame.mixer.Sound('../assets/eagle_flap.mp3')
+eagle_flap.set_volume(0.7)
 gravel = pygame.mixer.Sound('../assets/gravel.mp3')
+gravel.set_volume(0.7)
 eagle_screech = pygame.mixer.Sound('../assets/eagle_screech.mp3')
+eagle_screech.set_volume(0.5)
 pygame.mixer.music.load('../assets/background_music.mp3')
-#pygame.mixer.music.play(-1,0)
+pygame.mixer.music.set_volume(0.4)
+pygame.mixer.music.play(-1,0)
 
 
 class Scene(object):
@@ -226,6 +232,7 @@ class GameScene(Scene):
         self._running = True
         self.model = DynamicModel()
         self.plant = Plant(plant_pos, self.model)
+        self.environment = Environment(get_image,SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0)
         self.environment = Environment(get_image,SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0)
         self.particle_systems = []
         self.sprites = pygame.sprite.Group()
@@ -415,20 +422,20 @@ class GameScene(Scene):
                 self.sprites.remove(sprite)
 
         for animation in self.animations:
-            screen.blit(animation.image, animation.pos)
+            tmp_screen.blit(animation.image, animation.pos)
 
-        self.plant.draw(screen)
+        self.plant.draw(tmp_screen)
         #self.darken_display_daytime(tmp_screen) # --> find smth better
         self.sprites.draw(tmp_screen)
         for quick_time_event in self.quick_time_events:
-            quick_time_event.draw(screen)
+            quick_time_event.draw(tmp_screen)
         for entity in self.entities:
-            entity.draw(screen)
+            entity.draw(tmp_screen)
         for system in self.particle_systems:
             system.draw(tmp_screen)
         self.draw_organ_ui(tmp_screen)
         if self.scarecrow["active"]:
-            screen.blit(scarecrow, (1050,580))
+            tmp_screen.blit(scarecrow, (1050,580))
         self.environment.draw_foreground(tmp_screen)
         self.button_sprites.draw(tmp_screen)
         self.tool_tip_manager.draw(tmp_screen)
@@ -447,7 +454,7 @@ class GameScene(Scene):
             image = self.blue_grain["image"]
             pos = (mouse_pos[0]-image.get_width(),mouse_pos[1]-image.get_height())
             tmp_screen.blit(image, (pos))
-        screen.blit(tmp_screen, next(self.offset))
+        #screen.blit(tmp_screen, next(self.offset))
         screen.blit(tmp_screen, next(self.offset))
 
 
