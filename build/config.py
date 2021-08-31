@@ -52,18 +52,18 @@ def get_time():
 # BUTTONS
 
 # EVENTS
-rain0 = {"type": RAIN,
-        "start_time": 1000 * 5,  # miliseconds
-        "delta_temp": -5}  # temperature in celsius
+events = ({"type": RAIN,
+           "start_time": 1000 * 5,  # miliseconds
+           "delta_temp": -5},  # temperature in celsius
 
-sun0 = {"type": SUN,
-        "start_time": 1000 * 30,  # miliseconds
-        "delta_temp": 5}  # temperature in celsius
+          {"type": SUN,
+           "start_time": 1000 * 30,  # miliseconds
+           "delta_temp": 5},  # temperature in celsius
 
-rain1 = {"type": RAIN,
-        "start_time": 1000 * 35,  # miliseconds
-        "delta_temp": 5}  # temperature in celsius
+          {"type": RAIN,
+           "start_time": 1000 * 35,  # miliseconds
+           "delta_temp": 5},  # temperature in celsius
 
-cloud0 = {"type": CLOUD,
-        "start_time": 1000 * 60,  # miliseconds
-        "delta_temp": 5}  # temperature in celsius
+          {"type": CLOUD,
+           "start_time": 1000 * 60,  # miliseconds
+           "delta_temp": 5})  # temperature in celsius

@@ -3,6 +3,8 @@ import pygame
 from pygame.locals import *
 import numpy as np
 from itertools import repeat
+
+from build import config, assets
 from plant import Plant
 from button import Button, RadioButton, Slider, SliderGroup, ToggleButton
 from particle import ParticleSystem, PointParticleSystem
@@ -61,7 +63,8 @@ def shake():
         yield (0, 0)
 
 menu_plant = [get_image("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
-can = get_image("watering_can_outlined.png")
+#can = get_image("watering_can_outlined.png")
+can = assets.get_image("watering_can_outlined.png")
 can_icon = pygame.transform.scale(can, (64,64)).convert_alpha()
 can_tilted = get_image("watering_can_outlined_tilted.png")
 background = pygame.transform.scale(get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
@@ -96,7 +99,7 @@ gravel.set_volume(0.7)
 eagle_screech = pygame.mixer.Sound('../assets/eagle_screech.mp3')
 eagle_screech.set_volume(0.5)
 pygame.mixer.music.load('../assets/background_music.mp3')
-pygame.mixer.music.set_volume(0.4)
+pygame.mixer.music.set_volume(0.2)
 pygame.mixer.music.play(-1,0)
 
 

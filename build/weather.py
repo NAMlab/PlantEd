@@ -63,10 +63,7 @@ class Environment:
                                     boundary_box=Rect(1200,900,400,190),
                                     color=(0,0,0), speed=[0, 0], callback=self.model.get_nitrate_pool,
                                     active=True, size=5, once=True)
-        self.weather_events.append(config.rain0)
-        self.weather_events.append(config.sun0)
-        self.weather_events.append(config.rain1)
-        self.weather_events.append(config.cloud0)
+        self.weather_events = config.events
 
 
     def update(self, dt):
