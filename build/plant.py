@@ -34,10 +34,10 @@ class Plant:
         self.upgrade_points = 0
         self.model = model
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=1.01, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=1.01, leaf = organ_leaf, active=False)
-        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=6.01, active=True)
-        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=0.005, active=True, model=self.model)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0.00, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0.01, leaf = organ_leaf, active=False)
+        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=1, active=True)
+        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=5, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 6)
         self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
@@ -438,7 +438,7 @@ class Stem(Organ):
 
 class Starch(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active, model):
-        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[0.01,0.1,1,10])
+        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[10,20,50,100])
         self.toggle_button = None
         self.model = model
 

@@ -11,10 +11,10 @@ WATER = "root_H2O_tx"
 PHOTON = "leaf_Photon_tx"
 
 # mol
-Vmax = 0.00336
-max_nitrate_pool_low = 0.0012    # based on paper
-max_nitrate_pool_high = 0.05
-Km = 0.0004
+Vmax = 0.3
+max_nitrate_pool_low = 1
+max_nitrate_pool_high = 50
+Km = 0.4
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
@@ -27,7 +27,7 @@ class DynamicModel:
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
-        self.max_water_pool = 0.1
+        self.max_water_pool = 10
         self.temp = 20 # degree ceclsius
              # based on paper
         # copies of intake rates to drain form pools
@@ -41,14 +41,16 @@ class DynamicModel:
         self.starch_rate = 0
         self.biomass_rate = 0
 
+        #self.pool = Pool(processes=1)
+
         self.init_constraints()
         self.calc_growth_rate()
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
         self.nitrate_pool = max_nitrate_pool_low
-        self.water_pool = 0.1
-        self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.01)))
+        self.water_pool = 1
+        self.set_bounds(NITRATE, (0, self.get_nitrate_intake(1)))
         self.set_bounds(PHOTON, (0, 0))
 
         '''forced_ATP = (
@@ -73,14 +75,8 @@ class DynamicModel:
 
     def calc_growth_rate(self):
         # transporter
-
-        # calc current objective rate
-        # constraints to restrict transfer flows
-        # 5g Root, (0,5) mol/h/g Nitrate -> 0.001g Stem, 1000 mol/h/g
-        # vNitrateRoot * RootMass = vNitrateStem * StemMass
-        #
         solution = self.model.optimize()
-        # update bounds
+
         if self.objective == BIOMASS:
             self.biomass_rate = solution.objective_value/60/60*240 # make it every ingame second
             self.starch_rate = 0
@@ -92,6 +88,17 @@ class DynamicModel:
         self.nitrate_intake = solution.fluxes[NITRATE]#self.get_flux(NITRATE)
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         self.photon_intake = solution.fluxes[PHOTON]
+
+        # calc current objective rate
+        # constraints to restrict transfer flows
+        # 5g Root, (0,5) mol/h/g Nitrate -> 0.001g Stem, 1000 mol/h/g
+        # vNitrateRoot * RootMass = vNitrateStem * StemMass
+
+        #self.pool.apply_async(self.model.optimize, callback=self.unpack_solution)
+
+        #solution = self.model.optimize()
+        # update bounds
+
 
     def get_rates(self):
         return (self.biomass_rate, self.starch_rate, self.starch_intake)
@@ -147,10 +154,10 @@ class DynamicModel:
         self.set_bounds(STARCH_IN, (0, 0))
         self.calc_growth_rate()
 
-    def update(self, mass, PLA, sun_intensity):
-        self.update_bounds(mass, PLA*sun_intensity)
-        self.update_pools()
+    def update(self, root_mass, PLA, sun_intensity):
+        self.update_bounds(root_mass, PLA*sun_intensity)
         self.calc_growth_rate()
+        self.update_pools()
         #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
 
     def update_pools(self):
@@ -158,9 +165,9 @@ class DynamicModel:
         self.water_pool -= self.water_intake
         # starch gets handled separatly in Organ Starch
 
-    def update_bounds(self, mass, photon_in):
+    def update_bounds(self, root_mass, photon_in):
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
-        self.set_bounds(NITRATE,(0,self.get_nitrate_intake(mass)))
-        self.set_bounds(PHOTON,(0,100))
+        self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)))
+        self.set_bounds(PHOTON,(0,photon_in))

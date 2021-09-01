@@ -89,7 +89,7 @@ blue_grain = (get_image("blue_grain_0.png"))
 blue_grain_bag = (get_image("blue_grain_bag.png"))
 #pygame.mixer.music.load()
 water_sound = pygame.mixer.Sound('../assets/water_can.mp3')
-water_sound.set_volume(0.1)
+water_sound.set_volume(0.05)
 click_sound = pygame.mixer.Sound('../assets/button_klick.mp3')
 click_sound.set_volume(0.8)
 eagle_flap = pygame.mixer.Sound('../assets/eagle_flap.mp3')
@@ -330,7 +330,7 @@ class GameScene(Scene):
     def handle_events(self, event):
         for e in event:
             if e.type == GROWTH:
-                self.model.update(self.plant.get_biomass(), self.plant.get_PLA(), max(self.environment.get_sun_intensity(),0))
+                self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(),0))
                 self.plant.grow()
             if e.type == QUIT: raise SystemExit("QUIT")
             if e.type == WIN: self.manager.go_to(CustomScene())

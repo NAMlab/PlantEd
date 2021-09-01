@@ -32,7 +32,7 @@ class Environment:
     def __init__(self, get_image, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water):
         self.w = SCREEN_WIDTH
         self.model = model
-        self.background = pygame.transform.scale(get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
+        self.background = get_image("background_empty_sky.png").convert_alpha()
         self.background_moist = pygame.transform.scale(get_image("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.sun_pos_noon = (1300,0)
@@ -42,6 +42,7 @@ class Environment:
         self.font = pygame.font.SysFont('Arial', 56)
         self.sfont = pygame.font.SysFont('Arial', 32)
         self.plant = plant
+        self.draw = True
         self.sprites = pygame.sprite.Group()
         self.animations = []
         self.weather_events = []
@@ -63,7 +64,10 @@ class Environment:
                                     boundary_box=Rect(1200,900,400,190),
                                     color=(0,0,0), speed=[0, 0], callback=self.model.get_nitrate_pool,
                                     active=True, size=5, once=True)
-        self.weather_events = config.events
+        self.weather_events.append(config.e0)
+        self.weather_events.append(config.e1)
+        self.weather_events.append(config.e2)
+        self.weather_events.append(config.e3)
 
 
     def update(self, dt):
@@ -86,6 +90,10 @@ class Environment:
             self.sun_pos = (x,y)
 
     def draw_background(self, screen):
+        #if self.draw:
+        #    self.draw = False
+        #    return
+        #self.draw = True
         s = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         # sun-->Photon_intensity, moon, water_lvl
         sun_intensity = self.get_sun_intensity()
@@ -112,14 +120,19 @@ class Environment:
             s.blit(self.cloud_dark, (1550, -20))
 
         screen.fill(color)
+
         #for animation in self.animations:
         #    s.blit(animation.image, animation.pos)
         screen.blit(s, (0, 0))
-        screen.blit(self.background, (0, 0))
-        if self.model.water_pool > 0:
-            background_moist = self.background_moist.copy()
-            background_moist.set_alpha(int(self.model.water_pool/self.model.max_water_pool*255))
-            screen.blit(background_moist, (0,0))
+        screen.blit(self.background, (0, 1080-658))
+
+        #if self.model.water_pool > 0:
+        #    pygame.draw.circle(s, (50, 40, 20, min(int(self.model.water_pool / self.model.max_water_pool * 32), 255)),
+        #                       (1430, 1000), min(1, self.model.water_pool / self.model.max_water_pool) * 40 + 70)
+            # background_moist = self.background_moist.copy()
+            # background_moist.set_alpha(int(self.model.water_pool/self.model.max_water_pool*255))
+            # screen.blit(background_moist, (0,0))
+
 
     def draw_foreground(self, screen):
         self.draw_clock(screen)
@@ -136,7 +149,6 @@ class Environment:
 
     def start_event(self, event):
         self.state = event["type"]
-        print(self.state, event)
         self.model.temp += event["delta_temp"]
         if self.state == RAIN:
             pygame.mixer.Sound.play(rain_sound, -1)

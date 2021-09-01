@@ -53,8 +53,8 @@ class PointsParticle(Particle):
         self.direction[0] = x_dist / abs(x_dist) if x_dist != 0 else 0
         y_dist = (self.points[self.index + 1][1] - self.points[self.index][1])
         self.direction[1] = y_dist / abs(y_dist) if y_dist != 0 else 0
-        self.x += self.direction[0] * self.speed[0]
-        self.y += self.direction[1] * self.speed[0]
+        self.x += self.direction[0] * self.speed[0] * dt * 40
+        self.y += self.direction[1] * self.speed[0] * dt * 40
         # check if point reached
         if self.direction[0] < 0 and self.x < self.points[self.index + 1][0] or self.direction[0] > 0 and self.x > \
                 self.points[self.index + 1][0]:
@@ -206,7 +206,7 @@ class StillParticles(ParticleSystem):
 
     def update(self, dt):
         if self.callback:
-            self.max_particles = int((self.callback()/0.0012)*100) #max 0.0012/0.05
+            self.max_particles = int((self.callback()/1)*100) #max 0.0012/0.05
         while self.max_particles > len(self.particles):
             self.generate_particle()
         while self.max_particles < len(self.particles):
