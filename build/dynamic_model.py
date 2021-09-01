@@ -1,4 +1,5 @@
 import cobra
+import multiprocessing as mp
 
 # states for objective
 BIOMASS = "leaf_AraCore_Biomass_tx"
@@ -41,7 +42,8 @@ class DynamicModel:
         self.starch_rate = 0
         self.biomass_rate = 0
 
-        #self.pool = Pool(processes=1)
+        spawn_context = mp.get_context("spawn")
+        self.pool = spawn_context.Pool(processes=1)
 
         self.init_constraints()
         self.calc_growth_rate()
@@ -73,10 +75,7 @@ class DynamicModel:
         atp = 0.00727 /24
         nadhp = 0.00256 /24
 
-    def calc_growth_rate(self):
-        # transporter
-        solution = self.model.optimize()
-
+    def unpack_solution(self, solution):
         if self.objective == BIOMASS:
             self.biomass_rate = solution.objective_value/60/60*240 # make it every ingame second
             self.starch_rate = 0
@@ -89,16 +88,8 @@ class DynamicModel:
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         self.photon_intake = solution.fluxes[PHOTON]
 
-        # calc current objective rate
-        # constraints to restrict transfer flows
-        # 5g Root, (0,5) mol/h/g Nitrate -> 0.001g Stem, 1000 mol/h/g
-        # vNitrateRoot * RootMass = vNitrateStem * StemMass
-
-        #self.pool.apply_async(self.model.optimize, callback=self.unpack_solution)
-
-        #solution = self.model.optimize()
-        # update bounds
-
+    def calc_growth_rate(self):
+        self.pool.apply_async(self.model.optimize, (), callback=self.unpack_solution)
 
     def get_rates(self):
         return (self.biomass_rate, self.starch_rate, self.starch_intake)
