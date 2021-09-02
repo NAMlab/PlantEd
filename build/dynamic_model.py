@@ -1,4 +1,5 @@
 import cobra
+import config
 import multiprocessing as mp
 
 # states for objective
@@ -13,14 +14,15 @@ PHOTON = "leaf_Photon_tx"
 
 # mol
 Vmax = 0.3
-max_nitrate_pool_low = 1
-max_nitrate_pool_high = 50
-Km = 0.4
+max_nitrate_pool_low = 0.1
+max_nitrate_pool_high = 5
+Km = 0.5
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
     def __init__(self, plant_mass=None, model=cobra.io.read_sbml_model("whole_plant.sbml")):
         self.model = model
+        self.GAMESPEED = config.GAMESPEED
         self.plant_mass = plant_mass
         self.use_starch = False
         # model.objective can be changed by this string, but not compared, workaround: self.objective
@@ -36,14 +38,11 @@ class DynamicModel:
         self.photon_intake = 0                  # 300micromol /m2 s * PLA(gDW * slope)
         self.water_intake = 0
         self.starch_intake = 0                  # actual starch consumption
-        self.starch_intake_max = 10            # upper bound for init consumption
+        self.starch_intake_max = 10              # upper bound /h
 
         # growth rates for each objective
         self.starch_rate = 0
         self.biomass_rate = 0
-
-        spawn_context = mp.get_context("spawn")
-        self.pool = spawn_context.Pool(processes=1)
 
         self.init_constraints()
         self.calc_growth_rate()
@@ -52,7 +51,7 @@ class DynamicModel:
     def init_constraints(self):
         self.nitrate_pool = max_nitrate_pool_low
         self.water_pool = 1
-        self.set_bounds(NITRATE, (0, self.get_nitrate_intake(1)))
+        self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.1)))
         self.set_bounds(PHOTON, (0, 0))
 
         '''forced_ATP = (
@@ -75,29 +74,33 @@ class DynamicModel:
         atp = 0.00727 /24
         nadhp = 0.00256 /24
 
-    def unpack_solution(self, solution):
+    def calc_growth_rate(self):
+        solution = self.model.optimize()
+
         if self.objective == BIOMASS:
-            self.biomass_rate = solution.objective_value/60/60*240 # make it every ingame second
+            self.biomass_rate = solution.objective_value/60/60*240*self.GAMESPEED# make it every ingame second
             self.starch_rate = 0
         elif self.objective == STARCH_OUT:
-            self.starch_rate = solution.objective_value/60/60*240 # make it every ingame second
+            self.starch_rate = solution.objective_value/60/60*240*self.GAMESPEED# make it every ingame second
             self.biomass_rate = 0
         # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth
+
+        # hourly rates
         self.water_intake = solution.fluxes[WATER]#self.get_flux(WATER)
         self.nitrate_intake = solution.fluxes[NITRATE]#self.get_flux(NITRATE)
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         self.photon_intake = solution.fluxes[PHOTON]
 
-    def calc_growth_rate(self):
-        self.pool.apply_async(self.model.optimize, (), callback=self.unpack_solution)
-
     def get_rates(self):
-        return (self.biomass_rate, self.starch_rate, self.starch_intake)
+        return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*self.GAMESPEED)
 
     def get_nitrate_pool(self):
         return self.nitrate_pool
 
     def increase_nitrate_pool(self, amount):
+        if self.nitrate_pool >= max_nitrate_pool_low:
+            self.nitrate_pool = max_nitrate_pool_low
+            return
         self.nitrate_pool += amount
 
     def get_nitrate_intake(self, mass):
@@ -105,7 +108,7 @@ class DynamicModel:
         # v = Vmax*S/Km+S, v=intake speed, Vmax=max Intake, Km=Where S that v=Vmax/2, S=Substrate Concentration
         # Literature: Vmax ~ 0.00336 mol g DW−1 day−1, KM = 0.4 mmol,  S = 50 mmol and 1.2 mmol (high, low)
         # day --> sec (240 real sec = 1 ingame sec)
-        return max(((Vmax*self.nitrate_pool)/(Km+self.nitrate_pool))*mass/23/60/60*240,0) #day
+        return max(((Vmax*self.nitrate_pool)/(Km+self.nitrate_pool))*mass/24,0) #hour
 
     def get_rate(self):
         if self.objective == BIOMASS:
@@ -152,13 +155,14 @@ class DynamicModel:
         #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
 
     def update_pools(self):
-        self.nitrate_pool -= self.nitrate_intake
-        self.water_pool -= self.water_intake
+        print(self.nitrate_pool, self.water_pool)
+        self.nitrate_pool -= self.nitrate_intake/60/60*self.GAMESPEED
+        self.water_pool -= self.water_intake/60/60*self.GAMESPEED
         # starch gets handled separatly in Organ Starch
 
     def update_bounds(self, root_mass, photon_in):
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
-        self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)))
-        self.set_bounds(PHOTON,(0,photon_in))
+        self.set_bounds(NITRATE,(0,0.4))
+        self.set_bounds(PHOTON,(0,photon_in*30))

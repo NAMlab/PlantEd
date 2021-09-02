@@ -181,8 +181,7 @@ class PointParticleSystem(ParticleSystem):
 
     def update(self, dt):
         if self.callback:
-            self.set_max_particles(int(self.callback() * 1000))
-
+            self.set_max_particles(int(self.callback()))
         if self.particle_counter < self.max_particles and random.randint(0, 10) < 1 and self.active:
             self.particle_counter += 1
             self.particles.append(PointsParticle(points=self.points, image=self.images[0], speed=self.speed))
@@ -206,10 +205,10 @@ class StillParticles(ParticleSystem):
 
     def update(self, dt):
         if self.callback:
-            self.max_particles = int((self.callback()/1)*100) #max 0.0012/0.05
+            self.max_particles = int(self.callback()*1000) #max 0.0012/0.05
         while self.max_particles > len(self.particles):
             self.generate_particle()
-        while self.max_particles < len(self.particles):
+        while self.max_particles < len(self.particles) and len(self.particles) > 0:
             self.destroy_particle()
 
     def destroy_particle(self):

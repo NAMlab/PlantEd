@@ -8,15 +8,11 @@ SUN = 0
 RAIN = 1
 CLOUD = 2
 
-GAMESPEED = 1
+GAMESPEED = 10
 GROWTH_TICK_RATE = 1000  # in ms
 
-STARTTIME = 0
-
-
 def get_time():
-    return pygame.time.get_ticks() - STARTTIME
-
+    return pygame.time.get_ticks()
 
 # PLANT
 

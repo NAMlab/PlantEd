@@ -338,6 +338,11 @@ class GameScene(Scene):
                 self.manager.go_to(TitleScene())
             if e.type == KEYDOWN and e.key == K_SPACE:
                 self.manager.go_to(GameScene(0))
+            if e.type == KEYDOWN and e.key == K_UP:
+                self.model.GAMESPEED *= 10
+                print(config.GAMESPEED)
+            if e.type == KEYDOWN and e.key == K_DOWN:
+                self.model.GAMESPEED /= 10
             for button in self.button_sprites:
                 # all button_sprites handle their events
                 button.handle_event(e)
@@ -588,7 +593,7 @@ class GameScene(Scene):
         pool_level = self.plant.organ_starch.mass * pool_height/pool_limit
         pool_rect = Rect(pool_rect[0], pool_rect[1]+pool_height-pool_level, 32, pool_level)
         pygame.draw.rect(s, white, pool_rect, border_radius=3)
-        pool_level_text = self.sfont.render("{:.2f}".format(self.plant.organ_starch.mass*1000), True, (0, 0, 0))  # title
+        pool_level_text = self.sfont.render("{:.1f}".format(self.plant.organ_starch.mass), True, (0, 0, 0))  # title
         s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))
 
         # overal stats
@@ -626,7 +631,7 @@ class GameScene(Scene):
         # nitrate
         nitrate_level_text = self.sfont.render("Nitrate:", True, (0, 0, 0))
         s.blit(nitrate_level_text, dest=(670, 150))
-        nitrate_level = self.sfont.render("{:.2f}".format(self.model.nitrate_pool*1000), True, (0, 0, 0))  # title
+        nitrate_level = self.sfont.render("{:.2f}".format(self.model.nitrate_pool), True, (0, 0, 0))  # title
         s.blit(nitrate_level, dest=(860 - nitrate_level.get_width(), 150))
 
         # shop
@@ -668,7 +673,7 @@ class GameScene(Scene):
         pygame.draw.rect(s, white_transparent,(245, 490, 400, 125), border_radius=3)
 
         # growth_rate in seconds
-        growth_rate = self.sfont.render("Growth Rate /h {:.10f}".format(self.plant.target_organ.growth_rate*60*60), True, (0, 0, 0)) #hourly
+        growth_rate = self.sfont.render("Growth Rate /s {:.10f}".format(self.plant.target_organ.growth_rate), True, (0, 0, 0)) #hourly
         s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
 
         # level
@@ -678,7 +683,7 @@ class GameScene(Scene):
         s.blit(level, (100-level.get_width()/2,510-level.get_height()/2))
 
         # mass
-        mass = self.sfont.render("Organ Mass in mg, DW {:.10f}".format(self.plant.target_organ.mass*1000), True, (0, 0, 0))
+        mass = self.sfont.render("Organ Mass in g, DW {:.10f}".format(self.plant.target_organ.mass), True, (0, 0, 0))
         s.blit(mass, dest=(245, 550))
         screen.blit(s, (0, 0))
 
