@@ -30,9 +30,6 @@ SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 plant_pos = (SCREEN_WIDTH - SCREEN_WIDTH/4, SCREEN_HEIGHT - SCREEN_HEIGHT/5)
 
-FONT = pygame.font.SysFont('arial', 24)
-TITLE_FONT = pygame.font.SysFont('arialblack', 24)
-
 GREEN = (19, 155, 23)
 BLUE = (75, 75, 200)
 SKY_BLUE = (169, 247, 252)
@@ -120,8 +117,8 @@ class Scene(object):
 class TitleScene(object):
     def __init__(self):
         super(TitleScene, self).__init__()
-        self.font = pygame.font.SysFont('Arial', 56)
-        self.sfont = pygame.font.SysFont('Arial', 32)
+        self.font = config.TITLE_FONT
+        self.sfont = config.FONT
         self.centre = (SCREEN_WIDTH/2-menu_plant[0].get_width()/2, SCREEN_HEIGHT/7)
         self.particle_systems = []
         self.watering_can = can
@@ -189,8 +186,8 @@ class TitleScene(object):
 class CustomScene(object):
     def __init__(self):
         super(CustomScene, self).__init__()
-        self.font = pygame.font.SysFont('Arial', 56)
-        self.sfont = pygame.font.SysFont('Arial', 32)
+        self.font = config.TITLE_FONT
+        self.sfont = config.FONT
         self.centre = (SCREEN_WIDTH, SCREEN_HEIGHT/2)
         self.text1 = self.font.render('PlantEd', True, (255,255,255))
         self.text2 = self.font.render('YOU WON!', True, (255,255,255))
@@ -231,8 +228,8 @@ class GameScene(Scene):
         self.screen_changes = [pygame.Rect(0,0,SCREEN_WIDTH, SCREEN_HEIGHT)]
         self.manager = None
         self.hover_message = None
-        self.font = TITLE_FONT  #pygame.font.SysFont('Arial', 24)
-        self.sfont = FONT   #pygame.font.SysFont('Arial', 14)
+        self.font = config.TITLE_FONT
+        self.sfont = config.FONT
         self._running = True
         self.model = DynamicModel(self.gametime)
         self.plant = Plant(plant_pos, self.model)
@@ -279,10 +276,10 @@ class GameScene(Scene):
         self.button_sprites.add(self.scarecrow["button"])
 
         radioButtons = [
-            RadioButton(100, 70, 64, 64, [self.plant.set_target_organ_leaf, self.activate_biomass_objective], FONT, image=leaf_icon),
-            RadioButton(180, 70, 64, 64, [self.plant.set_target_organ_stem, self.activate_biomass_objective], FONT, image=stem_icon),
-            RadioButton(260, 70, 64, 64, [self.plant.set_target_organ_root, self.activate_biomass_objective], FONT, image=root_icon),
-            RadioButton(460, 70, 64, 64, [self.plant.set_target_organ_starch, self.activate_starch_objective], FONT, image=starch_icon)
+            RadioButton(100, 70, 64, 64, [self.plant.set_target_organ_leaf, self.activate_biomass_objective], self.sfont, image=leaf_icon),
+            RadioButton(180, 70, 64, 64, [self.plant.set_target_organ_stem, self.activate_biomass_objective], self.sfont, image=stem_icon),
+            RadioButton(260, 70, 64, 64, [self.plant.set_target_organ_root, self.activate_biomass_objective], self.sfont, image=root_icon),
+            RadioButton(460, 70, 64, 64, [self.plant.set_target_organ_starch, self.activate_starch_objective], self.sfont, image=starch_icon)
         ]
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
@@ -313,18 +310,8 @@ class GameScene(Scene):
         self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE,apply_gravity=True,speed=[0, 5], spread=[3, 0], active=False)
         self.particle_systems.append(self.can_particle_system)
 
-        self.tool_tip_manager = ToolTipManager(
-            [ToolTip(855,150,0,0,["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant."], self.sfont, self.font, mass=0),
-             ToolTip(655,380,0,0,["Your seed has no Leaves yet.", "Use Your Starch Deposit", "But don't waste it"], self.sfont, mass=0, point=(-45,30)),
-             ToolTip(370,140,0,0,["These are your main 3 Organs.", "Select them for Details.", "Once your roots are big enough", "your are able to grow a stem!"], self.sfont, mass=1, point=(-40,0)),
-             ToolTip(300,300,0,0,["Grow your stem", "to get your first leaves", "The biomass can be", "split up between all organs."], self.sfont, mass=6, point=(-50,20)),
-             ToolTip(685,450,0,0,["One leaf can be added"," for each skillpoint", "But remember to keep", "the stem big enough"], self.sfont, mass=10, point=(-50,20)),
-             ToolTip(240, 230, 0, 0, ["You can fill up", "your starch deposit", "instead of growing"], self.sfont, mass=15, point=(50, 20)),
-             ToolTip(850,300,0,0,["Congratulations, you reached", " 30gr of plant mass"], self.sfont, mass=30, point=(50,20)),
-             ToolTip(1100,300,0,0,["50 Gramms!"], self.sfont, mass=50, point=(50,20)),
-             ToolTip(1100,300,0,0,["100 Gramms!"], self.sfont, mass=100, point=(50,20)),
-             ToolTip(1000,600,0,0,["You son of a b*tch did it!" "200 Gramms, thats game"], self.sfont, mass=200, point=(50,20),)],
-            callback=self.plant.get_biomass)
+        tooltipps = config.tooltipps
+        self.tool_tip_manager = ToolTipManager(tooltipps, callback=self.plant.get_biomass)
         pygame.time.set_timer(GROWTH, 1000)
 
     def handle_events(self, event):
@@ -711,7 +698,7 @@ def main():
         dt = timer.tick(60)/1000.0
 
         fps = str(int(timer.get_fps()))
-        fps_text = FONT.render(fps, False, (255,255,255))
+        fps_text = config.FONT.render(fps, False, (255,255,255))
         #print(fps)
 
         if pygame.event.get(QUIT):

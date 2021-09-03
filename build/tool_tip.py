@@ -17,8 +17,6 @@ class ToolTipManager:
             tip.draw(screen)
 
     def update(self):
-        # aktueller done
-        # nächster masse
         if not self.tool_tips:
             return
         if self.callback:
