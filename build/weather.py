@@ -29,12 +29,14 @@ rain_sound.set_volume(0.05)
 
 
 class Environment:
-    def __init__(self, get_image, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water):
+    def __init__(self, get_image, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water, gametime):
         self.w = SCREEN_WIDTH
         self.model = model
+        self.gametime = gametime
         self.background = get_image("background_empty_sky.png").convert_alpha()
         self.background_moist = pygame.transform.scale(get_image("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
+        self.GAMESPEED = config.GAMESPEED
         self.sun_pos_noon = (1300,0)
         self.sun_pos_night = (500,SCREEN_HEIGHT-200)
         self.sun_pos = (0,0)
@@ -83,11 +85,10 @@ class Environment:
             if not sprite.update():
                 self.sprites.remove(sprite) # dumb to remove during iteration, maybe don't
 
-        if self.state == SUN:
-            sun_intensity = self.get_sun_intensity()
-            x = (self.sun_pos_night[0] + (self.sun_pos_noon[0]-self.sun_pos_night[0])*sun_intensity)
-            y = (self.sun_pos_night[1] + (self.sun_pos_noon[1]-self.sun_pos_night[1])*sun_intensity)
-            self.sun_pos = (x,y)
+        sun_intensity = self.get_sun_intensity()
+        x = (self.sun_pos_night[0] + (self.sun_pos_noon[0] - self.sun_pos_night[0]) * sun_intensity)
+        y = (self.sun_pos_night[1] + (self.sun_pos_noon[1] - self.sun_pos_night[1]) * sun_intensity)
+        self.sun_pos = (x, y)
 
     def draw_background(self, screen):
         #if self.draw:
@@ -99,10 +100,10 @@ class Environment:
         sun_intensity = self.get_sun_intensity()
         if sun_intensity > 0:
             color = gradient.get_color(orange, blue, sun_intensity)
-            if self.state == SUN:
-                # sun_intensity 0, 1 -->
-                sun_index = min(max(int(self.get_sun_intensity() * len(self.sun)),0),4)
-                s.blit(self.sun[sun_index], self.sun_pos)
+            # sun_intensity 0, 1 -->
+            sun_index = min(max(int(self.get_sun_intensity() * len(self.sun)), 0), 4)
+            s.blit(self.sun[sun_index], self.sun_pos)
+
         else:
             color= gradient.get_color(orange, (0,0,0), abs(sun_intensity))
 
@@ -141,7 +142,7 @@ class Environment:
         self.sprites.draw(screen)
 
     def handle_weather_events(self):
-        time = config.get_time()
+        time = self.gametime.get_time()
 
         for event in self.weather_events:
             if event["start_time"] <= time:
@@ -163,27 +164,28 @@ class Environment:
         self.weather_events.remove(event)
 
     def get_day_time(self):
-        ticks = pygame.time.get_ticks()
+        ticks = self.gametime.get_time()
         day = 1000*60*6
         hour = day/24
         min = hour/60
+        days = int(ticks/day)
         hours = (ticks % day) / hour
         minutes = (ticks % hour) / min
-        return hours, minutes
+        return days, hours, minutes
 
     def draw_clock(self, screen):
         # clock
-        hours, minutes = self.get_day_time()
-        output_string = "{0:02}:{1:02}".format(int(hours), int(minutes))
+        days, hours, minutes = self.get_day_time()
+        output_string = "Day {0} {1:02}:{2:02}".format(days, int(hours), int(minutes))
         clock_text = self.sfont.render(output_string, True, (0, 0, 0))
         screen.blit(clock_text, clock_text.get_rect(center=(self.w / 2, 20)))
 
         day_time = self.get_sun_intensity()
         sun_intensity = self.sfont.render("{:.2}".format(day_time), True, (0, 0, 0))
-        screen.blit(sun_intensity, sun_intensity.get_rect(center=(self.w / 2 + 100, 20)))
+        screen.blit(sun_intensity, sun_intensity.get_rect(center=(self.w / 2 + 150, 20)))
 
     def get_sun_intensity(self):
-        return -(np.sin(np.pi/2-np.pi/5+((pygame.time.get_ticks()/(1000 * 60 * 6)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
+        return -(np.sin(np.pi/2-np.pi/5+((self.gametime.get_time()/(1000 * 60 * 6)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))

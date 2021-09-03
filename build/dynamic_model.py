@@ -13,16 +13,16 @@ WATER = "root_H2O_tx"
 PHOTON = "leaf_Photon_tx"
 
 # mol
-Vmax = 0.3
-max_nitrate_pool_low = 0.1
+Vmax = 0.03
+max_nitrate_pool_low = 1
 max_nitrate_pool_high = 5
-Km = 0.5
+Km = 0.04
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, plant_mass=None, model=cobra.io.read_sbml_model("whole_plant.sbml")):
+    def __init__(self, gametime, plant_mass=None, model=cobra.io.read_sbml_model("whole_plant.sbml")):
         self.model = model
-        self.GAMESPEED = config.GAMESPEED
+        self.gametime = gametime
         self.plant_mass = plant_mass
         self.use_starch = False
         # model.objective can be changed by this string, but not compared, workaround: self.objective
@@ -76,12 +76,13 @@ class DynamicModel:
 
     def calc_growth_rate(self):
         solution = self.model.optimize()
+        gamespeed = self.gametime.GAMESPEED
 
         if self.objective == BIOMASS:
-            self.biomass_rate = solution.objective_value/60/60*240*self.GAMESPEED# make it every ingame second
+            self.biomass_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
             self.starch_rate = 0
         elif self.objective == STARCH_OUT:
-            self.starch_rate = solution.objective_value/60/60*240*self.GAMESPEED# make it every ingame second
+            self.starch_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
             self.biomass_rate = 0
         # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth
 
@@ -92,7 +93,7 @@ class DynamicModel:
         self.photon_intake = solution.fluxes[PHOTON]
 
     def get_rates(self):
-        return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*self.GAMESPEED)
+        return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*self.gametime.GAMESPEED)
 
     def get_nitrate_pool(self):
         return self.nitrate_pool
@@ -155,9 +156,10 @@ class DynamicModel:
         #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
 
     def update_pools(self):
-        print(self.nitrate_pool, self.water_pool)
-        self.nitrate_pool -= self.nitrate_intake/60/60*self.GAMESPEED
-        self.water_pool -= self.water_intake/60/60*self.GAMESPEED
+        gamespeed = self.gametime.GAMESPEED
+        #print(self.nitrate_pool, self.nitrate_intake/60/60*gamespeed, self.water_pool)
+        self.nitrate_pool -= self.nitrate_intake/60/60*gamespeed
+        self.water_pool -= self.water_intake/60/60*gamespeed
         # starch gets handled separatly in Organ Starch
 
     def update_bounds(self, root_mass, photon_in):

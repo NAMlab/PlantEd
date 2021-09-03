@@ -226,6 +226,7 @@ class GameScene(Scene):
         pygame.mouse.set_visible(True)
         self.width = SCREEN_WIDTH
         self.height = SCREEN_HEIGHT
+        self.gametime = config.GameTime()
         self.offset = repeat((0, 0))
         self.screen_changes = [pygame.Rect(0,0,SCREEN_WIDTH, SCREEN_HEIGHT)]
         self.manager = None
@@ -233,10 +234,9 @@ class GameScene(Scene):
         self.font = TITLE_FONT  #pygame.font.SysFont('Arial', 24)
         self.sfont = FONT   #pygame.font.SysFont('Arial', 14)
         self._running = True
-        self.model = DynamicModel()
+        self.model = DynamicModel(self.gametime)
         self.plant = Plant(plant_pos, self.model)
-        self.environment = Environment(get_image,SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0)
-        self.environment = Environment(get_image,SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0)
+        self.environment = Environment(get_image,SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime)
         self.particle_systems = []
         self.sprites = pygame.sprite.Group()
         self.button_sprites = pygame.sprite.Group()
@@ -339,10 +339,9 @@ class GameScene(Scene):
             if e.type == KEYDOWN and e.key == K_SPACE:
                 self.manager.go_to(GameScene(0))
             if e.type == KEYDOWN and e.key == K_UP:
-                self.model.GAMESPEED *= 10
-                print(config.GAMESPEED)
+                self.gametime.change_speed()
             if e.type == KEYDOWN and e.key == K_DOWN:
-                self.model.GAMESPEED /= 10
+                self.gametime.change_speed(0.5)
             for button in self.button_sprites:
                 # all button_sprites handle their events
                 button.handle_event(e)
