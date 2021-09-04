@@ -7,10 +7,9 @@ class ToolTipManager:
         self.tool_tips = tool_tips
         self.callback = callback
         self.current_tip = 0 if tool_tips else -1
-        '''
-        maybe not necessary
+
         if self.current_tip >= 0:
-            self.tool_tips[self.current_tip].activate()'''
+            self.tool_tips[self.current_tip].activate()
 
     def draw(self, screen):
         for tip in self.tool_tips:
@@ -21,9 +20,13 @@ class ToolTipManager:
             return
         if self.callback:
             biomass = self.callback()
-            for tip in self.tool_tips:
-                if tip.mass < biomass and not tip.done:
-                    tip.activate()
+            if self.tool_tips[self.current_tip].done and len(self.tool_tips)-1 > self.current_tip:
+                if self.tool_tips[self.current_tip+1].mass < biomass:
+                    self.current_tip += 1
+                    self.tool_tips[self.current_tip].activate()
+            #for tip in self.tool_tips:
+            #    if tip.mass < biomass and not tip.done:
+            #        tip.activate()
 
 
 class ToolTip:

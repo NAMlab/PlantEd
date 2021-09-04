@@ -6,10 +6,13 @@ import numpy as np
 import gradient
 import random
 import config
+import asset_handler
 
 SUN = 0
 RAIN = 1
 CLOUD = 2
+WIND = 3
+HAWK = 4
 
 color = (0, 0, 0)
 orange = (137, 77, 0)
@@ -22,19 +25,19 @@ SCREEN_HEIGHT = 1080
 # altering: Temp, H2O, N, Photon_level
 # caused by: time
 # draw: background, clouds, sun, moon, wind, birds, rain
-gust = [pygame.transform.scale(pygame.image.load("../assets/wind/gust_{}.png".format(i)),(960,540)) for i in range(0,5)]
-rain_sound = pygame.mixer.Sound("../assets/rain/rain_sound.mp3")
+#gust = [pygame.transform.scale(pygame.image.load("../assets/wind/gust_{}.png".format(i)),(960,540)) for i in range(0,5)]
+rain_sound = asset_handler.get_sound("rain/rain_sound.mp3")
 rain_sound.set_volume(0.05)
 
 
 
 class Environment:
-    def __init__(self, get_image, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water, gametime):
+    def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water, gametime, activate_hawk):
         self.w = SCREEN_WIDTH
         self.model = model
         self.gametime = gametime
-        self.background = get_image("background_empty_sky.png").convert_alpha()
-        self.background_moist = pygame.transform.scale(get_image("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
+        self.background = asset_handler.get_image("background_empty_sky.png").convert_alpha()
+        self.background_moist = pygame.transform.scale(asset_handler.get_image("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.GAMESPEED = config.GAMESPEED
         self.sun_pos_noon = (1300,0)
@@ -45,6 +48,7 @@ class Environment:
         self.sfont = pygame.font.SysFont('Arial', 32)
         self.plant = plant
         self.draw = True
+        self.activate_hawk = activate_hawk
         self.sprites = pygame.sprite.Group()
         self.animations = []
         self.weather_events = []
@@ -52,11 +56,11 @@ class Environment:
         self.star_pos_size = [((random.randint(0,SCREEN_WIDTH), random.randint(0,SCREEN_HEIGHT/2)), random.randint(0,10)) for i in range(0,50)]
 
         # init drop sprites
-        drops = [pygame.transform.scale(pygame.image.load("../assets/rain/raindrop{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 3)]
-        splash = [pygame.transform.scale(pygame.image.load("../assets/rain/raindrop_splash{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 4)]
-        self.sun = [pygame.transform.scale(pygame.image.load("../assets/sun/sun_face_{}.png".format(i)), (512, 512)).convert_alpha() for i in range(0, 5)]
-        self.cloud = pygame.transform.scale(pygame.image.load("../assets/cloud.png"),(420,240)).convert_alpha()
-        self.cloud_dark = pygame.transform.scale(pygame.image.load("../assets/cloud_dark.png"),(420,240)).convert_alpha()
+        drops = [pygame.transform.scale(asset_handler.get_image("rain/raindrop{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 3)]
+        splash = [pygame.transform.scale(asset_handler.get_image("rain/raindrop_splash{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 4)]
+        self.sun = [pygame.transform.scale(asset_handler.get_image("sun/sun_face_{}.png".format(i)), (512, 512)).convert_alpha() for i in range(0, 5)]
+        self.cloud = pygame.transform.scale(asset_handler.get_image("cloud.png"),(420,240)).convert_alpha()
+        self.cloud_dark = pygame.transform.scale(asset_handler.get_image("cloud_dark.png"),(420,240)).convert_alpha()
         self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH / 2, 50, SCREEN_WIDTH/3*2, 0),
                                     boundary_box=Rect(SCREEN_WIDTH/3,0,SCREEN_WIDTH/3*2,SCREEN_HEIGHT-250),
                                     color=(0,0,100), apply_gravity=True, speed=[0, 18],
@@ -66,10 +70,7 @@ class Environment:
                                     boundary_box=Rect(1200,900,400,190),
                                     color=(0,0,0), speed=[0, 0], callback=self.model.get_nitrate_pool,
                                     active=True, size=5, once=True)
-        self.weather_events.append(config.e0)
-        self.weather_events.append(config.e1)
-        self.weather_events.append(config.e2)
-        self.weather_events.append(config.e3)
+        self.weather_events = config.e
 
 
     def update(self, dt):
@@ -150,7 +151,6 @@ class Environment:
 
     def start_event(self, event):
         self.state = event["type"]
-        self.model.temp += event["delta_temp"]
         if self.state == RAIN:
             pygame.mixer.Sound.play(rain_sound, -1)
             self.rain.activate()
@@ -160,7 +160,9 @@ class Environment:
         elif self.state == CLOUD:
             pygame.mixer.Sound.stop(rain_sound)
             self.rain.deactivate()
-            pass
+        elif self.state == HAWK:
+            self.activate_hawk()
+
         self.weather_events.remove(event)
 
     def get_day_time(self):
@@ -189,3 +191,4 @@ class Environment:
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))
+

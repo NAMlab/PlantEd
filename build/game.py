@@ -4,16 +4,17 @@ from pygame.locals import *
 import numpy as np
 from itertools import repeat
 
-from build import config, assets
+import asset_handler
 from plant import Plant
 from button import Button, RadioButton, Slider, SliderGroup, ToggleButton
 from particle import ParticleSystem, PointParticleSystem
 from animation import OneShotAnimation, Animation
 import os, sys
-from tool_tip import ToolTipManager, ToolTip
+from tool_tip import ToolTipManager
 from weather import Environment
 from dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
 from eagle import Eagle, QuickTimeEvent
+import config, asset_handler
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -34,20 +35,6 @@ GREEN = (19, 155, 23)
 BLUE = (75, 75, 200)
 SKY_BLUE = (169, 247, 252)
 
-# nice clutter free img manager
-fileDir = os.path.dirname(os.path.realpath('__file__'))
-assets_dir = os.path.join(fileDir, '../assets/')
-_image_library = {}
-def get_image(path):
-        path = os.path.join(assets_dir, path)
-        global _image_library
-        image = _image_library.get(path)
-        if image == None:
-                canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-                image = pygame.image.load(canonicalized_path).convert_alpha()
-                _image_library[path] = image
-        return image
-
 def shake():
     s = -1  # looks unnecessary but maybe cool, int((random.randint(0,1)-0.5)*2)
     for _ in range(0, 3):
@@ -59,45 +46,45 @@ def shake():
     while True:
         yield (0, 0)
 
-menu_plant = [get_image("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
+menu_plant = [asset_handler.get_image("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
 #can = get_image("watering_can_outlined.png")
-can = assets.get_image("watering_can_outlined.png")
+can = asset_handler.get_image("watering_can_outlined.png")
 can_icon = pygame.transform.scale(can, (64,64)).convert_alpha()
-can_tilted = get_image("watering_can_outlined_tilted.png")
-background = pygame.transform.scale(get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
-leaf_icon = get_image("leaf_small.png")
+can_tilted = asset_handler.get_image("watering_can_outlined_tilted.png")
+background = pygame.transform.scale(asset_handler.get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
+leaf_icon = asset_handler.get_image("leaf_small.png")
 leaf_icon_big = pygame.transform.scale(leaf_icon, (128,128)).convert_alpha()
-stem_icon = get_image("stem_small.png")
+stem_icon = asset_handler.get_image("stem_small.png")
 stem_icon_big = pygame.transform.scale(stem_icon, (128,128)).convert_alpha()
-root_icon = get_image("roots_small.png")
+root_icon = asset_handler.get_image("roots_small.png")
 root_icon_big = pygame.transform.scale(root_icon, (128,128)).convert_alpha()
-starch_icon = get_image("starch.png")
+starch_icon = asset_handler.get_image("starch.png")
 starch_icon_big = pygame.transform.scale(starch_icon, (128,128)).convert_alpha()
-drain_icon = get_image("drain_icon.png").convert_alpha()
-photo_energy = pygame.transform.scale(get_image("photo_energy.png"),(15,15)).convert_alpha()
-starch_energy = pygame.transform.scale(get_image("starch_energy.png"),(15,15)).convert_alpha()
-eagle_img = [pygame.transform.scale(get_image("bird/Eagle Normal_{}.png".format(i)), (128,128)) for i in range(1,20)]
-danger_eagle_icon = pygame.transform.scale(get_image("danger_bird.png"),(128,128))
-scarecrow = pygame.transform.scale(get_image("scarecrow.png"), (256,256)).convert_alpha()
-scarecrow_icon = pygame.transform.scale(get_image("scarecrow.png"), (64,64)).convert_alpha()
-chloroplast_icon = pygame.transform.scale(get_image("chloroplast.png"), (20,20)).convert_alpha()
-blue_grain = (get_image("blue_grain_0.png"))
+drain_icon = asset_handler.get_image("drain_icon.png").convert_alpha()
+photo_energy = pygame.transform.scale(asset_handler.get_image("photo_energy.png"),(15,15)).convert_alpha()
+starch_energy = pygame.transform.scale(asset_handler.get_image("starch_energy.png"),(15,15)).convert_alpha()
+eagle_img = [pygame.transform.scale(asset_handler.get_image("bird/Eagle Normal_{}.png".format(i)), (128,128)) for i in range(1,20)]
+danger_eagle_icon = pygame.transform.scale(asset_handler.get_image("danger_bird.png"),(128,128))
+scarecrow = pygame.transform.scale(asset_handler.get_image("scarecrow.png"), (256,256)).convert_alpha()
+scarecrow_icon = pygame.transform.scale(asset_handler.get_image("scarecrow.png"), (64,64)).convert_alpha()
+chloroplast_icon = pygame.transform.scale(asset_handler.get_image("chloroplast.png"), (20,20)).convert_alpha()
+blue_grain = (asset_handler.get_image("blue_grain_0.png"))
 #danger_energy = (get_image("danger_energy.png"))
-blue_grain_bag = (get_image("blue_grain_bag.png"))
+blue_grain_bag = (asset_handler.get_image("blue_grain_bag.png"))
 #pygame.mixer.music.load()
-water_sound = pygame.mixer.Sound('../assets/water_can.mp3')
+water_sound = asset_handler.get_sound('water_can.mp3')
 water_sound.set_volume(0.05)
-click_sound = pygame.mixer.Sound('../assets/button_klick.mp3')
+click_sound = asset_handler.get_sound('button_klick.mp3')
 click_sound.set_volume(0.8)
-eagle_flap = pygame.mixer.Sound('../assets/eagle_flap.mp3')
+eagle_flap = asset_handler.get_sound('eagle_flap.mp3')
 eagle_flap.set_volume(0.7)
-gravel = pygame.mixer.Sound('../assets/gravel.mp3')
+gravel = asset_handler.get_sound('gravel.mp3')
 gravel.set_volume(0.7)
-eagle_screech = pygame.mixer.Sound('../assets/eagle_screech.mp3')
+eagle_screech = asset_handler.get_sound('eagle_screech.mp3')
 eagle_screech.set_volume(0.5)
-pygame.mixer.music.load('../assets/background_music.mp3')
-pygame.mixer.music.set_volume(0.2)
-pygame.mixer.music.play(-1,0)
+#pygame.mixer.music.load('background_music.mp3')
+#pygame.mixer.music.set_volume(0.2)
+#pygame.mixer.music.play(-1,0)
 
 
 class Scene(object):
@@ -233,7 +220,7 @@ class GameScene(Scene):
         self._running = True
         self.model = DynamicModel(self.gametime)
         self.plant = Plant(plant_pos, self.model)
-        self.environment = Environment(get_image,SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime)
+        self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime, self.activate_hawk)
         self.particle_systems = []
         self.sprites = pygame.sprite.Group()
         self.button_sprites = pygame.sprite.Group()
@@ -360,14 +347,7 @@ class GameScene(Scene):
                     pygame.mouse.set_visible(True)
 
             if e.type == KEYDOWN and e.key == K_a:
-                self.offset = shake()
-                if len(self.plant.organs[0].leaves) > 0:
-                    leaf = self.plant.organs[0].get_random_leave()
-                    eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf,Animation(eagle_img, 500), 40,
-                                  action_sound=eagle_flap, callback=self.plant.organs[0].remove_leaf)
-                    self.entities.append(eagle)
-                    self.quick_time_events.append(
-                        QuickTimeEvent((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), 5, eagle, danger_eagle_icon, self.entities, eagle_screech))
+                pass
             for slider in self.sliders:
                 slider.handle_event(e)
             self.plant.handle_event(e)
@@ -385,8 +365,8 @@ class GameScene(Scene):
         # beware of ugly
         if self.plant.get_biomass() > self.plant.seedling.max and not self.stem_slider.active:
             self.stem_slider.active = True
-        if self.plant.organs[1].active_threshold >= 2 and not self.leaf_slider.active:
             self.leaf_slider.active = True
+
 
         for slider in self.sliders:
             slider.update()
@@ -521,6 +501,17 @@ class GameScene(Scene):
 
     def activate_scarecrow(self):
         self.scarecrow["active"] = True
+
+    def activate_hawk(self):
+        self.offset = shake()
+        if len(self.plant.organs[0].leaves) > 0:
+            leaf = self.plant.organs[0].get_random_leave()
+            eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf, Animation(eagle_img, 500), 40,
+                          action_sound=eagle_flap, callback=self.plant.organs[0].remove_leaf)
+            self.entities.append(eagle)
+            self.quick_time_events.append(
+                QuickTimeEvent((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), 5, eagle, danger_eagle_icon, self.entities,
+                               eagle_screech))
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))

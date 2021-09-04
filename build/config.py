@@ -10,6 +10,8 @@ pygame.init()
 SUN = 0
 RAIN = 1
 CLOUD = 2
+WIND = 3
+HAWK = 4
 
 GAMESPEED = 4
 GROWTH_TICK_RATE = 1000  # in ms
@@ -73,26 +75,29 @@ class GameTime:
 tooltipps = [ToolTip(855, 150, 0, 0,
                      ["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant."],
                      FONT, TITLE_FONT, mass=0),
-             ToolTip(655, 380, 0, 0, ["Your seed has no Leaves yet.", "Use Your Starch Deposit", "But don't waste it"],
+             ToolTip(655, 380, 0, 0, ["Your plant starts as a seed.", "Use your starch deposit", "to grow the roots"],
                      FONT,
                      mass=0, point=(-45, 30)),
              ToolTip(370, 140, 0, 0,
                      ["These are your main 3 Organs.", "Select them for Details.", "Once your roots are big enough",
-                      "your are able to grow a stem!"], FONT, mass=1, point=(-40, 0)),
-             ToolTip(300, 300, 0, 0,
-                     ["Grow your stem", "to get your first leaves", "The biomass can be",
-                      "split up between all organs."],
-                     FONT, mass=6, point=(-50, 20)),
-             ToolTip(685, 450, 0, 0,
-                     ["One leaf can be added", " for each skillpoint", "But remember to keep", "the stem big enough"],
+                      "your are able to grow a stem!", "Try to grow it to 2 gramms"], FONT, mass=0, point=(-40, 0)),
+             ToolTip(880, 780, 0, 0,
+                     ["Your sprout started stem and leaf development.", "Grow its mass further to increase nutrient intake.",],
+                     FONT, mass=2, point=(50, 120)),
+             ToolTip(855, 155, 0, 0, ["Seedling Stage", "Stem and Leaf development", "are now available.", "Decide wich organs to grow.", "Larger roots will lead", "to faster Nitrate and H2O intake.", "Larger leaves result in more", "light reaching the plant.", "A Bigger Stem will provide", "more spots to grow leaves."],
+                     FONT, TITLE_FONT, mass=4),
+             ToolTip(800, 240, 0, 0,
+                     ["For every level up", "you will get one chloroplast", "to buy upgrades."],
                      FONT,
-                     mass=10, point=(-50, 20)),
-             ToolTip(240, 230, 0, 0, ["You can fill up", "your starch deposit", "instead of growing"], FONT, mass=15,
+                     mass=5, point=(-50, 20)),
+             ToolTip(400, 400, 0, 0, ["The yellow dots indicate", "how much energy your plant", "produces with phtosynthesis."],
+                     FONT, mass=6,
+                     point=(-50, 20)),
+             ToolTip(220, 100, 0, 0, ["Instead of growing organs", "Select the starch icon", "to activate starch production."],
+                     FONT, mass=8,
                      point=(50, 20)),
-             ToolTip(850, 300, 0, 0, ["Congratulations, you reached", " 30gr of plant mass"], FONT, mass=30,
-                     point=(50, 20)),
-             ToolTip(1100, 300, 0, 0, ["50 Gramms!"], FONT, mass=50, point=(50, 20)),
-             ToolTip(1100, 300, 0, 0, ["100 Gramms!"], FONT, mass=100, point=(50, 20)),
+             ToolTip(1100, 300, 0, 0, ["50 gramms!"], FONT, mass=50),
+             ToolTip(1100, 300, 0, 0, ["100 gramms!"], FONT, mass=100),
              ToolTip(1000, 600, 0, 0, ["You son of a b*tch did it!" "200 Gramms, thats game"], FONT, mass=200,
                      point=(50, 20), )]
 
@@ -101,18 +106,17 @@ tooltipps = [ToolTip(855, 150, 0, 0,
 # BUTTONS
 
 # EVENTS
-e0 = {"type": RAIN,
-      "start_time": 1000 * 5,  # miliseconds
-      "delta_temp": -5}  # temperature in celsius
-
-e1 = {"type": SUN,
-      "start_time": 1000 * 30,  # miliseconds
-      "delta_temp": 5}  # temperature in celsius
-
-e2 = {"type": CLOUD,
-      "start_time": 1000 * 35,  # miliseconds
-      "delta_temp": 5}  # temperature in celsius
-
-e3 = {"type": SUN,
-      "start_time": 1000 * 60,  # miliseconds
-      "delta_temp": 5}  # temperature in celsius
+day = 1000*60*6
+e = [{"type": CLOUD,
+      "start_time": 1000 * 60},
+    {"type": RAIN,
+      "start_time": 1000 * 60 * 6},
+    {"type": CLOUD,
+      "start_time": 1000 * 60 * 9},
+     {"type": SUN,
+      "start_time": 1000 * 60 * 12},
+     {"type": HAWK,
+      "start_time": day * 2},
+     {"type": CLOUD,
+      "start_time": 1000 * 60 * 18},
+     ]

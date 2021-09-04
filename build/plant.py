@@ -1,23 +1,24 @@
 import cobra.test
 import random
 import pygame
+import asset_handler
 
 pygame.init()
 gram_mol = 0.5124299411
 WIN = pygame.USEREVENT+1
 pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
-leaves = [(pygame.image.load("../assets/leaves/leaf_{index}.png".format(index=i)), pivot_pos[i]) for i in range(0, 7)]
-stem = (pygame.image.load("../assets/stem.png"),(15,1063))
-roots = (pygame.image.load("../assets/roots.png"),(387, 36))
+leaves = [(asset_handler.get_image("leaves/leaf_{index}.png".format(index=i)), pivot_pos[i]) for i in range(0, 7)]
+stem = (asset_handler.get_image("stem.png"),(15,1063))
+roots = (asset_handler.get_image("roots.png"),(387, 36))
 
-thorn_l = (pygame.image.load("../assets/thorn_l.png"))
-thorn_r = (pygame.image.load("../assets/thorn_r.png"))
+thorn_l = (asset_handler.get_image("thorn_l.png"))
+thorn_r = (asset_handler.get_image("thorn_r.png"))
 
-beans_big = [pygame.image.load("../assets/bean_growth/bean_{}.png".format(index)) for index in range(0,6)]
+beans_big = [asset_handler.get_image("bean_growth/bean_{}.png".format(index)) for index in range(0,6)]
 beans = []
 for bean in beans_big:
     beans.append(pygame.transform.scale(bean, (int(bean.get_width()/3), int(bean.get_height()/3))))
-plopp = pygame.mixer.Sound('../assets/plopp.wav')
+plopp = asset_handler.get_sound('plopp.wav')
 plopp.set_volume(0.4)
 
 
@@ -37,7 +38,7 @@ class Plant:
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=1, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=50, active=True, model=self.model)
-        self.seedling = Seedling(self.x, self.y, beans, 6)
+        self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
         # Fix env constraints
@@ -97,8 +98,9 @@ class Plant:
     def update(self):
         if self.get_biomass() > self.seedling.max-1 and not self.organs[1].active:
             self.organs[1].activate()
-            if self.get_biomass() > self.seedling.max and not self.organs[0].active:
-                self.organs[0].activate()
+            self.organs[0].activate()
+            #if self.get_biomass() > self.seedling.max and not self.organs[0].active:
+
 
     def handle_event(self, event):
         for organ in self.organs:
@@ -327,10 +329,10 @@ class Stem(Organ):
         self.thorns = []
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
 
-        for i in range(1,9):
+        '''for i in range(1,9):
             y = int(i * self.image.get_height() / 10)
             x, dir = self.get_image_mask_x((int(y),random.randint(0,self.image.get_width())), self.image)
-            self.add_thorn((x+self.x-self.pivot[0],y+self.y-self.pivot[1]), dir)
+            self.add_thorn((x+self.x-self.pivot[0],y+self.y-self.pivot[1]), dir)'''
 
     def add_thorn(self, pos, dir):
         if dir > 0:
