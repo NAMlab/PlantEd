@@ -102,7 +102,7 @@ class GameTime:
 
 # TOOLTIPPS
 tooltipps = [ToolTip(855, 150, 0, 0,
-                     ["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant."],
+                     ["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant.", " To WIN the game", "Reach plant level 20"],
                      FONT, TITLE_FONT, mass=0),
              ToolTip(655, 380, 0, 0, ["Your plant starts as a seed.", "Use your starch deposit", "to grow the roots"],
                      FONT,

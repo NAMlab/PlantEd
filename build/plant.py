@@ -231,7 +231,7 @@ class Leaf(Organ):
 
     def activate_add_leaf(self):
         #ugly but has to work for now, maybe move activate_add_leave to plant and check there
-        if self.plant.organs[1].active_threshold >= len(self.leaves):
+        if self.plant.organs[1].active_threshold*2 > len(self.leaves):
             self.can_add_leaf = True
 
     def remove_leaf(self, leaf=None):

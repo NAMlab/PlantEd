@@ -23,7 +23,7 @@ class Particle:
         if self.apply_gravity:
             self.speed[1] = self.speed[1] + 0.1
             if abs(self.speed[0]) > 0:
-                self.speed[0] = self.speed[0] - 0.2 * self.speed[0] / abs(self.speed[0])
+                self.speed[0] = self.speed[0] - 0.2 * dt * 60 * self.speed[0] / abs(self.speed[0])
             else:
                 self.speed[0] = 0
         if self.lifetime:
@@ -76,6 +76,8 @@ class ParticleSystem:
         self.lifetime = lifetime
         self.spread = spread
         self.images = images
+        if self.images and not size:
+            self.size = self.images[0].get_width
         self.despawn_images = despawn_images
         self.particles = 0
         self.size = size
@@ -153,16 +155,26 @@ class ParticleSystem:
             self.particles.clear()
         self.active = True
 
+    def circle_surf(self, radius, color):
+        surf = pygame.Surface((radius * 2, radius * 2))
+        pygame.draw.circle(surf, color, (radius, radius), radius)
+        surf.set_colorkey((0, 0, 0))
+        return surf
+
     def draw(self, screen):
         for particle in self.particles:
             if particle.image:
-                screen.blit(particle.image, (particle.x, particle.y))
+                offset = self.size/2
+                screen.blit(particle.image, (particle.x-offset, particle.y-offset))
+                size = self.size
             else:
                 if particle.lifetime != None and self.size_over_lifetime:
                     size = particle.lifetime
                 else:
                     size = particle.size
                 pygame.draw.circle(screen, particle.color, (particle.x, particle.y), size)
+
+            screen.blit(self.circle_surf(size*2, (20, 20, 60)), (particle.x-size*2, particle.y-size*2), special_flags=BLEND_RGB_ADD)
 
 
 class PointParticleSystem(ParticleSystem):

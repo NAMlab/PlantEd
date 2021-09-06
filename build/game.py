@@ -236,18 +236,20 @@ class GameScene(Scene):
         self.watering_can = {"active": False,
                              "button": Button(780, 260, 64, 64, [self.activate_watering_can], self.sfont,
                                               image=can_icon, post_hover_message=self.post_hover_message,
-                                              hover_message="Water Your Plant, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound),
+                                              hover_message="Water Your Plant, Cost: 2",  hover_message_image=chloroplast_icon, button_sound=click_sound),
                              "image": can,
                              "amount": 0,
                              "rate": 0.1,
+                             "cost": 2,
                              "pouring": False}
         self.blue_grain = {"active": False,
                            "button": Button(780, 344, 64,64, [self.activate_blue_grain], self.sfont,
                                             image=blue_grain, post_hover_message=self.post_hover_message,
-                                            hover_message="Blue Grain to Fertilize, Cost 1", hover_message_image=chloroplast_icon, button_sound=click_sound),
+                                            hover_message="Blue Grain to Fertilize, Cost 2", hover_message_image=chloroplast_icon, button_sound=click_sound),
                            "image": blue_grain_bag,
                            "amount": 0.05, #mg
                            "effect": self.model.increase_nitrate_pool, #0.5mg
+                           "cost": 2,
                            "system": ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 50, 50),
                                                     boundary_box=Rect(0,0, SCREEN_WIDTH, SCREEN_HEIGHT-220),
                                                     lifetime=20, size=8, color=BLUE,apply_gravity=True,speed=[0, 5],
@@ -256,13 +258,14 @@ class GameScene(Scene):
         self.button_sprites.add(self.watering_can["button"])
         self.particle_systems.append(self.blue_grain["system"])
         add_leaf_button = Button(676, 260, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
-                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", hover_message_image=chloroplast_icon, button_sound=click_sound)
+                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 0", hover_message_image=chloroplast_icon, button_sound=click_sound)
         self.button_sprites.add(add_leaf_button)
         self.scarecrow = {"active": False,
                           "button": Button(676, 334, 64, 64, [self.activate_scarecrow], self.sfont,
                                  image=scarecrow_icon, post_hover_message=self.post_hover_message,
-                                 hover_message="Buy a scarecrow, Cost: 1",  hover_message_image=chloroplast_icon, button_sound=click_sound),
-                          "effect": None}
+                                 hover_message="Buy a scarecrow, Cost: 5",  hover_message_image=chloroplast_icon, button_sound=click_sound),
+                          "effect": None,
+                          "cost": 5}
         self.button_sprites.add(add_leaf_button)
         self.button_sprites.add(self.scarecrow["button"])
 
@@ -391,7 +394,7 @@ class GameScene(Scene):
         for slider in self.sliders:
             slider.update()
         for system in self.particle_systems:
-            system.update(dt)
+            system.update(dt*self.gametime.GAMESPEED)
 
         for entity in self.entities:
             entity.update()
@@ -496,9 +499,9 @@ class GameScene(Scene):
 
     # buy can basically
     def activate_watering_can(self):
-        if self.plant.upgrade_points <= 0:
+        if self.plant.upgrade_points - self.watering_can["cost"] <= 0:
             return
-        self.plant.upgrade_points -= 1
+        self.plant.upgrade_points -= self.watering_can["cost"]
         self.watering_can["active"] = True
         self.watering_can["amount"] = 10
         pygame.mouse.set_visible(False)
@@ -513,18 +516,22 @@ class GameScene(Scene):
         pygame.mouse.set_visible(True)
 
     def activate_blue_grain(self):
-        '''if self.plant.upgrade_points <= 0:
+        if self.plant.upgrade_points - self.blue_grain["cost"] <= 0:
             return
-        self.plant.upgrade_points -= 1'''
+        self.plant.upgrade_points -= self.blue_grain["cost"]
         pygame.mouse.set_visible(False)
         self.blue_grain["active"] = True
 
     def activate_scarecrow(self):
+        if self.plant.upgrade_points - self.scarecrow["cost"] <= 0:
+            return
+        self.plant.upgrade_points -= self.scarecrow["cost"]
         self.scarecrow["active"] = True
 
     def activate_hawk(self):
-        self.offset = shake()
-        if len(self.plant.organs[0].leaves) > 0:
+
+        if len(self.plant.organs[0].leaves) > 0 and not self.scarecrow["active"]:
+            self.offset = shake()
             leaf = self.plant.organs[0].get_random_leave()
             eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf, Animation(eagle_img, 500), 40,
                           action_sound=eagle_flap, callback=self.plant.organs[0].remove_leaf)
