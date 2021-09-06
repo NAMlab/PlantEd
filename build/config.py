@@ -29,22 +29,34 @@ class GameTime:
         self.starttime = pygame.time.get_ticks()
         self.currenttime = self.starttime
         self.GAMESPEED = 1
+        self.pause = False
+        self.pause_start = 0
         self.timediff = 0  # used to add sped up or slowed time to the current time
         self.deltatime = self.starttime  # tmp time for states
         self.change_speed(1)
 
     def change_speed(self, factor=2):
-        self.timediff += (pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
-        self.deltatime = pygame.time.get_ticks()  # set up
+        ticks = pygame.time.get_ticks()
+        if self.pause:
+            self.pause = False
+            self.deltatime -= (ticks - self.pause_start)
+        self.timediff += (ticks - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
+        self.deltatime = ticks  # set up
         self.GAMESPEED *= factor
 
     def set_speed(self, speed):
-        self.timediff += (pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
-        self.deltatime = pygame.time.get_ticks()  # set up
+        ticks = pygame.time.get_ticks()
+        if self.pause:
+            self.pause = False
+            self.timediff -= (ticks - self.pause_start)
+        self.timediff += (ticks - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
+        self.deltatime = ticks  # set up
         self.GAMESPEED = speed
 
-    def pause(self):
-        self.set_speed(0)
+    def start_pause(self):
+        self.GAMESPEED = 0
+        self.pause = True
+        self.pause_start = pygame.time.get_ticks()
 
     def play(self):
         self.set_speed(1)
@@ -53,7 +65,11 @@ class GameTime:
         self.set_speed(10)
 
     def get_time(self):
-        return pygame.time.get_ticks() - self.starttime + self.timediff + (
+        if self.pause:
+            return self.pause_start - self.starttime + self.timediff + (
+                    (pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED)
+        else:
+            return pygame.time.get_ticks() - self.starttime + self.timediff + (
                     (pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED)
 
 
@@ -91,6 +107,9 @@ tooltipps = [ToolTip(855, 150, 0, 0,
              ToolTip(655, 380, 0, 0, ["Your plant starts as a seed.", "Use your starch deposit", "to grow the roots"],
                      FONT,
                      mass=0, point=(-45, 30)),
+             ToolTip(270, 900, 0, 0, ["Time can be controlled", "in 3 different speeds."],
+                     FONT,
+                     mass=0, point=(-30, 120)),
              ToolTip(370, 140, 0, 0,
                      ["These are your main 3 Organs.", "Select them for Details.", "Once your roots are big enough",
                       "your are able to grow a stem!", "Try to grow it to 2 gramms"], FONT, mass=0, point=(-40, 0)),

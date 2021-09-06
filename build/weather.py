@@ -68,7 +68,7 @@ class Environment:
 
         self.nitrate = StillParticles(100, spawn_box=Rect(1200,900,400,190),
                                     boundary_box=Rect(1200,900,400,190),
-                                    color=(0,0,0), speed=[0, 0], callback=self.model.get_nitrate_pool,
+                                    color=(0,0,0), speed=[0, 0], callback=self.model.get_nitrate_percentage,
                                     active=True, size=5, once=True)
         self.weather_events = config.e
 

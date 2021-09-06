@@ -246,7 +246,7 @@ class GameScene(Scene):
                                             image=blue_grain, post_hover_message=self.post_hover_message,
                                             hover_message="Blue Grain to Fertilize, Cost 1", hover_message_image=chloroplast_icon, button_sound=click_sound),
                            "image": blue_grain_bag,
-                           "amount": 0.0005, #mg
+                           "amount": 0.05, #mg
                            "effect": self.model.increase_nitrate_pool, #0.5mg
                            "system": ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 50, 50),
                                                     boundary_box=Rect(0,0, SCREEN_WIDTH, SCREEN_HEIGHT-220),
@@ -278,7 +278,7 @@ class GameScene(Scene):
         radioButtons[2].button_down = True
 
         speed_options = [
-            RadioButton(100, self.height-50, 32, 32, [self.gametime.pause, self.toggle_pause],
+            RadioButton(100, self.height-50, 32, 32, [self.gametime.start_pause],
                         self.sfont, image=pause_icon),
             RadioButton(140, self.height - 50, 32, 32, [self.gametime.play],
                         self.sfont, image=play_icon),
@@ -373,7 +373,7 @@ class GameScene(Scene):
                 tips.handle_event(e)
 
     def update(self, dt):
-        if self.pause:
+        if self.gametime.pause:
             return
         for animation in self.animations:
             animation.update()
@@ -469,12 +469,6 @@ class GameScene(Scene):
             self.starch_particle.particle_counter = 0
             self.starch_particle.particles.clear()
             self.model.set_objective(STARCH_OUT)
-
-    def toggle_pause(self):
-        if self.pause:
-            self.pause = False
-        else:
-            self.pause = True
 
     def toggle_starch_as_resource(self):
         self.starch_particle.particles.clear()

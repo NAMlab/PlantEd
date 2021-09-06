@@ -205,7 +205,7 @@ class StillParticles(ParticleSystem):
 
     def update(self, dt):
         if self.callback:
-            self.max_particles = int(self.callback()*1000) #max 0.0012/0.05
+            self.max_particles = int(self.callback()*200) #max 0.0012/0.05
         while self.max_particles > len(self.particles):
             self.generate_particle()
         while self.max_particles < len(self.particles) and len(self.particles) > 0:

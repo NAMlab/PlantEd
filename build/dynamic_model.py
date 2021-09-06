@@ -110,6 +110,9 @@ class DynamicModel:
             return
         self.nitrate_pool += amount
 
+    def get_nitrate_percentage(self):
+        return self.nitrate_pool/max_nitrate_pool_low
+
     def get_nitrate_intake(self, mass):
         # Michaelis-Menten Kinetics
         # v = Vmax*S/Km+S, v=intake speed, Vmax=max Intake, Km=Where S that v=Vmax/2, S=Substrate Concentration
@@ -165,6 +168,10 @@ class DynamicModel:
         gamespeed = self.gametime.GAMESPEED
         #print(self.nitrate_pool, self.nitrate_intake/60/60*gamespeed, self.water_pool)
         self.nitrate_pool -= self.nitrate_intake/60/60*gamespeed
+        if self.nitrate_pool > max_nitrate_pool_low:
+            self.nitrate_pool = max_nitrate_pool_low
+        if self.nitrate_pool < 0:
+            self.nitrate_pool = 0.001
         self.water_pool -= self.water_intake/60/60*gamespeed
         # starch gets handled separatly in Organ Starch
 
