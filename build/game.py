@@ -71,6 +71,9 @@ chloroplast_icon = pygame.transform.scale(asset_handler.get_image("chloroplast.p
 blue_grain = (asset_handler.get_image("blue_grain_0.png"))
 #danger_energy = (get_image("danger_energy.png"))
 blue_grain_bag = (asset_handler.get_image("blue_grain_bag.png"))
+pause_icon = asset_handler.get_image("pause.png")
+play_icon = asset_handler.get_image("normal_speed.png")
+fast_icon = asset_handler.get_image("fast_speed.png")
 #pygame.mixer.music.load()
 water_sound = asset_handler.get_sound('water_can.mp3')
 water_sound.set_volume(0.05)
@@ -218,6 +221,7 @@ class GameScene(Scene):
         self.font = config.TITLE_FONT
         self.sfont = config.FONT
         self._running = True
+        self.pause = False
         self.model = DynamicModel(self.gametime)
         self.plant = Plant(plant_pos, self.model)
         self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime, self.activate_hawk)
@@ -272,6 +276,20 @@ class GameScene(Scene):
             rb.setRadioButtons(radioButtons)
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
+
+        speed_options = [
+            RadioButton(100, self.height-50, 32, 32, [self.gametime.pause, self.toggle_pause],
+                        self.sfont, image=pause_icon),
+            RadioButton(140, self.height - 50, 32, 32, [self.gametime.play],
+                        self.sfont, image=play_icon),
+            RadioButton(180, self.height - 50, 32, 32, [self.gametime.faster],
+                        self.sfont, image=fast_icon)
+        ]
+        for rb in speed_options:
+            rb.setRadioButtons(speed_options)
+            self.button_sprites.add(rb)
+        speed_options[1].button_down = True
+
         #self.add_leaf_button = Button(523, 503, 100, 40, [self.plant.get_actions().add_leave] , self.sfont, text="Buy Leaf")
         #self.button_sprites.add(Button(600, 600, 64, 64, [self.activate_watering_can()] , self.sfont, text="Activate Can"))
 
@@ -355,6 +373,8 @@ class GameScene(Scene):
                 tips.handle_event(e)
 
     def update(self, dt):
+        if self.pause:
+            return
         for animation in self.animations:
             animation.update()
         for quick_time_event in self.quick_time_events:
@@ -449,6 +469,12 @@ class GameScene(Scene):
             self.starch_particle.particle_counter = 0
             self.starch_particle.particles.clear()
             self.model.set_objective(STARCH_OUT)
+
+    def toggle_pause(self):
+        if self.pause:
+            self.pause = False
+        else:
+            self.pause = True
 
     def toggle_starch_as_resource(self):
         self.starch_particle.particles.clear()
@@ -690,7 +716,7 @@ def main():
 
         fps = str(int(timer.get_fps()))
         fps_text = config.FONT.render(fps, False, (255,255,255))
-        #print(fps)
+        print(fps)
 
         if pygame.event.get(QUIT):
             running = False
@@ -700,7 +726,7 @@ def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
-        screen.blit(fps_text, (800, 30))
+        #screen.blit(fps_text, (800, 30))
         pygame.display.update()
 
 if __name__ == "__main__":

@@ -1,10 +1,8 @@
 import cobra
 import config
 import os
-import multiprocessing as mp
 
 fileDir = os.path.dirname(os.path.realpath('__file__'))
-print(fileDir)
 assets_dir = os.path.join(fileDir, './build/')
 path = os.path.join(assets_dir, "whole_plant.sbml")
 canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)

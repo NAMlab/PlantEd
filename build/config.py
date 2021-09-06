@@ -34,10 +34,23 @@ class GameTime:
         self.change_speed(1)
 
     def change_speed(self, factor=2):
-        self.timediff += (
-                                     pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
+        self.timediff += (pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
         self.deltatime = pygame.time.get_ticks()  # set up
         self.GAMESPEED *= factor
+
+    def set_speed(self, speed):
+        self.timediff += (pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
+        self.deltatime = pygame.time.get_ticks()  # set up
+        self.GAMESPEED = speed
+
+    def pause(self):
+        self.set_speed(0)
+
+    def play(self):
+        self.set_speed(1)
+
+    def faster(self):
+        self.set_speed(10)
 
     def get_time(self):
         return pygame.time.get_ticks() - self.starttime + self.timediff + (
@@ -116,7 +129,7 @@ e = [{"type": CLOUD,
      {"type": SUN,
       "start_time": 1000 * 60 * 12},
      {"type": HAWK,
-      "start_time": day * 2},
+      "start_time": day * 8},
      {"type": CLOUD,
       "start_time": 1000 * 60 * 18},
      ]

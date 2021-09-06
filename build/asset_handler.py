@@ -19,7 +19,6 @@ def get_image(path):
     image = _image_library.get(path)
     if image == None:
         canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-        print(canonicalized_path)
         image = pygame.image.load(canonicalized_path).convert_alpha()
         _image_library[path] = image
     return image
@@ -30,7 +29,16 @@ def get_sound(path):
     sound = _sound_library.get(path)
     if sound == None:
         canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-        print(canonicalized_path)
         sound = pygame.mixer.Sound(canonicalized_path)
         _sound_library[path] = sound
+    return sound
+
+def get_music(path):
+    path = os.path.join(assets_dir, path)
+    global _music_library
+    music = _music_library.get(path)
+    if music == None:
+        canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
+        music = pygame.mixer.music.load(canonicalized_path)
+        _music_library[path] = music
     return sound

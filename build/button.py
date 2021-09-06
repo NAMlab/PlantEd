@@ -154,8 +154,9 @@ class ToggleButton(pygame.sprite.Sprite):
 # image size has to be = w,h
 class RadioButton(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, target=None):
+                 image=None, border_w=None, target=None, callback_var=None):
         super().__init__()
+        self.callback_var = callback_var
         self.target = target if target else None
         self.border_w = 5 if not border_w else border_w
         self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
@@ -194,7 +195,10 @@ class RadioButton(pygame.sprite.Sprite):
                         rb.button_down = False
                 self.button_down = True
                 for callback in self.callbacks:
-                    callback()
+                    if self.callback_var:
+                        callback(self.callback_var)
+                    else:
+                        callback()
         self.image = self.button_image
         if self.button_down:
             self.image = self.clicked_image

@@ -180,11 +180,15 @@ class Environment:
         days, hours, minutes = self.get_day_time()
         output_string = "Day {0} {1:02}:{2:02}".format(days, int(hours), int(minutes))
         clock_text = self.sfont.render(output_string, True, (0, 0, 0))
-        screen.blit(clock_text, clock_text.get_rect(center=(self.w / 2, 20)))
+        pygame.draw.rect(screen, (255, 255, 255, 180), Rect(self.w/2-clock_text.get_width()/2-20, 10, 180, 30), border_radius=3)
+        screen.blit(clock_text, clock_text.get_rect(center=(self.w / 2, 24)))
+        # headbox
 
+        '''
         day_time = self.get_sun_intensity()
         sun_intensity = self.sfont.render("{:.2}".format(day_time), True, (0, 0, 0))
         screen.blit(sun_intensity, sun_intensity.get_rect(center=(self.w / 2 + 150, 20)))
+        '''
 
     def get_sun_intensity(self):
         return -(np.sin(np.pi/2-np.pi/5+((self.gametime.get_time()/(1000 * 60 * 6)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
