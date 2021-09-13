@@ -2,13 +2,13 @@
 
 block_cipher = None
 import sys
-sys.setrecursionlimit(5000)
+sys.setrecursionlimit(100000)
 
 
 a = Analysis(['game.py'],
-             pathex=['C:\\IPK\\git\\planted\\build'],
+             pathex=['C:\\IPK\\git\\planted\\build', 'C:\\IPK\\git\\planted\\assets'],
              binaries=[],
-             datas=[],
+             datas=['C:\\IPK\\git\\planted\\assets', '.assets'],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

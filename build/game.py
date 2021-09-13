@@ -3,7 +3,7 @@ import pygame
 from pygame.locals import *
 import numpy as np
 from itertools import repeat
-
+import scoring
 import asset_handler
 from plant import Plant
 from button import Button, RadioButton, Slider, SliderGroup, ToggleButton
@@ -85,9 +85,9 @@ gravel = asset_handler.get_sound('gravel.mp3')
 gravel.set_volume(0.7)
 eagle_screech = asset_handler.get_sound('eagle_screech.mp3')
 eagle_screech.set_volume(0.5)
-#pygame.mixer.music.load('background_music.mp3')
-#pygame.mixer.music.set_volume(0.2)
-#pygame.mixer.music.play(-1,0)
+pygame.mixer.music.load('../assets/background_music.mp3')
+pygame.mixer.music.set_volume(0.2)
+pygame.mixer.music.play(-1,0)
 
 
 class Scene(object):
@@ -180,14 +180,32 @@ class CustomScene(object):
         self.sfont = config.FONT
         self.centre = (SCREEN_WIDTH, SCREEN_HEIGHT/2)
         self.text1 = self.font.render('PlantEd', True, (255,255,255))
-        self.text2 = self.font.render('YOU WON!', True, (255,255,255))
-        self.text3 = self.sfont.render('> press any key to continue <', True, (255,255,255))
+        self.text2 = self.font.render('Top 10 Plants!', True, (255,255,255))
+        self.text3 = self.sfont.render('> press any key to restart <', True, (255,255,255))
+        self.winners = scoring.get_scores()
+        self.scores = []
+        self.names = []
+        self.datetimes = []
+
+        for winner in self.winners:
+            score = self.font.render(str(winner['score']), True, (255,255,255))
+            self.scores.append(score)
+            name = self.font.render(winner['name'], True, (255, 255, 255))
+            self.names.append(name)
+            datetime_added = self.font.render(str(winner['datetime_added']), True, (255, 255, 255))
+            self.datetimes.append(datetime_added)
 
     def render(self, screen):
         screen.fill((50, 50, 50))
         screen.blit(self.text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
-        screen.blit(self.text2, (SCREEN_WIDTH/2-self.text2.get_width()/2, SCREEN_HEIGHT/2))
+        screen.blit(self.text2, (SCREEN_WIDTH/2-self.text2.get_width()/2, SCREEN_HEIGHT/3-SCREEN_HEIGHT/25))
+        pygame.draw.rect(screen, (255,255,255), (SCREEN_WIDTH/4, SCREEN_HEIGHT/3-SCREEN_HEIGHT/25+33,SCREEN_WIDTH/2, 5))
         screen.blit(self.text3, (SCREEN_WIDTH/2-self.text3.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
+
+        for i in range(0,min(10,len(self.winners))):
+            screen.blit(self.names[i], (SCREEN_WIDTH/3-self.names[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/25*i))
+            screen.blit(self.scores[i], (SCREEN_WIDTH/2-self.scores[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/25*i))
+            screen.blit(self.datetimes[i], (SCREEN_WIDTH/3*2-self.datetimes[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/25*i))
 
     def update(self, dt):
         pass
@@ -219,6 +237,7 @@ class GameScene(Scene):
         self.manager = None
         self.hover_message = None
         self.font = config.TITLE_FONT
+        self.name = "name"
         self.sfont = config.FONT
         self._running = True
         self.pause = False
@@ -328,7 +347,9 @@ class GameScene(Scene):
                 self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(),0))
                 self.plant.grow()
             if e.type == QUIT: raise SystemExit("QUIT")
-            if e.type == WIN: self.manager.go_to(CustomScene())
+            if e.type == WIN:
+                scoring.upload_score(self.name, self.gametime.get_time())
+                self.manager.go_to(CustomScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.manager.go_to(TitleScene())
             if e.type == KEYDOWN and e.key == K_SPACE:
@@ -608,7 +629,7 @@ class GameScene(Scene):
         # skillpoints
         # temp
         pygame.draw.rect(s, (255,255,255,180), (660, 10, 200, 30), border_radius=3)
-        plant_text = self.font.render("Plant Name", True, (0, 0, 0))  # title
+        plant_text = self.font.render(self.name, True, (0, 0, 0))  # title
         s.blit(plant_text, dest=(760-plant_text.get_size()[0]/2, 10))
 
         pygame.draw.rect(s, white_transparent, (660, 50, 200, 150), border_radius=3)
@@ -715,9 +736,9 @@ def main():
     while running:
         dt = timer.tick(60)/1000.0
 
-        fps = str(int(timer.get_fps()))
-        fps_text = config.FONT.render(fps, False, (255,255,255))
-        print(fps)
+        #fps = str(int(timer.get_fps()))
+        #fps_text = config.FONT.render(fps, False, (255,255,255))
+        #print(fps)
 
         if pygame.event.get(QUIT):
             running = False

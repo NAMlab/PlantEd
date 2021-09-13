@@ -4,8 +4,8 @@ import ctypes
 # assets is supposed to allow access to images, sounds
 # assets also handles options like volume, lists of songs to play or
 
-fileDir = os.path.dirname(os.path.realpath('__file__'))
-assets_dir = os.path.join(fileDir, './assets/')
+#fileDir = os.path.dirname(os.path.realpath('__file__'))
+#assets_dir = os.path.join(fileDir, 'assets')
 _image_library = {}
 _sound_library = {}
 
@@ -14,17 +14,18 @@ true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSy
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
 
 def get_image(path):
-    path = os.path.join(assets_dir, path)
+    path = os.path.join("../assets", path)
     global _image_library
     image = _image_library.get(path)
     if image == None:
         canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
+        print(canonicalized_path)
         image = pygame.image.load(canonicalized_path).convert_alpha()
         _image_library[path] = image
     return image
 
 def get_sound(path):
-    path = os.path.join(assets_dir, path)
+    path = os.path.join("../assets", path)
     global _sound_library
     sound = _sound_library.get(path)
     if sound == None:
@@ -34,7 +35,7 @@ def get_sound(path):
     return sound
 
 def get_music(path):
-    path = os.path.join(assets_dir, path)
+    path = os.path.join("../assets", path)
     global _music_library
     music = _music_library.get(path)
     if music == None:

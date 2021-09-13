@@ -2,12 +2,6 @@ import cobra
 import config
 import os
 
-fileDir = os.path.dirname(os.path.realpath('__file__'))
-assets_dir = os.path.join(fileDir, './build/')
-path = os.path.join(assets_dir, "whole_plant.sbml")
-canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-
-
 # states for objective
 BIOMASS = "leaf_AraCore_Biomass_tx"
 STARCH_OUT = "root_Starch_out_tx"
@@ -26,7 +20,7 @@ Km = 0.04
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, gametime, plant_mass=None, model=cobra.io.read_sbml_model(canonicalized_path)):
+    def __init__(self, gametime, plant_mass=None, model=cobra.io.read_sbml_model("whole_plant.sbml")):
         self.model = model
         self.gametime = gametime
         self.plant_mass = plant_mass
