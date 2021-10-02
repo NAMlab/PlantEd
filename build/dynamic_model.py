@@ -38,7 +38,7 @@ class DynamicModel:
         self.photon_intake = 0                  # 300micromol /m2 s * PLA(gDW * slope)
         self.water_intake = 0
         self.starch_intake = 0                  # actual starch consumption
-        self.starch_intake_max = 10              # upper bound /h
+        self.starch_intake_max = 1              # upper bound /h
 
         # growth rates for each objective
         self.starch_rate = 0
@@ -94,6 +94,9 @@ class DynamicModel:
 
     def get_rates(self):
         return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*self.gametime.GAMESPEED)
+
+    def get_photon_upper(self):
+        return self.model.reactions.get_by_id(PHOTON).bounds[1]
 
     def get_nitrate_pool(self):
         return self.nitrate_pool

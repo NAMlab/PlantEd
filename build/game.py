@@ -15,6 +15,7 @@ from weather import Environment
 from dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
 from eagle import Eagle, QuickTimeEvent
 import config, asset_handler
+from datetime import datetime
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -67,7 +68,8 @@ eagle_img = [pygame.transform.scale(asset_handler.get_image("bird/Eagle Normal_{
 danger_eagle_icon = pygame.transform.scale(asset_handler.get_image("danger_bird.png"),(128,128))
 scarecrow = pygame.transform.scale(asset_handler.get_image("scarecrow.png"), (256,256)).convert_alpha()
 scarecrow_icon = pygame.transform.scale(asset_handler.get_image("scarecrow.png"), (64,64)).convert_alpha()
-chloroplast_icon = pygame.transform.scale(asset_handler.get_image("chloroplast.png"), (20,20)).convert_alpha()
+green_thumb = pygame.transform.scale(asset_handler.get_image("green_thumb.png"), (20,20)).convert_alpha()
+#chloroplast_icon = pygame.transform.scale(asset_handler.get_image("chloroplast.png"), (20,20)).convert_alpha()
 blue_grain = (asset_handler.get_image("blue_grain_0.png"))
 #danger_energy = (get_image("danger_energy.png"))
 blue_grain_bag = (asset_handler.get_image("blue_grain_bag.png"))
@@ -182,25 +184,34 @@ class CustomScene(object):
         self.text1 = self.font.render('PlantEd', True, (255,255,255))
         self.text2 = self.font.render('Top 10 Plants!', True, (255,255,255))
         self.text3 = self.sfont.render('> press any key to restart <', True, (255,255,255))
+
+        self.name_txt = self.font.render('Name', True, (255,255,255))
+        self.score_txt = self.font.render('Score', True, (255,255,255))
+        self.submit_txt = self.font.render('Date', True, (255,255,255))
+
         self.winners = scoring.get_scores()
         self.scores = []
         self.names = []
         self.datetimes = []
 
         for winner in self.winners:
-            score = self.font.render(str(winner['score']), True, (255,255,255))
+            score = self.font.render(datetime.utcfromtimestamp(winner['score']).strftime('Days: %d Hours %H Minutes %M'), True, (255,255,255))
             self.scores.append(score)
             name = self.font.render(winner['name'], True, (255, 255, 255))
             self.names.append(name)
-            datetime_added = self.font.render(str(winner['datetime_added']), True, (255, 255, 255))
+            datetime_added = self.font.render(datetime.utcfromtimestamp(winner['datetime_added']).strftime('%d/%m/%Y'), True, (255, 255, 255))
             self.datetimes.append(datetime_added)
 
     def render(self, screen):
         screen.fill((50, 50, 50))
         screen.blit(self.text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
-        screen.blit(self.text2, (SCREEN_WIDTH/2-self.text2.get_width()/2, SCREEN_HEIGHT/3-SCREEN_HEIGHT/25))
+        screen.blit(self.text2, (SCREEN_WIDTH/2-self.text2.get_width()/2, SCREEN_HEIGHT/3-SCREEN_HEIGHT/10))
         pygame.draw.rect(screen, (255,255,255), (SCREEN_WIDTH/4, SCREEN_HEIGHT/3-SCREEN_HEIGHT/25+33,SCREEN_WIDTH/2, 5))
         screen.blit(self.text3, (SCREEN_WIDTH/2-self.text3.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
+
+        screen.blit(self.name_txt, (SCREEN_WIDTH / 3 - self.name_txt.get_width()/2, SCREEN_HEIGHT / 3-50))
+        screen.blit(self.score_txt, (SCREEN_WIDTH / 2 - self.score_txt.get_width()/2, SCREEN_HEIGHT / 3-50))
+        screen.blit(self.submit_txt, (SCREEN_WIDTH / 3*2 - self.submit_txt.get_width()/2, SCREEN_HEIGHT / 3-50))
 
         for i in range(0,min(10,len(self.winners))):
             screen.blit(self.names[i], (SCREEN_WIDTH/3-self.names[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/25*i))
@@ -218,7 +229,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(GameScene(0))
+        self.go_to(CustomScene())
 
     def go_to(self, scene):
         self.scene = scene
@@ -253,20 +264,20 @@ class GameScene(Scene):
         self.quick_time_events = []
         self.entities = []
         self.watering_can = {"active": False,
-                             "button": Button(780, 260, 64, 64, [self.activate_watering_can], self.sfont,
+                             "button": Button(780, 270, 64, 64, [self.activate_watering_can], self.sfont,
                                               image=can_icon, post_hover_message=self.post_hover_message,
-                                              hover_message="Water Your Plant, Cost: 2",  hover_message_image=chloroplast_icon, button_sound=click_sound),
+                                              hover_message="Water Your Plant, Cost: 2",  hover_message_image=green_thumb, button_sound=click_sound),
                              "image": can,
                              "amount": 0,
                              "rate": 0.1,
                              "cost": 2,
                              "pouring": False}
         self.blue_grain = {"active": False,
-                           "button": Button(780, 344, 64,64, [self.activate_blue_grain], self.sfont,
+                           "button": Button(780, 354, 64,64, [self.activate_blue_grain], self.sfont,
                                             image=blue_grain, post_hover_message=self.post_hover_message,
-                                            hover_message="Blue Grain to Fertilize, Cost 2", hover_message_image=chloroplast_icon, button_sound=click_sound),
+                                            hover_message="Blue Grain to Fertilize, Cost 2", hover_message_image=green_thumb, button_sound=click_sound),
                            "image": blue_grain_bag,
-                           "amount": 0.05, #mg
+                           "amount": 1, #mg
                            "effect": self.model.increase_nitrate_pool, #0.5mg
                            "cost": 2,
                            "system": ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 50, 50),
@@ -276,13 +287,13 @@ class GameScene(Scene):
         self.button_sprites.add(self.blue_grain["button"])
         self.button_sprites.add(self.watering_can["button"])
         self.particle_systems.append(self.blue_grain["system"])
-        add_leaf_button = Button(676, 260, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
-                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 0", hover_message_image=chloroplast_icon, button_sound=click_sound)
+        add_leaf_button = Button(676, 270, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
+                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", hover_message_image=green_thumb, button_sound=click_sound)
         self.button_sprites.add(add_leaf_button)
         self.scarecrow = {"active": False,
-                          "button": Button(676, 334, 64, 64, [self.activate_scarecrow], self.sfont,
+                          "button": Button(676, 354, 64, 64, [self.activate_scarecrow], self.sfont,
                                  image=scarecrow_icon, post_hover_message=self.post_hover_message,
-                                 hover_message="Buy a scarecrow, Cost: 5",  hover_message_image=chloroplast_icon, button_sound=click_sound),
+                                 hover_message="Buy a scarecrow, Cost: 5",  hover_message_image=green_thumb, button_sound=click_sound),
                           "effect": None,
                           "cost": 5}
         self.button_sprites.add(add_leaf_button)
@@ -328,9 +339,9 @@ class GameScene(Scene):
         SliderGroup([slider for slider in self.sliders], 100)
         self.sliders.append(Slider((536, 70, 15, 200), self.sfont, (50, 20), organ=self.plant.organ_starch, plant=self.plant, percent=100))
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
-        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.plant.get_growth_rate(), images=[photo_energy], speed=(2,0), callback=self.plant.get_growth_rate)
+        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.model.get_photon_upper(), images=[photo_energy], speed=(2,0), callback=self.model.get_photon_upper)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
-        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake())
+        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake)
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
         #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
@@ -344,7 +355,7 @@ class GameScene(Scene):
     def handle_events(self, event):
         for e in event:
             if e.type == GROWTH:
-                self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(),0))
+                self.model.calc_growth_rate()
                 self.plant.grow()
             if e.type == QUIT: raise SystemExit("QUIT")
             if e.type == WIN:
@@ -411,6 +422,7 @@ class GameScene(Scene):
             self.stem_slider.active = True
             self.leaf_slider.active = True
 
+        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0))
 
         for slider in self.sliders:
             slider.update()
@@ -472,6 +484,12 @@ class GameScene(Scene):
             image = self.blue_grain["image"]
             pos = (mouse_pos[0]-image.get_width(),mouse_pos[1]-image.get_height())
             tmp_screen.blit(image, (pos))
+        if self.plant.organs[0].can_add_leaf:
+            mouse_pos = pygame.mouse.get_pos()
+            image = leaf_icon
+            pos = (mouse_pos[0], mouse_pos[1])
+            tmp_screen.blit(image, (pos))
+
         #screen.blit(tmp_screen, next(self.offset))
         screen.blit(tmp_screen, next(self.offset))
 
@@ -621,50 +639,50 @@ class GameScene(Scene):
         pool_level_text = self.sfont.render("{:.1f}".format(self.plant.organ_starch.mass), True, (0, 0, 0))  # title
         s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))
 
-        # overal stats
-        # plant health? -> infeasable will damage plant
-        # plant size
-        # plant mass
-        # leaf area, mass
-        # skillpoints
-        # temp
         pygame.draw.rect(s, (255,255,255,180), (660, 10, 200, 30), border_radius=3)
         plant_text = self.font.render(self.name, True, (0, 0, 0))  # title
         s.blit(plant_text, dest=(760-plant_text.get_size()[0]/2, 10))
 
-        pygame.draw.rect(s, white_transparent, (660, 50, 200, 150), border_radius=3)
+        # stats background
+        pygame.draw.rect(s, white_transparent, (660, 50, 200, 160), border_radius=3)
+
+        # plant lvl
+        lvl_text = self.sfont.render("Plant Level:", True, (0, 0, 0))
+        s.blit(lvl_text, dest=(670, 60))
+        level = self.sfont.render("{:.0f}".format(self.plant.get_level()), True, (0, 0, 0))  # title
+        s.blit(level, dest=(860 - level.get_width() - 5, 60))
 
         # biomass
         biomass_text = self.sfont.render("Plant Mass:", True, (0, 0, 0))
-        s.blit(biomass_text, dest=(670, 60))
+        s.blit(biomass_text, dest=(670, 90))
         biomass = self.sfont.render("{:.4f}".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
-        s.blit(biomass, dest=(860-biomass.get_width()-5, 60))
+        s.blit(biomass, dest=(860-biomass.get_width()-5, 90))
 
         # skillpoints
-        skillpoints_text = self.sfont.render("Chloroplast:", True, (0, 0, 0))
-        s.blit(skillpoints_text, dest=(670, 90))
+        skillpoints_text = self.sfont.render("Green Thumbs:", True, (0, 0, 0))
+        s.blit(skillpoints_text, dest=(670, 120))
         skillpoints = self.sfont.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(chloroplast_icon, (860-skillpoints.get_width()-7, 93))
-        s.blit(skillpoints, dest=(860-skillpoints.get_width()-26, 90))
+        s.blit(green_thumb, (860-skillpoints.get_width()-10, 123))
+        s.blit(skillpoints, dest=(860-skillpoints.get_width()-26, 120))
 
         # water
         water_level_text = self.sfont.render("Water:", True, (0, 0, 0))
-        s.blit(water_level_text, dest=(670, 120))
+        s.blit(water_level_text, dest=(670, 150))
         water_level = self.sfont.render("{:.2f}".format(self.model.water_pool), True, (0, 0, 0))  # title
-        s.blit(water_level, dest=(860 - water_level.get_width(), 120))
+        s.blit(water_level, dest=(860 - water_level.get_width(), 150))
 
         # nitrate
         nitrate_level_text = self.sfont.render("Nitrate:", True, (0, 0, 0))
-        s.blit(nitrate_level_text, dest=(670, 150))
+        s.blit(nitrate_level_text, dest=(670, 180))
         nitrate_level = self.sfont.render("{:.2f}".format(self.model.nitrate_pool), True, (0, 0, 0))  # title
-        s.blit(nitrate_level, dest=(860 - nitrate_level.get_width(), 150))
+        s.blit(nitrate_level, dest=(860 - nitrate_level.get_width(), 180))
 
         # shop
-        pygame.draw.rect(s, (255, 255, 255, 180), (660, 210, 200, 30), border_radius=3)
+        pygame.draw.rect(s, (255, 255, 255, 180), (660, 220, 200, 30), border_radius=3)
         shop_text = self.font.render("Shop", True, (0, 0, 0))  # title
-        s.blit(shop_text, dest=(760 - shop_text.get_size()[0] / 2, 210))
+        s.blit(shop_text, dest=(760 - shop_text.get_size()[0] / 2, 220))
 
-        pygame.draw.rect(s, white_transparent, (660, 250, 200, 175), border_radius=3)
+        pygame.draw.rect(s, white_transparent, (660, 260, 200, 175), border_radius=3)
         #items
 
         # headbox
@@ -695,11 +713,27 @@ class GameScene(Scene):
                                       True, (0, 0, 0))
         s.blit(text_organ_mass, dest=(105, 596))  # Todo change x, y
 
-        pygame.draw.rect(s, white_transparent,(245, 490, 400, 125), border_radius=3)
+        pygame.draw.rect(s, white_transparent,(245, 490, 450, 130), border_radius=3)
 
         # growth_rate in seconds
-        growth_rate = self.sfont.render("Growth Rate /s {:.10f}".format(self.plant.target_organ.growth_rate), True, (0, 0, 0)) #hourly
+        growth_rate = self.sfont.render("Growth Rate per second", True, (0, 0, 0)) #hourly
         s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
+        growth_rate_text = self.sfont.render("{:.10f}".format(self.plant.target_organ.growth_rate), True,(0, 0, 0))  # hourly
+        s.blit(growth_rate_text, dest=(645-growth_rate_text.get_width(), 500))  # Todo change x, y
+
+        # mass
+        mass_text = self.sfont.render("Organ Mass", True, (0, 0, 0))
+        s.blit(mass_text, dest=(245, 525))
+        mass = self.sfont.render("{:.10f}".format(self.plant.target_organ.mass), True, (0, 0, 0))
+        s.blit(mass, dest=(645 - mass.get_width(), 525))
+
+        # intake water
+        #if self.plant.target_organ.type == self.plant.ROOTS:
+        water_intake_text = self.sfont.render("Water intake", True,(0, 0, 0))
+        s.blit(water_intake_text, dest=(245,550))
+        water_intake = self.sfont.render("{:.10f}".format(self.model.water_intake), True,(0, 0, 0))
+        s.blit(water_intake, dest=(645-water_intake.get_width(), 550))
+
 
         # level
         pygame.draw.circle(s, white_transparent, (100, 510,), 20)
@@ -707,9 +741,6 @@ class GameScene(Scene):
         level = self.sfont.render("{:.0f}".format(self.plant.target_organ.level), True, (0, 0, 0))
         s.blit(level, (100-level.get_width()/2,510-level.get_height()/2))
 
-        # mass
-        mass = self.sfont.render("Organ Mass in g, DW {:.10f}".format(self.plant.target_organ.mass), True, (0, 0, 0))
-        s.blit(mass, dest=(245, 550))
         screen.blit(s, (0, 0))
 
     def on_cleanup(self):
@@ -735,6 +766,7 @@ def main():
 
     while running:
         dt = timer.tick(60)/1000.0
+
 
         #fps = str(int(timer.get_fps()))
         #fps_text = config.FONT.render(fps, False, (255,255,255))

@@ -39,11 +39,10 @@ class Environment:
         self.background = asset_handler.get_image("background_empty_sky.png").convert_alpha()
         self.background_moist = pygame.transform.scale(asset_handler.get_image("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
-        self.GAMESPEED = config.GAMESPEED
         self.sun_pos_noon = (1300,0)
         self.sun_pos_night = (500,SCREEN_HEIGHT-200)
         self.sun_pos = (0,0)
-        self.rain_rate = 0.001
+        self.rain_rate = 0.0001
         self.font = pygame.font.SysFont('Arial', 56)
         self.sfont = pygame.font.SysFont('Arial', 32)
         self.plant = plant
@@ -80,7 +79,7 @@ class Environment:
         self.rain.update(dt)
         self.nitrate.update(dt)
         if self.rain.active:
-            self.model.water_pool += self.rain_rate
+            self.model.water_pool += self.rain_rate * self.gametime.GAMESPEED
         for sprite in self.sprites:
             # sprites are able to cancle themselves, OneShotAnimation / Animation (loop)
             if not sprite.update():

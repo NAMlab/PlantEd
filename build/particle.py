@@ -174,7 +174,7 @@ class ParticleSystem:
                     size = particle.size
                 pygame.draw.circle(screen, particle.color, (particle.x, particle.y), size)
 
-            screen.blit(self.circle_surf(size*2, (20, 20, 60)), (particle.x-size*2, particle.y-size*2), special_flags=BLEND_RGB_ADD)
+            #screen.blit(self.circle_surf(size*2, (20, 20, 60)), (particle.x-size*2, particle.y-size*2), special_flags=BLEND_RGB_ADD)
 
 
 class PointParticleSystem(ParticleSystem):
@@ -187,13 +187,13 @@ class PointParticleSystem(ParticleSystem):
         self.points = points
 
     def set_max_particles(self, max_particles):
-        if max_particles < self.max_particles:
-            self.particles.clear()
         self.max_particles = max_particles
+        while len(self.particles) > self.max_particles and len(self.particles) > 0:
+            self.particles.pop(0)
 
     def update(self, dt):
         if self.callback:
-            self.set_max_particles(int(self.callback()))
+            self.set_max_particles(int(self.callback()*10))
         if self.particle_counter < self.max_particles and random.randint(0, 10) < 1 and self.active:
             self.particle_counter += 1
             self.particles.append(PointsParticle(points=self.points, image=self.images[0], speed=self.speed))
