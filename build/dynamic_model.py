@@ -14,8 +14,8 @@ PHOTON = "leaf_Photon_tx"
 
 # mol
 Vmax = 0.03
-max_nitrate_pool_low = 1
-max_nitrate_pool_high = 5
+max_nitrate_pool_low = 10
+max_nitrate_pool_high = 50
 Km = 0.04
 
 # interface and state holder of model --> dynamic wow
@@ -82,8 +82,9 @@ class DynamicModel:
             self.biomass_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
             self.starch_rate = 0
         elif self.objective == STARCH_OUT:
+            # Todo find fix for low production
+            # beware workaround just 10fold
             self.starch_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
-            print(self.starch_rate, self.starch_intake/60/60*240*gamespeed, self.starch_intake_max)
             self.biomass_rate = 0
         # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth
 
@@ -157,8 +158,7 @@ class DynamicModel:
         self.calc_growth_rate()
 
     def update(self, root_mass, PLA, sun_intensity):
-        self.update_bounds(root_mass, PLA*sun_intensity)
-        self.calc_growth_rate()
+        self.update_bounds(root_mass, PLA*sun_intensity*50)
         self.update_pools()
         #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
 
@@ -178,4 +178,4 @@ class DynamicModel:
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
         self.set_bounds(NITRATE,(0,0.4))
-        self.set_bounds(PHOTON,(0,photon_in*30))
+        self.set_bounds(PHOTON,(0,photon_in))

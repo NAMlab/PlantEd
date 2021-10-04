@@ -119,6 +119,7 @@ class ToggleButton(pygame.sprite.Sprite):
         self.button_down = False
         if pressed:
             self.image = self.clicked_image
+            self.button_down = True
             for callback in self.callback:
                 callback()
 

@@ -196,11 +196,11 @@ class CustomScene(object):
         self.datetimes = []
 
         for winner in self.winners:
-            score = self.font.render(datetime.utcfromtimestamp(winner['score']).strftime('Days: %d Hours %H Minutes %M'), True, (255,255,255))
+            score = self.font.render(datetime.utcfromtimestamp(winner['score']).strftime('%d Days %H Hours %M Minutes'), True, (255,255,255))
             self.scores.append(score)
             name = self.font.render(winner['name'], True, (255, 255, 255))
             self.names.append(name)
-            datetime_added = self.font.render(datetime.utcfromtimestamp(winner['datetime_added']).strftime('%d/%m/%Y'), True, (255, 255, 255))
+            datetime_added = self.font.render(datetime.utcfromtimestamp(winner['datetime_added']).strftime('%d/%m/%Y %H:%M'), True, (255, 255, 255))
             self.datetimes.append(datetime_added)
 
     def render(self, screen):
@@ -363,18 +363,18 @@ class GameScene(Scene):
                 self.plant.grow()
             if e.type == QUIT: raise SystemExit("QUIT")
             if e.type == WIN:
-                scoring.upload_score(self.name, self.gametime.get_time())
+                scoring.upload_score(self.textbox.text, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.manager.go_to(TitleScene())
-            '''
-            if e.type == KEYDOWN and e.key == K_SPACE:
-                self.manager.go_to(GameScene(0))
+
+            #if e.type == KEYDOWN and e.key == K_SPACE:
+            #    self.manager.go_to(GameScene(0))
             if e.type == KEYDOWN and e.key == K_UP:
                 self.gametime.change_speed()
             if e.type == KEYDOWN and e.key == K_DOWN:
                 self.gametime.change_speed(0.5)
-            '''
+
             self.textbox.handle_event(e)
             for button in self.button_sprites:
                 # all button_sprites handle their events
@@ -622,10 +622,10 @@ class GameScene(Scene):
             slider.draw(screen)
 
         # draw life tax
-        life_tax_pos = Rect(360, 230, 64, 64)
-        pygame.draw.rect(s, white_transparent, life_tax_pos, border_radius=5)
-        starch_lvl = self.sfont.render("TAX", True, (0, 0, 0))  # title
-        s.blit(starch_lvl, starch_lvl.get_rect(center=life_tax_pos.center))
+        #life_tax_pos = Rect(360, 230, 64, 64)
+        #pygame.draw.rect(s, white_transparent, life_tax_pos, border_radius=5)
+        #starch_lvl = self.sfont.render("TAX", True, (0, 0, 0))  # title
+        #s.blit(starch_lvl, starch_lvl.get_rect(center=life_tax_pos.center))
 
         # draw starch details
         lvl_pos = Rect(530, 270, 64, 64)
@@ -669,11 +669,11 @@ class GameScene(Scene):
         biomass = self.sfont.render("{:.4f}".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
         s.blit(biomass, dest=(860-biomass.get_width()-5, 90))
 
-        # skillpoints
+        # skillpoints greenthumb
         skillpoints_text = self.sfont.render("Green Thumbs:", True, (0, 0, 0))
         s.blit(skillpoints_text, dest=(670, 120))
         skillpoints = self.sfont.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(green_thumb, (860-skillpoints.get_width()-10, 123))
+        s.blit(green_thumb, (860-green_thumb.get_width()-1, 123))
         s.blit(skillpoints, dest=(860-skillpoints.get_width()-26, 120))
 
         # water
@@ -717,7 +717,7 @@ class GameScene(Scene):
         pygame.draw.rect(s, white_transparent, Rect(100, 600, exp_width, 25), border_radius=0)
         needed_exp = self.plant.target_organ.get_threshold()
         exp = self.plant.target_organ.mass / needed_exp
-        width = int(exp_width / 1 * exp)
+        width = min(int(exp_width / 1 * exp),exp_width)
         pygame.draw.rect(s, (255, 255, 255), Rect(100, 600, width, 25), border_radius=0)  # exp
         text_organ_mass = self.font.render("{:.2f} / {threshold}".format(self.plant.target_organ.mass,
                                                                     threshold=self.plant.target_organ.get_threshold()),

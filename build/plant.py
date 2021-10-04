@@ -38,7 +38,7 @@ class Plant:
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=1, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=50, active=True, model=self.model)
-        self.seedling = Seedling(self.x, self.y, beans, 5)
+        self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
         # Fix env constraints
@@ -112,7 +112,7 @@ class Plant:
 
     def draw(self, screen):
         self.draw_seedling(screen)
-        if self.get_biomass() - 1 < self.seedling.max:
+        if self.get_biomass() < self.seedling.max:
             return
         for organ in self.organs:
             organ.draw(screen)
@@ -129,7 +129,7 @@ class Seedling:
         self.max = max
 
     def draw(self, screen, mass):
-        index = int(len(self.images)/self.max * (mass-1))
+        index = int(len(self.images)/self.max * (mass))
         if index >= len(self.images):
             index = len(self.images)-1
         screen.blit(self.images[index], (self.x, self.y))
