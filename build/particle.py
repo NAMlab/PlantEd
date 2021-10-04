@@ -178,9 +178,10 @@ class ParticleSystem:
 
 
 class PointParticleSystem(ParticleSystem):
-    def __init__(self, points, max_particles, images, speed, active=True, callback=None):
+    def __init__(self, points, max_particles, images, speed, active=True, callback=None, factor=1):
         super().__init__(max_particles, images=images, speed=speed, active=active)
         self.points = points
+        self.factor = factor
         self.callback = callback
 
     def change_points(self, points):
@@ -193,7 +194,7 @@ class PointParticleSystem(ParticleSystem):
 
     def update(self, dt):
         if self.callback:
-            self.set_max_particles(int(self.callback()*10))
+            self.set_max_particles(int(self.callback()*10*self.factor))
         if self.particle_counter < self.max_particles and random.randint(0, 10) < 1 and self.active:
             self.particle_counter += 1
             self.particles.append(PointsParticle(points=self.points, image=self.images[0], speed=self.speed))

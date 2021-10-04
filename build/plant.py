@@ -37,8 +37,8 @@ class Plant:
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=1, active=True)
-        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=0.5, active=True, model=self.model)
-        self.seedling = Seedling(self.x, self.y, beans, 4)
+        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=50, active=True, model=self.model)
+        self.seedling = Seedling(self.x, self.y, beans, 5)
         self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
         # Fix env constraints
@@ -74,7 +74,7 @@ class Plant:
     # Projected Leaf Area (PLA)
     def get_PLA(self):
         # 0.03152043208186226
-        return self.organs[0].get_mass() * 0.03152043208186226 if len(self.organs[0].leaves) > 0 else 0 #m^2
+        return (self.organs[0].get_mass() * 0.03152043208186226)+self.organs[0].base_mass if len(self.organs[0].leaves) > 0 else 0 #m^2
 
     def grow(self):
         self.update_growth_rates(self.model.get_rates())
@@ -112,7 +112,7 @@ class Plant:
 
     def draw(self, screen):
         self.draw_seedling(screen)
-        if self.get_biomass() < self.seedling.max:
+        if self.get_biomass() - 1 < self.seedling.max:
             return
         for organ in self.organs:
             organ.draw(screen)
@@ -129,7 +129,7 @@ class Seedling:
         self.max = max
 
     def draw(self, screen, mass):
-        index = int(len(self.images)/self.max * mass)
+        index = int(len(self.images)/self.max * (mass-1))
         if index >= len(self.images):
             index = len(self.images)-1
         screen.blit(self.images[index], (self.x, self.y))
@@ -443,7 +443,7 @@ class Stem(Organ):
 
 class Starch(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active, model):
-        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[1,2,5,10])
+        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[50,100,500,1000])
         self.toggle_button = None
         self.model = model
 

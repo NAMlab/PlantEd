@@ -6,14 +6,19 @@ class ToolTipManager:
     def __init__(self, tool_tips, callback=None):
         self.tool_tips = tool_tips
         self.callback = callback
+        self.active = False
         self.current_tip = 0 if tool_tips else -1
 
         if self.current_tip >= 0:
             self.tool_tips[self.current_tip].activate()
 
+    def toggle_activate(self):
+        self.active = not self.active
+
     def draw(self, screen):
-        for tip in self.tool_tips:
-            tip.draw(screen)
+        if self.active:
+            for tip in self.tool_tips:
+                tip.draw(screen)
 
     def update(self):
         if not self.tool_tips:

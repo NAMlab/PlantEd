@@ -376,3 +376,48 @@ class SliderGroup:
                     extra = s.sub_percentage(delta)
                     if extra > 0:
                         self.sliders_zero.append(s)
+
+class Textbox:
+    def __init__(self, x,y,w,h, font, text="name", color=(240,240,240,180), highlight_color=(255,255,255,255)):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.rect = pygame.Rect(x,y,w,h)
+        self.text = text
+        self.font = font
+        self.render_text = self.font.render(self.text, True, (0,0,0))
+        self.color = color
+        self.higlight_color = highlight_color
+        self.active = False
+        self.max_chars = 10
+
+    def handle_event(self, e):
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(e.pos):
+                self.active = True
+                print(self.active)
+            else:
+                self.active = False
+        if not self.active:
+            return
+        if e.type == pygame.KEYDOWN:
+            if e.key == pygame.K_BACKSPACE:
+                if len(self.text) > 0:
+                    self.text = self.text[:-1]
+            else:
+                if len(self.text) < self.max_chars:
+                    self.text += e.unicode
+        self.render_text = self.font.render(self.text, True, (0,0,0))
+
+    def draw(self, screen):
+        if self.active:
+            pygame.draw.rect(screen, self.higlight_color, self.rect, border_radius=3)
+        else:
+            pygame.draw.rect(screen, self.color, self.rect, border_radius=3)
+        #pygame.draw.rect(screen, self.border_color, self.rect, border_radius=3, width=3)
+        screen.blit(self.render_text, (self.x+self.w/2-self.render_text.get_width()/2,self.y+self.h/2-self.render_text.get_height()/2))
+
+
+
+

@@ -83,6 +83,7 @@ class DynamicModel:
             self.starch_rate = 0
         elif self.objective == STARCH_OUT:
             self.starch_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
+            print(self.starch_rate, self.starch_intake/60/60*240*gamespeed, self.starch_intake_max)
             self.biomass_rate = 0
         # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth
 
@@ -93,7 +94,7 @@ class DynamicModel:
         self.photon_intake = solution.fluxes[PHOTON]
 
     def get_rates(self):
-        return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*self.gametime.GAMESPEED)
+        return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
 
     def get_photon_upper(self):
         return self.model.reactions.get_by_id(PHOTON).bounds[1]

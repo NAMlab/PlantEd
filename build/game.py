@@ -5,8 +5,9 @@ import numpy as np
 from itertools import repeat
 import scoring
 import asset_handler
+import math
 from plant import Plant
-from button import Button, RadioButton, Slider, SliderGroup, ToggleButton
+from button import Button, RadioButton, Slider, SliderGroup, ToggleButton, Textbox
 from particle import ParticleSystem, PointParticleSystem
 from animation import OneShotAnimation, Animation
 import os, sys
@@ -229,7 +230,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(CustomScene())
+        self.go_to(GameScene(0))
 
     def go_to(self, scene):
         self.scene = scene
@@ -248,7 +249,7 @@ class GameScene(Scene):
         self.manager = None
         self.hover_message = None
         self.font = config.TITLE_FONT
-        self.name = "name"
+        self.name = "Generic Plant"
         self.sfont = config.FONT
         self._running = True
         self.pause = False
@@ -341,15 +342,18 @@ class GameScene(Scene):
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
         self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.model.get_photon_upper(), images=[photo_energy], speed=(2,0), callback=self.model.get_photon_upper)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
-        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake)
+        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake, factor=10)
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
         #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
         self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE,apply_gravity=True,speed=[0, 5], spread=[3, 0], active=False)
         self.particle_systems.append(self.can_particle_system)
 
+        self.textbox = Textbox(660, 10, 200, 30,self.sfont, self.name)
+
         tooltipps = config.tooltipps
         self.tool_tip_manager = ToolTipManager(tooltipps, callback=self.plant.get_biomass)
+        self.button_sprites.add(ToggleButton(240, self.height - 50, 64, 32, [self.tool_tip_manager.toggle_activate], self.sfont, text="HINT", pressed=True))
         pygame.time.set_timer(GROWTH, 1000)
 
     def handle_events(self, event):
@@ -363,12 +367,15 @@ class GameScene(Scene):
                 self.manager.go_to(CustomScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.manager.go_to(TitleScene())
+            '''
             if e.type == KEYDOWN and e.key == K_SPACE:
                 self.manager.go_to(GameScene(0))
             if e.type == KEYDOWN and e.key == K_UP:
                 self.gametime.change_speed()
             if e.type == KEYDOWN and e.key == K_DOWN:
                 self.gametime.change_speed(0.5)
+            '''
+            self.textbox.handle_event(e)
             for button in self.button_sprites:
                 # all button_sprites handle their events
                 button.handle_event(e)
@@ -427,7 +434,7 @@ class GameScene(Scene):
         for slider in self.sliders:
             slider.update()
         for system in self.particle_systems:
-            system.update(dt*self.gametime.GAMESPEED)
+            system.update(dt*math.sqrt(self.gametime.GAMESPEED))
 
         for entity in self.entities:
             entity.update()
@@ -639,9 +646,13 @@ class GameScene(Scene):
         pool_level_text = self.sfont.render("{:.1f}".format(self.plant.organ_starch.mass), True, (0, 0, 0))  # title
         s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))
 
-        pygame.draw.rect(s, (255,255,255,180), (660, 10, 200, 30), border_radius=3)
-        plant_text = self.font.render(self.name, True, (0, 0, 0))  # title
-        s.blit(plant_text, dest=(760-plant_text.get_size()[0]/2, 10))
+
+        # name plant, make textbox
+        self.textbox.draw(s)
+        #pygame.draw.rect(s, (255,255,255,180), (660, 10, 200, 30), border_radius=3)
+        #pygame.draw.rect(s, (255,255,255,180), (660, 10, 200, 30), width=3, border_radius=3)
+        #plant_text = self.font.render(self.name, True, (0, 0, 0))  # title
+        #s.blit(plant_text, dest=(760-plant_text.get_size()[0]/2, 10))
 
         # stats background
         pygame.draw.rect(s, white_transparent, (660, 50, 200, 160), border_radius=3)
@@ -713,26 +724,33 @@ class GameScene(Scene):
                                       True, (0, 0, 0))
         s.blit(text_organ_mass, dest=(105, 596))  # Todo change x, y
 
-        pygame.draw.rect(s, white_transparent,(245, 490, 450, 130), border_radius=3)
+        pygame.draw.rect(s, white_transparent,(245, 490, 395, 130), border_radius=3)
 
         # growth_rate in seconds
-        growth_rate = self.sfont.render("Growth Rate per second", True, (0, 0, 0)) #hourly
+        growth_rate = self.sfont.render("Growth Rate", True, (0, 0, 0)) #hourly
         s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
-        growth_rate_text = self.sfont.render("{:.10f}".format(self.plant.target_organ.growth_rate), True,(0, 0, 0))  # hourly
-        s.blit(growth_rate_text, dest=(645-growth_rate_text.get_width(), 500))  # Todo change x, y
+        growth_rate_text = self.sfont.render("{:.10f} /s".format(self.plant.target_organ.growth_rate), True,(0, 0, 0))  # hourly
+        s.blit(growth_rate_text, dest=(635-growth_rate_text.get_width(), 500))  # Todo change x, y
 
         # mass
         mass_text = self.sfont.render("Organ Mass", True, (0, 0, 0))
         s.blit(mass_text, dest=(245, 525))
-        mass = self.sfont.render("{:.10f}".format(self.plant.target_organ.mass), True, (0, 0, 0))
-        s.blit(mass, dest=(645 - mass.get_width(), 525))
+        mass = self.sfont.render("{:.10f} /g".format(self.plant.target_organ.mass), True, (0, 0, 0))
+        s.blit(mass, dest=(635 - mass.get_width(), 525))
 
         # intake water
         #if self.plant.target_organ.type == self.plant.ROOTS:
         water_intake_text = self.sfont.render("Water intake", True,(0, 0, 0))
         s.blit(water_intake_text, dest=(245,550))
-        water_intake = self.sfont.render("{:.10f}".format(self.model.water_intake), True,(0, 0, 0))
-        s.blit(water_intake, dest=(645-water_intake.get_width(), 550))
+        water_intake = self.sfont.render("{:.10f} /h".format(self.model.water_intake), True,(0, 0, 0))
+        s.blit(water_intake, dest=(635-water_intake.get_width(), 550))
+
+        # nitrate water
+        # if self.plant.target_organ.type == self.plant.ROOTS:
+        nitrate_intake_text = self.sfont.render("Nitrate intake", True, (0, 0, 0))
+        s.blit(nitrate_intake_text, dest=(245, 575))
+        nitrate_intake = self.sfont.render("{:.10f} /h".format(self.model.nitrate_intake), True, (0, 0, 0))
+        s.blit(nitrate_intake, dest=(635 - nitrate_intake.get_width(), 575))
 
 
         # level
