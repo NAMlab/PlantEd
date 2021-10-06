@@ -42,7 +42,7 @@ class Environment:
         self.sun_pos_noon = (1300,0)
         self.sun_pos_night = (500,SCREEN_HEIGHT-200)
         self.sun_pos = (0,0)
-        self.rain_rate = 0.0001
+        self.rain_rate = 0.0002
         self.font = pygame.font.SysFont('Arial', 56)
         self.sfont = pygame.font.SysFont('Arial', 32)
         self.plant = plant

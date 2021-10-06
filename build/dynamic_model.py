@@ -13,10 +13,10 @@ WATER = "root_H2O_tx"
 PHOTON = "leaf_Photon_tx"
 
 # mol
-Vmax = 0.03
+Vmax = 0.8
 max_nitrate_pool_low = 10
 max_nitrate_pool_high = 50
-Km = 0.04
+Km = 4
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
@@ -136,6 +136,9 @@ class DynamicModel:
     def set_bounds(self, reaction, bounds):
         self.model.reactions.get_by_id(reaction).bounds = bounds
 
+    def get_bounds(self, reaction):
+        return self.model.reactions.get_by_id(reaction).bounds
+
     def set_objective(self, objective):
         if objective == BIOMASS:
             self.objective = BIOMASS
@@ -157,8 +160,8 @@ class DynamicModel:
         self.set_bounds(STARCH_IN, (0, 0))
         self.calc_growth_rate()
 
-    def update(self, root_mass, PLA, sun_intensity):
-        self.update_bounds(root_mass, PLA*sun_intensity*50)
+    def update(self, root_mass, PLA, sun_intensity, starch_percentage):
+        self.update_bounds(root_mass, PLA*sun_intensity*50, starch_percentage)
         self.update_pools()
         #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
 
@@ -171,11 +174,19 @@ class DynamicModel:
         if self.nitrate_pool < 0:
             self.nitrate_pool = 0.001
         self.water_pool -= self.water_intake/60/60*gamespeed
+        if self.water_pool < 0:
+            self.water_pool = 0
         # starch gets handled separatly in Organ Starch
 
-    def update_bounds(self, root_mass, photon_in):
+    def update_bounds(self, root_mass, photon_in, starch_percenatage):
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
-        self.set_bounds(NITRATE,(0,0.4))
+        if self.use_starch:
+            self.set_bounds(STARCH_IN, (0, self.starch_intake_max*starch_percenatage/100))
+        self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)*40))
+        if self.water_pool <= 0:
+            self.set_bounds(WATER, (0,0))
+        else:
+            self.set_bounds(WATER, (-1000,1000))
         self.set_bounds(PHOTON,(0,photon_in))

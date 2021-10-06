@@ -188,12 +188,14 @@ class CustomScene(object):
 
         self.name_txt = self.font.render('Name', True, (255,255,255))
         self.score_txt = self.font.render('Score', True, (255,255,255))
-        self.submit_txt = self.font.render('Date', True, (255,255,255))
+        self.submit_txt = self.font.render('Submit Date', True, (255,255,255))
 
         self.winners = scoring.get_scores()
         self.scores = []
         self.names = []
         self.datetimes = []
+
+        self.winners = sorted(self.winners, key=lambda x: datetime.utcfromtimestamp(x["score"]).strftime("%d%H%M"))
 
         for winner in self.winners:
             score = self.font.render(datetime.utcfromtimestamp(winner['score']).strftime('%d Days %H Hours %M Minutes'), True, (255,255,255))
@@ -230,7 +232,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(GameScene(0))
+        self.go_to(CustomScene())
 
     def go_to(self, scene):
         self.scene = scene
@@ -278,7 +280,7 @@ class GameScene(Scene):
                                             image=blue_grain, post_hover_message=self.post_hover_message,
                                             hover_message="Blue Grain to Fertilize, Cost 2", hover_message_image=green_thumb, button_sound=click_sound),
                            "image": blue_grain_bag,
-                           "amount": 1, #mg
+                           "amount": 2, #mg
                            "effect": self.model.increase_nitrate_pool, #0.5mg
                            "cost": 2,
                            "system": ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 50, 50),
@@ -338,11 +340,11 @@ class GameScene(Scene):
         self.sliders.append(self.stem_slider)
         self.sliders.append(self.root_slider)
         SliderGroup([slider for slider in self.sliders], 100)
-        self.sliders.append(Slider((536, 70, 15, 200), self.sfont, (50, 20), organ=self.plant.organ_starch, plant=self.plant, percent=100))
+        self.sliders.append(Slider((536, 70, 15, 200), self.sfont, (50, 20), organ=self.plant.organ_starch, plant=self.plant, percent=30))
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
-        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.model.get_photon_upper(), images=[photo_energy], speed=(2,0), callback=self.model.get_photon_upper)
+        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.model.get_photon_upper(), images=[photo_energy], speed=(2,0), callback=self.model.get_photon_upper, nmin=0, nmax=80)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
-        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake, factor=10)
+        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake, factor=20, nmin=1, nmax=40)
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
         #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
@@ -429,7 +431,7 @@ class GameScene(Scene):
             self.stem_slider.active = True
             self.leaf_slider.active = True
 
-        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0))
+        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0), self.plant.organ_starch.percentage)
 
         for slider in self.sliders:
             slider.update()
@@ -545,7 +547,7 @@ class GameScene(Scene):
 
     # buy can basically
     def activate_watering_can(self):
-        if self.plant.upgrade_points - self.watering_can["cost"] <= 0:
+        if self.plant.upgrade_points - self.watering_can["cost"] < 0:
             return
         self.plant.upgrade_points -= self.watering_can["cost"]
         self.watering_can["active"] = True
@@ -562,14 +564,14 @@ class GameScene(Scene):
         pygame.mouse.set_visible(True)
 
     def activate_blue_grain(self):
-        if self.plant.upgrade_points - self.blue_grain["cost"] <= 0:
+        if self.plant.upgrade_points - self.blue_grain["cost"] < 0:
             return
         self.plant.upgrade_points -= self.blue_grain["cost"]
         pygame.mouse.set_visible(False)
         self.blue_grain["active"] = True
 
     def activate_scarecrow(self):
-        if self.plant.upgrade_points - self.scarecrow["cost"] <= 0:
+        if self.plant.upgrade_points - self.scarecrow["cost"] < 0:
             return
         self.plant.upgrade_points -= self.scarecrow["cost"]
         self.scarecrow["active"] = True

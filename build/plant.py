@@ -235,7 +235,7 @@ class Leaf(Organ):
     def activate_add_leaf(self):
         #ugly but has to work for now, maybe move activate_add_leave to plant and check there
         if self.plant.organs[1].active_threshold*2 > len(self.leaves):
-            self.plant.upgrade_points -= 1
+            self.plant.upgrade_points -= 1 if self.plant.upgrade_points > 0 else 0
             self.can_add_leaf = True
 
     def remove_leaf(self, leaf=None):
@@ -366,7 +366,6 @@ class Stem(Organ):
             for rect in self.get_rect():
                 if rect.collidepoint(event.pos):
                     if self.leaf.can_add_leaf:
-                        self.plant.upgrade_points -= 1
                         if self.highlight:
                             self.leaf.append_leaf(self.highlight)
                         return
