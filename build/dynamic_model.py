@@ -2,6 +2,7 @@ import cobra
 import config
 import os
 
+
 # states for objective
 BIOMASS = "leaf_AraCore_Biomass_tx"
 STARCH_OUT = "root_Starch_out_tx"
@@ -20,9 +21,10 @@ Km = 4
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, gametime, plant_mass=None, model=cobra.io.read_sbml_model("whole_plant.sbml")):
+    def __init__(self, gametime, log=None, plant_mass=None, model=cobra.io.read_sbml_model("whole_plant.sbml")):
         self.model = model
         self.gametime = gametime
+        self.log = log
         self.plant_mass = plant_mass
         self.use_starch = False
         # model.objective can be changed by this string, but not compared, workaround: self.objective
@@ -93,6 +95,9 @@ class DynamicModel:
         self.nitrate_intake = solution.fluxes[NITRATE]#self.get_flux(NITRATE)
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         self.photon_intake = solution.fluxes[PHOTON]
+
+        if self.log:
+            self.log.append_log(self.biomass_rate, self.starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, self.water_pool, self.nitrate_pool)
 
     def get_rates(self):
         return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)

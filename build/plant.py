@@ -53,7 +53,7 @@ class Plant:
         lvl = 0
         for organ in self.organs:
             lvl += organ.level
-        if lvl >= 20:
+        if lvl >= 4:
             pygame.event.post(pygame.event.Event(WIN))
 
     def update_growth_rates(self, growth_rate):
@@ -67,6 +67,9 @@ class Plant:
         for organ in self.organs:
             biomass += organ.mass
         return biomass
+
+    def get_percentages(self):
+        return [organ.percentage for organ in self.organs]
 
     def get_level(self):
         return sum([organ.level for organ in self.organs])

@@ -6,6 +6,7 @@ from itertools import repeat
 import scoring
 import asset_handler
 import math
+from logger import Log
 from plant import Plant
 from button import Button, RadioButton, Slider, SliderGroup, ToggleButton, Textbox
 from particle import ParticleSystem, PointParticleSystem
@@ -89,7 +90,7 @@ gravel.set_volume(0.7)
 eagle_screech = asset_handler.get_sound('eagle_screech.mp3')
 eagle_screech.set_volume(0.5)
 pygame.mixer.music.load('../assets/background_music.mp3')
-pygame.mixer.music.set_volume(0.2)
+pygame.mixer.music.set_volume(0.05)
 pygame.mixer.music.play(-1,0)
 
 
@@ -246,6 +247,7 @@ class GameScene(Scene):
         self.width = SCREEN_WIDTH
         self.height = SCREEN_HEIGHT
         self.gametime = config.GameTime()
+        self.log = Log()
         self.offset = repeat((0, 0))
         self.screen_changes = [pygame.Rect(0,0,SCREEN_WIDTH, SCREEN_HEIGHT)]
         self.manager = None
@@ -255,7 +257,7 @@ class GameScene(Scene):
         self.sfont = config.FONT
         self._running = True
         self.pause = False
-        self.model = DynamicModel(self.gametime)
+        self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant(plant_pos, self.model)
         self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime, self.activate_hawk)
         self.particle_systems = []
@@ -273,7 +275,7 @@ class GameScene(Scene):
                              "image": can,
                              "amount": 0,
                              "rate": 0.1,
-                             "cost": 2,
+                             "cost": 1,
                              "pouring": False}
         self.blue_grain = {"active": False,
                            "button": Button(780, 354, 64,64, [self.activate_blue_grain], self.sfont,
@@ -362,9 +364,12 @@ class GameScene(Scene):
         for e in event:
             if e.type == GROWTH:
                 self.model.calc_growth_rate()
+                self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
                 self.plant.grow()
             if e.type == QUIT: raise SystemExit("QUIT")
             if e.type == WIN:
+                if self.log:
+                    self.log.write_log(self.name)
                 scoring.upload_score(self.textbox.text, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
@@ -529,7 +534,7 @@ class GameScene(Scene):
         else:
             self.starch_particle.active = True
             self.model.activate_starch_resource()
-        self.plant.update_growth_rates(self.model.get_rates())
+        #self.plant.update_growth_rates(self.model.get_rates())
 
     def activate_biomass_objective(self):
         if self.model.objective == STARCH_OUT:
