@@ -285,7 +285,7 @@ class GameScene(Scene):
                                               hover_message="Water Your Plant, Cost: 1",  hover_message_image=green_thumb, button_sound=click_sound),
                              "image": can,
                              "amount": 0,
-                             "rate": 0.1,
+                             "rate": 0.15,
                              "cost": 1,
                              "pouring": False}
         self.blue_grain = {"active": False,
@@ -293,7 +293,7 @@ class GameScene(Scene):
                                             image=blue_grain, post_hover_message=self.post_hover_message,
                                             hover_message="Blue Grain to Fertilize, Cost 2", hover_message_image=green_thumb, button_sound=click_sound),
                            "image": blue_grain_bag,
-                           "amount": 2, #mg
+                           "amount": 5, #mg
                            "effect": self.model.increase_nitrate_pool, #0.5mg
                            "cost": 2,
                            "system": ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 50, 50),
@@ -383,6 +383,8 @@ class GameScene(Scene):
             if e.type == QUIT:
                 raise SystemExit("QUIT")
             if e.type == WIN:
+                if self.log:
+                    self.log.write_log(self.textbox.text)
                 #if self.log:
                 #    self.log.write_log(self.name)
                 scoring.upload_score(self.textbox.text, self.gametime.get_time())

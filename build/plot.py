@@ -1,43 +1,43 @@
 import matplotlib.pyplot as plt
 
 def main():
-    with open("gametime.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/gametime.txt", "r") as f:
         lines = f.readlines()
     gametimes = [float(l.strip())/1000 for l in lines]
 
-    with open("growth.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/growth.txt", "r") as f:
         lines = f.readlines()
     growth_rates = [float(l.strip()) for l in lines]
 
-    with open("starch.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/starch.txt", "r") as f:
         lines = f.readlines()
     starch = [float(l.strip()) for l in lines]
 
-    with open("gamespeed.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/gamespeed.txt", "r") as f:
         lines = f.readlines()
     gamespeeds = [float(l.strip()) for l in lines]
 
-    with open("water.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/water.txt", "r") as f:
         lines = f.readlines()
     waters = [float(l.strip()) for l in lines]
 
-    with open("nitrate.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/nitrate.txt", "r") as f:
         lines = f.readlines()
     nitrates = [float(l.strip()) for l in lines]
 
-    with open("leaf_mass.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/leaf_mass.txt", "r") as f:
         lines = f.readlines()
     leaf_mass = [float(l.strip()) for l in lines]
 
-    with open("stem_mass.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/stem_mass.txt", "r") as f:
         lines = f.readlines()
     stem_mass = [float(l.strip()) for l in lines]
 
-    with open("root_mass.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/root_mass.txt", "r") as f:
         lines = f.readlines()
     root_mass = [float(l.strip()) for l in lines]
 
-    with open("starch_pool.txt", "r") as f:
+    with open("../logs/2021-11-17 18.52.02Generic Plant/starch_pool.txt", "r") as f:
         lines = f.readlines()
     starch_pool = [float(l.strip()) for l in lines]
 

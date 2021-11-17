@@ -177,13 +177,13 @@ class DynamicModel:
         gamespeed = self.gametime.GAMESPEED
         #print(self.nitrate_pool, self.nitrate_intake/60/60*gamespeed, self.water_pool)
         self.nitrate_pool -= self.nitrate_intake/60/60*gamespeed
-        if self.nitrate_pool > max_nitrate_pool_low:
-            self.nitrate_pool = max_nitrate_pool_low
-        if self.nitrate_pool < 0:
-            self.nitrate_pool = 0.001
+        #if self.nitrate_pool > max_nitrate_pool_low:
+        #    self.nitrate_pool = max_nitrate_pool_low
+        if self.nitrate_pool < 0.1:
+            self.nitrate_pool = 0.1
         self.water_pool -= self.water_intake/60/60*gamespeed
-        if self.water_pool < 0:
-            self.water_pool = 0
+        if self.water_pool < 0.1:
+            self.water_pool = 0.1
         # starch gets handled separatly in Organ Starch
 
     def update_bounds(self, root_mass, photon_in, starch_percenatage):
