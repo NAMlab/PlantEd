@@ -196,15 +196,26 @@ class CustomScene(object):
         self.names = []
         self.datetimes = []
 
-        self.winners = sorted(self.winners, key=lambda x: datetime.utcfromtimestamp(x["score"]).strftime("%d%H%M"))
+        self.winners = sorted(self.winners, key=lambda x: x["score"])
 
         for winner in self.winners:
-            score = self.font.render(datetime.utcfromtimestamp(winner['score']).strftime('%d Days %H Hours %M Minutes'), True, (255,255,255))
+            score = self.get_day_time(winner['score'])
+            score = self.font.render(score, True, (255,255,255))
             self.scores.append(score)
             name = self.font.render(winner['name'], True, (255, 255, 255))
             self.names.append(name)
             datetime_added = self.font.render(datetime.utcfromtimestamp(winner['datetime_added']).strftime('%d/%m/%Y %H:%M'), True, (255, 255, 255))
             self.datetimes.append(datetime_added)
+
+    def get_day_time(self, ticks):
+        day = 1000*60*6
+        hour = day/24
+        min = hour/60
+        second = min/60
+        days = str(int(ticks/day))
+        hours = str(int((ticks % day) / hour))
+        minutes = str(int((ticks % hour) / min))
+        return (days +  " Days " + hours + " Hours " + minutes + " Minutes")
 
     def render(self, screen):
         screen.fill((50, 50, 50))
