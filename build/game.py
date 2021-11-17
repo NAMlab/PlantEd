@@ -271,7 +271,7 @@ class GameScene(Scene):
         self.watering_can = {"active": False,
                              "button": Button(780, 270, 64, 64, [self.activate_watering_can], self.sfont,
                                               image=can_icon, post_hover_message=self.post_hover_message,
-                                              hover_message="Water Your Plant, Cost: 2",  hover_message_image=green_thumb, button_sound=click_sound),
+                                              hover_message="Water Your Plant, Cost: 1",  hover_message_image=green_thumb, button_sound=click_sound),
                              "image": can,
                              "amount": 0,
                              "rate": 0.1,
@@ -364,15 +364,21 @@ class GameScene(Scene):
         for e in event:
             if e.type == GROWTH:
                 self.model.calc_growth_rate()
+                growth_rate, starch_rate, starch_intake = self.model.get_rates()
+                nitrate_pool, water_pool = self.model.get_pools()
+                self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
                 self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
                 self.plant.grow()
-            if e.type == QUIT: raise SystemExit("QUIT")
+            if e.type == QUIT:
+                raise SystemExit("QUIT")
             if e.type == WIN:
-                if self.log:
-                    self.log.write_log(self.name)
+                #if self.log:
+                #    self.log.write_log(self.name)
                 scoring.upload_score(self.textbox.text, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
+                if self.log:
+                    self.log.write_log(self.name)
                 self.manager.go_to(TitleScene())
 
             #if e.type == KEYDOWN and e.key == K_SPACE:

@@ -96,11 +96,14 @@ class DynamicModel:
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         self.photon_intake = solution.fluxes[PHOTON]
 
-        if self.log:
-            self.log.append_log(self.biomass_rate, self.starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, self.water_pool, self.nitrate_pool)
+        #if self.log:
+        #    self.log.append_log(self.biomass_rate, self.starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, self.water_pool, self.nitrate_pool)
 
     def get_rates(self):
         return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
+
+    def get_pools(self):
+        return (self.nitrate_pool, self.water_pool)
 
     def get_photon_upper(self):
         return self.model.reactions.get_by_id(PHOTON).bounds[1]
