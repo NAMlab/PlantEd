@@ -380,6 +380,7 @@ class GameScene(Scene):
                 self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
                 self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
                 self.plant.grow()
+                #self.model.update_pools()
             if e.type == QUIT:
                 raise SystemExit("QUIT")
             if e.type == WIN:
