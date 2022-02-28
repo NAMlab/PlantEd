@@ -1,7 +1,7 @@
 import cobra.test
 import random
 import pygame
-import assets
+from data import assets
 
 pygame.init()
 gram_mol = 0.5124299411

@@ -1,13 +1,13 @@
 import pygame
-from tool_tip import ToolTip
+from utils.tool_tip import ToolTip
 
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
 # settings: HARD, INTERMEDIATE, EASY, Graphics - not yet
-#
+
 pygame.init()
 
-# ugly, no config -> sue enums
+# ugly, no config -> see enums
 SUN = 0
 RAIN = 1
 CLOUD = 2

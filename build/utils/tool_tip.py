@@ -1,5 +1,5 @@
 import pygame
-from button import Button
+from utils.button import Button
 
 
 class ToolTipManager:

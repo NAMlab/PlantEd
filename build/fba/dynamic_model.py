@@ -21,7 +21,7 @@ Km = 4
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, gametime, log=None, plant_mass=None, model=cobra.io.read_sbml_model("whole_plant.sbml")):
+    def __init__(self, gametime, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/whole_plant.sbml")):
         self.model = model
         self.gametime = gametime
         self.log = log

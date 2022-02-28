@@ -1,7 +1,7 @@
 import pygame
 import random
-from button import Button
-from particle import ParticleSystem
+from utils.button import Button
+from utils.particle import ParticleSystem
 from pygame import Rect
 # spawns a button or interactable. If the player reacts fast, nothing happens. Else spawn hazard
 class QuickTimeEvent:

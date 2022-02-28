@@ -1,12 +1,11 @@
 import pygame
 from pygame.locals import *
-from particle import ParticleSystem, StillParticles
-from animation import OneShotAnimation, Animation
+from utils.particle import ParticleSystem, StillParticles
+from utils.animation import OneShotAnimation, Animation
 import numpy as np
-import gradient
 import random
 import config
-import assets
+from data import assets
 
 SUN = 0
 RAIN = 1
@@ -101,13 +100,13 @@ class Environment:
         # sun-->Photon_intensity, moon, water_lvl
         sun_intensity = self.get_sun_intensity()
         if sun_intensity > 0:
-            color = gradient.get_color(orange, blue, sun_intensity)
+            color = self.get_color(orange, blue, sun_intensity)
             # sun_intensity 0, 1 -->
             sun_index = min(max(int(self.get_sun_intensity() * len(self.sun)), 0), 4)
             s.blit(self.sun[sun_index], self.sun_pos)
 
         else:
-            color= gradient.get_color(orange, (0,0,0), abs(sun_intensity))
+            color= self.get_color(orange, (0,0,0), abs(sun_intensity))
 
             for pos in self.star_pos_size:
                 pygame.draw.circle(s, (255,255,255, abs(sun_intensity)*128), pos[0], pos[1])
@@ -136,6 +135,9 @@ class Environment:
             # background_moist.set_alpha(int(self.model.water_pool/self.model.max_water_pool*255))
             # screen.blit(background_moist, (0,0))
 
+    def get_color(self, color0, color1, grad):
+        return (int(color0[0] * (1 - grad) + color1[0] * grad), int(color0[1] * (1 - grad) + color1[1] * grad),
+                int(color0[2] * (1 - grad) + color1[2] * grad))
 
     def draw_foreground(self, screen):
         self.draw_clock(screen)

@@ -6,20 +6,20 @@ from itertools import repeat
 import analysis.scoring
 import data.assets
 import math
-from logger import Log
-from plant import Plant
-from button import Button, RadioButton, Slider, SliderGroup, ToggleButton, Textbox
-from particle import ParticleSystem, PointParticleSystem
-from animation import OneShotAnimation, Animation
+from analysis.logger import Log
+from gameobjects.plant import Plant
+from utils.button import Button, RadioButton, Slider, SliderGroup, ToggleButton, Textbox
+from utils.particle import ParticleSystem, PointParticleSystem
+from utils.animation import OneShotAnimation, Animation
 import os, sys
-from tool_tip import ToolTipManager
+from utils.tool_tip import ToolTipManager
 from weather import Environment
-from dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
-from eagle import Eagle, QuickTimeEvent
+from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
+from gameobjects.eagle import Eagle, QuickTimeEvent
 import config
-from gametime import GameTime
+from utils.gametime import GameTime
 from datetime import datetime
-from spline import Beziere
+from utils.spline import Beziere
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -250,14 +250,13 @@ class SceneMananger(object):
 class GameScene():
     # multiple inits to separate gameobjects, window, ui (slider, button), ...
     def __init__(self, level):
-        super(GameScene, self).__init__()
+        #super(GameScene, self).__init__()
         pygame.mouse.set_visible(True)
         self.width = SCREEN_WIDTH
         self.height = SCREEN_HEIGHT
         self.gametime = GameTime()
         self.log = Log()
         self.offset = repeat((0, 0))
-        self.screen_changes = [pygame.Rect(0,0,SCREEN_WIDTH, SCREEN_HEIGHT)]
         self.manager = None
         self.hover_message = None
         self.font = config.TITLE_FONT
