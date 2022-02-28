@@ -8,12 +8,13 @@ import ctypes
 #assets_dir = os.path.join(fileDir, 'assets')
 _image_library = {}
 _sound_library = {}
+_music_library = {}
 
 pygame.init()
 true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
 
-def get_image(path):
+def img(path, size=None):
     path = os.path.join("../assets", path)
     print(path)
     global _image_library
@@ -22,9 +23,11 @@ def get_image(path):
         canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
         image = pygame.image.load(canonicalized_path).convert_alpha()
         _image_library[path] = image
+    if size is not None:
+        return pygame.transform.scale(image, size).convert_alpha()
     return image
 
-def get_sound(path):
+def sfx(path, volume=None):
     path = os.path.join("../assets", path)
     global _sound_library
     sound = _sound_library.get(path)
@@ -32,9 +35,11 @@ def get_sound(path):
         canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
         sound = pygame.mixer.Sound(canonicalized_path)
         _sound_library[path] = sound
+    if volume is not None:
+        sound.set_volume(volume)
     return sound
 
-def get_music(path):
+def song(path, volume=None):
     path = os.path.join("../assets", path)
     global _music_library
     music = _music_library.get(path)
@@ -42,4 +47,6 @@ def get_music(path):
         canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
         music = pygame.mixer.music.load(canonicalized_path)
         _music_library[path] = music
+    if volume is not None:
+        music.set_volume(volume)
     return sound

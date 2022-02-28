@@ -6,7 +6,7 @@ import numpy as np
 import gradient
 import random
 import config
-import asset_handler
+import assets
 
 SUN = 0
 RAIN = 1
@@ -26,7 +26,7 @@ SCREEN_HEIGHT = 1080
 # caused by: time
 # draw: background, clouds, sun, moon, wind, birds, rain
 #gust = [pygame.transform.scale(pygame.image.load("../assets/wind/gust_{}.png".format(i)),(960,540)) for i in range(0,5)]
-rain_sound = asset_handler.get_sound("rain/rain_sound.mp3")
+rain_sound = assets.sfx("rain/rain_sound.mp3")
 rain_sound.set_volume(0.05)
 
 
@@ -36,8 +36,8 @@ class Environment:
         self.w = SCREEN_WIDTH
         self.model = model
         self.gametime = gametime
-        self.background = asset_handler.get_image("background_empty_sky.png").convert_alpha()
-        self.background_moist = pygame.transform.scale(asset_handler.get_image("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
+        self.background = assets.img("background_empty_sky.png").convert_alpha()
+        self.background_moist = pygame.transform.scale(assets.img("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.sun_pos_noon = (1300,0)
         self.sun_pos_night = (500,SCREEN_HEIGHT-200)
@@ -57,11 +57,11 @@ class Environment:
         self.star_pos_size = [((random.randint(0,SCREEN_WIDTH), random.randint(0,SCREEN_HEIGHT/2)), random.randint(0,10)) for i in range(0,50)]
 
         # init drop sprites
-        drops = [pygame.transform.scale(asset_handler.get_image("rain/raindrop{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 3)]
-        splash = [pygame.transform.scale(asset_handler.get_image("rain/raindrop_splash{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 4)]
-        self.sun = [pygame.transform.scale(asset_handler.get_image("sun/sun_face_{}.png".format(i)), (512, 512)).convert_alpha() for i in range(0, 5)]
-        self.cloud = pygame.transform.scale(asset_handler.get_image("cloud.png"),(420,240)).convert_alpha()
-        self.cloud_dark = pygame.transform.scale(asset_handler.get_image("cloud_dark.png"),(420,240)).convert_alpha()
+        drops = [pygame.transform.scale(assets.img("rain/raindrop{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 3)]
+        splash = [pygame.transform.scale(assets.img("rain/raindrop_splash{}.png".format(i)).convert_alpha(), (20, 20)) for i in range(0, 4)]
+        self.sun = [pygame.transform.scale(assets.img("sun/sun_face_{}.png".format(i)), (512, 512)).convert_alpha() for i in range(0, 5)]
+        self.cloud = pygame.transform.scale(assets.img("cloud.png"), (420, 240)).convert_alpha()
+        self.cloud_dark = pygame.transform.scale(assets.img("cloud_dark.png"), (420, 240)).convert_alpha()
         self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH / 2, 50, SCREEN_WIDTH/3*2, 0),
                                     boundary_box=Rect(SCREEN_WIDTH/3,0,SCREEN_WIDTH/3*2,SCREEN_HEIGHT-250),
                                     color=(0,0,100), apply_gravity=True, speed=[0, 18],

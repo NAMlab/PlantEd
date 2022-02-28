@@ -3,8 +3,8 @@ import pygame
 from pygame.locals import *
 import numpy as np
 from itertools import repeat
-import scoring
-import asset_handler
+import analysis.scoring
+import data.assets
 import math
 from logger import Log
 from plant import Plant
@@ -16,7 +16,8 @@ from tool_tip import ToolTipManager
 from weather import Environment
 from dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
 from eagle import Eagle, QuickTimeEvent
-import config, asset_handler
+import config
+from gametime import GameTime
 from datetime import datetime
 from spline import Beziere
 
@@ -55,67 +56,8 @@ def shake():
 # unittests, dir that contains all tests, one test file for one class, secure class function
 # pipenv for git, enable cloners to see all depencies
 
-
-# asset handle, lazy loading, transform included
-# assets["roadtogoat"] -> fake dictionary, for smaller calls
-
-menu_plant = [asset_handler.get_image("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
-#can = get_image("watering_can_outlined.png")
-can = asset_handler.get_image("watering_can_outlined.png")
-can_icon = pygame.transform.scale(can, (64,64)).convert_alpha()
-can_tilted = asset_handler.get_image("watering_can_outlined_tilted.png")
-background = pygame.transform.scale(asset_handler.get_image("background_empty_sky.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
-leaf_icon = asset_handler.get_image("leaf_small.png")
-leaf_icon_big = pygame.transform.scale(leaf_icon, (128,128)).convert_alpha()
-stem_icon = asset_handler.get_image("stem_small.png")
-stem_icon_big = pygame.transform.scale(stem_icon, (128,128)).convert_alpha()
-root_icon = asset_handler.get_image("roots_small.png")
-root_icon_big = pygame.transform.scale(root_icon, (128,128)).convert_alpha()
-starch_icon = asset_handler.get_image("starch.png")
-starch_icon_big = pygame.transform.scale(starch_icon, (128,128)).convert_alpha()
-drain_icon = asset_handler.get_image("drain_icon.png").convert_alpha()
-photo_energy = pygame.transform.scale(asset_handler.get_image("photo_energy.png"),(15,15)).convert_alpha()
-starch_energy = pygame.transform.scale(asset_handler.get_image("starch_energy.png"),(15,15)).convert_alpha()
-eagle_img = [pygame.transform.scale(asset_handler.get_image("bird/Eagle Normal_{}.png".format(i)), (128,128)) for i in range(1,20)]
-danger_eagle_icon = pygame.transform.scale(asset_handler.get_image("danger_bird.png"),(128,128))
-scarecrow = pygame.transform.scale(asset_handler.get_image("scarecrow.png"), (256,256)).convert_alpha()
-scarecrow_icon = pygame.transform.scale(asset_handler.get_image("scarecrow.png"), (64,64)).convert_alpha()
-green_thumb = pygame.transform.scale(asset_handler.get_image("green_thumb.png"), (20,20)).convert_alpha()
-#chloroplast_icon = pygame.transform.scale(asset_handler.get_image("chloroplast.png"), (20,20)).convert_alpha()
-blue_grain = (asset_handler.get_image("blue_grain_0.png"))
-#danger_energy = (get_image("danger_energy.png"))
-blue_grain_bag = (asset_handler.get_image("blue_grain_bag.png"))
-pause_icon = asset_handler.get_image("pause.png")
-play_icon = asset_handler.get_image("normal_speed.png")
-fast_icon = asset_handler.get_image("fast_speed.png")
-#pygame.mixer.music.load()
-water_sound = asset_handler.get_sound('water_can.mp3')
-water_sound.set_volume(0.05)
-click_sound = asset_handler.get_sound('button_klick.mp3')
-click_sound.set_volume(0.8)
-eagle_flap = asset_handler.get_sound('eagle_flap.mp3')
-eagle_flap.set_volume(0.7)
-gravel = asset_handler.get_sound('gravel.mp3')
-gravel.set_volume(0.7)
-eagle_screech = asset_handler.get_sound('eagle_screech.mp3')
-eagle_screech.set_volume(0.5)
-#pygame.mixer.music.load('../assets/background_music.mp3')
-#pygame.mixer.music.set_volume(0.05)
+#pygame.mixer.music.load('../assets/background_music.mp3', 0.05)
 #pygame.mixer.music.play(-1,0)
-
-# useless, maybe no parents needed
-class Scene(object):
-    def __init__(self):
-        pass
-
-    def render(self, screen):
-        raise NotImplementedError
-
-    def update(self, dt):
-        raise NotImplementedError
-
-    def handle_events(self, events):
-        raise NotImplementedError
 
 # seperate high to low level --> less function calls, less clutter
 class DevScene(object):
@@ -167,14 +109,14 @@ class TitleScene(object):
         super(TitleScene, self).__init__()
         self.font = config.TITLE_FONT
         self.sfont = config.FONT
-        self.centre = (SCREEN_WIDTH/2-menu_plant[0].get_width()/2, SCREEN_HEIGHT/7)
+        self.images = [assets.img("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
+        self.centre = (SCREEN_WIDTH/2-self.images[0].get_width()/2, SCREEN_HEIGHT/7)
         self.particle_systems = []
-        self.watering_can = can
+        self.watering_can = assets.img("watering_can_outlined.png")
         self.plant_size = 0
         self.plant_growth_pos = []
         self.offset = repeat((0, 0))
         self.max_plant_size = 100
-        self.images = menu_plant
         self.image = self.images[0]
         self.mouse_pos = pygame.mouse.get_pos()
         pygame.mouse.set_visible(False)
@@ -222,13 +164,13 @@ class TitleScene(object):
                 self.offset = shake()
             if e.type == MOUSEBUTTONDOWN:
                 self.particle_systems[0].activate()
-                self.watering_can = can_tilted
+                self.watering_can = assets.img("watering_can_outlined_tilted.png")
             if e.type == MOUSEMOTION:
                 self.mouse_pos = pygame.mouse.get_pos()
                 self.particle_systems[0].spawn_box = pygame.Rect(self.mouse_pos[0], self.mouse_pos[1], 0, 0)
             if e.type == MOUSEBUTTONUP:
                 self.particle_systems[0].deactivate()
-                self.watering_can = can
+                self.watering_can = assets.img("watering_can_outlined.png")
 
 
 class CustomScene(object):
@@ -312,7 +254,7 @@ class GameScene():
         pygame.mouse.set_visible(True)
         self.width = SCREEN_WIDTH
         self.height = SCREEN_HEIGHT
-        self.gametime = config.GameTime()
+        self.gametime = GameTime()
         self.log = Log()
         self.offset = repeat((0, 0))
         self.screen_changes = [pygame.Rect(0,0,SCREEN_WIDTH, SCREEN_HEIGHT)]
@@ -336,18 +278,18 @@ class GameScene():
         self.entities = []
         self.watering_can = {"active": False,
                              "button": Button(780, 270, 64, 64, [self.activate_watering_can], self.sfont,
-                                              image=can_icon, post_hover_message=self.post_hover_message,
-                                              hover_message="Water Your Plant, Cost: 1",  hover_message_image=green_thumb, button_sound=click_sound),
-                             "image": can,
+                                              image=assets.img("watering_can_outlined.png", (64,64)), post_hover_message=self.post_hover_message,
+                                              hover_message="Water Your Plant, Cost: 1",  hover_message_image=assets.img("green_thumb.png", (20, 20)), button_sound=assets.sfx('button_klick.mp3', 0.8)),
+                             "image": assets.img("watering_can_outlined.png"),
                              "amount": 0,
                              "rate": 0.15,
                              "cost": 1,
                              "pouring": False}
         self.blue_grain = {"active": False,
                            "button": Button(780, 354, 64,64, [self.activate_blue_grain], self.sfont,
-                                            image=blue_grain, post_hover_message=self.post_hover_message,
-                                            hover_message="Blue Grain to Fertilize, Cost 2", hover_message_image=green_thumb, button_sound=click_sound),
-                           "image": blue_grain_bag,
+                                            image=assets.img("blue_grain_0.png"), post_hover_message=self.post_hover_message,
+                                            hover_message="Blue Grain to Fertilize, Cost 2", hover_message_image=assets.img("green_thumb.png", (20, 20)), button_sound=assets.sfx('button_klick.mp3', 0.8)),
+                           "image": assets.img("blue_grain_bag.png"),
                            "amount": 5, #mg
                            "effect": self.model.increase_nitrate_pool, #0.5mg
                            "cost": 2,
@@ -359,22 +301,22 @@ class GameScene():
         self.button_sprites.add(self.watering_can["button"])
         self.particle_systems.append(self.blue_grain["system"])
         add_leaf_button = Button(676, 270, 64, 64, [self.plant.organs[0].activate_add_leaf], self.sfont,
-                                 image=leaf_icon, post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", hover_message_image=green_thumb, button_sound=click_sound)
+                                 image=assets.img("leaf_small.png"), post_hover_message=self.post_hover_message, hover_message="Buy one leaf, Cost: 1", hover_message_image=assets.img("green_thumb.png", (20, 20)), button_sound=assets.sfx('button_klick.mp3', 0.8))
         self.button_sprites.add(add_leaf_button)
         self.scarecrow = {"active": False,
                           "button": Button(676, 354, 64, 64, [self.activate_scarecrow], self.sfont,
-                                 image=scarecrow_icon, post_hover_message=self.post_hover_message,
-                                 hover_message="Buy a scarecrow, Cost: 5",  hover_message_image=green_thumb, button_sound=click_sound),
+                                 image=assets.img("scarecrow.png", (64, 64)), post_hover_message=self.post_hover_message,
+                                 hover_message="Buy a scarecrow, Cost: 5",  hover_message_image=assets.img("green_thumb.png", (20, 20)), button_sound=assets.sfx('button_klick.mp3', 0.8)),
                           "effect": None,
                           "cost": 5}
         self.button_sprites.add(add_leaf_button)
         self.button_sprites.add(self.scarecrow["button"])
 
         radioButtons = [
-            RadioButton(100, 70, 64, 64, [self.plant.set_target_organ_leaf, self.activate_biomass_objective], self.sfont, image=leaf_icon),
-            RadioButton(180, 70, 64, 64, [self.plant.set_target_organ_stem, self.activate_biomass_objective], self.sfont, image=stem_icon),
-            RadioButton(260, 70, 64, 64, [self.plant.set_target_organ_root, self.activate_biomass_objective], self.sfont, image=root_icon),
-            RadioButton(460, 70, 64, 64, [self.plant.set_target_organ_starch, self.activate_starch_objective], self.sfont, image=starch_icon)
+            RadioButton(100, 70, 64, 64, [self.plant.set_target_organ_leaf, self.activate_biomass_objective], self.sfont, image=assets.img("leaf_small.png")),
+            RadioButton(180, 70, 64, 64, [self.plant.set_target_organ_stem, self.activate_biomass_objective], self.sfont, image=assets.img("stem_small.png")),
+            RadioButton(260, 70, 64, 64, [self.plant.set_target_organ_root, self.activate_biomass_objective], self.sfont, image=assets.img("roots_small.png")),
+            RadioButton(460, 70, 64, 64, [self.plant.set_target_organ_starch, self.activate_starch_objective], self.sfont, image=assets.img("starch.png"))
         ]
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
@@ -383,11 +325,11 @@ class GameScene():
 
         speed_options = [
             RadioButton(100, self.height-50, 32, 32, [self.gametime.start_pause],
-                        self.sfont, image=pause_icon),
+                        self.sfont, image=assets.img("pause.png")),
             RadioButton(140, self.height - 50, 32, 32, [self.gametime.play],
-                        self.sfont, image=play_icon),
+                        self.sfont, image=assets.img("normal_speed.png")),
             RadioButton(180, self.height - 50, 32, 32, [self.gametime.faster],
-                        self.sfont, image=fast_icon)
+                        self.sfont, image=assets.img("fast_speed.png"))
         ]
         for rb in speed_options:
             rb.setRadioButtons(speed_options)
@@ -410,9 +352,9 @@ class GameScene():
         SliderGroup([slider for slider in self.sliders], 100)
         self.sliders.append(Slider((536, 70, 15, 200), self.sfont, (50, 20), organ=self.plant.organ_starch, plant=self.plant, percent=30))
         particle_photosynthesis_points = [[330,405],[380,405],[380,100],[330,100]]
-        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.model.get_photon_upper(), images=[photo_energy], speed=(2,0), callback=self.model.get_photon_upper, nmin=0, nmax=80)
+        self.photosynthesis_particle = PointParticleSystem(particle_photosynthesis_points,self.model.get_photon_upper(), images=[assets.img("photo_energy.png", (15, 15))], speed=(2,0), callback=self.model.get_photon_upper, nmin=0, nmax=80)
         particle_starch_points = [[430, 405], [380, 405], [380, 100], [330, 100]]
-        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[starch_energy], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake, factor=20, nmin=1, nmax=40)
+        self.starch_particle = PointParticleSystem(particle_starch_points, 30, images=[assets.img("starch_energy.png", (15, 15))], speed=(2,0), active=False, callback=self.plant.organ_starch.get_intake, factor=20, nmin=1, nmax=40)
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
         #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
@@ -465,14 +407,14 @@ class GameScene():
                 quick_time_event.handle_event(e)
             if self.watering_can["active"]:
                 if e.type == MOUSEBUTTONDOWN:
-                        self.watering_can["image"] = can_tilted
+                        self.watering_can["image"] = assets.img("watering_can_outlined_tilted.png")
                         self.watering_can["pouring"] = True
                         self.can_particle_system.activate()
-                        pygame.mixer.Sound.play(water_sound, -1)
+                        pygame.mixer.Sound.play(assets.sfx('water_can.mp3', 0.05), -1)
                 if e.type == MOUSEBUTTONUP:
-                    self.watering_can["image"] = can
+                    self.watering_can["image"] = assets.img("watering_can_outlined.png")
                     self.can_particle_system.deactivate()
-                    pygame.mixer.Sound.stop(water_sound)
+                    pygame.mixer.Sound.stop(assets.sfx('water_can.mp3', 0.05))
                     self.watering_can["pouring"] = False
                 if e.type == MOUSEMOTION:
                     x,y = pygame.mouse.get_pos()
@@ -480,7 +422,7 @@ class GameScene():
             if self.blue_grain["active"]:
                 x, y = pygame.mouse.get_pos()
                 if e.type == MOUSEBUTTONDOWN:
-                    pygame.mixer.Sound.play(gravel)
+                    pygame.mixer.Sound.play(assets.sfx('gravel.mp3', 0.7))
                     # one function to rule them all
                     self.blue_grain["system"].spawn_box = Rect(x,y,0,0)
                     self.blue_grain["system"].deactivate()
@@ -555,7 +497,7 @@ class GameScene():
             system.draw(tmp_screen)
         self.draw_organ_ui(tmp_screen)
         if self.scarecrow["active"]:
-            tmp_screen.blit(scarecrow, (1050,580))
+            tmp_screen.blit(assets.img("scarecrow.png", (256, 256)), (1050,580))
         self.environment.draw_foreground(tmp_screen)
         self.button_sprites.draw(tmp_screen)
         self.tool_tip_manager.draw(tmp_screen)
@@ -576,7 +518,7 @@ class GameScene():
             tmp_screen.blit(image, (pos))
         if self.plant.organs[0].can_add_leaf:
             mouse_pos = pygame.mouse.get_pos()
-            image = leaf_icon
+            image = assets.img("leaf_small.png")
             pos = (mouse_pos[0], mouse_pos[1])
             tmp_screen.blit(image, (pos))
 
@@ -636,9 +578,9 @@ class GameScene():
         pygame.mouse.set_visible(False)
 
     def deactivate_watering_can(self):
-        pygame.mixer.Sound.stop(water_sound)
+        pygame.mixer.Sound.stop(assets.sfx('water_can.mp3', 0.05))
         self.can_particle_system.deactivate()
-        self.watering_can["image"] = can
+        self.watering_can["image"] = assets.img("watering_can_outlined.png")
         self.watering_can["active"] = False
         self.watering_can["amount"] = 0
         self.watering_can["pouring"] = False
@@ -662,12 +604,12 @@ class GameScene():
         if len(self.plant.organs[0].leaves) > 0 and not self.scarecrow["active"]:
             self.offset = shake()
             leaf = self.plant.organs[0].get_random_leave()
-            eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf, Animation(eagle_img, 500), 40,
-                          action_sound=eagle_flap, callback=self.plant.organs[0].remove_leaf)
+            eagle = Eagle(SCREEN_WIDTH, SCREEN_HEIGHT, leaf, Animation([pygame.transform.scale(assets.img("bird/Eagle Normal_{}.png".format(i)), (128, 128)) for i in range(1, 20)], 500), 40,
+                          action_sound=assets.sfx('eagle_flap.mp3', 0.7), callback=self.plant.organs[0].remove_leaf)
             self.entities.append(eagle)
             self.quick_time_events.append(
-                QuickTimeEvent((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), 5, eagle, danger_eagle_icon, self.entities,
-                               eagle_screech))
+                QuickTimeEvent((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), 5, eagle, assets.img("danger_bird.png", (128, 128)), self.entities,
+                               assets.sfx('eagle_screech.mp3', 0.5)))
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))
@@ -687,7 +629,7 @@ class GameScene():
 
     def draw_background(self, screen):
         screen.fill(SKY_BLUE)
-        screen.blit(background, (0,0))
+        screen.blit(assets.img("background_empty_sky.png", (SCREEN_WIDTH, SCREEN_HEIGHT)), (0,0))
 
     def draw_organ_ui(self, screen):
         white = (255, 255, 255)
@@ -756,7 +698,7 @@ class GameScene():
         skillpoints_text = self.sfont.render("Green Thumbs:", True, (0, 0, 0))
         s.blit(skillpoints_text, dest=(670, 120))
         skillpoints = self.sfont.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(green_thumb, (860-green_thumb.get_width()-1, 123))
+        s.blit(assets.img("green_thumb.png", (20, 20)), (860-assets.img("green_thumb.png", (20, 20)).get_width()-1, 123))
         s.blit(skillpoints, dest=(860-skillpoints.get_width()-26, 120))
 
         # water
@@ -784,14 +726,14 @@ class GameScene():
         leave_title = self.font.render("Organ", True, (0, 0, 0))  # title
         s.blit(leave_title, dest=(290 - leave_title.get_size()[0] / 2, 450))
         if self.plant.target_organ.type == self.plant.LEAF:
-            image = leaf_icon_big
+            image = assets.img("leaf_small.png", (128,128))
             #self.button_sprites.add(self.button)
         elif self.plant.target_organ.type == self.plant.STEM:
-            image = stem_icon_big
+            image = assets.img("stem_small.png", (128,128))
         elif self.plant.target_organ.type == self.plant.ROOTS:
-            image = root_icon_big
+            image = assets.img("roots_small.png", (128,128))
         elif self.plant.target_organ.type == self.plant.STARCH:
-            image = starch_icon_big
+            image = assets.img("starch.png", (128,128))
 
         # draw plant image + exp + lvl + rate + mass
         s.blit(image, (100,490))
