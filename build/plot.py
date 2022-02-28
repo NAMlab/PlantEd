@@ -84,7 +84,7 @@ def main(dir):
     plt.ylabel("root_mass in g")
 
 
-    #plt.show()
+    #äplt.show()
     plt.savefig(path.join(dir,'plot.png'))
 
 

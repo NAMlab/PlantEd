@@ -32,7 +32,7 @@ rain_sound.set_volume(0.05)
 
 
 class Environment:
-    def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water, gametime, activate_hawk):
+    def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water, gametime, activate_hawk=None):
         self.w = SCREEN_WIDTH
         self.model = model
         self.gametime = gametime
@@ -46,6 +46,8 @@ class Environment:
         self.font = pygame.font.SysFont('Arial', 56)
         self.sfont = pygame.font.SysFont('Arial', 32)
         self.plant = plant
+        self.wind_force = (0,0)
+        self.wind_duration = 0 # at 60fps
         self.draw = True
         self.activate_hawk = activate_hawk
         self.sprites = pygame.sprite.Group()

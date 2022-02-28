@@ -342,7 +342,8 @@ class Slider():
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.drag:
                 self.drag = False
-                self.organ.set_percentage(self.get_percentage())
+                if self.organ is not None:
+                    self.organ.set_percentage(self.get_percentage())
                 if self.callback:
                     self.callback(self)
 

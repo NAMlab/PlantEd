@@ -7,6 +7,7 @@ from tool_tip import ToolTip
 #
 pygame.init()
 
+# ugly, no config -> sue enums
 SUN = 0
 RAIN = 1
 CLOUD = 2
@@ -101,6 +102,8 @@ class GameTime:
 # SHOPITEMS
 
 # TOOLTIPPS
+# ui setup --> move to ui_setup.py
+# build complete ui in a separate class (watering can, tooltips, slider, ..)
 tooltipps = [ToolTip(855, 150, 0, 0,
                      ["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant.", " To WIN the game", "Reach plant level 20"],
                      FONT, TITLE_FONT, mass=0),
@@ -143,6 +146,7 @@ tooltipps = [ToolTip(855, 150, 0, 0,
 # BUTTONS
 
 # EVENTS
+# change to seed and chances --> endless
 day = 1000*60*6
 e = [{"type": CLOUD,
       "start_time": 1000 * 60},

@@ -18,6 +18,7 @@ from dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
 from eagle import Eagle, QuickTimeEvent
 import config, asset_handler
 from datetime import datetime
+from spline import Beziere
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -30,6 +31,8 @@ tmp_screen = pygame.display.set_mode(true_res, pygame.SRCALPHA)
 GROWTH = 24
 RECALC = 25
 WIN = pygame.USEREVENT+1
+
+# stupid, change dynamically
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 plant_pos = (SCREEN_WIDTH - SCREEN_WIDTH/4, SCREEN_HEIGHT - SCREEN_HEIGHT/5)
@@ -48,6 +51,13 @@ def shake():
         s *= -1
     while True:
         yield (0, 0)
+# Todo
+# unittests, dir that contains all tests, one test file for one class, secure class function
+# pipenv for git, enable cloners to see all depencies
+
+
+# asset handle, lazy loading, transform included
+# assets["roadtogoat"] -> fake dictionary, for smaller calls
 
 menu_plant = [asset_handler.get_image("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
 #can = get_image("watering_can_outlined.png")
@@ -89,11 +99,11 @@ gravel = asset_handler.get_sound('gravel.mp3')
 gravel.set_volume(0.7)
 eagle_screech = asset_handler.get_sound('eagle_screech.mp3')
 eagle_screech.set_volume(0.5)
-pygame.mixer.music.load('../assets/background_music.mp3')
-pygame.mixer.music.set_volume(0.05)
-pygame.mixer.music.play(-1,0)
+#pygame.mixer.music.load('../assets/background_music.mp3')
+#pygame.mixer.music.set_volume(0.05)
+#pygame.mixer.music.play(-1,0)
 
-
+# useless, maybe no parents needed
 class Scene(object):
     def __init__(self):
         pass
@@ -107,6 +117,50 @@ class Scene(object):
     def handle_events(self, events):
         raise NotImplementedError
 
+# seperate high to low level --> less function calls, less clutter
+class DevScene(object):
+    def __init__(self):
+        super(DevScene, self).__init__()
+        self.plant = Beziere([(1000,980),(950,900),(1030,830)])
+        self.max_wind_force = 0
+        self.wind_force = 0
+        self.wind_duration = 0
+        self.wind_time_elapsed = 0 # @60fps
+
+    def render(self, screen):
+        tmp_screen.fill((50, 50, 50))
+        self.plant.draw(screen)
+        screen.blit(tmp_screen, (0,0))
+
+    def blow_wind(self, max_wind_force=5, duration=None):
+        self.max_wind_force = max_wind_force
+        self.wind_duration = duration if duration else 120
+        self.wind_time_elapsed = 1
+
+    def update(self, dt):
+        if self.wind_duration - self.wind_time_elapsed >=0 and self.wind_time_elapsed > 0:
+            # reversed parable to simulate a gust
+            #(-(2x-1)*(2x-1)) + 1
+            relative_time = self.wind_time_elapsed/self.wind_duration
+            self.wind_force = ((-((2*(relative_time)-1)*(2*(relative_time)-1)))+1) * self.max_wind_force
+            self.wind_time_elapsed += 1
+            print(self.wind_duration, self.wind_time_elapsed, self.wind_force)
+        else:
+            self.wind_force = 0
+            self.wind_duration = 0
+            self.wind_time_elapsed = 0
+        self.plant.update(dt)
+        #self.plant.set_force(self.wind_force)
+
+    def handle_events(self, events):
+        for e in events:
+            if e.type == KEYDOWN and e.key == K_ESCAPE:
+                pygame.quit()
+                sys.exit()
+            if e.type == KEYDOWN and e.key == K_e:
+                self.blow_wind()
+
+        self.plant.handle_events(events)
 
 class TitleScene(object):
     def __init__(self):
@@ -244,14 +298,15 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(CustomScene())
+        self.go_to(DevScene())
 
     def go_to(self, scene):
         self.scene = scene
         self.scene.manager = self
 
-
-class GameScene(Scene):
+# parent gamescene to hide variables, objects
+class GameScene():
+    # multiple inits to separate gameobjects, window, ui (slider, button), ...
     def __init__(self, level):
         super(GameScene, self).__init__()
         pygame.mouse.set_visible(True)
@@ -426,6 +481,7 @@ class GameScene(Scene):
                 x, y = pygame.mouse.get_pos()
                 if e.type == MOUSEBUTTONDOWN:
                     pygame.mixer.Sound.play(gravel)
+                    # one function to rule them all
                     self.blue_grain["system"].spawn_box = Rect(x,y,0,0)
                     self.blue_grain["system"].deactivate()
                     self.blue_grain["system"].activate()

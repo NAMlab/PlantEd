@@ -15,6 +15,7 @@ screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF,
 
 def get_image(path):
     path = os.path.join("../assets", path)
+    print(path)
     global _image_library
     image = _image_library.get(path)
     if image == None:
