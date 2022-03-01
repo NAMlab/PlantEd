@@ -93,6 +93,8 @@ class ParticleSystem:
         self.particle_counter = 0
 
     def update(self, dt):
+        if not self.active:
+            return
         if self.particle_counter < self.max_particles and self.active:
             if self.once:
                 while (self.particle_counter < self.max_particles and self.active):
@@ -106,6 +108,8 @@ class ParticleSystem:
                 if self.despawn_animation:
                     self.despawn_animation(self.despawn_images, 100, (particle.x, particle.y))
                 self.particles.remove(particle)
+        if len(self.particles) <= 0 and self.once:
+            self.active = False
         self.particles = [particle for particle in self.particles if particle.active == True]
         if not self.once:
             self.particle_counter = len(self.particles)

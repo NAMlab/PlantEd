@@ -20,6 +20,8 @@ import config
 from utils.gametime import GameTime
 from datetime import datetime
 from utils.spline import Beziere
+from gameobjects.watering_can import Watering_can
+from gameobjects.blue_grain import Blue_grain
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -67,11 +69,15 @@ class DevScene(object):
         self.max_wind_force = 0
         self.wind_force = 0
         self.wind_duration = 0
+        self.watering_can = Watering_can((0, 0))
+        self.blue_grain = Blue_grain((0,0))
         self.wind_time_elapsed = 0 # @60fps
 
     def render(self, screen):
         tmp_screen.fill((50, 50, 50))
-        self.plant.draw(screen)
+        self.plant.draw(tmp_screen)
+        self.blue_grain.draw(screen)
+        self.watering_can.draw(screen)
         screen.blit(tmp_screen, (0,0))
 
     def blow_wind(self, max_wind_force=5, duration=None):
@@ -92,15 +98,20 @@ class DevScene(object):
             self.wind_duration = 0
             self.wind_time_elapsed = 0
         self.plant.update(dt)
+        self.watering_can.update(dt)
+        self.blue_grain.update(dt)
         #self.plant.set_force(self.wind_force)
 
     def handle_events(self, events):
         for e in events:
+            self.watering_can.handle_event(e)
+            self.blue_grain.handle_event(e)
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
             if e.type == KEYDOWN and e.key == K_e:
-                self.blow_wind()
+                #self.watering_can.activate(pygame.mouse.get_pos())
+                self.blue_grain.activate(pygame.mouse.get_pos())
 
         self.plant.handle_events(events)
 
@@ -112,7 +123,7 @@ class TitleScene(object):
         self.images = [assets.img("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
         self.centre = (SCREEN_WIDTH/2-self.images[0].get_width()/2, SCREEN_HEIGHT/7)
         self.particle_systems = []
-        self.watering_can = assets.img("watering_can_outlined.png")
+        self.watering_can = Watering_can((0, 0))#assets.img("watering_can_outlined.png")
         self.plant_size = 0
         self.plant_growth_pos = []
         self.offset = repeat((0, 0))
@@ -275,6 +286,7 @@ class GameScene():
         self.animations = []
         self.quick_time_events = []
         self.entities = []
+        '''
         self.watering_can = {"active": False,
                              "button": Button(780, 270, 64, 64, [self.activate_watering_can], self.sfont,
                                               image=assets.img("watering_can_outlined.png", (64,64)), post_hover_message=self.post_hover_message,
@@ -284,6 +296,7 @@ class GameScene():
                              "rate": 0.15,
                              "cost": 1,
                              "pouring": False}
+        
         self.blue_grain = {"active": False,
                            "button": Button(780, 354, 64,64, [self.activate_blue_grain], self.sfont,
                                             image=assets.img("blue_grain_0.png"), post_hover_message=self.post_hover_message,
@@ -296,6 +309,7 @@ class GameScene():
                                                     boundary_box=Rect(0,0, SCREEN_WIDTH, SCREEN_HEIGHT-220),
                                                     lifetime=20, size=8, color=BLUE,apply_gravity=True,speed=[0, 5],
                                                     spread=[6,0], active=False, once=True, size_over_lifetime=False)}
+        '''
         self.button_sprites.add(self.blue_grain["button"])
         self.button_sprites.add(self.watering_can["button"])
         self.particle_systems.append(self.blue_grain["system"])
@@ -357,7 +371,7 @@ class GameScene():
         self.particle_systems.append(self.photosynthesis_particle)
         self.particle_systems.append(self.starch_particle)
         #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE, apply_gravity=True, speed=[0, 3], spread=True, active=False)
-        self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE,apply_gravity=True,speed=[0, 5], spread=[3, 0], active=False)
+        #self.can_particle_system = ParticleSystem(40, spawn_box=Rect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 0), lifetime=8, color=BLUE,apply_gravity=True,speed=[0, 5], spread=[3, 0], active=False)
         self.particle_systems.append(self.can_particle_system)
 
         self.textbox = Textbox(660, 10, 200, 30,self.sfont, self.name)
@@ -463,13 +477,14 @@ class GameScene():
         for entity in self.entities:
             entity.update()
 
+        '''
         # watering can
         if self.watering_can["pouring"]:
             self.watering_can["amount"] -= self.watering_can["rate"]
             self.model.water_pool += self.watering_can["rate"]
             if self.watering_can["amount"] <= 0:
                 self.deactivate_watering_can()
-
+        '''
         self.tool_tip_manager.update()
 
     def render(self, screen):
@@ -566,24 +581,6 @@ class GameScene():
             self.starch_particle.particle_counter = 0
             self.starch_particle.particles.clear()
             self.model.set_objective(BIOMASS)
-
-    # buy can basically
-    def activate_watering_can(self):
-        if self.plant.upgrade_points - self.watering_can["cost"] < 0:
-            return
-        self.plant.upgrade_points -= self.watering_can["cost"]
-        self.watering_can["active"] = True
-        self.watering_can["amount"] = 10
-        pygame.mouse.set_visible(False)
-
-    def deactivate_watering_can(self):
-        pygame.mixer.Sound.stop(assets.sfx('water_can.mp3', 0.05))
-        self.can_particle_system.deactivate()
-        self.watering_can["image"] = assets.img("watering_can_outlined.png")
-        self.watering_can["active"] = False
-        self.watering_can["amount"] = 0
-        self.watering_can["pouring"] = False
-        pygame.mouse.set_visible(True)
 
     def activate_blue_grain(self):
         if self.plant.upgrade_points - self.blue_grain["cost"] < 0:
