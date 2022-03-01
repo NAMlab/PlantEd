@@ -22,6 +22,7 @@ from datetime import datetime
 from utils.spline import Beziere
 from gameobjects.watering_can import Watering_can
 from gameobjects.blue_grain import Blue_grain
+from gameobjects.shop import Shop
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -115,6 +116,35 @@ class DevScene(object):
 
         self.plant.handle_events(events)
 
+class DefaultGameScene(object):
+    def __init__(self):
+        self.ui = UI()
+        self.shop = Shop()
+        self.gameobjects = []
+        self.particle_systems = []
+        self.plant = Plant()
+
+    def init_gameobjects(self):
+        pass
+
+    def init_particle_systems(self):
+        pass
+
+    def init_plant(self):
+        pass
+
+    def update(self, dt):
+        self.gameobjects.update(dt)
+        self.particle_systems.update(dt)
+        self.shop.update(dt)
+        self.plant.update(dt)
+
+    def draw(self, screen):
+        self.gameobjects.draw(screen)
+        self.particle_systems.draw(screen)
+        self.shop.draw(screen)
+        self.plant.draw(screen)
+
 class TitleScene(object):
     def __init__(self):
         super(TitleScene, self).__init__()
@@ -183,7 +213,6 @@ class TitleScene(object):
                 self.particle_systems[0].deactivate()
                 self.watering_can = assets.img("watering_can_outlined.png")
 
-
 class CustomScene(object):
     def __init__(self):
         super(CustomScene, self).__init__()
@@ -248,7 +277,6 @@ class CustomScene(object):
             if e.type == KEYDOWN:
                 self.manager.go_to(TitleScene())
 
-
 class SceneMananger(object):
     def __init__(self):
         self.go_to(DevScene())
@@ -258,6 +286,8 @@ class SceneMananger(object):
         self.scene.manager = self
 
 # parent gamescene to hide variables, objects
+# gameobjects, particles, weather->gameobject?, UI Elements (button, slider, image, numbers, text)
+
 class GameScene():
     # multiple inits to separate gameobjects, window, ui (slider, button), ...
     def __init__(self, level):
@@ -265,7 +295,7 @@ class GameScene():
         pygame.mouse.set_visible(True)
         self.width = SCREEN_WIDTH
         self.height = SCREEN_HEIGHT
-        self.gametime = GameTime()
+        self.gametime = GameTime.instance()
         self.log = Log()
         self.offset = repeat((0, 0))
         self.manager = None
@@ -322,7 +352,7 @@ class GameScene():
                                  hover_message="Buy a scarecrow, Cost: 5",  hover_message_image=assets.img("green_thumb.png", (20, 20)), button_sound=assets.sfx('button_klick.mp3', 0.8)),
                           "effect": None,
                           "cost": 5}
-        self.button_sprites.add(add_leaf_button)
+        #self.button_sprites.add(add_leaf_button)
         self.button_sprites.add(self.scarecrow["button"])
 
         radioButtons = [
@@ -462,6 +492,7 @@ class GameScene():
         self.quick_time_events = [quick_time_event for quick_time_event in self.quick_time_events if quick_time_event.active]
         self.plant.update()
         self.environment.update(dt)
+
         # beware of ugly
         if self.plant.get_biomass() > self.plant.seedling.max and not self.stem_slider.active:
             self.stem_slider.active = True

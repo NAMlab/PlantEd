@@ -27,6 +27,8 @@ GROWTH_TICK_RATE = 1000  # in ms
 FONT = pygame.font.SysFont('arial', 24)
 TITLE_FONT = pygame.font.SysFont('arialblack', 24)
 
+PLANTNAME = 'GenEric'
+
 # PLANT
 
 # ORGANS
