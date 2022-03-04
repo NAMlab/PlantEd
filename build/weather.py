@@ -31,7 +31,7 @@ rain_sound.set_volume(0.05)
 
 
 class Environment:
-    def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT, plant, model, nitrate, water, gametime, activate_hawk=None):
+    def __init__(self, plant, model, nitrate, water, gametime, activate_hawk=None):
         self.w = SCREEN_WIDTH
         self.model = model
         self.gametime = gametime

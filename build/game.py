@@ -23,6 +23,7 @@ from utils.spline import Beziere
 from gameobjects.watering_can import Watering_can
 from gameobjects.blue_grain import Blue_grain
 from gameobjects.shop import Shop, Shop_Item
+from ui import UI
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -118,10 +119,32 @@ class DevScene(object):
 
 class DefaultGameScene(object):
     def __init__(self):
+        self.gametime = GameTime.instance()
+        self.log = Log()                        # can be turned off
+        self.model = DynamFicModel(self.gametime, self.log)
+        self.plant = Plant((SCREEN_WIDTH - SCREEN_WIDTH/4, SCREEN_HEIGHT - SCREEN_HEIGHT/5), self.model)
+        self.environment = Environment(self.plant, self.model, 0, 0, self.gametime, self.activate_hawk)
+        self.manager = None                     # has to be none, get set after scene switch
+        self.hover_message = None               # should be in camera.py
+        self.name = "Generic Plant"             # plant name, maybe better in plant
+
+        # gameobjects
+        self.gameobjects = [] # dict for key value pairs? maybe named to access easily
+        # shopitems should only be known to shop, no logic in game.py
+        self.quick_time_events = []
+        self.animations = []
+
+        # ui
+        self.ui = UI(scale=1)
+
         #self.ui = UI()
+
+
+
         shop_items = [Shop_Item(assets.img("watering_can_outlined_tilted.png",(64,64)),self.prin) for i in range(0,8)]
         self.shop = Shop((200, 200), shop_items)
-        #, image, rect, cost, info_text,
+
+
 
         #self.gameobjects = []
         #self.particle_systems = []
@@ -129,9 +152,6 @@ class DefaultGameScene(object):
 
     def init_gameobjects(self):
         pass
-
-    def prin(self):
-        print("BUY ME")
 
     def init_particle_systems(self):
         pass
@@ -317,16 +337,13 @@ class GameScene():
         self.font = config.TITLE_FONT
         self.name = "Generic Plant"
         self.sfont = config.FONT
-        self._running = True
-        self.pause = False
-        self.model = DynamicModel(self.gametime, self.log)
+        self.model = DynamFicModel(self.gametime, self.log)
         self.plant = Plant(plant_pos, self.model)
         self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime, self.activate_hawk)
         self.particle_systems = []
         self.sprites = pygame.sprite.Group()
         self.button_sprites = pygame.sprite.Group()
         self.sliders = []
-        self.items = []
         self.animations = []
         self.quick_time_events = []
         self.entities = []
@@ -381,8 +398,6 @@ class GameScene():
         radioButtons[2].button_down = True
 
         speed_options = [
-            RadioButton(100, self.height-50, 32, 32, [self.gametime.start_pause],
-                        self.sfont, image=assets.img("pause.png")),
             RadioButton(140, self.height - 50, 32, 32, [self.gametime.play],
                         self.sfont, image=assets.img("normal_speed.png")),
             RadioButton(180, self.height - 50, 32, 32, [self.gametime.faster],
@@ -497,8 +512,6 @@ class GameScene():
                 tips.handle_event(e)
 
     def update(self, dt):
-        if self.gametime.pause:
-            return
         for animation in self.animations:
             animation.update()
         for quick_time_event in self.quick_time_events:
