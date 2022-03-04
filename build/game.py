@@ -4,7 +4,7 @@ from pygame.locals import *
 import numpy as np
 from itertools import repeat
 import analysis.scoring
-import data.assets
+from data import assets
 import math
 from analysis.logger import Log
 from gameobjects.plant import Plant
@@ -22,7 +22,7 @@ from datetime import datetime
 from utils.spline import Beziere
 from gameobjects.watering_can import Watering_can
 from gameobjects.blue_grain import Blue_grain
-from gameobjects.shop import Shop
+from gameobjects.shop import Shop, Shop_Item
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -118,14 +118,20 @@ class DevScene(object):
 
 class DefaultGameScene(object):
     def __init__(self):
-        self.ui = UI()
-        self.shop = Shop()
-        self.gameobjects = []
-        self.particle_systems = []
-        self.plant = Plant()
+        #self.ui = UI()
+        shop_items = [Shop_Item(assets.img("watering_can_outlined_tilted.png",(64,64)),self.prin) for i in range(0,8)]
+        self.shop = Shop((200, 200), shop_items)
+        #, image, rect, cost, info_text,
+
+        #self.gameobjects = []
+        #self.particle_systems = []
+        #self.plant = Plant()
 
     def init_gameobjects(self):
         pass
+
+    def prin(self):
+        print("BUY ME")
 
     def init_particle_systems(self):
         pass
@@ -133,17 +139,25 @@ class DefaultGameScene(object):
     def init_plant(self):
         pass
 
-    def update(self, dt):
-        self.gameobjects.update(dt)
-        self.particle_systems.update(dt)
-        self.shop.update(dt)
-        self.plant.update(dt)
+    def handle_events(self, events):
+        for e in events:
+            if e.type == KEYDOWN and e.key == K_ESCAPE:
+                pygame.quit()
+                sys.exit()
+            self.shop.handle_event(e)
 
-    def draw(self, screen):
-        self.gameobjects.draw(screen)
-        self.particle_systems.draw(screen)
+    def update(self, dt):
+        #self.gameobjects.update(dt)
+        #self.particle_systems.update(dt)
+        self.shop.update(dt)
+        #self.plant.update(dt)
+
+    def render(self, screen):
+        screen.fill((50, 50, 50))
+        #self.gameobjects.draw(screen)
+        #self.particle_systems.draw(screen)
         self.shop.draw(screen)
-        self.plant.draw(screen)
+        #self.plant.draw(screen)
 
 class TitleScene(object):
     def __init__(self):
@@ -279,7 +293,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(DevScene())
+        self.go_to(DefaultGameScene())
 
     def go_to(self, scene):
         self.scene = scene
