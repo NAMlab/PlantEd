@@ -1,6 +1,7 @@
 import pygame
 from utils.button import Button
 import config
+from utils.animation import LabelAnimation
 '''
 shop holds items and interfaces actions to consumables
 holds green thumbs, checks if buyable
@@ -17,7 +18,10 @@ class Shop:
         self.cols = cols
         self.green_thumbs = green_thumbs
         self.current_cost = 0
+        self.animations = []
+        self.cost_label_pos = None
         self.init_layout()
+
 
     def add_shop_item(self, shop_item):
         self.shop_items.append(shop_item)
@@ -29,6 +33,8 @@ class Shop:
                     item.callback()
                     item.selected = False
                     print(item.cost, self.green_thumbs)
+                    cost = config.FONT.render("{}".format(self.current_cost), False, (255, 255, 255))
+                    self.animations.append(LabelAnimation(cost, item.cost, 120, self.cost_label_pos))
                 else:
                     # throw insufficient funds, maybe post hover msg
                     pass
@@ -41,6 +47,8 @@ class Shop:
                 self.current_cost += item.cost
         for item in self.shop_items:
             item.update(dt)
+        for anim in self.animations:
+            anim.update()
 
     def handle_event(self, e):
         x,y = pygame.mouse.get_pos()

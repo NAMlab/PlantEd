@@ -1,6 +1,7 @@
 import pygame
 from pygame import Rect
 import numpy as np
+import config
 
 class OneShotAnimation(pygame.sprite.Sprite):
     def __init__(self, images, duration, pos, speed=1):
@@ -8,6 +9,43 @@ class OneShotAnimation(pygame.sprite.Sprite):
         self.pos = pos
         self.rect = Rect(pos[0], pos[1], 10, 10)
         self.images = images
+        self.image = images[0]
+        self.duration = duration
+        self.start_time = pygame.time.get_ticks()
+        self.interval = int(duration / len(images))
+        self.start_interval = self.interval
+        self.index = 0
+        self.speed = speed
+
+    def update(self):
+        time_elapsed = pygame.time.get_ticks() - self.start_time
+        if time_elapsed >= self.interval:
+            if self.index >= len(self.images) - 1:
+                return False
+            self.index += 1
+            self.interval += self.start_interval
+        self.image = self.images[self.index]
+        return True
+
+class LabelAnimation(pygame.sprite.Sprite):
+    def __init__(self, label_image, number, duration, pos, speed=1):
+        super(LabelAnimation, self).__init__()
+        self.images = []
+        #move surface up and triple its size to make room for numbers
+        self.pos = (pos[0],pos[1]-label_image.get_height())
+
+        #generate images from label to animate
+        self.surface = pygame.Surface((label_image.get_width(),label_image.get_height()*3))
+        sign = number/abs(number) # 1 or -1
+        for i in range(0,10):
+            y = i * sign * label_image.get_height()/10
+            text = config.FONT.render(number, False, (255,255,255))
+            surf = self.surface.copy()
+            surf.blit(text, (0,y))
+            self.images.append()
+        # self.rect = Rect(pos[0], pos[1], 10, 10)
+
+
         self.image = images[0]
         self.duration = duration
         self.start_time = pygame.time.get_ticks()

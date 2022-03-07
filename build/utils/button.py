@@ -261,7 +261,7 @@ class OptionBox:
                     return self.active_option
         return -1
 
-
+# Todo include slider to mouse offset when clicked to avoid jumping
 class Slider():
     def __init__(self, rect, font, slider_size, organ=None, plant=None, color=None, slider_color=None, callback=None, percent=0, active=True, visible=True):
         super().__init__()
@@ -281,12 +281,11 @@ class Slider():
         self.rect = rect
         self.set_percentage(percent)
 
+
     def update(self):
         if not self.active:
             return
-        if self.drag:
-            # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
-            self.slider_y = clamp(pygame.mouse.get_pos()[1], self.y, self.y-self.slider_h+self.h) - self.y
+
 
     def get_percentage(self):
         line_height = self.h - self.slider_h
@@ -333,11 +332,12 @@ class Slider():
     def handle_event(self, event):
         if not self.active:
             return
-        rect =self.get_slider_rect_global()
+        rect = self.get_slider_rect_global()
         hover = rect.collidepoint(pygame.mouse.get_pos())
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if hover and event.button == 1:
+                print(event.type, "Hopefully a slider move", hover, self.drag)
                 self.drag = True
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.drag:
@@ -346,6 +346,10 @@ class Slider():
                     self.organ.set_percentage(self.get_percentage())
                 if self.callback:
                     self.callback(self)
+        if event.type == pygame.MOUSEMOTION:
+            if self.drag:
+                # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
+                self.slider_y = clamp(pygame.mouse.get_pos()[1], self.y, self.y - self.slider_h + self.h) - self.y
 
 
 class SliderGroup:

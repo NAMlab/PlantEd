@@ -121,43 +121,18 @@ class DefaultGameScene(object):
     def __init__(self):
         self.gametime = GameTime.instance()
         self.log = Log()                        # can be turned off
-        self.model = DynamFicModel(self.gametime, self.log)
-        self.plant = Plant((SCREEN_WIDTH - SCREEN_WIDTH/4, SCREEN_HEIGHT - SCREEN_HEIGHT/5), self.model)
-        self.environment = Environment(self.plant, self.model, 0, 0, self.gametime, self.activate_hawk)
-        self.manager = None                     # has to be none, get set after scene switch
-        self.hover_message = None               # should be in camera.py
-        self.name = "Generic Plant"             # plant name, maybe better in plant
-
-        # gameobjects
-        self.gameobjects = [] # dict for key value pairs? maybe named to access easily
-        # shopitems should only be known to shop, no logic in game.py
-        self.quick_time_events = []
+        self.model = DynamicModel(self.gametime, self.log)
+        self.plant = Plant((config.SCREEN_WIDTH - config.SCREEN_WIDTH/4, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model)
+        print(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime)
+        self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
         self.animations = []
-
-        # ui
-        self.ui = UI(scale=1)
-
-        #self.ui = UI()
-
-
-
+        self.ui = UI(1, self.plant, self.model)
         shop_items = [Shop_Item(assets.img("watering_can_outlined_tilted.png",(64,64)),self.prin) for i in range(0,8)]
-        self.shop = Shop((200, 200), shop_items)
+        self.shop = Shop((700, 200), shop_items)
 
-
-
-        #self.gameobjects = []
-        #self.particle_systems = []
-        #self.plant = Plant()
-
-    def init_gameobjects(self):
-        pass
-
-    def init_particle_systems(self):
-        pass
-
-    def init_plant(self):
-        pass
+    # placeholder
+    def prin(self):
+        print("D")
 
     def handle_events(self, events):
         for e in events:
@@ -165,19 +140,22 @@ class DefaultGameScene(object):
                 pygame.quit()
                 sys.exit()
             self.shop.handle_event(e)
+            self.ui.handle_event(e)
 
     def update(self, dt):
-        #self.gameobjects.update(dt)
-        #self.particle_systems.update(dt)
+        self.environment.update(dt)
         self.shop.update(dt)
-        #self.plant.update(dt)
+        self.ui.update(dt)
+        self.plant.update(dt)
 
     def render(self, screen):
-        screen.fill((50, 50, 50))
-        #self.gameobjects.draw(screen)
-        #self.particle_systems.draw(screen)
+        self.environment.draw_background(tmp_screen)
+        for animation in self.animations:
+            screen.blit(animation.image, animation.pos)
         self.shop.draw(screen)
-        #self.plant.draw(screen)
+        self.ui.draw(screen)
+        self.plant.draw(screen)
+        self.environment.draw_foreground(screen)
 
 class TitleScene(object):
     def __init__(self):

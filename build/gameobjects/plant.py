@@ -101,7 +101,8 @@ class Plant:
     def set_target_organ_starch(self):
         self.target_organ = self.organ_starch
 
-    def update(self):
+    def update(self, dt):
+        # dirty Todo make beter
         if self.get_biomass() > self.seedling.max-1 and not self.organs[1].active:
             self.organs[1].activate()
             self.organs[0].activate()
