@@ -2,6 +2,7 @@ import cobra.test
 import random
 import pygame
 from data import assets
+from utils.spline import Beziere
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -31,12 +32,12 @@ class Plant:
     def __init__(self, pos, model):
         self.x = pos[0]
         self.y = pos[1]
-        self.upgrade_points = 0
+        self.upgrade_points = 10
         self.model = model
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=0, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=0, leaf = organ_leaf, active=False)
-        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=1, active=True)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=1, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=1, leaf = organ_leaf, active=False)
+        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=2, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=20, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
@@ -107,6 +108,8 @@ class Plant:
             self.organs[1].activate()
             self.organs[0].activate()
             #if self.get_biomass() > self.seedling.max and not self.organs[0].active:
+        for organ in self.organs:
+            organ.update(dt)
 
 
     def handle_event(self, event):
@@ -162,6 +165,9 @@ class Organ:
         self.level = 0
         self.update_image_size()
 
+    def update(self, dt):
+        pass
+
     def set_percentage(self, percentage):
         self.percentage = percentage
 
@@ -212,6 +218,7 @@ class Organ:
         self.active = True
 
     def draw(self, screen):
+
         if not self.pivot:
             self.pivot = (0,0)
         if self.image and self.active:
@@ -236,11 +243,14 @@ class Leaf(Organ):
         self.base_mass = 1
         self.can_add_leaf = False
 
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            for rect in self.get_rect():
+                if rect.collidepoint(event.pos):
+                    self.callback(self.type)
+
     def activate_add_leaf(self):
-        #ugly but has to work for now, maybe move activate_add_leave to plant and check there
-        if self.plant.organs[1].active_threshold*2 > len(self.leaves):
-            self.plant.upgrade_points -= 1 if self.plant.upgrade_points > 0 else 0
-            self.can_add_leaf = True
+        self.can_add_leaf = True
 
     def remove_leaf(self, leaf=None):
         if not leaf:
@@ -319,6 +329,8 @@ class Leaf(Organ):
         leaf["image"] = pygame.transform.scale(base_image, (new_width, new_height))
 
     def draw(self, screen):
+        if self.can_add_leaf:
+            screen.blit(assets.img("leaf_small.png"), pygame.mouse.get_pos())
         for leaf in self.leaves:
             screen.blit(leaf["image"], (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))
 
@@ -336,11 +348,16 @@ class Stem(Organ):
         self.highlight = None
         self.thorns = []
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
+        self.curve = Beziere([(self.x, self.y), (self.x - 0, self.y - 90), (self.x + 30, self.y - 150)])
+
 
         '''for i in range(1,9):
             y = int(i * self.image.get_height() / 10)
             x, dir = self.get_image_mask_x((int(y),random.randint(0,self.image.get_width())), self.image)
             self.add_thorn((x+self.x-self.pivot[0],y+self.y-self.pivot[1]), dir)'''
+
+    def update(self, dt):
+        self.curve.update(dt)
 
     def add_thorn(self, pos, dir):
         if dir > 0:
@@ -352,10 +369,13 @@ class Stem(Organ):
 
 
     def handle_event(self, event):
+        self.curve.handle_event(event)
         if event.type == pygame.MOUSEMOTION:
             if self.leaf.can_add_leaf:
+                print("can")
                 mouse_pos = pygame.mouse.get_pos()
                 if self.get_rect()[0].collidepoint(mouse_pos):
+                    print("collide")
                     global_x, global_y = pygame.mouse.get_pos()
                     global_pos = (global_x, global_y)
                     x, dir = self.get_image_mask_x(self.get_local_pos(global_pos), self.image)
@@ -401,14 +421,20 @@ class Stem(Organ):
 
 
     def draw(self, screen):
+        self.curve.draw(screen)
+        '''
         super().draw(screen)
         pygame.draw.rect(screen, (0,0,0), self.get_rect()[0], width=2)
+        #if self.leaf.can_add_leaf:
+            #image = assets.img("leaf_small.png")
+            #screen.blit(image, pygame.mouse.get_pos())
         if self.highlight:
             size = 10
             pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size, width=int(size/3))
             pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size/3)
         for thorn in self.thorns:
             screen.blit(thorn["image"], thorn["position"])
+        '''
 
     def get_rect(self):
         if self.image:

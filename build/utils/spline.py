@@ -4,6 +4,7 @@ from scipy.spatial.distance import pdist
 import pygame
 import math
 from pygame.locals import *
+import config
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
@@ -37,7 +38,9 @@ class Beziere:
         self.offsets = [(0,0) for point in self.list_of_points] # resulting x/y from v|m/s
 
         #final list of points to be drawn
-        self.points_to_draw = self.get_current_points_to_draw()
+        self.points_to_draw = []
+        self.get_current_points_to_draw()
+        #self.update(0)
 
     def basis_function(self, t: float, list_of_points: List[Tuple[float, float]], degree: int):
         """
@@ -186,27 +189,27 @@ class Beziere:
         #unsure if forces should be applied at interpolated points
         self.forces.append(force)
 
-    def handle_events(self,events):
-        for e in events:
-            if e.type == KEYDOWN and e.key == K_SPACE:
-                self.grow_point(pygame.mouse.get_pos())
-            if e.type == KEYDOWN and e.key == K_PLUS:
-                self.forces.append((10,0))
-            if e.type == KEYDOWN and e.key == K_MINUS:
-                self.forces = []
-            if e.type == MOUSEMOTION and self.pressed > -1:
-                mouse_pos = pygame.mouse.get_pos()
-                self.list_of_points[self.pressed] = mouse_pos
+    def handle_event(self,e):
+        if e.type == KEYDOWN and e.key == K_SPACE:
+            self.grow_point(pygame.mouse.get_pos())
+        if e.type == KEYDOWN and e.key == K_PLUS:
+            self.forces.append((10, 0))
+        if e.type == KEYDOWN and e.key == K_MINUS:
+            self.forces = []
+        if e.type == MOUSEMOTION and self.pressed > -1:
+            mouse_pos = pygame.mouse.get_pos()
+            self.list_of_points[self.pressed] = mouse_pos
 
-            if e.type == MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-                for i in range(0,len(self.list_of_points)):
-                    if math.dist(mouse_pos,self.list_of_points[i]) < 10:
-                        self.pressed = i
+        if e.type == MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            for i in range(0, len(self.list_of_points)):
+                if math.dist(mouse_pos, self.list_of_points[i]) < 10:
+                    self.pressed = i
 
-            if e.type == MOUSEBUTTONUP:
-                mouse_pos = pygame.mouse.get_pos()
-                self.pressed = -1
+        if e.type == MOUSEBUTTONUP:
+            mouse_pos = pygame.mouse.get_pos()
+            self.pressed = -1
+
 
     def add_point(self, point):
         self.list_of_points.append(point)
@@ -223,7 +226,8 @@ class Beziere:
     def draw(self, screen):
         # draw should not contain logic, points_to_draw are drawn without further calculation
         #draw list_of_points
-        pygame.draw.lines(screen, (255,255,255), False, self.points_to_draw)
+        pygame.draw.lines(screen, (0,0,0), False, self.points_to_draw, width=7)
+        pygame.draw.lines(screen, config.GREEN, False, self.points_to_draw, width=5)
 
         # draw control points
         for i in range (0,len(self.list_of_points)):

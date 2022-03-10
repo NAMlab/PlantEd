@@ -39,10 +39,10 @@ class LabelAnimation(pygame.sprite.Sprite):
         sign = number/abs(number) # 1 or -1
         for i in range(0,10):
             y = i * sign * label_image.get_height()/10
-            text = config.FONT.render(number, False, (255,255,255))
+            text = config.FONT.render("number {}".format(number), False, (255,255,255))
             surf = self.surface.copy()
             surf.blit(text, (0,y))
-            self.images.append()
+            #self.images.append()
         # self.rect = Rect(pos[0], pos[1], 10, 10)
 
 

@@ -7,6 +7,7 @@ from utils.particle import ParticleSystem, PointParticleSystem, StillParticles
 import config
 import math
 from pygame import rect, Rect
+from gameobjects.watering_can import Watering_can
 
 # constants in dynamic model, beter in config? dont think so
 from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
@@ -91,6 +92,7 @@ class UI:
             slider.handle_event(e)
         for tips in self.tool_tip_manager.tool_tips:
             tips.handle_event(e)
+        self.textbox.handle_event(e)
 
     def update(self, dt):
         for slider in self.sliders:
@@ -105,146 +107,7 @@ class UI:
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
         self.tool_tip_manager.draw(screen)
-        self.draw_organ_ui(screen)
-
-    # Todo split up into smaller components, make text easier to create
-    def draw_organ_ui(self, screen):
-        white = (255, 255, 255)
-        white_transparent = (255, 255, 255, 128)
-        # new surface to get alpha
-        s = pygame.Surface((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT), pygame.SRCALPHA)
-        w,h = s.get_size()
-
-        # headbox
-        pygame.draw.rect(s, (255, 255, 255, 180), (60, 10, 580, 30), border_radius=3)
-        production_text = config.FONT.render("Production", True, (0, 0, 0))  # title
-        s.blit(production_text, dest=(290-production_text.get_size()[0]/2, 10))
-
-        # draw starch details
-        lvl_pos = (530, 270, 64, 64)
-        num_arrows = int((self.plant.organ_starch.percentage)/100 * 3)
-        for i in range(0,num_arrows+1):
-            pygame.draw.line(s, (255, 0, 0), (545, 280+i*10), (560, 300+i*10), width=4)
-            pygame.draw.line(s, (255, 0, 0), (575, 280+i*10), (560, 300+i*10), width=4)
-
-        # draw starch pool
-        pool_height = 180
-        pool_rect = (476, 150, 32, pool_height)
-        pygame.draw.rect(s, white_transparent, pool_rect, border_radius=3)
-        pool_limit = self.plant.organ_starch.get_threshold()
-        pool_level = self.plant.organ_starch.mass * pool_height/pool_limit
-        pool_rect = Rect(pool_rect[0], pool_rect[1]+pool_height-pool_level, 32, pool_level)
-        pygame.draw.rect(s, white, pool_rect, border_radius=3)
-        pool_level_text = config.FONT.render("{:.1f}".format(self.plant.organ_starch.mass), True, (0, 0, 0))  # title
-        s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))
-
-
-        # name plant, make textbox
-        self.textbox.draw(s)
-
-        # stats background
-        pygame.draw.rect(s, white_transparent, (660, 50, 200, 160), border_radius=3)
-
-        # plant lvl
-        lvl_text = config.FONT.render("Plant Level:", True, (0, 0, 0))
-        s.blit(lvl_text, dest=(670, 60))
-        level = config.FONT.render("{:.0f}".format(self.plant.get_level()), True, (0, 0, 0))  # title
-        s.blit(level, dest=(860 - level.get_width() - 5, 60))
-
-        # biomass
-        biomass_text = config.FONT.render("Plant Mass:", True, (0, 0, 0))
-        s.blit(biomass_text, dest=(670, 90))
-        biomass = config.FONT.render("{:.4f}".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
-        s.blit(biomass, dest=(860-biomass.get_width()-5, 90))
-
-        # skillpoints greenthumb
-        skillpoints_text = config.FONT.render("Green Thumbs:", True, (0, 0, 0))
-        s.blit(skillpoints_text, dest=(670, 120))
-        skillpoints = config.FONT.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(assets.img("green_thumb.png", (20, 20)), (860-assets.img("green_thumb.png", (20, 20)).get_width()-1, 123))
-        s.blit(skillpoints, dest=(860-skillpoints.get_width()-26, 120))
-
-        # water
-        water_level_text = config.FONT.render("Water:", True, (0, 0, 0))
-        s.blit(water_level_text, dest=(670, 150))
-        water_level = config.FONT.render("{:.2f}".format(self.model.water_pool), True, (0, 0, 0))  # title
-        s.blit(water_level, dest=(860 - water_level.get_width(), 150))
-
-        # nitrate
-        nitrate_level_text = config.FONT.render("Nitrate:", True, (0, 0, 0))
-        s.blit(nitrate_level_text, dest=(670, 180))
-        nitrate_level = config.FONT.render("{:.2f}".format(self.model.nitrate_pool), True, (0, 0, 0))  # title
-        s.blit(nitrate_level, dest=(860 - nitrate_level.get_width(), 180))
-
-        # shop
-        #pygame.draw.rect(s, (255, 255, 255, 180), (660, 220, 200, 30), border_radius=3)
-        #shop_text = config.FONT.render("Shop", True, (0, 0, 0))  # title
-        #s.blit(shop_text, dest=(760 - shop_text.get_size()[0] / 2, 220))
-
-        #pygame.draw.rect(s, white_transparent, (660, 260, 200, 175), border_radius=3)
-        #items
-
-        # headbox
-        pygame.draw.rect(s, (255, 255, 255, 180), Rect(60, 450, 580, 30), border_radius=3)
-        leave_title = config.FONT.render("Organ", True, (0, 0, 0))  # title
-        s.blit(leave_title, dest=(290 - leave_title.get_size()[0] / 2, 450))
-        if self.plant.target_organ.type == self.plant.LEAF:
-            image = assets.img("leaf_small.png", (128,128))
-            #self.button_sprites.add(self.button)
-        elif self.plant.target_organ.type == self.plant.STEM:
-            image = assets.img("stem_small.png", (128,128))
-        elif self.plant.target_organ.type == self.plant.ROOTS:
-            image = assets.img("roots_small.png", (128,128))
-        elif self.plant.target_organ.type == self.plant.STARCH:
-            image = assets.img("starch.png", (128,128))
-
-        # draw plant image + exp + lvl + rate + mass
-        s.blit(image, (100,490))
-
-        exp_width = 128
-        pygame.draw.rect(s, white_transparent, Rect(100, 600, exp_width, 25), border_radius=0)
-        needed_exp = self.plant.target_organ.get_threshold()
-        exp = self.plant.target_organ.mass / needed_exp
-        width = min(int(exp_width / 1 * exp),exp_width)
-        pygame.draw.rect(s, (255, 255, 255), Rect(100, 600, width, 25), border_radius=0)  # exp
-        text_organ_mass = config.FONT.render("{:.2f} / {threshold}".format(self.plant.target_organ.mass,threshold=self.plant.target_organ.get_threshold()),True, (0, 0, 0))
-        s.blit(text_organ_mass, dest=(105, 596))  # Todo change x, y
-
-        pygame.draw.rect(s, white_transparent,(245, 490, 395, 130), border_radius=3)
-
-        # growth_rate in seconds
-        growth_rate = config.FONT.render("Growth Rate", True, (0, 0, 0)) #hourly
-        s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
-        growth_rate_text = config.FONT.render("{:.10f} /s".format(self.plant.target_organ.growth_rate), True,(0, 0, 0))  # hourly
-        s.blit(growth_rate_text, dest=(635-growth_rate_text.get_width(), 500))  # Todo change x, y
-
-        # mass
-        mass_text = config.FONT.render("Organ Mass", True, (0, 0, 0))
-        s.blit(mass_text, dest=(245, 525))
-        mass = config.FONT.render("{:.10f} /g".format(self.plant.target_organ.mass), True, (0, 0, 0))
-        s.blit(mass, dest=(635 - mass.get_width(), 525))
-
-        # intake water
-        #if self.plant.target_organ.type == self.plant.ROOTS:
-        water_intake_text = config.FONT.render("Water intake", True,(0, 0, 0))
-        s.blit(water_intake_text, dest=(245,550))
-        water_intake = config.FONT.render("{:.10f} /h".format(self.model.water_intake), True,(0, 0, 0))
-        s.blit(water_intake, dest=(635-water_intake.get_width(), 550))
-
-        # nitrate water
-        # if self.plant.target_organ.type == self.plant.ROOTS:
-        nitrate_intake_text = config.FONT.render("Nitrate intake", True, (0, 0, 0))
-        s.blit(nitrate_intake_text, dest=(245, 575))
-        nitrate_intake = config.FONT.render("{:.10f} /h".format(self.model.nitrate_intake), True, (0, 0, 0))
-        s.blit(nitrate_intake, dest=(635 - nitrate_intake.get_width(), 575))
-
-        # level
-        pygame.draw.circle(s, white_transparent, (100, 510,), 20)
-        pygame.draw.circle(s, white, (100, 510,), 20, width=3)
-        level = config.FONT.render("{:.0f}".format(self.plant.target_organ.level), True, (0, 0, 0))
-        s.blit(level, (100-level.get_width()/2,510-level.get_height()/2))
-
-        screen.blit(s, (0, 0))
+        self.draw_ui(screen)
 
     # this should focus on UI components
     def activate_biomass_objective(self):
@@ -287,3 +150,142 @@ class UI:
         else:
             self.starch_particle.active = True
             self.model.activate_starch_resource()
+
+    def draw_ui(self, screen):
+        # new surface to get alpha
+        s = pygame.Surface((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        self.draw_plant_details(s)
+        self.draw_production(s)
+        self.draw_organ_details(s)
+        self.draw_starch_details(s)
+        # name plant, make textbox
+        self.textbox.draw(s)
+        screen.blit(s, (0, 0))
+
+    def draw_plant_details(self, s):
+        # details
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (660, 50, 200, 160), border_radius=3)
+
+        # plant lvl
+        lvl_text = config.FONT.render("Plant Level:", True, (0, 0, 0))
+        s.blit(lvl_text, dest=(670, 60))
+        level = config.FONT.render("{:.0f}".format(self.plant.get_level()), True, (0, 0, 0))  # title
+        s.blit(level, dest=(860 - level.get_width() - 5, 60))
+
+        # biomass
+        biomass_text = config.FONT.render("Plant Mass:", True, (0, 0, 0))
+        s.blit(biomass_text, dest=(670, 90))
+        biomass = config.FONT.render("{:.4f}".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
+        s.blit(biomass, dest=(860 - biomass.get_width() - 5, 90))
+
+        # skillpoints greenthumb
+        skillpoints_text = config.FONT.render("Green Thumbs:", True, (0, 0, 0))
+        s.blit(skillpoints_text, dest=(670, 120))
+        skillpoints = config.FONT.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
+        s.blit(assets.img("green_thumb.png", (20, 20)),
+               (860 - assets.img("green_thumb.png", (20, 20)).get_width() - 1, 123))
+        s.blit(skillpoints, dest=(860 - skillpoints.get_width() - 26, 120))
+
+        # water
+        water_level_text = config.FONT.render("Water:", True, (0, 0, 0))
+        s.blit(water_level_text, dest=(670, 150))
+        water_level = config.FONT.render("{:.2f}".format(self.model.water_pool), True, (0, 0, 0))  # title
+        s.blit(water_level, dest=(860 - water_level.get_width(), 150))
+
+        # nitrate
+        nitrate_level_text = config.FONT.render("Nitrate:", True, (0, 0, 0))
+        s.blit(nitrate_level_text, dest=(670, 180))
+        nitrate_level = config.FONT.render("{:.2f}".format(self.model.nitrate_pool), True, (0, 0, 0))  # title
+        s.blit(nitrate_level, dest=(860 - nitrate_level.get_width(), 180))
+
+    def draw_production(self, s):
+        # headbox
+        pygame.draw.rect(s, (255, 255, 255, 180), (60, 10, 580, 30), border_radius=3)
+        production_text = config.FONT.render("Production", True, (0, 0, 0))  # title
+        s.blit(production_text, dest=(320 - production_text.get_size()[0] / 2, 10))
+
+        # rest of production consists of sliders and buttons
+
+    def draw_organ_details(self, s):
+        # headbox
+        pygame.draw.rect(s, (255, 255, 255, 180), Rect(60, 450, 580, 30), border_radius=3)
+        leave_title = config.FONT.render("Organ:{}".format(self.plant.target_organ.type), True, (0, 0, 0))  # title
+        s.blit(leave_title, dest=(290 - leave_title.get_size()[0] / 2, 450))
+
+        # organ details
+        if self.plant.target_organ.type == self.plant.LEAF:
+            image = assets.img("leaf_small.png", (128, 128))
+            # self.button_sprites.add(self.button)
+        elif self.plant.target_organ.type == self.plant.STEM:
+            image = assets.img("stem_small.png", (128, 128))
+        elif self.plant.target_organ.type == self.plant.ROOTS:
+            image = assets.img("roots_small.png", (128, 128))
+        elif self.plant.target_organ.type == self.plant.STARCH:
+            image = assets.img("starch.png", (128, 128))
+        # draw plant image + exp + lvl + rate + mass
+        s.blit(image, (100, 490))
+
+        exp_width = 128
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, Rect(100, 600, exp_width, 25), border_radius=0)
+        needed_exp = self.plant.target_organ.get_threshold()
+        exp = self.plant.target_organ.mass / needed_exp
+        width = min(int(exp_width / 1 * exp), exp_width)
+        pygame.draw.rect(s, (255, 255, 255), Rect(100, 600, width, 25), border_radius=0)  # exp
+        text_organ_mass = config.FONT.render("{:.2f} / {threshold}".format(self.plant.target_organ.mass,
+                                                                           threshold=self.plant.target_organ.get_threshold()),
+                                             True, (0, 0, 0))
+        s.blit(text_organ_mass, dest=(105, 596))  # Todo change x, y
+
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (245, 490, 395, 130), border_radius=3)
+
+        # growth_rate in seconds
+        growth_rate = config.FONT.render("Growth Rate", True, (0, 0, 0))  # hourly
+        s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
+        growth_rate_text = config.FONT.render("{:.10f} /s".format(self.plant.target_organ.growth_rate), True,
+                                              (0, 0, 0))  # hourly
+        s.blit(growth_rate_text, dest=(635 - growth_rate_text.get_width(), 500))  # Todo change x, y
+
+        # mass
+        mass_text = config.FONT.render("Organ Mass", True, (0, 0, 0))
+        s.blit(mass_text, dest=(245, 525))
+        mass = config.FONT.render("{:.10f} /g".format(self.plant.target_organ.mass), True, (0, 0, 0))
+        s.blit(mass, dest=(635 - mass.get_width(), 525))
+
+        # intake water
+        # if self.plant.target_organ.type == self.plant.ROOTS:
+        water_intake_text = config.FONT.render("Water intake", True, (0, 0, 0))
+        s.blit(water_intake_text, dest=(245, 550))
+        water_intake = config.FONT.render("{:.10f} /h".format(self.model.water_intake), True, (0, 0, 0))
+        s.blit(water_intake, dest=(635 - water_intake.get_width(), 550))
+
+        # nitrate water
+        # if self.plant.target_organ.type == self.plant.ROOTS:
+        nitrate_intake_text = config.FONT.render("Nitrate intake", True, (0, 0, 0))
+        s.blit(nitrate_intake_text, dest=(245, 575))
+        nitrate_intake = config.FONT.render("{:.10f} /h".format(self.model.nitrate_intake), True, (0, 0, 0))
+        s.blit(nitrate_intake, dest=(635 - nitrate_intake.get_width(), 575))
+
+        # level
+        pygame.draw.circle(s, config.WHITE_TRANSPARENT, (100, 510,), 20)
+        pygame.draw.circle(s, config.WHITE, (100, 510,), 20, width=3)
+        level = config.FONT.render("{:.0f}".format(self.plant.target_organ.level), True, (0, 0, 0))
+        s.blit(level, (100 - level.get_width() / 2, 510 - level.get_height() / 2))
+
+    def draw_starch_details(self, s):
+        # draw starch details
+        lvl_pos = (530, 270, 64, 64)
+        num_arrows = int((self.plant.organ_starch.percentage) / 100 * 3)
+        for i in range(0, num_arrows + 1):
+            pygame.draw.line(s, (255, 0, 0), (545, 280 + i * 10), (560, 300 + i * 10), width=4)
+            pygame.draw.line(s, (255, 0, 0), (575, 280 + i * 10), (560, 300 + i * 10), width=4)
+
+        # draw starch pool
+        pool_height = 180
+        pool_rect = (476, 150, 32, pool_height)
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, pool_rect, border_radius=3)
+        pool_limit = self.plant.organ_starch.get_threshold()
+        pool_level = self.plant.organ_starch.mass * pool_height / pool_limit
+        pool_rect = Rect(pool_rect[0], pool_rect[1] + pool_height - pool_level, 32, pool_level)
+        pygame.draw.rect(s, config.WHITE, pool_rect, border_radius=3)
+        pool_level_text = config.FONT.render("{:.1f}".format(self.plant.organ_starch.mass), True, (0, 0, 0))  # title
+        s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))

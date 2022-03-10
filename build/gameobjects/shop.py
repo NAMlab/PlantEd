@@ -2,6 +2,8 @@ import pygame
 from utils.button import Button
 import config
 from utils.animation import LabelAnimation
+from gameobjects.watering_can import Watering_can
+from data import assets
 '''
 shop holds items and interfaces actions to consumables
 holds green thumbs, checks if buyable
@@ -10,9 +12,10 @@ shopitems have action and button and cost
 '''
 
 class Shop:
-    def __init__(self, pos, shop_items, cols=2, green_thumbs=0):
+    def __init__(self, pos, shop_items, model, cols=3, green_thumbs=10):
         self.pos = pos
         self.shop_items = shop_items
+        self.model = model
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.cols = cols
@@ -21,10 +24,15 @@ class Shop:
         self.animations = []
         self.cost_label_pos = None
         self.init_layout()
-
+        self.watering_can = Watering_can((0,0), self.model)
 
     def add_shop_item(self, shop_item):
         self.shop_items.append(shop_item)
+
+    def add_shop_item(self, keyword):
+        if keyword == "watering":
+            self.shop_items.append(Shop_Item(assets.img("watering_can_outlined_tilted.png", (64,64)), self.watering_can.activate))
+        self.init_layout()
 
     def buy(self):
         for item in self.shop_items:
@@ -32,9 +40,8 @@ class Shop:
                 if self.green_thumbs - item.cost >= 0:
                     item.callback()
                     item.selected = False
-                    print(item.cost, self.green_thumbs)
                     cost = config.FONT.render("{}".format(self.current_cost), False, (255, 255, 255))
-                    self.animations.append(LabelAnimation(cost, item.cost, 120, self.cost_label_pos))
+                    #self.animations.append(LabelAnimation(cost, item.cost, 120, self.cost_label_pos))
                 else:
                     # throw insufficient funds, maybe post hover msg
                     pass
@@ -42,6 +49,7 @@ class Shop:
 
     def update(self, dt):
         self.current_cost = 0
+        self.watering_can.update(dt)
         for item in self.shop_items:
             if item.selected:
                 self.current_cost += item.cost
@@ -56,14 +64,20 @@ class Shop:
             self.confirm_button.handle_event(e)
         for item in self.shop_items:
             item.handle_event(e)
+        self.watering_can.handle_event(e)
 
     def draw(self, screen):
-        pygame.draw.rect(screen, (255,255,255), self.rect, int(self.margin/2))
+        self.watering_can.draw(screen)
+        # s should only be as big as rect, for the moment its fine
+        s = pygame.Surface((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, self.rect, border_radius=3)
+        #pygame.draw.rect(s, (255,255,255), self.rect, int(self.margin/2))
         for item in self.shop_items:
-            item.draw(screen)
-        self.buttons.draw(screen)
+            item.draw(s)
         cost = config.FONT.render("{}".format(self.current_cost),False,(255,255,255))
-        screen.blit(cost, (int(self.cost_label_pos[0]-cost.get_width()/2), int(self.cost_label_pos[1]-cost.get_height()/2)))
+        s.blit(cost, (int(self.cost_label_pos[0]-cost.get_width()/2), int(self.cost_label_pos[1]-cost.get_height()/2)))
+        self.buttons.draw(s)
+        screen.blit(s,(0,0))
 
     # layout
     def init_layout(self):
@@ -110,7 +124,7 @@ class Shop:
 
 
 class Shop_Item:
-    def __init__(self, image, callback, cost=1, info_text=None, rect=(0,0,0,0), selected_color=(255,255,255), hover_color = (128,128,128), border_width=5):
+    def __init__(self, image, callback, cost=1, info_text=None, rect=(0,0,0,0), selected_color=(255,255,255), hover_color = (128,128,128,128), border_width=3):
         self.image = image
         self.callback = callback
         self.cost = cost

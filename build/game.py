@@ -114,8 +114,8 @@ class DevScene(object):
             if e.type == KEYDOWN and e.key == K_e:
                 #self.watering_can.activate(pygame.mouse.get_pos())
                 self.blue_grain.activate(pygame.mouse.get_pos())
-
         self.plant.handle_events(events)
+
 
 class DefaultGameScene(object):
     def __init__(self):
@@ -123,35 +123,45 @@ class DefaultGameScene(object):
         self.log = Log()                        # can be turned off
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH - config.SCREEN_WIDTH/4, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model)
-        print(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
-        self.animations = []
         self.ui = UI(1, self.plant, self.model)
-        shop_items = [Shop_Item(assets.img("watering_can_outlined_tilted.png",(64,64)),self.prin) for i in range(0,8)]
-        self.shop = Shop((700, 200), shop_items)
+        #shop items are to be defined by the level
+        shop_items = [Shop_Item(assets.img("watering_can_outlined_tilted.png",(64,64)),self.activate_add_leaf) for i in range(0,8)]
+        self.shop = Shop((660, 220), shop_items, self.model)
+        self.shop.add_shop_item("watering")
+        # start plant growth timer
+        pygame.time.set_timer(GROWTH, 1000)
 
-    # placeholder
-    def prin(self):
-        print("D")
+    def activate_add_leaf(self):
+        # if there are funds, buy a leave will enable leave @ mouse pos until clicked again
+        self.plant.organs[0].activate_add_leaf()
 
     def handle_events(self, events):
         for e in events:
+            if e.type == GROWTH:
+                self.model.calc_growth_rate()
+                growth_rate, starch_rate, starch_intake = self.model.get_rates()
+                nitrate_pool, water_pool = self.model.get_pools()
+                self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
+                self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
+                self.plant.grow()
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
             self.shop.handle_event(e)
             self.ui.handle_event(e)
+            self.plant.handle_event(e)
 
     def update(self, dt):
         self.environment.update(dt)
         self.shop.update(dt)
         self.ui.update(dt)
         self.plant.update(dt)
+        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0), self.plant.organ_starch.percentage)
+
 
     def render(self, screen):
         self.environment.draw_background(tmp_screen)
-        for animation in self.animations:
-            screen.blit(animation.image, animation.pos)
         self.shop.draw(screen)
         self.ui.draw(screen)
         self.plant.draw(screen)
@@ -315,7 +325,7 @@ class GameScene():
         self.font = config.TITLE_FONT
         self.name = "Generic Plant"
         self.sfont = config.FONT
-        self.model = DynamFicModel(self.gametime, self.log)
+        self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant(plant_pos, self.model)
         self.environment = Environment(SCREEN_WIDTH, SCREEN_HEIGHT, self.plant, self.model, 0, 0, self.gametime, self.activate_hawk)
         self.particle_systems = []
