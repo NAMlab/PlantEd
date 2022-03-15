@@ -223,11 +223,21 @@ class Beziere:
         self.degree += 1
         self.growth_percentage = 0
 
+    def draw_highlighted(self, screen):
+        for i in range(1,len(self.points_to_draw)):
+            pygame.draw.line(screen, config.WHITE, self.points_to_draw[i-1],self.points_to_draw[i],width=int(12-0.05*i))
+        self.draw(screen)
+
     def draw(self, screen):
         # draw should not contain logic, points_to_draw are drawn without further calculation
         #draw list_of_points
-        pygame.draw.lines(screen, (0,0,0), False, self.points_to_draw, width=7)
-        pygame.draw.lines(screen, config.GREEN, False, self.points_to_draw, width=5)
+
+        # tapering
+        for i in range(1,len(self.points_to_draw)):
+            pygame.draw.line(screen, (0,0,0), self.points_to_draw[i-1],self.points_to_draw[i],width=int(10-0.05*i))
+            pygame.draw.line(screen, config.GREEN, self.points_to_draw[i-1],self.points_to_draw[i],width=int(8-0.05*i))
+        #pygame.draw.lines(screen, (0,0,0), False, self.points_to_draw, width=7)
+        #pygame.draw.lines(screen, config.GREEN, False, self.points_to_draw, width=5)
 
         # draw control points
         for i in range (0,len(self.list_of_points)):

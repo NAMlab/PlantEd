@@ -20,7 +20,7 @@ SCREEN_HEIGHT = 1080
 WHITE = (255, 255, 255)
 WHITE_TRANSPARENT = (255, 255, 255, 128)
 
-GREEN = (19, 155, 23)
+GREEN = (150, 168, 96)
 BLUE = (75, 75, 200)
 SKY_BLUE = (169, 247, 252)
 
@@ -29,6 +29,8 @@ GROWTH_TICK_RATE = 1000  # in ms
 
 FONT = pygame.font.SysFont('arial', 24)
 TITLE_FONT = pygame.font.SysFont('arialblack', 24)
+BIG_FONT = pygame.font.SysFont('arial', 28)
+YELLOW_TRANSPARENT = (255,255,255,128)
 
 PLANTNAME = 'GenEric'
 

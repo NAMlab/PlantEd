@@ -81,6 +81,9 @@ class Button(pygame.sprite.Sprite):
                     self.post_hover_message(None)
                 self.image = self.button_image
 
+    def draw(self, screen):
+        screen.blit(self.image, (self.rect[0],self.rect[1]))
+
 
 class Item_Button(Button):
     def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK, image=None, border_w=None, item_index=-1):

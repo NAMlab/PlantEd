@@ -3,6 +3,7 @@ import random
 import pygame
 from data import assets
 from utils.spline import Beziere
+import config
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -218,7 +219,6 @@ class Organ:
         self.active = True
 
     def draw(self, screen):
-
         if not self.pivot:
             self.pivot = (0,0)
         if self.image and self.active:
@@ -245,8 +245,10 @@ class Leaf(Organ):
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
+            print(self.get_rect(), pygame.mouse.get_pos())
             for rect in self.get_rect():
-                if rect.collidepoint(event.pos):
+                if rect.collidepoint(pygame.mouse.get_pos()):
+                    print("lalala", self.type)
                     self.callback(self.type)
 
     def activate_add_leaf(self):
@@ -331,8 +333,30 @@ class Leaf(Organ):
     def draw(self, screen):
         if self.can_add_leaf:
             screen.blit(assets.img("leaf_small.png"), pygame.mouse.get_pos())
+
+        rects = self.get_rect()
+        for rect in rects:
+            pygame.draw.rect(screen, (255,255,255),rect,2)
+
         for leaf in self.leaves:
             screen.blit(leaf["image"], (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))
+
+        if self.type == self.plant.target_organ.type:
+
+            outlines = self.get_outlines()
+            for i in range(0,len(self.leaves)):
+                s = pygame.Surface((64, 64),pygame.SRCALPHA)
+                pygame.draw.lines(s, (255,255,255),True,outlines[i],2)
+                screen.blit(s, (self.leaves[i]["x"]-self.leaves[i]["offset_x"], self.leaves[i]["y"]-self.leaves[i]["offset_y"]))
+
+    def get_outlines(self):
+        outlines = []
+        for leaf in self.leaves:
+            mask = pygame.mask.from_surface(leaf["image"])
+            #mask.fill()
+            outline = mask.outline()
+            outlines.append(outline)
+        return outlines
 
 
 class Root(Organ):
@@ -342,13 +366,30 @@ class Root(Organ):
     def update_image_size(self, factor=5, base=25):
         super().update_image_size(factor, base)
 
+    def get_outline(self):
+        outlines = pygame.mask.from_surface(self.image).outline()
+        return outlines
+
+    def draw(self, screen):
+        if not self.pivot:
+            self.pivot = (0,0)
+        if self.type == self.plant.target_organ.type:
+            outlines = self.get_outline()
+            s = pygame.Surface((self.image.get_width(),self.image.get_height()),pygame.SRCALPHA)
+            pygame.draw.lines(s,config.WHITE, True,outlines,2)
+            screen.blit(s,(self.x - self.pivot[0], self.y - self.pivot[1]))
+
+        if self.image and self.active:
+            screen.blit(self.image,(self.x - self.pivot[0], self.y - self.pivot[1]))
+
+
 class Stem(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, leaf, mass, active):
         self.leaf = leaf
         self.highlight = None
         self.thorns = []
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
-        self.curve = Beziere([(self.x, self.y), (self.x - 0, self.y - 90), (self.x + 30, self.y - 150)])
+        self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x, self.y - 150)])
 
 
         '''for i in range(1,9):
@@ -421,7 +462,11 @@ class Stem(Organ):
 
 
     def draw(self, screen):
-        self.curve.draw(screen)
+        if self.plant.target_organ.type == self.type:
+            self.curve.draw_highlighted(screen)
+        else:
+            self.curve.draw(screen)
+
         '''
         super().draw(screen)
         pygame.draw.rect(screen, (0,0,0), self.get_rect()[0], width=2)

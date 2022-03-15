@@ -106,8 +106,8 @@ class UI:
             system.draw(screen)
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
-        self.tool_tip_manager.draw(screen)
         self.draw_ui(screen)
+        self.tool_tip_manager.draw(screen)
 
     # this should focus on UI components
     def activate_biomass_objective(self):

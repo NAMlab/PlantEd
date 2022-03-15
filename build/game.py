@@ -125,10 +125,14 @@ class DefaultGameScene(object):
         self.plant = Plant((config.SCREEN_WIDTH - config.SCREEN_WIDTH/4, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model)
+        self.item_positions = []
+
         #shop items are to be defined by the level
-        shop_items = [Shop_Item(assets.img("watering_can_outlined_tilted.png",(64,64)),self.activate_add_leaf) for i in range(0,8)]
-        self.shop = Shop((660, 220), shop_items, self.model)
-        self.shop.add_shop_item("watering")
+        add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf)
+
+
+        self.shop = Shop(Rect(660, 220, 200, 400), [add_leaf_item], self.model, self.plant.upgrade_points)
+        self.shop.add_shop_item(["watering","blue_grain","blue_grain","blue_grain","blue_grain","blue_grain","blue_grain"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 
