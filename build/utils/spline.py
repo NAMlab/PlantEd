@@ -117,6 +117,26 @@ class Beziere:
         self.get_current_points_to_draw()
         #self.apply_forces(dt)
 
+    def find_closest(self, pos):
+        min_dist = 10000
+        t = 0
+        for i in range(1,len(self.points_to_draw)):
+            dist_x = pos[0] - self.points_to_draw[i][0]
+            dist_y = pos[1] - self.points_to_draw[i][1]
+            dist = math.sqrt(dist_x*dist_x+dist_y*dist_y)
+            if dist < min_dist:
+                min_dist = dist
+                t = i/len(self.points_to_draw)
+        return t
+
+    def get_rects(self, width=5):
+        rects = []
+        for point in self.points_to_draw:
+            rects.append(pygame.Rect(point[0]-width/2,point[1]-width/2,width,width))
+        return rects
+
+
+
     def apply_forces(self, dt):
         #initialise offsets, maybe stupid in case of growth --> growth should append offset
         #if len(self.offsets) < len(self.points_to_draw):
@@ -165,6 +185,16 @@ class Beziere:
             print(velocity_x, velocity_y)
             #print(i, a_x*dt, a_y*dt, velocity_x*dt, velocity_y*dt)
 
+    def get_point(self, t):
+        # self, t: float, list_of_points: List[Tuple[float, float]], degree: int) -> Tuple[float, float]:
+        if self.growth_percentage < 1.0:
+            old_point = self.bezier_curve_function(t, self.last_point_list, len(self.last_point_list)-1)
+            new_point = self.bezier_curve_function(t, self.list_of_points, self.degree)
+            x = (new_point[0] - old_point[0]) * self.growth_percentage + old_point[0]
+            y = (new_point[1] - old_point[1]) * self.growth_percentage + old_point[1]
+        else:
+            return self.bezier_curve_function(t, self.list_of_points, self.degree)
+        return (x,y)
 
     def get_current_points_to_draw(self):
         if self.growth_percentage < 1.0:

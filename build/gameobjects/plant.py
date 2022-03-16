@@ -283,8 +283,8 @@ class Leaf(Organ):
 
     def append_leaf(self, highlight):
         pos = (highlight[0], highlight[1])
-        dir = highlight[2]
-        if dir < 0:
+        dir = highlight[0] - pygame.mouse.get_pos()[0]
+        if dir > 0:
             image_id = random.randrange(0,len(leaves)-1,2)
             image = leaves[image_id]
             offset = pivot_pos[image_id]
@@ -294,6 +294,7 @@ class Leaf(Organ):
             offset = pivot_pos[image_id]
         leaf = {"x": pos[0],
                 "y": pos[1],
+                "t": highlight[2],
                 "image": image[0],
                 "offset_x": offset[0],
                 "offset_y": offset[1],
@@ -386,6 +387,7 @@ class Root(Organ):
 class Stem(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, leaf, mass, active):
         self.leaf = leaf
+        self.width = 15
         self.highlight = None
         self.thorns = []
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
@@ -399,6 +401,7 @@ class Stem(Organ):
 
     def update(self, dt):
         self.curve.update(dt)
+        self.update_leaf_positions()
 
     def add_thorn(self, pos, dir):
         if dir > 0:
@@ -413,9 +416,13 @@ class Stem(Organ):
         self.curve.handle_event(event)
         if event.type == pygame.MOUSEMOTION:
             if self.leaf.can_add_leaf:
-                print("can")
                 mouse_pos = pygame.mouse.get_pos()
-                if self.get_rect()[0].collidepoint(mouse_pos):
+                t = self.curve.find_closest(mouse_pos)
+                point = self.curve.get_point(t)
+                self.highlight = (point[0],point[1],t)
+
+
+                '''if self.get_rect()[0].collidepoint(mouse_pos):
                     print("collide")
                     global_x, global_y = pygame.mouse.get_pos()
                     global_pos = (global_x, global_y)
@@ -424,12 +431,12 @@ class Stem(Organ):
                         x = self.get_global_x(x)
                         if self.pivot:
                             x -= self.pivot[0]
-                        self.highlight = [x, global_y, dir]
+                        self.highlight = [x, global_y, dir]'''
             else:
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
-            for rect in self.get_rect():
-                if rect.collidepoint(event.pos):
+            for rect in self.curve.get_rects(self.width):
+                if rect.collidepoint(pygame.mouse.get_pos()):
                     if self.leaf.can_add_leaf:
                         if self.highlight:
                             self.leaf.append_leaf(self.highlight)
@@ -441,6 +448,10 @@ class Stem(Organ):
         if self.leaf:
             for leaf in self.leaf.leaves:
                 self.reassign_leaf_x(leaf)
+
+    def update_leaf_positions(self):
+        for leaf in self.leaf.leaves:
+            leaf["x"],leaf["y"] = self.curve.get_point(leaf["t"])
 
     def get_local_pos(self, pos):
         return (int(pos[0]-(self.x-self.pivot[0])),int(pos[1]-(self.y-self.pivot[1])))
@@ -466,6 +477,10 @@ class Stem(Organ):
             self.curve.draw_highlighted(screen)
         else:
             self.curve.draw(screen)
+        if self.highlight:
+            pygame.draw.line(screen, config.WHITE, (self.highlight[0],self.highlight[1]),(pygame.mouse.get_pos()))
+            pygame.draw.circle(screen, config.WHITE,(int(self.highlight[0]), int(self.highlight[1])), 10)
+
 
         '''
         super().draw(screen)
