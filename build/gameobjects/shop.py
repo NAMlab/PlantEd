@@ -4,6 +4,7 @@ import config
 from utils.animation import LabelAnimation
 from gameobjects.watering_can import Watering_can
 from gameobjects.blue_grain import Blue_grain
+from gameobjects.spraycan import Spraycan
 from data import assets
 '''
 shop holds items and interfaces actions to consumables
@@ -24,6 +25,7 @@ class Shop:
         self.animations = []
         self.watering_can = Watering_can((0,0), self.model)
         self.blue_grain = Blue_grain((0,0), self.model)
+        self.spraycan = Spraycan((0,0), self.model,3,2)
         self.buy_button = Button(self.rect[0]+self.rect[2]-self.margin*2-64,self.rect[1]+self.rect[3]-self.margin-64,64,64,[self.buy],config.FONT,"BUY")
         self.init_layout()
 
@@ -56,6 +58,8 @@ class Shop:
                 self.shop_items.append(Shop_Item(assets.img("watering_can_outlined_tilted.png", (64, 64)), self.watering_can.activate))
             elif keyword == "blue_grain":
                 self.shop_items.append(Shop_Item(assets.img("blue_grain_0.png", (64, 64)), self.blue_grain.activate))
+            elif keyword == "spraycan":
+                self.shop_items.append(Shop_Item(assets.img("spraycan_icon.png", (64, 64)), self.spraycan.activate))
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.init_layout()
@@ -76,6 +80,7 @@ class Shop:
         self.current_cost = 0
         self.watering_can.update(dt)
         self.blue_grain.update(dt)
+        self.spraycan.update(dt)
         self.buy_button.update(dt)
         for item in self.shop_items:
             if item.selected:
@@ -93,6 +98,7 @@ class Shop:
             item.handle_event(e)
         self.watering_can.handle_event(e)
         self.blue_grain.handle_event(e)
+        self.spraycan.handle_event(e)
         self.buy_button.handle_event(e)
 
     def draw(self, screen):
@@ -109,6 +115,7 @@ class Shop:
         screen.blit(s,(0,0))
         self.watering_can.draw(screen)
         self.blue_grain.draw(screen)
+        self.spraycan.draw(screen)
 
 
 class Shop_Item:

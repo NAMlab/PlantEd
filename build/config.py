@@ -31,6 +31,7 @@ FONT = pygame.font.SysFont('arial', 24)
 TITLE_FONT = pygame.font.SysFont('arialblack', 24)
 BIG_FONT = pygame.font.SysFont('arial', 28)
 YELLOW_TRANSPARENT = (255,255,255,128)
+PURPLE = (171, 36, 255)
 
 PLANTNAME = 'GenEric'
 

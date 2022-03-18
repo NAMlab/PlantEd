@@ -20,7 +20,23 @@ UI: set up all UI elements, update them, link them to functions
         Components may differ from level to level --> should be set by file
             Dict active groups for: Organs plus Sliders, Starch deposit, Organ Detail
 '''
+class FloatingElement:
+    def __init__(self, rect, image=None, animate=None, active=False):
+        self.rect = rect
+        self.image = image
+        self.animation = animation
+        self.animate = animate
 
+    def update(self, dt):
+        if self.animate:
+            self.animation.update(dt)
+
+    def draw(self, screen):
+        pygame.draw.rect(screen,config.WHITE,self.rect, width=2, border_radius=3)
+        if self.animate:
+            screen.blit(self.animation.image,(self.rect[0],self.rect[1]))
+        elif self.image:
+            screen.blit(self.image, (self.rect[0],self.rect[1]))
 
 class UI:
     def __init__(self, scale, plant, model):
@@ -31,6 +47,7 @@ class UI:
         self.sliders = []
         self.button_sprites = pygame.sprite.Group()
         self.particle_systems = []
+        self.floating_elements = []
 
         # init organs
         radioButtons = [
@@ -108,6 +125,10 @@ class UI:
         [slider.draw(screen) for slider in self.sliders]
         self.draw_ui(screen)
         self.tool_tip_manager.draw(screen)
+
+    def update_floating_pos(self):
+        for element in self.floating_elements:
+            pass
 
     # this should focus on UI components
     def activate_biomass_objective(self):

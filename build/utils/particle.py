@@ -67,12 +67,12 @@ class PointsParticle(Particle):
 class ParticleSystem:
     def __init__(self, max_particles, spawn_box=Rect(0, 0, 0, 0), boundary_box=None, color=(0, 0, 0),
                  direction=None, size=10, lifetime=None, apply_gravity=False, speed=None, size_over_lifetime=True,
-                 images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True):
+                 images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True, wide_spread=False):
         if speed is None:
             speed = [0.0, 0.0]
         self.apply_gravity = apply_gravity
         self.size_over_lifetime = size_over_lifetime
-        self.boundary_box = boundary_box if not None else Rect(0, 0, 0, 0)
+        self.boundary_box = boundary_box #if not None else Rect(0, 0, 0, 0)
         self.lifetime = lifetime
         self.spread = spread
         self.images = images
@@ -91,6 +91,7 @@ class ParticleSystem:
         self.despawn_animation = despawn_animation
         self.direction = direction
         self.particle_counter = 0
+        self.wide_spread = wide_spread
 
     def update(self, dt):
         if not self.active:
@@ -125,12 +126,14 @@ class ParticleSystem:
         if self.spread:
             if self.spread[0] > 0:
                 speed[0] = (speed[0] + ((random.randint(0, 20) - 10) / 10) * self.spread[0])
+                speed[0] = speed[0] * random.random() if self.wide_spread else speed[0]
             if self.spread[1] > 0:
                 speed[1] = (speed[1] + ((random.randint(0, 20) - 10) / 10) * self.spread[1])
 
+        lifetime = self.lifetime * random.random() if self.lifetime else self.lifetime
         self.particles.append(
             Particle(x, y, color=self.color, image=image, speed=speed, size=self.size, apply_gravity=self.apply_gravity,
-                     lifetime=self.lifetime))
+                     lifetime=lifetime))
         self.particle_counter += 1
 
     def check_boundaries(self, particle):

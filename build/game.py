@@ -132,7 +132,7 @@ class DefaultGameScene(object):
 
 
         self.shop = Shop(Rect(660, 220, 200, 400), [add_leaf_item], self.model, self.plant.upgrade_points)
-        self.shop.add_shop_item(["watering","blue_grain","blue_grain","blue_grain","blue_grain","blue_grain","blue_grain"])
+        self.shop.add_shop_item(["watering","blue_grain","spraycan","blue_grain","blue_grain","blue_grain","blue_grain"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 
@@ -170,6 +170,8 @@ class DefaultGameScene(object):
         self.ui.draw(screen)
         self.plant.draw(screen)
         self.environment.draw_foreground(screen)
+
+        screen.blit(assets.img("stomata_open.png"),(900,600))
 
 class TitleScene(object):
     def __init__(self):
