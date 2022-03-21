@@ -23,7 +23,8 @@ from utils.spline import Beziere
 from gameobjects.watering_can import Watering_can
 from gameobjects.blue_grain import Blue_grain
 from gameobjects.shop import Shop, Shop_Item
-from ui import UI
+from gameobjects.bug import Bug
+from ui import UI, FloatingElement
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -125,7 +126,10 @@ class DefaultGameScene(object):
         self.plant = Plant((config.SCREEN_WIDTH - config.SCREEN_WIDTH/4, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model)
-        self.item_positions = []
+
+        self.bug = Bug((200,900),pygame.Rect(100,800,200,200),Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)],480))
+
+        #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
         #shop items are to be defined by the level
         add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf)
@@ -157,6 +161,7 @@ class DefaultGameScene(object):
             self.plant.handle_event(e)
 
     def update(self, dt):
+        self.bug.update(dt)
         self.environment.update(dt)
         self.shop.update(dt)
         self.ui.update(dt)
@@ -168,10 +173,9 @@ class DefaultGameScene(object):
         self.environment.draw_background(tmp_screen)
         self.shop.draw(screen)
         self.ui.draw(screen)
+        self.bug.draw(screen)
         self.plant.draw(screen)
         self.environment.draw_foreground(screen)
-
-        screen.blit(assets.img("stomata_open.png"),(900,600))
 
 class TitleScene(object):
     def __init__(self):

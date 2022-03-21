@@ -4,10 +4,12 @@ from utils.gametime import GameTime
 from utils.button import RadioButton, ToggleButton, Button, Slider, SliderGroup, Textbox
 from utils.tool_tip import ToolTip, ToolTipManager
 from utils.particle import ParticleSystem, PointParticleSystem, StillParticles
+from utils.animation import Animation
 import config
 import math
 from pygame import rect, Rect
 from gameobjects.watering_can import Watering_can
+import random
 
 # constants in dynamic model, beter in config? dont think so
 from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
@@ -20,23 +22,55 @@ UI: set up all UI elements, update them, link them to functions
         Components may differ from level to level --> should be set by file
             Dict active groups for: Organs plus Sliders, Starch deposit, Organ Detail
 '''
+# there is a chance random int leads to no movement
 class FloatingElement:
-    def __init__(self, rect, image=None, animate=None, active=False):
-        self.rect = rect
+    # bounding rect defines the floating space
+    def __init__(self, pos, bounding_rect, image=None, animation=None, active=True):
+        self.pos = pos
+        self.bounding_rect = bounding_rect
         self.image = image
         self.animation = animation
-        self.animate = animate
+        self.dir = ((random.randint(0,2)-1), (random.randint(0,2)-1)) #random direction -1,1 -1,1
+        self.active = active
 
     def update(self, dt):
-        if self.animate:
+        if self.animation is not None:
             self.animation.update(dt)
+        if self.active:
+            self.move(dt)
+
+    def move(self, dt):
+        if not self.bounding_rect.collidepoint(self.pos[0],self.pos[1]):
+            self.dir = (-1*self.dir[0], -1*self.dir[1])
+        x = self.dir[0] * dt * 10
+        y = self.dir[1] * dt * 10
+        self.pos = (self.pos[0]+x, self.pos[1]+y)
 
     def draw(self, screen):
-        pygame.draw.rect(screen,config.WHITE,self.rect, width=2, border_radius=3)
-        if self.animate:
-            screen.blit(self.animation.image,(self.rect[0],self.rect[1]))
+        #pygame.draw.rect(screen,config.WHITE,self.bounding_rect, width=2, border_radius=3)
+        if self.animation:
+            screen.blit(self.animation.image,(self.pos[0],self.pos[1]))
         elif self.image:
-            screen.blit(self.image, (self.rect[0],self.rect[1]))
+            screen.blit(self.image, (self.pos[0],self.pos[1]))
+
+class InfoElement:
+    '''
+    InfoElement is hidden (I) until pressed, then it opens and shows an animation/image, text
+    '''
+    def __init__(self, rect, image, animation=None, headline=None, text=None, active=False):
+        self.info_icon = assets.img("drain_icon.png",(16,16))
+        self.rect = rect
+        self.image = image
+        self.animaiton = animation
+        self.headline = headline
+        self.text = text
+        self.active = active
+
+    def update(self, dt):
+        pass
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, config.WHITE,self.rect, border_radius=3, width=2)
 
 class UI:
     def __init__(self, scale, plant, model):
@@ -48,6 +82,13 @@ class UI:
         self.button_sprites = pygame.sprite.Group()
         self.particle_systems = []
         self.floating_elements = []
+        self.animations = []
+
+        #assets.img("stomata/stomata_open_{}.png".format(0))
+
+        self.animations.append(Animation([assets.img("stomata/stomata_open_{}.png".format(i)) for i in range(0, 9)],720,(250,500)))
+        self.animations.append(Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)], 720, (250, 500)))
+        #self.animations.append(Animation([assets.img("stomata/stomata_open_test.png")],720,(250,500)))
 
         # init organs
         radioButtons = [
@@ -117,6 +158,10 @@ class UI:
         for system in self.particle_systems:
             system.update(dt*math.sqrt(self.gametime.GAMESPEED))
         self.tool_tip_manager.update()
+        for element in self.floating_elements:
+            element.update(dt)
+        for animation in self.animations:
+            animation.update()
 
     def draw(self, screen):
         for system in self.particle_systems:
@@ -124,11 +169,13 @@ class UI:
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
         self.draw_ui(screen)
+        for element in self.floating_elements:
+            element.draw(screen)
+        for animation in self.animations:
+            screen.blit(animation.image,animation.pos)
         self.tool_tip_manager.draw(screen)
 
-    def update_floating_pos(self):
-        for element in self.floating_elements:
-            pass
+
 
     # this should focus on UI components
     def activate_biomass_objective(self):
@@ -259,6 +306,7 @@ class UI:
 
         pygame.draw.rect(s, config.WHITE_TRANSPARENT, (245, 490, 395, 130), border_radius=3)
 
+        '''
         # growth_rate in seconds
         growth_rate = config.FONT.render("Growth Rate", True, (0, 0, 0))  # hourly
         s.blit(growth_rate, dest=(245, 500))  # Todo change x, y
@@ -285,6 +333,7 @@ class UI:
         s.blit(nitrate_intake_text, dest=(245, 575))
         nitrate_intake = config.FONT.render("{:.10f} /h".format(self.model.nitrate_intake), True, (0, 0, 0))
         s.blit(nitrate_intake, dest=(635 - nitrate_intake.get_width(), 575))
+        '''
 
         # level
         pygame.draw.circle(s, config.WHITE_TRANSPARENT, (100, 510,), 20)
