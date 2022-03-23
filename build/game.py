@@ -95,7 +95,6 @@ class DevScene(object):
             relative_time = self.wind_time_elapsed/self.wind_duration
             self.wind_force = ((-((2*(relative_time)-1)*(2*(relative_time)-1)))+1) * self.max_wind_force
             self.wind_time_elapsed += 1
-            print(self.wind_duration, self.wind_time_elapsed, self.wind_force)
         else:
             self.wind_force = 0
             self.wind_duration = 0
@@ -126,9 +125,10 @@ class DefaultGameScene(object):
         self.plant = Plant((config.SCREEN_WIDTH - config.SCREEN_WIDTH/4, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model)
-
-        self.bug = Bug((200,900),pygame.Rect(100,800,200,200),Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)],480))
-
+        self.entities = []
+        for i in range(0,100):
+            bug = Bug((200,900),pygame.Rect(100,800,200,200),Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)],480))
+            self.entities.append(bug)
         #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
         #shop items are to be defined by the level
@@ -161,7 +161,8 @@ class DefaultGameScene(object):
             self.plant.handle_event(e)
 
     def update(self, dt):
-        self.bug.update(dt)
+        for entity in self.entities:
+            entity.update(dt)
         self.environment.update(dt)
         self.shop.update(dt)
         self.ui.update(dt)
@@ -173,7 +174,8 @@ class DefaultGameScene(object):
         self.environment.draw_background(tmp_screen)
         self.shop.draw(screen)
         self.ui.draw(screen)
-        self.bug.draw(screen)
+        for entity in self.entities:
+            entity.draw(screen)
         self.plant.draw(screen)
         self.environment.draw_foreground(screen)
 
