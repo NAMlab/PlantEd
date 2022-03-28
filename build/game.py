@@ -127,7 +127,7 @@ class DefaultGameScene(object):
         self.ui = UI(1, self.plant, self.model)
         self.entities = []
         for i in range(0,10):
-            bug = Bug((200,900),pygame.Rect(0,860,config.SCREEN_WIDTH,250),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)])
+            bug = Bug((200,900),pygame.Rect(0,870,config.SCREEN_WIDTH,250),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)])
             self.entities.append(bug)
         #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
@@ -159,6 +159,8 @@ class DefaultGameScene(object):
             self.shop.handle_event(e)
             self.ui.handle_event(e)
             self.plant.handle_event(e)
+            for entity in self.entities:
+                entity.handle_event(e)
 
     def update(self, dt):
         for entity in self.entities:

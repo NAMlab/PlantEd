@@ -23,14 +23,29 @@ class Bug:
         self.pause_timer -= 1
         if self.pause_timer <= 0:
             if random.random() > 0.99:
+                self.speed = 1
                 self.pause_timer = 360
             self.move(dt)
             if self.animation:
                 self.animation.update()
 
+    def handle_event(self, e):
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
+                if self.get_rect().collidepoint(pygame.mouse.get_pos()):
+                    self.set_random_direction()
+                    self.pause_timer = 0
+                    self.speed = 5
+                    print("bug_click_sound/bug_squeek_{}".format(random.randint(0, 2)))
+                    assets.sfx("bug_click_sound/bug_squeek_{}.mp3".format(random.randint(0,2))).play()
+
+
     def set_random_direction(self):
         self.dir = (random.random() - 0.5, random.random() - 0.5)
         self.rotate_images()
+
+    def get_rect(self):
+        return pygame.Rect(self.pos[0]-self.rect[2]/2,self.pos[1]-self.rect[3]/2,self.rect[2],self.rect[3])
 
     def rotate_images(self):
         rad = self.angle_between((0,1), (self.dir[0],self.dir[1]))
@@ -59,6 +74,7 @@ class Bug:
         self.rotate_images()
 
     def draw(self, screen):
+        #pygame.draw.rect(screen,config.WHITE,self.get_rect(),2)
         if self.animation:
             screen.blit(self.animation.image, (int(self.pos[0]-self.rect[2]/2),int(self.pos[1]-self.rect[3]/2)))
         elif self.image:
