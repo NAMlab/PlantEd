@@ -87,7 +87,7 @@ class UI:
         #assets.img("stomata/stomata_open_{}.png".format(0))
 
         self.animations.append(Animation([assets.img("stomata/stomata_open_{}.png".format(i)) for i in range(0, 9)],720,(250,500)))
-        self.animations.append(Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)], 720, (250, 500)))
+        #self.animations.append(Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)], 720, (250, 500)))
         #self.animations.append(Animation([assets.img("stomata/stomata_open_test.png")],720,(250,500)))
 
         # init organs

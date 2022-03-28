@@ -4,6 +4,7 @@ import pygame
 from data import assets
 from utils.spline import Beziere
 import config
+import math
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -307,7 +308,7 @@ class Leaf(Organ):
         self.can_add_leaf = False
 
     def get_rect(self):
-        return [leaf["image"].get_rect(topleft=(leaf["x"], leaf["y"])) for leaf in self.leaves]
+        return [leaf["image"].get_rect(topleft=(leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"])) for leaf in self.leaves]
 
     # depending on the mean height of all leaves, 0 .. 1000, -> TODO: mass to PLA better
     def get_mean_leaf_height(self):
@@ -335,19 +336,16 @@ class Leaf(Organ):
         if self.can_add_leaf:
             screen.blit(assets.img("leaf_small.png"), pygame.mouse.get_pos())
 
-        rects = self.get_rect()
-        for rect in rects:
-            pygame.draw.rect(screen, (255,255,255),rect,2)
-
         for leaf in self.leaves:
             screen.blit(leaf["image"], (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))
 
         if self.type == self.plant.target_organ.type:
-
+            rects = self.get_rect()
             outlines = self.get_outlines()
             for i in range(0,len(self.leaves)):
                 s = pygame.Surface((64, 64),pygame.SRCALPHA)
                 pygame.draw.lines(s, (255,255,255),True,outlines[i],2)
+                #pygame.draw.rect(screen, (255, 255, 255), (rects[i][0],rects[i][1],rects[i][2],rects[i][3]), 2)
                 screen.blit(s, (self.leaves[i]["x"]-self.leaves[i]["offset_x"], self.leaves[i]["y"]-self.leaves[i]["offset_y"]))
 
     def get_outlines(self):
@@ -393,12 +391,6 @@ class Stem(Organ):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
         self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x, self.y - 150)])
 
-
-        '''for i in range(1,9):
-            y = int(i * self.image.get_height() / 10)
-            x, dir = self.get_image_mask_x((int(y),random.randint(0,self.image.get_width())), self.image)
-            self.add_thorn((x+self.x-self.pivot[0],y+self.y-self.pivot[1]), dir)'''
-
     def update(self, dt):
         self.curve.update(dt)
         self.update_leaf_positions()
@@ -410,7 +402,6 @@ class Stem(Organ):
             image = thorn_l
         self.thorns.append({"position": pos,
                             "image" : image})
-
 
     def handle_event(self, event):
         self.curve.handle_event(event)
@@ -435,11 +426,11 @@ class Stem(Organ):
             else:
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
-            for rect in self.curve.get_rects(self.width):
+            width = self.width+25 if self.leaf.can_add_leaf else self.width + 5
+            for rect in self.curve.get_rects(width):
                 if rect.collidepoint(pygame.mouse.get_pos()):
-                    if self.leaf.can_add_leaf:
-                        if self.highlight:
-                            self.leaf.append_leaf(self.highlight)
+                    if self.highlight:
+                        self.leaf.append_leaf(self.highlight)
                         return
                     self.callback(self.type)
 
@@ -478,8 +469,11 @@ class Stem(Organ):
         else:
             self.curve.draw(screen)
         if self.highlight:
-            pygame.draw.line(screen, config.WHITE, (self.highlight[0],self.highlight[1]),(pygame.mouse.get_pos()))
-            pygame.draw.circle(screen, config.WHITE,(int(self.highlight[0]), int(self.highlight[1])), 10)
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            dist_to_stem = math.sqrt((mouse_x - self.highlight[0])**2 + (mouse_y - self.highlight[1])**2)
+            color = config.GRAY if dist_to_stem > 20 else config.WHITE
+            pygame.draw.line(screen, color, (self.highlight[0],self.highlight[1]),(mouse_x,mouse_y))
+            pygame.draw.circle(screen, color, (int(self.highlight[0]), int(self.highlight[1])), 10)
 
 
         '''

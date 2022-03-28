@@ -126,8 +126,8 @@ class DefaultGameScene(object):
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model)
         self.entities = []
-        for i in range(0,100):
-            bug = Bug((200,900),pygame.Rect(100,800,200,200),Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)],480))
+        for i in range(0,10):
+            bug = Bug((200,900),pygame.Rect(0,860,config.SCREEN_WIDTH,250),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)])
             self.entities.append(bug)
         #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 

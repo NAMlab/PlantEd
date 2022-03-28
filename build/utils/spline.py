@@ -136,7 +136,6 @@ class Beziere:
         return rects
 
 
-
     def apply_forces(self, dt):
         #initialise offsets, maybe stupid in case of growth --> growth should append offset
         #if len(self.offsets) < len(self.points_to_draw):
