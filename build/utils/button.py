@@ -320,7 +320,7 @@ class Slider():
     def draw(self, screen):
         if not self.visible:
             return
-        slider_color = self.slider_color if self.active else (0,0,0,128)
+        slider_color = self.slider_color if self.active else (150,150,150,128)
         w = self.w if self.w >= self.slider_w else self.slider_w
         border = pygame.Surface((w, self.h), pygame.SRCALPHA)
         # line

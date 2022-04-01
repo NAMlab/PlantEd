@@ -25,6 +25,7 @@ from gameobjects.blue_grain import Blue_grain
 from gameobjects.shop import Shop, Shop_Item
 from gameobjects.bug import Bug
 from ui import UI, FloatingElement
+from camera import Camera
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -33,7 +34,10 @@ pygame.init()
 ctypes.windll.user32.SetProcessDPIAware()
 true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
+#screen = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+#screen_high = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.DOUBLEBUF)
 tmp_screen = pygame.display.set_mode(true_res, pygame.SRCALPHA)
+#screen_high = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.SRCALPHA)
 GROWTH = 24
 RECALC = 25
 WIN = pygame.USEREVENT+1
@@ -68,66 +72,50 @@ def shake():
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
-        self.plant = Beziere([(1000,980),(950,900),(1030,830)])
-        self.max_wind_force = 0
-        self.wind_force = 0
-        self.wind_duration = 0
-        self.watering_can = Watering_can((0, 0))
-        self.blue_grain = Blue_grain((0,0))
-        self.wind_time_elapsed = 0 # @60fps
+        self.camera_pos_y = -100
 
     def render(self, screen):
-        tmp_screen.fill((50, 50, 50))
-        self.plant.draw(tmp_screen)
-        self.blue_grain.draw(screen)
-        self.watering_can.draw(screen)
-        screen.blit(tmp_screen, (0,0))
-
-    def blow_wind(self, max_wind_force=5, duration=None):
-        self.max_wind_force = max_wind_force
-        self.wind_duration = duration if duration else 120
-        self.wind_time_elapsed = 1
+        screen.fill((50,50,50))
+        temp_surface = pygame.Surface((1920,2160),pygame.SRCALPHA)
+        temp_surface.fill((50, 50, 50))
+        pygame.draw.rect(temp_surface,(255,255,255),pygame.Rect(500,0,500,500),5)
+        screen.blit(temp_surface,(0,self.camera_pos_y))
 
     def update(self, dt):
-        if self.wind_duration - self.wind_time_elapsed >=0 and self.wind_time_elapsed > 0:
-            # reversed parable to simulate a gust
-            #(-(2x-1)*(2x-1)) + 1
-            relative_time = self.wind_time_elapsed/self.wind_duration
-            self.wind_force = ((-((2*(relative_time)-1)*(2*(relative_time)-1)))+1) * self.max_wind_force
-            self.wind_time_elapsed += 1
-        else:
-            self.wind_force = 0
-            self.wind_duration = 0
-            self.wind_time_elapsed = 0
-        self.plant.update(dt)
-        self.watering_can.update(dt)
-        self.blue_grain.update(dt)
-        #self.plant.set_force(self.wind_force)
+        pass
 
     def handle_events(self, events):
         for e in events:
-            self.watering_can.handle_event(e)
-            self.blue_grain.handle_event(e)
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
-            if e.type == KEYDOWN and e.key == K_e:
-                #self.watering_can.activate(pygame.mouse.get_pos())
-                self.blue_grain.activate(pygame.mouse.get_pos())
-        self.plant.handle_events(events)
+            if e.type == KEYDOWN and e.key == K_w:
+                self.camera_pos_y -= 100
+            if e.type == KEYDOWN and e.key == K_s:
+                self.camera_pos_y += 100
 
+class Camera:
+    def __init__(self, offset_y):
+        self.offset_y = offset_y
+
+    def handle_event(self, e):
+        if e.type == KEYDOWN and e.key == K_w:
+            self.offset_y -= 100
+        if e.type == KEYDOWN and e.key == K_s:
+            self.offset_y += 100
 
 class DefaultGameScene(object):
     def __init__(self):
+        self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
         self.log = Log()                        # can be turned off
         self.model = DynamicModel(self.gametime, self.log)
-        self.plant = Plant((config.SCREEN_WIDTH - config.SCREEN_WIDTH/4, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model)
+        self.plant = Plant((config.SCREEN_WIDTH - config.SCREEN_WIDTH/4, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model)
         self.entities = []
         for i in range(0,10):
-            bug = Bug((200,900),pygame.Rect(0,870,config.SCREEN_WIDTH,250),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)])
+            bug = Bug((200,900),pygame.Rect(0,870,config.SCREEN_WIDTH,250),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)],self.camera)
             self.entities.append(bug)
         #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
@@ -135,8 +123,8 @@ class DefaultGameScene(object):
         add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf)
 
 
-        self.shop = Shop(Rect(660, 220, 200, 400), [add_leaf_item], self.model, self.plant.upgrade_points)
-        self.shop.add_shop_item(["watering","blue_grain","spraycan","blue_grain","blue_grain","blue_grain","blue_grain"])
+        self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant.upgrade_points)
+        self.shop.add_shop_item(["watering","blue_grain","spraycan"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 
@@ -161,6 +149,7 @@ class DefaultGameScene(object):
             self.plant.handle_event(e)
             for entity in self.entities:
                 entity.handle_event(e)
+            self.camera.handle_event(e)
 
     def update(self, dt):
         for entity in self.entities:
@@ -173,13 +162,27 @@ class DefaultGameScene(object):
 
 
     def render(self, screen):
-        self.environment.draw_background(tmp_screen)
+        screen.fill((0,0,0))
+        temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
+
+        self.environment.draw_background(temp_surface)
+        self.shop.draw(temp_surface)
+        self.ui.draw(temp_surface)
+        for entity in self.entities:
+            entity.draw(temp_surface)
+        self.plant.draw(temp_surface)
+        self.environment.draw_foreground(temp_surface)
+
+        screen.blit(temp_surface,(0,self.camera.offset_y))
+
+
+        '''self.environment.draw_background(tmp_screen)
         self.shop.draw(screen)
         self.ui.draw(screen)
         for entity in self.entities:
             entity.draw(screen)
         self.plant.draw(screen)
-        self.environment.draw_foreground(screen)
+        self.environment.draw_foreground(screen)'''
 
 class TitleScene(object):
     def __init__(self):
@@ -320,6 +323,11 @@ class SceneMananger(object):
     def go_to(self, scene):
         self.scene = scene
         self.scene.manager = self
+
+    def render(self, screen):
+        self.scene.render(screen)
+        #screen.blit(screen_high,(0,-100))
+        #self.camera.render(screen_high, screen)
 
 # parent gamescene to hide variables, objects
 # gameobjects, particles, weather->gameobject?, UI Elements (button, slider, image, numbers, text)
@@ -861,7 +869,9 @@ def main():
     timer = pygame.time.Clock()
     running = True
 
+    #camera = Camera()
     manager = SceneMananger()
+
 
     while running:
         dt = timer.tick(60)/1000.0
@@ -879,6 +889,7 @@ def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
+        #camera.render(screen)
         #screen.blit(fps_text, (800, 30))
         pygame.display.update()
 

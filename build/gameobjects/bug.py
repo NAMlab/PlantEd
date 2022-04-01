@@ -6,11 +6,12 @@ import pygame
 import numpy as np
 import config
 
-class Bug:
-    def __init__(self, pos, bounding_rect, images, image=None, speed=1):
+class Bug():
+    def __init__(self, pos, bounding_rect, images, camera, image=None, speed=1):
         self.pos = pos
         self.bounding_rect = bounding_rect
         self.images = images
+        self.camera = camera
         self.image = image if image else self.images[0]
         self.animation = Animation(self.images, 720)
         self.speed = speed
@@ -31,13 +32,13 @@ class Bug:
 
     def handle_event(self, e):
         if e.type == pygame.MOUSEBUTTONDOWN:
-            if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
-                if self.get_rect().collidepoint(pygame.mouse.get_pos()):
-                    self.set_random_direction()
-                    self.pause_timer = 0
-                    self.speed = 5
-                    print("bug_click_sound/bug_squeek_{}".format(random.randint(0, 2)))
-                    assets.sfx("bug_click_sound/bug_squeek_{}.mp3".format(random.randint(0,2))).play()
+            print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
+            #if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
+            if self.get_rect().collidepoint(pygame.mouse.get_pos()):
+                self.set_random_direction()
+                self.pause_timer = 0
+                self.speed = 5
+                assets.sfx("bug_click_sound/bug_squeek_{}.mp3".format(random.randint(0,2))).play()
 
 
     def set_random_direction(self):
@@ -45,7 +46,7 @@ class Bug:
         self.rotate_images()
 
     def get_rect(self):
-        return pygame.Rect(self.pos[0]-self.rect[2]/2,self.pos[1]-self.rect[3]/2,self.rect[2],self.rect[3])
+        return pygame.Rect(self.pos[0]-self.rect[2]/2,self.pos[1]-self.rect[3]/2+self.camera.offset_y,self.rect[2],self.rect[3])
 
     def rotate_images(self):
         rad = self.angle_between((0,1), (self.dir[0],self.dir[1]))

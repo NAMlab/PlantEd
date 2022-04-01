@@ -35,7 +35,7 @@ class Environment:
         self.w = SCREEN_WIDTH
         self.model = model
         self.gametime = gametime
-        self.background = assets.img("background_empty_sky.png").convert_alpha()
+        self.background = assets.img("below_ground.png").convert_alpha()
         self.background_moist = pygame.transform.scale(assets.img("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.sun_pos_noon = (1300,0)

@@ -31,11 +31,12 @@ class Plant:
     ROOTS = 3
     STARCH = 4
 
-    def __init__(self, pos, model):
+    def __init__(self, pos, model, camera):
         self.x = pos[0]
         self.y = pos[1]
         self.upgrade_points = 10
         self.model = model
+        self.camera = camera
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=1, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=1, leaf = organ_leaf, active=False)
@@ -183,7 +184,7 @@ class Organ:
         if self.image:
             x = self.x - self.pivot[0] if self.pivot else self.x
             y = self.y - self.pivot[1] if self.pivot else self.y
-            rect = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
+            rect = pygame.Rect(x, y+self.plant.camera.offset_y, self.image.get_width(), self.image.get_height())
         else:
             rect = pygame.Rect(0,0,0,0)
         return [rect]
@@ -308,7 +309,7 @@ class Leaf(Organ):
         self.can_add_leaf = False
 
     def get_rect(self):
-        return [leaf["image"].get_rect(topleft=(leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"])) for leaf in self.leaves]
+        return [leaf["image"].get_rect(topleft=(leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]+self.plant.camera.offset_y)) for leaf in self.leaves]
 
     # depending on the mean height of all leaves, 0 .. 1000, -> TODO: mass to PLA better
     def get_mean_leaf_height(self):
@@ -427,7 +428,7 @@ class Stem(Organ):
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
             width = self.width+25 if self.leaf.can_add_leaf else self.width + 5
-            for rect in self.curve.get_rects(width):
+            for rect in self.curve.get_rects(width, self.plant.camera.offset_y):
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     if self.highlight:
                         self.leaf.append_leaf(self.highlight)
@@ -494,7 +495,7 @@ class Stem(Organ):
         if self.image:
             x = (self.x - self.pivot[0] if self.pivot else self.x) -15
             y = self.y - self.pivot[1] if self.pivot else self.y
-            rect = pygame.Rect(x, y, self.image.get_width()+30, self.image.get_height())
+            rect = pygame.Rect(x, y+self.plant.camera.offset_y, self.image.get_width()+30, self.image.get_height())
         else:
             rect = pygame.Rect(0,0,0,0)
         return [rect]

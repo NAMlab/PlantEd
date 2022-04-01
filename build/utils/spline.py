@@ -129,10 +129,10 @@ class Beziere:
                 t = i/len(self.points_to_draw)
         return t
 
-    def get_rects(self, width=5):
+    def get_rects(self, width=5, offset_y=0):
         rects = []
         for point in self.points_to_draw:
-            rects.append(pygame.Rect(point[0]-width/2,point[1]-width/2,width,width))
+            rects.append(pygame.Rect(point[0]-width/2,point[1]-width/2+offset_y,width,width))
         return rects
 
 

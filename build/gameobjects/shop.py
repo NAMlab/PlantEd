@@ -45,7 +45,7 @@ class Shop:
                 y = i+1 * self.margin + img_width * i + self.margin * i
                 # looks dirty, maybe zip?
                 if len(self.shop_items) > i*columns+j:
-                    self.shop_items[i*columns+j].rect = pygame.Rect(x+self.rect[0],y+self.rect[1], img_width, img_width)
+                    self.shop_items[i*columns+j].rect = pygame.Rect(x+self.rect[0],y+self.rect[1]+50, img_width, img_width)
 
     def add_shop_item(self, shop_item):
         self.shop_items.append(shop_item)
@@ -103,9 +103,12 @@ class Shop:
 
     def draw(self, screen):
         # s should only be as big as rect, for the moment its fine
-        s = pygame.Surface((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT), pygame.SRCALPHA)
-        pygame.draw.rect(s, config.WHITE_TRANSPARENT, self.rect, border_radius=3)
+        s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (self.rect[0],self.rect[1]+45,self.rect[2],self.rect[3]-45), border_radius=3)
         #pygame.draw.rect(s, (255,255,255), self.rect, int(self.margin/2))
+        pygame.draw.rect(s,config.WHITE,(self.rect[0],self.rect[1],self.rect[2],40),border_radius=3)
+        shop_label = config.BIG_FONT.render("Shop",True,(0,0,0))
+        s.blit(shop_label,dest=(self.rect[0]+self.rect[2]/2-shop_label.get_width()/2,self.rect[1]+5))
         for item in self.shop_items:
             item.draw(s)
         self.buy_button.draw(s)
