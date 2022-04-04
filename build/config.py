@@ -28,6 +28,7 @@ SKY_BLUE = (169, 247, 252)
 GAMESPEED = 4
 GROWTH_TICK_RATE = 1000  # in ms
 
+SMALL_FONT = pygame.font.SysFont('arial', 16)
 FONT = pygame.font.SysFont('arial', 24)
 TITLE_FONT = pygame.font.SysFont('arialblack', 24)
 BIG_FONT = pygame.font.SysFont('arial', 28)

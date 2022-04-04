@@ -110,7 +110,7 @@ class DefaultGameScene(object):
         self.gametime = GameTime.instance()
         self.log = Log()                        # can be turned off
         self.model = DynamicModel(self.gametime, self.log)
-        self.plant = Plant((config.SCREEN_WIDTH - config.SCREEN_WIDTH/4, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
+        self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model)
         self.entities = []

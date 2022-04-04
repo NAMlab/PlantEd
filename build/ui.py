@@ -73,7 +73,7 @@ class InfoElement:
         pygame.draw.rect(screen, config.WHITE,self.rect, border_radius=3, width=2)
 
 class UI:
-    def __init__(self, scale, plant, model, production_topleft=(10,100), plant_details_topleft=(10,10)):
+    def __init__(self, scale, plant, model, production_topleft=(10,100), plant_details_topleft=(10,10),organ_details_topleft=(10,430)):
         self.name = "Plant"
         self.plant = plant
         self.model = model
@@ -82,6 +82,7 @@ class UI:
         # layout positions
         self.production_topleft = production_topleft
         self.plant_details_topleft = plant_details_topleft
+        self.organ_details_topleft = organ_details_topleft
 
 
         self.sliders = []
@@ -107,7 +108,6 @@ class UI:
             self.button_sprites.add(rb)
         speed_options[1].button_down = True
 
-        topleft = self.plant_details_topleft
         self.textbox = Textbox(config.SCREEN_WIDTH/2-90, 50, 180, 30, config.FONT, self.name)
 
         #assets.img("stomata/stomata_open_{}.png".format(0))
@@ -116,6 +116,7 @@ class UI:
         #self.animations.append(Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)], 720, (250, 500)))
         #self.animations.append(Animation([assets.img("stomata/stomata_open_test.png")],720,(250,500)))
         self.init_production_ui()
+        self.init_organ_ui()
 
     def handle_event(self, e):
         for button in self.button_sprites:
@@ -128,6 +129,10 @@ class UI:
         self.textbox.handle_event(e)
 
     def update(self, dt):
+        if self.plant.target_organ.type == self.plant.STARCH:
+            self.starch_consumption_slider.visible = True
+        else:
+            self.starch_consumption_slider.visible = False
         for slider in self.sliders:
             slider.update()
         for system in self.particle_systems:
@@ -155,7 +160,7 @@ class UI:
     # this should focus on UI components
     def activate_biomass_objective(self):
         if self.model.objective == STARCH_OUT:
-            # to much code
+            '''# to much code
             photosysnthesis_lines = self.photosynthesis_particle.points
             photosysnthesis_lines[3] = [330, 100]
             self.photosynthesis_particle.change_points(photosysnthesis_lines)
@@ -166,14 +171,14 @@ class UI:
             self.starch_particle.change_points(starch_lines)
             self.starch_particle.particle_counter = 0
             self.starch_particle.particles.clear()
-            # is this the right place?
+            # is this the right place?'''
             self.model.set_objective(BIOMASS)
 
 
     def activate_starch_objective(self):
         # change particle system to follow new lines
         if self.model.objective == BIOMASS:
-            photosysnthesis_lines = self.photosynthesis_particle.points
+            '''photosysnthesis_lines = self.photosynthesis_particle.points
             photosysnthesis_lines[3] = [430, 100]
             self.photosynthesis_particle.change_points(photosysnthesis_lines)
             self.photosynthesis_particle.particle_counter = 0
@@ -182,16 +187,16 @@ class UI:
             starch_lines[3] = [430, 100]
             self.starch_particle.change_points(starch_lines)
             self.starch_particle.particle_counter = 0
-            self.starch_particle.particles.clear()
+            self.starch_particle.particles.clear()'''
             self.model.set_objective(STARCH_OUT)
 
     def toggle_starch_as_resource(self):
-        self.starch_particle.particles.clear()
+        #self.starch_particle.particles.clear()
         if self.model.use_starch:
-            self.starch_particle.active = False
+            #self.starch_particle.active = False
             self.model.deactivate_starch_resource()
         else:
-            self.starch_particle.active = True
+            #self.starch_particle.active = True
             self.model.activate_starch_resource()
 
     def draw_ui(self, screen):
@@ -199,8 +204,8 @@ class UI:
         s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
         self.draw_plant_details(s)
         self.draw_production(s)
-        #self.draw_organ_details(s)
-        self.draw_starch_details(s)
+        self.draw_organ_details(s)
+        #self.draw_starch_details(s)
         # name plant, make textbox
         self.textbox.draw(s)
         screen.blit(s, (0, 0))
@@ -250,42 +255,61 @@ class UI:
 
 
     def draw_organ_details(self, s):
-        # headbox
-        pygame.draw.rect(s, (255, 255, 255, 180), Rect(60, 450, 580, 30), border_radius=3)
-        leave_title = config.FONT.render("Organ:{}".format(self.plant.target_organ.type), True, (0, 0, 0))  # title
-        s.blit(leave_title, dest=(290 - leave_title.get_size()[0] / 2, 450))
+        topleft = self.organ_details_topleft
 
         # organ details
         if self.plant.target_organ.type == self.plant.LEAF:
             image = assets.img("leaf_small.png", (128, 128))
+            topleft = (topleft[0],topleft[1])
             # self.button_sprites.add(self.button)
         elif self.plant.target_organ.type == self.plant.STEM:
             image = assets.img("stem_small.png", (128, 128))
+            topleft = (topleft[0]+80, topleft[1])
         elif self.plant.target_organ.type == self.plant.ROOTS:
             image = assets.img("roots_small.png", (128, 128))
+            topleft = (topleft[0]+160, topleft[1])
         elif self.plant.target_organ.type == self.plant.STARCH:
             image = assets.img("starch.png", (128, 128))
+            topleft = (topleft[0]+240, topleft[1])
+            self.starch_consumption_slider.x = topleft[0]+138
+            self.starch_consumption_slider.y = topleft[1]
+
         # draw plant image + exp + lvl + rate + mass
-        s.blit(image, (100, 490))
+
+        # headbox
+        width = 128
+        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], width, 30), border_radius=3)
+        leave_title = config.FONT.render("Organ:{}".format(not self.plant.target_organ.type), True, (0, 0, 0))  # title
+        s.blit(leave_title, dest=(topleft[0]+width / 2 - leave_title.get_width() / 2, topleft[1]))
+
+        s.blit(image, (topleft[0], topleft[1]+40))
 
         exp_width = 128
-        pygame.draw.rect(s, config.WHITE_TRANSPARENT, Rect(100, 600, exp_width, 25), border_radius=0)
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1]+158, exp_width, 25), border_radius=0)
         needed_exp = self.plant.target_organ.get_threshold()
         exp = self.plant.target_organ.mass / needed_exp
         width = min(int(exp_width / 1 * exp), exp_width)
-        pygame.draw.rect(s, (255, 255, 255), Rect(100, 600, width, 25), border_radius=0)  # exp
+        pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1]+158, width, 25), border_radius=0)  # exp
         text_organ_mass = config.FONT.render("{:.2f} / {threshold}".format(self.plant.target_organ.mass,
-                                                                           threshold=self.plant.target_organ.get_threshold()),
-                                             True, (0, 0, 0))
-        s.blit(text_organ_mass, dest=(105, 596))  # Todo change x, y
-
-        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (245, 490, 395, 130), border_radius=3)
+                                                threshold=self.plant.target_organ.get_threshold()),
+                                                True, (0, 0, 0))
+        s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+158))  # Todo change x, y
 
         # level
-        pygame.draw.circle(s, config.WHITE_TRANSPARENT, (100, 510,), 20)
-        pygame.draw.circle(s, config.WHITE, (100, 510,), 20, width=3)
+        pygame.draw.circle(s, config.WHITE_TRANSPARENT, (topleft[0]+20,topleft[1]+60), 20)
+        pygame.draw.circle(s, config.WHITE, (topleft[0]+20,topleft[1]+60), 20, width=3)
         level = config.FONT.render("{:.0f}".format(self.plant.target_organ.level), True, (0, 0, 0))
-        s.blit(level, (100 - level.get_width() / 2, 510 - level.get_height() / 2))
+        s.blit(level, (topleft[0]+20 - level.get_width() / 2, topleft[1]+60 - level.get_height() / 2))
+
+    def init_organ_ui(self):
+        topleft = self.organ_details_topleft
+        # below so it does not get in group
+        self.starch_consumption_slider = Slider((0, 0, 15, 182), config.FONT, (50, 20),
+                                                organ=self.plant.organ_starch, plant=self.plant, percent=30,
+                                                visible=False)
+        self.sliders.append(self.starch_consumption_slider)
+        self.starch_consumption_slider.x = topleft[0] + 138
+        self.starch_consumption_slider.y = topleft[1]
 
     def init_production_ui(self):
         topleft = self.production_topleft
@@ -312,9 +336,9 @@ class UI:
         #self.button_sprites.add(
         #    ToggleButton(topleft[0] + 100, topleft[1] + 385, 210, 40, [], config.FONT, "Photosysnthesis", pressed=True,
         #                 fixed=True))
-        toggle_starch_button = ToggleButton(topleft[0] + 460, topleft[1] + 200, 64, 64,
-                                            [self.toggle_starch_as_resource], config.FONT,
-                                            "Drain")
+        toggle_starch_button = ToggleButton(topleft[0] + 304, topleft[1] + 40, 16, 64,
+                                            [self.toggle_starch_as_resource], config.SMALL_FONT,
+                                            "Drain", vertical=True)
         self.plant.organ_starch.toggle_button = toggle_starch_button
         self.button_sprites.add(toggle_starch_button)
         self.leaf_slider = Slider((topleft[0], topleft[1] + 110, 15, 200), config.FONT, (50, 20),
@@ -334,10 +358,11 @@ class UI:
         self.sliders.append(self.root_slider)
         self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
-        self.sliders.append(
+
+        '''self.sliders.append(
             Slider((topleft[0] + 536, topleft[1] + 70, 15, 200), config.FONT, (50, 20), organ=self.plant.organ_starch,
                    plant=self.plant, percent=30))
-        '''self.photosynthesis_particle = PointParticleSystem([[topleft[0] + 330, topleft[1] + 405],
+        self.photosynthesis_particle = PointParticleSystem([[topleft[0] + 330, topleft[1] + 405],
                                                             [topleft[0] + 380, topleft[1] + 405],
                                                             [topleft[0] + 380, topleft[1] + 100],
                                                             [topleft[0] + 330, topleft[1] + 100]],
@@ -367,9 +392,9 @@ class UI:
         # rest of production consists of sliders and buttons
 
     def draw_starch_details(self, s):
-        topleft = self.production_topleft
+        topleft = self.organ_details_topleft
         # draw starch details
-        lvl_pos = (topleft[0] + 530, topleft[1] + 270, 64, 64)
+        #lvl_pos = (topleft[0] + 128, topleft[1], 64, 64)
         num_arrows = int((self.plant.organ_starch.percentage) / 100 * 3)
         for i in range(0, num_arrows + 1):
             pygame.draw.line(s, (255, 0, 0), (topleft[0] + 545, topleft[1] + 280 + i * 10),
@@ -377,13 +402,13 @@ class UI:
             pygame.draw.line(s, (255, 0, 0), (topleft[0] + 575, topleft[1] + 280 + i * 10),
                              (topleft[0] + 560, topleft[1] + 300 + i * 10), width=4)
 
-        # draw starch pool
+        '''# draw starch pool
         pool_height = 180
-        pool_rect = (topleft[0] + 476, topleft[1] + 150, 32, pool_height)
+        pool_rect = (topleft[0] + 138, topleft[1], 32, pool_height)
         pygame.draw.rect(s, config.WHITE_TRANSPARENT, pool_rect, border_radius=3)
         pool_limit = self.plant.organ_starch.get_threshold()
         pool_level = self.plant.organ_starch.mass * pool_height / pool_limit
         pool_rect = Rect(pool_rect[0], pool_rect[1] + pool_height - pool_level, 32, pool_level)
         pygame.draw.rect(s, config.WHITE, pool_rect, border_radius=3)
         pool_level_text = config.FONT.render("{:.1f}".format(self.plant.organ_starch.mass), True, (0, 0, 0))  # title
-        s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))
+        s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))'''
