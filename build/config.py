@@ -17,11 +17,12 @@ HAWK = 4
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
+# COLORS
 WHITE = (255, 255, 255)
 GRAY = (145, 145, 145)
 WHITE_TRANSPARENT = (255, 255, 255, 128)
-
 GREEN = (150, 168, 96)
+BLACK = (0,0,0)
 BLUE = (75, 75, 200)
 SKY_BLUE = (169, 247, 252)
 
@@ -36,6 +37,36 @@ YELLOW_TRANSPARENT = (255,255,255,128)
 PURPLE = (171, 36, 255)
 
 PLANTNAME = 'GenEric'
+
+# WEATHER
+# shift should be -20.8 according to Nadines paper. But this seems easier to grasp for the player as it is wamrest 1 to 6 pm
+summer = {"Min_T" : 15,
+          "Max_T" : 30,
+          "shift" : 10,
+          "skew" : 3.2}
+
+winter = {"Min_T" : -5,
+          "Max_T" : 10,
+          "shift" : 10,
+          "skew" : 3.2}
+
+# HUMIDITY
+humidity = {"Min_H" : 0.4,
+          "Max_H" : 1,
+          "shift" : 10,
+          "skew" : 3.2}
+
+# provide season and x in hours to get temp or humidity
+def get_y(x,dict):
+    M = (dict["Min_T"] + dict["Max_T"]) / 2  # mean
+    A = (dict["Max_T"] - dict["Min_T"]) / 2  # amplitude
+    F = (2 * math.pi) / 24  # based on a 25 hour cycle
+    P = dict["shift"]# shift
+    d = dict["skew"]# skewness
+    temp = M + A * math.sin(F*((x-P)+d*(math.sin(F*(x-P))/2)))
+    print(temp)
+    return temp
+
 
 # PLANT
 
@@ -56,11 +87,6 @@ PLANTNAME = 'GenEric'
 # GAMETIME
 
 # SAVEGAME OBJECTS
-# ORGANS
-# LEAF
-# STEM
-# ROOTS
-# STARCH
 
 # SHOPITEMS
 

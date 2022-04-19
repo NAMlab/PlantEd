@@ -279,7 +279,7 @@ class UI:
         # headbox
         width = 128
         pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], width, 30), border_radius=3)
-        leave_title = config.FONT.render("Organ:{}".format(not self.plant.target_organ.type), True, (0, 0, 0))  # title
+        leave_title = config.FONT.render("Organ:{}".format(self.plant.target_organ.type), True, (0, 0, 0))  # title
         s.blit(leave_title, dest=(topleft[0]+width / 2 - leave_title.get_width() / 2, topleft[1]))
 
         s.blit(image, (topleft[0], topleft[1]+40))
@@ -300,6 +300,14 @@ class UI:
         pygame.draw.circle(s, config.WHITE, (topleft[0]+20,topleft[1]+60), 20, width=3)
         level = config.FONT.render("{:.0f}".format(self.plant.target_organ.level), True, (0, 0, 0))
         s.blit(level, (topleft[0]+20 - level.get_width() / 2, topleft[1]+60 - level.get_height() / 2))
+
+        '''#skills
+        if skills:
+            for i in range(0,len(skills)):
+                skills[i].pos = (topleft[0]+138+i*80,topleft[1]+50)
+                s.blit(skills[i].image,(topleft[0]+138+i*80,topleft[1]+50))'''
+
+
 
     def init_organ_ui(self):
         topleft = self.organ_details_topleft

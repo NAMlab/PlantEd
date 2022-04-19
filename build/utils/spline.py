@@ -9,16 +9,28 @@ import config
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
+
+# basic L-System
+# draw first line along direction (20 pix) - A
+# draw end of line - B
+# turn right +
+# turn left -
+
+# Rules for fibroot
+# rule 1: B -> AB
+# rule 2: A -> A+A
+
 class Beziere:
-    def __init__(self, list_of_points: List[Tuple[float, float]],res=100):
+    def __init__(self, list_of_points: List[Tuple[float, float]], color=config.GREEN, res=100, width=10):
         """
         list_of_points: Control points in the xy plane on which to interpolate. These
             points control the behavior (shape) of the Bezier curve.
         """
         self.list_of_points = list_of_points
         self.offsets = [(0,0) for point in self.list_of_points]
+        self.color = color
         self.resolution = res
-
+        self.width = width
         # Degree determines the flexibility of the curve.
         # Degree = 1 will produce a straight line.
         self.degree = len(list_of_points) - 1
@@ -219,8 +231,6 @@ class Beziere:
         self.forces.append(force)
 
     def handle_event(self,e):
-        if e.type == KEYDOWN and e.key == K_SPACE:
-            self.grow_point(pygame.mouse.get_pos())
         if e.type == KEYDOWN and e.key == K_PLUS:
             self.forces.append((10, 0))
         if e.type == KEYDOWN and e.key == K_MINUS:
@@ -252,6 +262,9 @@ class Beziere:
         self.degree += 1
         self.growth_percentage = 0
 
+    def print_points(self):
+        print(self.points_to_draw)
+
     def draw_highlighted(self, screen):
         for i in range(1,len(self.points_to_draw)):
             pygame.draw.line(screen, config.WHITE, self.points_to_draw[i-1],self.points_to_draw[i],width=int(12-0.05*i))
@@ -263,8 +276,8 @@ class Beziere:
 
         # tapering
         for i in range(1,len(self.points_to_draw)):
-            pygame.draw.line(screen, (0,0,0), self.points_to_draw[i-1],self.points_to_draw[i],width=int(10-0.05*i))
-            pygame.draw.line(screen, config.GREEN, self.points_to_draw[i-1],self.points_to_draw[i],width=int(8-0.05*i))
+            pygame.draw.line(screen, (0,0,0), self.points_to_draw[i-1],self.points_to_draw[i],width=int(self.width-0.05*i))
+            pygame.draw.line(screen, self.color, self.points_to_draw[i-1],self.points_to_draw[i],width=int((self.width-2)-0.05*i))
         #pygame.draw.lines(screen, (0,0,0), False, self.points_to_draw, width=7)
         #pygame.draw.lines(screen, config.GREEN, False, self.points_to_draw, width=5)
 

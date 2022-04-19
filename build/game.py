@@ -26,6 +26,9 @@ from gameobjects.shop import Shop, Shop_Item
 from gameobjects.bug import Bug
 from ui import UI, FloatingElement
 from camera import Camera
+import random
+from skillsystem import Skill_System, Skill
+from utils.LSystem import LSystem, Letter
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -72,27 +75,21 @@ def shake():
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
-        self.camera_pos_y = -100
+        self.ls = LSystem((1000,100))
 
     def render(self, screen):
         screen.fill((50,50,50))
-        temp_surface = pygame.Surface((1920,2160),pygame.SRCALPHA)
-        temp_surface.fill((50, 50, 50))
-        pygame.draw.rect(temp_surface,(255,255,255),pygame.Rect(500,0,500,500),5)
-        screen.blit(temp_surface,(0,self.camera_pos_y))
+        self.ls.draw(screen)
 
     def update(self, dt):
         pass
 
     def handle_events(self, events):
         for e in events:
+            self.ls.handle_event(e)
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
-            if e.type == KEYDOWN and e.key == K_w:
-                self.camera_pos_y -= 100
-            if e.type == KEYDOWN and e.key == K_s:
-                self.camera_pos_y += 100
 
 class Camera:
     def __init__(self, offset_y):
@@ -112,16 +109,20 @@ class DefaultGameScene(object):
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
+        example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,4)]
+        example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
+        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
+        example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,3)]
+        self.skill_system = Skill_System((1700,520),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
         self.ui = UI(1, self.plant, self.model)
         self.entities = []
         for i in range(0,10):
-            bug = Bug((200,900),pygame.Rect(0,870,config.SCREEN_WIDTH,250),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)],self.camera)
+            bug = Bug((190*random.randint(0,10),900+random.randint(0,500)),pygame.Rect(0,890,config.SCREEN_WIDTH,600),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)],self.camera)
             self.entities.append(bug)
         #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
         #shop items are to be defined by the level
         add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf)
-
 
         self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant.upgrade_points)
         self.shop.add_shop_item(["watering","blue_grain","spraycan"])
@@ -150,6 +151,7 @@ class DefaultGameScene(object):
             for entity in self.entities:
                 entity.handle_event(e)
             self.camera.handle_event(e)
+            self.skill_system.handle_event(e)
 
     def update(self, dt):
         for entity in self.entities:
@@ -172,6 +174,7 @@ class DefaultGameScene(object):
             entity.draw(temp_surface)
         self.plant.draw(temp_surface)
         self.environment.draw_foreground(temp_surface)
+        self.skill_system.draw(temp_surface)
 
         screen.blit(temp_surface,(0,self.camera.offset_y))
 
@@ -318,7 +321,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(DefaultGameScene())
+        self.go_to(DevScene())
 
     def go_to(self, scene):
         self.scene = scene

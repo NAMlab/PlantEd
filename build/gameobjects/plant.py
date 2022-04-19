@@ -38,9 +38,9 @@ class Plant:
         self.model = model
         self.camera = camera
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ, self, leaves, mass=1, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ, self, stem[0], stem[1], mass=1, leaf = organ_leaf, active=False)
-        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ, self, roots[0], roots[1], mass=2, active=True)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=1, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, stem[0], stem[1], mass=1, leaf = organ_leaf, active=False)
+        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, roots[0], roots[1], mass=2, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=20, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
@@ -89,9 +89,6 @@ class Plant:
             organ.grow()
         self.organ_starch.grow()
         self.organ_starch.drain()
-
-    def set_target_organ(self, target):
-        self.target_organ = self.organs[target - 1]
 
     def set_target_organ_leaf(self):
         self.target_organ = self.organs[0]
@@ -211,7 +208,7 @@ class Organ:
         if event.type == pygame.MOUSEBUTTONUP:
             for rect in self.get_rect():
                 if rect.collidepoint(event.pos):
-                    self.callback(self.type)
+                    self.callback()
 
     def get_threshold(self):
         return self.thresholds[self.active_threshold]
@@ -251,7 +248,7 @@ class Leaf(Organ):
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     print("lalala", self.type)
-                    self.callback(self.type)
+                    self.callback()
 
     def activate_add_leaf(self):
         self.can_add_leaf = True
@@ -360,8 +357,17 @@ class Leaf(Organ):
 
 
 class Root(Organ):
+
     def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, mass, active):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
+        self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
+        self.selected = 0
+        self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
+
+    def grow_roots(self):
+        if self.tabroot:
+
+            self.curves.append(Beziere(positions,config.WHITE,10,width))
 
     def update_image_size(self, factor=5, base=25):
         super().update_image_size(factor, base)
@@ -370,8 +376,31 @@ class Root(Organ):
         outlines = pygame.mask.from_surface(self.image).outline()
         return outlines
 
+    def update(self, dt):
+        for curve in self.curves:
+            curve.update(dt)
+
+    def handle_event(self, e):
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
+            self.curves[self.selected].grow_point(pygame.mouse.get_pos())
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_i:
+            self.selected += 1
+            if self.selected > len(self.curves):
+                self.selected = 0
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_l:
+            for curve in self.curves:
+                curve.print_points()
+        for curve in self.curves:
+            curve.handle_event(e)
+
+    def reach_threshold(self):
+        super().reach_threshold()
+        self.grow_roots()
+
     def draw(self, screen):
-        if not self.pivot:
+        for curve in self.curves:
+            curve.draw(screen)
+        '''if not self.pivot:
             self.pivot = (0,0)
         if self.type == self.plant.target_organ.type:
             outlines = self.get_outline()
@@ -381,7 +410,7 @@ class Root(Organ):
 
         if self.image and self.active:
             screen.blit(self.image,(self.x - self.pivot[0], self.y - self.pivot[1]))
-
+'''
 
 class Stem(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, leaf, mass, active):
@@ -433,7 +462,7 @@ class Stem(Organ):
                     if self.highlight:
                         self.leaf.append_leaf(self.highlight)
                         return
-                    self.callback(self.type)
+                    self.callback()
 
     def update_image_size(self, factor=3, base=5):
         super().update_image_size(factor, base)

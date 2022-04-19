@@ -12,13 +12,14 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None, button_sound=None):
+                 image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None, button_sound=None, active=True):
         super().__init__()
         self.posted = False
         self.button_sound = button_sound
         self.post_hover_message = post_hover_message
         self.hover_message_image = hover_message_image
         self.border_w = int(w / 10) if not border_w else border_w
+        self.active = active
         self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
@@ -55,6 +56,8 @@ class Button(pygame.sprite.Sprite):
                 self.hover_message.blit(self.hover_message_image,(hover_message.get_width()+10, 8))
 
     def handle_event(self, event):
+        if not self.active:
+            return
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 self.image = self.clicked_image
@@ -84,77 +87,10 @@ class Button(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, (self.rect[0],self.rect[1]))
 
+    def set_pos(self, pos):
+        self.x = pos[0]
+        self.y = pos[1]
 
-class Item_Button(Button):
-    def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK, image=None, border_w=None, item_index=-1):
-        super().__init__(x, y, w, h, callbacks, font, text, button_color, text_color, image, border_w)
-        self.item_index = item_index
-
-
-class ToggleButton(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, pressed=False, fixed=False, vertical=False):
-        super().__init__()
-        self.fixed = fixed
-        self.border_w = int(5) if not border_w else border_w
-        self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
-        self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
-        self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
-        if image:
-            self.button_image.blit(image.copy(), (0, 0))
-            self.hover_image.blit(image.copy(), (0, 0))
-            self.clicked_image.blit(image.copy(), (0, 0))
-        else:
-            self.button_image.fill(button_color)
-            self.hover_image.fill(button_color)
-            self.clicked_image.fill(button_color)
-        pygame.draw.rect(self.hover_image, WHITE_TRANSPARENT, self.hover_image.get_rect(), self.border_w)
-        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w)
-        if text and font:
-            text_surf = font.render(text, True, text_color)
-            if vertical:
-                text_surf = pygame.transform.rotate(text_surf,90)
-            self.button_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.hover_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.clicked_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-        self.image = self.button_image
-        self.rect = pygame.Rect(x, y, w, h)
-        # This function will be called when the button gets pressed.
-        self.callback = callback
-        self.button_down = False
-        if pressed:
-            self.image = self.clicked_image
-            self.button_down = True
-            for callback in self.callback:
-                callback()
-
-
-    def handle_event(self, event):
-        if self.fixed:
-            return
-        else:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.rect.collidepoint(event.pos):
-                    if self.button_down:
-                        self.button_down = False
-                        self.image = self.button_image
-                    else:
-                        self.image = self.clicked_image
-                        self.button_down = True
-                    for callback in self.callback:
-                        callback()  # Call the function.
-
-    def activate(self):
-        self.button_down = True
-        self.image = self.clicked_image
-        for callback in self.callback:
-            callback()
-
-    def deactivate(self):
-        self.button_down = False
-        self.image = self.button_image
-        for callback in self.callback:
-            callback()
 
 class ToggleButton(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
