@@ -75,14 +75,15 @@ def shake():
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
-        self.ls = LSystem((1000,100))
+        directions = [(-1,1),(0,1),(1,1)]
+        self.ls = LSystem([(820,100),(1000,100),(1140,100)], directions)
 
     def render(self, screen):
         screen.fill((50,50,50))
         self.ls.draw(screen)
 
     def update(self, dt):
-        pass
+        self.ls.update(dt)
 
     def handle_events(self, events):
         for e in events:
