@@ -75,8 +75,10 @@ def shake():
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
-        directions = [(-1,1),(0,1),(1,1)]
-        self.ls = LSystem([(820,100),(1000,100),(1140,100)], directions)
+        #directions = [(-1,0.5),(-1,0),(0,1),(1,0.5),(1,1)]
+        #self.ls = LSystem([(820,100),(910,120),(1000,100),(1050,90),(1140,100)], directions)
+        #directions = [(0,1)]
+        self.ls = LSystem([(900,110)])
 
     def render(self, screen):
         screen.fill((50,50,50))
