@@ -4,26 +4,27 @@ import pygame
 import numpy as np
 
 # tier 1 roots
+apply_gravity = False
 
 first_tier_root = {"growth_duration" : 100*20*2,
                    "max_branches" : 10,
-                   "max_length_basal" : 50,
+                   "max_length_basal" : 100,
                    "max_length_branching" : 600,
                    "max_length_apex" : 100,
                    "initial_speed" : 20,
-                   "max_tries": 10}
+                   "max_tries": 8}
 second_tier_root = {"growth_duration" : 100*20*2,
                    "max_branches" : 5,
                     "max_length_basal": 30,
-                    "max_length_branching": 250,
-                    "max_length_apex": 50,
+                    "max_length_branching": 200,
+                    "max_length_apex": 20,
                     "initial_speed": 20,
-                    "max_tries" : 7}
+                    "max_tries" : 6}
 third_tier_root = {"growth_duration" : 100*20,
                    "max_branches" : 0,
                    "max_length_basal": 10,
-                   "max_length_branching": 70,
-                   "max_length_apex": 10,
+                   "max_length_branching": 30,
+                   "max_length_apex": 3,
                    "initial_speed": 20,
                    "max_tries" : 2}
 # depending on tier, sucessor get i+1 tier
@@ -35,10 +36,11 @@ root_tier = [first_tier_root, second_tier_root, third_tier_root]
 
 class Letter:
     # letters can be: basal, branching, apex
-    def __init__(self, id, tier, dir, growth_start_time, grwoth_end_time, max_length, initial_speed, max_branches=0, branches=[], t=1, init_length=0, n_branches=0):
+    def __init__(self, id, tier, dir, init_dir, growth_start_time, grwoth_end_time, max_length, initial_speed, max_branches=0, branches=[], t=1, init_length=0, n_branches=0):
         # branches and follwing segments are held
         self.id = id
         self.tier = tier
+        self.init_dir = init_dir
         self.dir = dir
         self.length = init_length
         self.growth_start_time = growth_start_time
@@ -57,6 +59,7 @@ class Letter:
 
     def draw(self, screen, start_pos):
         end_pos = (start_pos[0]+self.dir[0]*self.length,start_pos[1]+self.dir[1]*self.length)
+        pygame.draw.line(screen,(0,0,0),start_pos, end_pos, 7-self.tier)
         pygame.draw.line(screen,(255,255,255),start_pos, end_pos, 5-self.tier)
         for branch in self.branches:
             next_start_pos = (start_pos[0] + self.dir[0] * branch.t * self.length,
@@ -72,7 +75,7 @@ class LSystem:
         if directions:
             self.first_letters = [self.create_root(tier=0,dir=self.directions[i]) for i in range(0,len(self.positions))]
         else:
-            self.first_letters = [self.create_root(tier=0)]
+            self.first_letters = [self.create_root(tier=0,dir=(0,1))]
 
     def update(self, dt):
         for letter in self.first_letters:
@@ -86,8 +89,8 @@ class LSystem:
             self.create_branch(self.first_letter)
 
     def create_root(self, tier, dir=None, t=1, growth_offset=None, init_length=0):
-        dir = dir if dir else (0,1)
         tier_init = root_tier[tier]
+        init_dir = dir if dir is not None else (0, 1)
         # one root creates 3 letters
         # 1 -> segment, that doesn't grow anymore
         # 100 -> basal
@@ -95,12 +98,12 @@ class LSystem:
         # 300 -> apex
         # basel grows first, then branching, then apex. Once apex is done, branches start to grow
         time = growth_offset if growth_offset else pygame.time.get_ticks()
-        apex = Letter(300, tier, self.get_random_direction(tier_init["max_tries"], dir), time + tier_init["growth_duration"]*2,
+        apex = Letter(300, tier, self.get_random_direction(tier_init["max_tries"], init_dir), init_dir, time + tier_init["growth_duration"]*2,
                       time + tier_init["growth_duration"]*3, tier_init["max_length_apex"], tier_init["initial_speed"])
-        branching = Letter(200, tier, self.get_random_direction(tier_init["max_tries"], dir), time + tier_init["growth_duration"],
+        branching = Letter(200, tier, self.get_random_direction(tier_init["max_tries"], init_dir), init_dir, time + tier_init["growth_duration"],
                            time + tier_init["growth_duration"]*2, tier_init["max_length_branching"], tier_init["initial_speed"],
                            tier_init["max_branches"], branches=[apex])
-        basal = Letter(100, tier, self.get_random_direction(tier_init["max_tries"], dir),time, time + tier_init["growth_duration"],
+        basal = Letter(100, tier, init_dir, init_dir,time, time + tier_init["growth_duration"],
                        tier_init["max_length_basal"], tier_init["initial_speed"], branches=[branching], t=t, init_length=init_length)
         return basal
 
@@ -111,8 +114,8 @@ class LSystem:
         # random branching
         for branch in letter.branches:
             self.apply_rules(branch)
-        if letter.id == 200 and letter.growth_start_time < current_time:
-            if random.uniform(0,100) > 90:
+        if letter.id == 200 and letter.growth_start_time*1.01 < current_time:
+            if random.uniform(0,100) > 95:
                 self.create_branch(letter)
             if random.uniform(0,100) > 90 and letter.length < letter.max_length:
                 self.create_segment(letter)
@@ -120,9 +123,8 @@ class LSystem:
 
     def create_segment(self, letter):
         # stop letter growth, keep branches, append segment branch before apex, pass remaining time, max_len
-
         tier_init = root_tier[letter.tier]
-        branching = Letter(200, letter.tier, self.get_random_direction(tier_init["max_tries"]),
+        branching = Letter(200, letter.tier, self.get_random_direction(tier_init["max_tries"],letter.init_dir), letter.init_dir,
                            letter.growth_start_time,
                            letter.grwoth_end_time, letter.max_length-letter.length,
                            letter.initial_speed,
@@ -130,9 +132,6 @@ class LSystem:
         letter.branches.pop(len(letter.branches)-1)
         letter.branches.append(branching)
         letter.id = 1
-        #letter.max_length = letter.length
-        print(letter.branches)
-        print(branching.branches)
 
 
     def grow_section(self, letter):
@@ -156,13 +155,14 @@ class LSystem:
         return delta_length
 
     def create_branch(self, letter):
-        if letter.tier <= len(root_tier)-1 and len(letter.branches) <= letter.max_branches:
-            dir = (letter.dir[0],letter.dir[1]*-1)
+        if letter.tier < len(root_tier)-1 and letter.n_branches <= letter.max_branches:
+            dir = self.get_ortogonal(letter.dir)
             current_t = letter.length/letter.max_length
             # branches start growing when this one is finished
             growth_offset = letter.branches[-1].grwoth_end_time
-            branch = self.create_root(letter.tier+1,t=current_t, growth_offset=growth_offset, init_length=0)
+            branch = self.create_root(letter.tier+1,t=current_t, dir=dir, growth_offset=growth_offset, init_length=0)
             letter.branches.insert(0,branch) #put in first
+            letter.n_branches += 1
 
     def print(self):
         print(self.first_letter.dir[0], self.first_letter.dir[1])
@@ -174,8 +174,9 @@ class LSystem:
         #self.first_letter.draw(screen, self.pos)
         #self.first_letter
 
-    def get_random_direction(self, tries, down=(0,1)):
-        dir = (0, -1)  # up
+    def get_random_direction(self, tries, growth_dir=None, down=(0,1)):
+        dir = (random.uniform(0,2)-1,random.uniform(0,2)-1)
+        down = growth_dir if not apply_gravity else down
         for i in range(0, tries):
             phi = random.uniform(0,2*math.pi)
             x = math.cos(phi)
@@ -191,3 +192,10 @@ class LSystem:
         v1_u = self.unit_vector(v1)
         v2_u = self.unit_vector(v2)
         return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+
+    def get_ortogonal(self, v1):
+        norm_vec = self.unit_vector(v1)
+        v2 = np.random.randn(2)
+        v2 -= v2.dot(norm_vec) * norm_vec
+        v2 /= np.linalg.norm(v2)
+        return v2
