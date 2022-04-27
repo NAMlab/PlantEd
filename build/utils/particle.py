@@ -18,12 +18,12 @@ class Particle:
         self.active = True
 
     def move(self, dt):
-        self.x += self.speed[0] * dt * 60
-        self.y += self.speed[1] * dt * 60
+        self.x += self.speed[0] * dt * 6
+        self.y += self.speed[1] * dt * 6
         if self.apply_gravity:
             self.speed[1] = self.speed[1] + 0.1
             if abs(self.speed[0]) > 0:
-                self.speed[0] = self.speed[0] - 0.2 * dt * 60 * self.speed[0] / abs(self.speed[0])
+                self.speed[0] = self.speed[0] - 0.2 * dt * 6 * self.speed[0] / abs(self.speed[0])
             else:
                 self.speed[0] = 0
         if self.lifetime:
@@ -67,7 +67,7 @@ class PointsParticle(Particle):
 class ParticleSystem:
     def __init__(self, max_particles, spawn_box=Rect(0, 0, 0, 0), boundary_box=None, color=(0, 0, 0),
                  direction=None, size=10, lifetime=None, apply_gravity=False, speed=None, size_over_lifetime=True,
-                 images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True, wide_spread=False):
+                 images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True, color_spectrum=False, wide_spread=False):
         if speed is None:
             speed = [0.0, 0.0]
         self.apply_gravity = apply_gravity
@@ -92,6 +92,7 @@ class ParticleSystem:
         self.direction = direction
         self.particle_counter = 0
         self.wide_spread = wide_spread
+        self.color_spectrum = color_spectrum
 
     def update(self, dt):
         if not self.active:
@@ -130,16 +131,21 @@ class ParticleSystem:
             if self.spread[1] > 0:
                 speed[1] = (speed[1] + ((random.randint(0, 20) - 10) / 10) * self.spread[1])
 
+        if self.color_spectrum:
+            color = (random.randint(0,50), self.color[1], random.randint(130, 230))
+        else:
+            color = self.color
+
         lifetime = self.lifetime * random.random() if self.lifetime else self.lifetime
         self.particles.append(
-            Particle(x, y, color=self.color, image=image, speed=speed, size=self.size, apply_gravity=self.apply_gravity,
+            Particle(x, y, color=color, image=image, speed=speed, size=self.size, apply_gravity=self.apply_gravity,
                      lifetime=lifetime))
         self.particle_counter += 1
 
     def check_boundaries(self, particle):
         if self.boundary_box:
             # if self.boundary_box.collidepoint(particle.x, particle.y):
-            if particle.y < self.boundary_box[1] + self.boundary_box[3] + random.randint(0, 100) - 50:
+            if particle.y < self.boundary_box[1] + self.boundary_box[3] + random.randint(0, 50) - 25:
                 return True
             else:
                 return False

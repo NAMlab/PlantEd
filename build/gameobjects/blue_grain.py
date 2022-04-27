@@ -13,10 +13,10 @@ class Blue_grain:
         self.model = model
         self.amount = amount
         self.active = False
-        self.particle_system = ParticleSystem(40, spawn_box=Rect(self.pos[0], self.pos[1], 50, 50),
+        self.particle_system = ParticleSystem(80, spawn_box=Rect(self.pos[0], self.pos[1], 50, 50),
                                                     boundary_box=Rect(0,0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT-220),
-                                                    lifetime=20, size=8, color=config.BLUE,apply_gravity=True,speed=[0, 5],
-                                                    spread=[6,0], active=False, once=True, size_over_lifetime=False)
+                                                    lifetime=20, size=8, color=(0,0,0),apply_gravity=True,speed=[0, 60],
+                                                    spread=[18,5], active=False, once=True, color_spectrum=True, size_over_lifetime=False)
 
     def activate(self, pos=None):
         pos = pos if pos else pygame.mouse.get_pos()

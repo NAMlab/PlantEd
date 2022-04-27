@@ -75,10 +75,10 @@ def shake():
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
-        #directions = [(-1,0.5),(-1,0),(0,1),(1,0.5),(1,1)]
-        #self.ls = LSystem([(820,100),(910,120),(1000,100),(1050,90),(1140,100)], directions)
+        directions = [(-1,0.5),(-1,0),(0,1),(1,0.5),(1,1)]
+        self.ls = LSystem([(820,100),(910,120),(1000,100),(1050,90),(1140,100)], directions)
         #directions = [(0,1)]
-        self.ls = LSystem([(900,110)])
+        #self.ls = LSystem([(900,110)])
 
     def render(self, screen):
         screen.fill((50,50,50))
@@ -112,11 +112,11 @@ class DefaultGameScene(object):
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
-        example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,4)]
-        example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
-        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
-        example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,3)]
-        self.skill_system = Skill_System((1700,520),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
+        #example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,4)]
+        #example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
+        #example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
+        #example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,3)]
+        #self.skill_system = Skill_System((1700,520),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
         self.ui = UI(1, self.plant, self.model)
         self.entities = []
         for i in range(0,10):
@@ -151,10 +151,11 @@ class DefaultGameScene(object):
             self.shop.handle_event(e)
             self.ui.handle_event(e)
             self.plant.handle_event(e)
+            #self.environment.handle_event(e)
             for entity in self.entities:
                 entity.handle_event(e)
             self.camera.handle_event(e)
-            self.skill_system.handle_event(e)
+            #self.skill_system.handle_event(e)
 
     def update(self, dt):
         for entity in self.entities:
@@ -162,7 +163,7 @@ class DefaultGameScene(object):
         self.environment.update(dt)
         self.shop.update(dt)
         self.ui.update(dt)
-        self.plant.update(dt)
+        self.plant.update(dt, self.model.get_photon_upper())
         self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0), self.plant.organ_starch.percentage)
 
 
@@ -177,7 +178,7 @@ class DefaultGameScene(object):
             entity.draw(temp_surface)
         self.plant.draw(temp_surface)
         self.environment.draw_foreground(temp_surface)
-        self.skill_system.draw(temp_surface)
+        #self.skill_system.draw(temp_surface)
 
         screen.blit(temp_surface,(0,self.camera.offset_y))
 
@@ -324,7 +325,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(DevScene())
+        self.go_to(DefaultGameScene())
 
     def go_to(self, scene):
         self.scene = scene

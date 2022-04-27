@@ -25,6 +25,7 @@ GREEN = (150, 168, 96)
 BLACK = (0,0,0)
 BLUE = (75, 75, 200)
 SKY_BLUE = (169, 247, 252)
+YELLOW = (255, 250, 94)
 
 GAMESPEED = 4
 GROWTH_TICK_RATE = 1000  # in ms
@@ -140,7 +141,7 @@ day = 1000*60*6
 e = [{"type": CLOUD,
       "start_time": 1000 * 60},
     {"type": RAIN,
-      "start_time": day * 1},
+      "start_time": day /5},
     {"type": SUN,
       "start_time": day * 2},
     {"type": CLOUD,

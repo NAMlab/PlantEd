@@ -5,6 +5,8 @@ from data import assets
 from utils.spline import Beziere
 import config
 import math
+from utils.particle import ParticleSystem, Particle
+from pygame import Rect
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -102,7 +104,7 @@ class Plant:
     def set_target_organ_starch(self):
         self.target_organ = self.organ_starch
 
-    def update(self, dt):
+    def update(self, dt, photon_intake):
         # dirty Todo make beter
         if self.get_biomass() > self.seedling.max-1 and not self.organs[1].active:
             self.organs[1].activate()
@@ -110,6 +112,7 @@ class Plant:
             #if self.get_biomass() > self.seedling.max and not self.organs[0].active:
         for organ in self.organs:
             organ.update(dt)
+        self.organs[0].photon_intake = photon_intake
 
 
     def handle_event(self, event):
@@ -239,10 +242,20 @@ class Leaf(Organ):
         super().__init__(x, y, name, organ_type, plant=plant, mass=mass, active=active, thresholds=[1,2,3,4,5,6,7,8,9,10,20,30,40])
         self.callback = callback
         self.images = images
+        self.photon_intake = 0
         self.base_mass = 1
         self.can_add_leaf = False
+        self.particle_system = (
+            ParticleSystem(20, spawn_box=Rect(500, 500, 50, 20), lifetime=8, color=config.YELLOW,
+                           apply_gravity=False,
+                           speed=[0, -1], spread=[1, -1], active=False))
+        self.particle_systems = []
 
     def handle_event(self, event):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_u:
+            self.particle_system.activate()
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_j:
+            self.particle_system.deactivate()
         if event.type == pygame.MOUSEBUTTONUP:
             print(self.get_rect(), pygame.mouse.get_pos())
             for rect in self.get_rect():
@@ -302,6 +315,9 @@ class Leaf(Organ):
                 "direction": dir,
                 "growth_index": self.active_threshold} # to get relative size, depending on current threshold - init threshold
         self.update_leaf_image(leaf, init=True)
+        self.particle_systems.append(ParticleSystem(20, spawn_box=Rect(leaf["x"], leaf["y"], 0, 0),
+                                                    lifetime=6, color=config.YELLOW, apply_gravity=False,
+                                                    speed=[0, -5], spread=[5, 5], active=False))
         self.leaves.append(leaf)
         self.can_add_leaf = False
 
@@ -311,6 +327,24 @@ class Leaf(Organ):
     # depending on the mean height of all leaves, 0 .. 1000, -> TODO: mass to PLA better
     def get_mean_leaf_height(self):
         return sum(self.y - leaf["y"] for leaf in self.leaves)/len(self.leaves) if len(self.leaves) > 0 else 0
+
+    def update(self, dt):
+        for system in self.particle_systems:
+            system.update(dt)
+        for i in range(0, len(self.leaves)):
+            box = self.particle_systems[i].spawn_box
+            size = self.leaves[i]["image"].get_size()
+            offset_x = self.leaves[i]["offset_x"]
+            offset_y = self.leaves[i]["offset_y"]
+            self.particle_systems[i].spawn_box = (int(self.leaves[i]["x"]-offset_x+size[0]/2),
+                                                  int(self.leaves[i]["y"]-offset_y+size[1]/2), 0, 0)
+            if self.photon_intake > 0:
+                adapted_pi = self.photon_intake/50*3 + 5
+                self.particle_systems[i].lifetime=adapted_pi
+                self.particle_systems[i].activate()
+            else:
+                self.particle_systems[i].deactivate()
+
 
     def update_image_size(self, factor=10, base=30):
         if not self.leaves:
@@ -346,6 +380,9 @@ class Leaf(Organ):
                 #pygame.draw.rect(screen, (255, 255, 255), (rects[i][0],rects[i][1],rects[i][2],rects[i][3]), 2)
                 screen.blit(s, (self.leaves[i]["x"]-self.leaves[i]["offset_x"], self.leaves[i]["y"]-self.leaves[i]["offset_y"]))
 
+        for system in self.particle_systems:
+            system.draw(screen)
+
     def get_outlines(self):
         outlines = []
         for leaf in self.leaves:
@@ -360,7 +397,7 @@ class Root(Organ):
 
     def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, mass, active):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
-        self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
+        #self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
@@ -377,29 +414,18 @@ class Root(Organ):
         return outlines
 
     def update(self, dt):
-        for curve in self.curves:
-            curve.update(dt)
-
-    def handle_event(self, e):
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-            self.curves[self.selected].grow_point(pygame.mouse.get_pos())
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_i:
-            self.selected += 1
-            if self.selected > len(self.curves):
-                self.selected = 0
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_l:
-            for curve in self.curves:
-                curve.print_points()
-        for curve in self.curves:
-            curve.handle_event(e)
+        pass
+        #for curve in self.curves:
+        #    curve.update(dt)
 
     def reach_threshold(self):
         super().reach_threshold()
         self.grow_roots()
 
     def draw(self, screen):
-        for curve in self.curves:
-            curve.draw(screen)
+        pass
+        #for curve in self.curves:
+        #    curve.draw(screen)
         '''if not self.pivot:
             self.pivot = (0,0)
         if self.type == self.plant.target_organ.type:

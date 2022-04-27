@@ -19,9 +19,9 @@ class Watering_can:
         self.cost = cost
         self.active = False
         self.pouring = False
-        self.can_particle_system = ParticleSystem(40, spawn_box=Rect(self.pos[0], self.pos[1], 0, 0), lifetime=12,
-                                                  color=config.BLUE,apply_gravity=True,speed=[0, 5],
-                                                  spread=[5, 0], active=False)
+        self.can_particle_system = ParticleSystem(90, spawn_box=Rect(self.pos[0], self.pos[1], 0, 0), lifetime=12,
+                                                  color=config.BLUE,apply_gravity=True,speed=[0, 60],
+                                                  spread=[10, 0], active=False)
 
     def activate(self, amount=None):
         self.amount = self.default_amount if amount is None else amount

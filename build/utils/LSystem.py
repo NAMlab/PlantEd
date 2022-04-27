@@ -4,20 +4,20 @@ import pygame
 import numpy as np
 
 # tier 1 roots
-apply_gravity = False
+apply_gravity = True
 
 first_tier_root = {"growth_duration" : 100*20*2,
-                   "max_branches" : 10,
+                   "max_branches" : 20,
                    "max_length_basal" : 100,
                    "max_length_branching" : 600,
                    "max_length_apex" : 100,
                    "initial_speed" : 20,
                    "max_tries": 8}
 second_tier_root = {"growth_duration" : 100*20*2,
-                   "max_branches" : 5,
+                   "max_branches" : 8,
                     "max_length_basal": 30,
-                    "max_length_branching": 200,
-                    "max_length_apex": 20,
+                    "max_length_branching": 250,
+                    "max_length_apex": 30,
                     "initial_speed": 20,
                     "max_tries" : 6}
 third_tier_root = {"growth_duration" : 100*20,
@@ -115,7 +115,7 @@ class LSystem:
         for branch in letter.branches:
             self.apply_rules(branch)
         if letter.id == 200 and letter.growth_start_time*1.01 < current_time:
-            if random.uniform(0,100) > 95:
+            if random.uniform(0,100) > 93:
                 self.create_branch(letter)
             if random.uniform(0,100) > 90 and letter.length < letter.max_length:
                 self.create_segment(letter)
