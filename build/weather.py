@@ -36,8 +36,8 @@ class Environment:
         self.w = SCREEN_WIDTH
         self.model = model
         self.gametime = gametime
-        self.background = assets.img("below_ground.png").convert_alpha()
-        self.background_moist = pygame.transform.scale(assets.img("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
+        self.background = assets.img("soil.png").convert_alpha()
+        #self.background_moist = pygame.transform.scale(assets.img("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.sun_pos_spline = Beziere([(-100,800),(960,-200),(2020,800)])
         self.rain_rate = 0.0003
@@ -143,7 +143,7 @@ class Environment:
         #for animation in self.animations:
         #    s.blit(animation.image, animation.pos)
         screen.blit(s, (0, 0))
-        screen.blit(self.background, (0, 1080-658))
+        screen.blit(self.background, (0,-140))
 
         #if self.model.water_pool > 0:
         #    pygame.draw.circle(s, (50, 40, 20, min(int(self.model.water_pool / self.model.max_water_pool * 32), 255)),

@@ -187,13 +187,13 @@ class Beziere:
             a_y = sum_forces_y / height_multiplicator
 
             velocity_x, velocity_y = self.velocities[i]
-            print(velocity_x, velocity_y)
+            #print(velocity_x, velocity_y)
             updated_velocity_x = (velocity_x + (a_x * dt/10)) * 0.99
             updated_velocity_y = (velocity_y + (a_y * dt/10)) * 0.99
             self.velocities[i] = (updated_velocity_x, updated_velocity_y)
 
             self.offsets[i] = (updated_velocity_x * dt/10, updated_velocity_y * dt/10)
-            print(velocity_x, velocity_y)
+            #print(velocity_x, velocity_y)
             #print(i, a_x*dt, a_y*dt, velocity_x*dt, velocity_y*dt)
 
     def get_point(self, t):

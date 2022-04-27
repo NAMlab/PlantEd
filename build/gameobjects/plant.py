@@ -7,6 +7,7 @@ import config
 import math
 from utils.particle import ParticleSystem, Particle
 from pygame import Rect
+from utils.LSystem import LSystem, Letter
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -257,10 +258,8 @@ class Leaf(Organ):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_j:
             self.particle_system.deactivate()
         if event.type == pygame.MOUSEBUTTONUP:
-            print(self.get_rect(), pygame.mouse.get_pos())
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
-                    print("lalala", self.type)
                     self.callback()
 
     def activate_add_leaf(self):
@@ -399,12 +398,13 @@ class Root(Organ):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
         #self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
+        #positions = [(x,y+50),(x,y+50),(x,y+50)]
+        #directions = [(-0.5,1),(0,1),(0.5,1)]
+        self.ls = LSystem([(x,y+50)])
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
     def grow_roots(self):
-        if self.tabroot:
-
-            self.curves.append(Beziere(positions,config.WHITE,10,width))
+        pass
 
     def update_image_size(self, factor=5, base=25):
         super().update_image_size(factor, base)
@@ -414,16 +414,15 @@ class Root(Organ):
         return outlines
 
     def update(self, dt):
-        pass
+        self.ls.update(dt)
         #for curve in self.curves:
         #    curve.update(dt)
 
     def reach_threshold(self):
         super().reach_threshold()
-        self.grow_roots()
 
     def draw(self, screen):
-        pass
+        self.ls.draw(screen)
         #for curve in self.curves:
         #    curve.draw(screen)
         '''if not self.pivot:
