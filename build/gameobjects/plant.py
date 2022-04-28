@@ -398,9 +398,9 @@ class Root(Organ):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
         #self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
-        #positions = [(x,y+50),(x,y+50),(x,y+50)]
-        #directions = [(-0.5,1),(0,1),(0.5,1)]
-        self.ls = LSystem([(x,y+50)])
+        positions = [(x-200,y+50),(x,y+50),(x+200,y+50)]
+        directions = [(-0.5,1),(0,1),(0.5,1)]
+        self.ls = LSystem(positions, directions)
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
     def grow_roots(self):

@@ -181,7 +181,8 @@ class Environment:
             pygame.mixer.Sound.stop(rain_sound)
             self.rain.deactivate()
         elif self.state == HAWK:
-            self.activate_hawk()
+            pass
+            #self.activate_hawk()
 
         self.weather_events.remove(event)
 

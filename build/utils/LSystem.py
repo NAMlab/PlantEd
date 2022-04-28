@@ -6,28 +6,28 @@ import numpy as np
 # tier 1 roots
 apply_gravity = False
 # [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
-first_tier_root = {"growth_duration" : 5,
+first_tier_root = {"growth_duration" : 100*40*1,
                    "max_branches" : 20,
                    "max_length_basal" : 30,
                    "max_length_branching" : 400,
                    "max_length_apex" : 40,
-                   "initial_speed" : 30,
+                   "initial_speed" : 10,
                    "max_tries": 8,
-                   "branch_rate" : 50}
-second_tier_root = {"growth_duration" : 10,
-                   "max_branches" : 8,
+                   "branch_rate" : 75}
+second_tier_root = {"growth_duration" : 100*40*1,
+                   "max_branches" : 10,
                     "max_length_basal": 10,
-                    "max_length_branching": 250,
+                    "max_length_branching": 150,
                     "max_length_apex": 30,
-                    "initial_speed": 30,
-                    "max_tries" : 6,
+                    "initial_speed": 7,
+                    "max_tries" : 7,
                     "branch_rate" : 75}
-third_tier_root = {"growth_duration" : 1,
+third_tier_root = {"growth_duration" : 100*40*1,
                    "max_branches" : 0,
                    "max_length_basal": 5,
                    "max_length_branching": 15,
                    "max_length_apex": 5,
-                   "initial_speed": 30,
+                   "initial_speed": 6,
                    "max_tries" : 2,
                    "branch_rate" : 100}
 # depending on tier, sucessor get i+1 tier
@@ -119,8 +119,6 @@ class LSystem:
         # random branching
         for branch in letter.branches:
             self.apply_rules(branch)
-        if letter.tier > 1:
-            print(letter.growth_start_time, letter.grwoth_end_time, current_time, letter.length, letter.max_length)
         if letter.id == 200 and letter.growth_start_time*1.05 < current_time:
             if random.uniform(0,100) > letter.branch_rate:
                 self.create_branch(letter)
@@ -155,11 +153,11 @@ class LSystem:
         # growth time finished
         if letter.grwoth_end_time < current_ticks:
             return
-        letter.length += self.grow_axial(letter.max_length, letter.initial_speed,current_ticks -letter.growth_start_time)
+        letter.length = self.grow_axial(letter.max_length, letter.initial_speed,current_ticks -letter.growth_start_time)
         #print(letter.id, letter.tier, letter.length, letter.max_length, letter.initial_speed, current_ticks-letter.growth_start_time)
 
     def grow_axial(self, max_length, initial_speed, t):
-        delta_length = max_length * (1 - math.exp(-1 * (initial_speed / max_length * t/10000)))
+        delta_length = max_length * (1 - math.exp(-1 * (initial_speed / max_length * t/1000)))
         return delta_length
 
     def create_branch(self, letter):
@@ -200,8 +198,7 @@ class LSystem:
             if growth_dir is not None:
                 angle_growth_xy = self.angle_between(growth_dir, (x, y))
                 angle_growth_dir = self.angle_between(growth_dir, dir)
-
-            if (angle_down_xy + angle_growth_xy)/2 < (angle_down_dir+angle_growth_dir)/2:
+            if (angle_down_xy + angle_down_xy + angle_growth_xy)/3 < (angle_down_dir+angle_down_dir+angle_growth_dir)/3:
                 dir = (x,y)
             #if self.angle_between(down, (x, y)) < self.angle_between(down, dir):  # downward directions get promoted
             #    dir = (x, y)
