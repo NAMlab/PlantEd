@@ -41,9 +41,9 @@ class Plant:
         self.model = model
         self.camera = camera
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
-        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=1, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, stem[0], stem[1], mass=1, leaf = organ_leaf, active=False)
-        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, roots[0], roots[1], mass=2, active=True)
+        organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, stem[0], stem[1], mass=0.1, leaf = organ_leaf, active=False)
+        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, roots[0], roots[1], mass=0.8, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=20, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
@@ -51,7 +51,7 @@ class Plant:
         # Fix env constraints
 
     def get_growth_rate(self):
-        growth_rate = 0
+        growth_rate = 0.2 if self.get_biomass() < 4 else 0
         for i in range(0,3):
             growth_rate += self.organs[i].growth_rate
         return growth_rate
@@ -64,8 +64,10 @@ class Plant:
             pygame.event.post(pygame.event.Event(WIN))
 
     def update_growth_rates(self, growth_rate):
+        growth_rate_organs = growth_rate[0]
+        growth_rate_organs += 0.08 if self.get_biomass() < 10 and growth_rate[0] > 0 else 0
         for organ in self.organs:
-            organ.update_growth_rate(growth_rate[0])
+            organ.update_growth_rate(growth_rate_organs)
         self.organ_starch.update_growth_rate(growth_rate[1])
         self.organ_starch.starch_intake = growth_rate[2]
 
@@ -107,7 +109,7 @@ class Plant:
 
     def update(self, dt, photon_intake):
         # dirty Todo make beter
-        if self.get_biomass() > self.seedling.max-1 and not self.organs[1].active:
+        if self.get_biomass() > self.seedling.max and not self.organs[1].active:
             self.organs[1].activate()
             self.organs[0].activate()
             #if self.get_biomass() > self.seedling.max and not self.organs[0].active:
@@ -124,6 +126,7 @@ class Plant:
     def draw(self, screen):
         self.draw_seedling(screen)
         if self.get_biomass() < self.seedling.max:
+            self.organs[2].draw(screen)
             return
         for organ in self.organs:
             organ.draw(screen)
@@ -140,7 +143,7 @@ class Seedling:
         self.max = max
 
     def draw(self, screen, mass):
-        index = int(len(self.images)/self.max * (mass))
+        index = int(len(self.images)/self.max * (mass))-1
         if index >= len(self.images):
             index = len(self.images)-1
         screen.blit(self.images[index], (self.x, self.y))
@@ -398,9 +401,10 @@ class Root(Organ):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
         #self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
-        positions = [(x-200,y+50),(x,y+50),(x+200,y+50)]
-        directions = [(-0.5,1),(0,1),(0.5,1)]
+        positions = [(x,y+45)]
+        directions = [(0,1)]
         self.ls = LSystem(positions, directions)
+
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
     def grow_roots(self):
@@ -414,14 +418,22 @@ class Root(Organ):
         return outlines
 
     def update(self, dt):
-        self.ls.update(dt)
+        self.ls.update(self.mass)
         #for curve in self.curves:
         #    curve.update(dt)
+
+    def handle_event(self, event):
+        self.ls.handle_event(event)
+
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+            self.ls.init_root((self.x, self.y + 20), (-0.2, 1), self.mass)
 
     def reach_threshold(self):
         super().reach_threshold()
 
     def draw(self, screen):
+        pygame.draw.line(screen,config.BLACK,(self.x+1,self.y+30), (self.x,self.y+45),6)
+        pygame.draw.line(screen,config.WHITE,(self.x+1,self.y+30), (self.x,self.y+45),4)
         self.ls.draw(screen)
         #for curve in self.curves:
         #    curve.draw(screen)
@@ -442,13 +454,17 @@ class Stem(Organ):
         self.leaf = leaf
         self.width = 15
         self.highlight = None
-        self.thorns = []
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
-        self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x, self.y - 150)])
+        self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x+3, self.y - 150)])
 
     def update(self, dt):
         self.curve.update(dt)
         self.update_leaf_positions()
+
+    def reach_threshold(self):
+        super().reach_threshold()
+        tip = self.curve.get_point(1)
+        self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*30,tip[1]+(-1*random.randint(40,50))))
 
     def add_thorn(self, pos, dir):
         if dir > 0:

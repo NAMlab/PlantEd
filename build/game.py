@@ -40,6 +40,7 @@ screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF,
 #screen = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
 #screen_high = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.DOUBLEBUF)
 tmp_screen = pygame.display.set_mode(true_res, pygame.SRCALPHA)
+temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 #screen_high = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.SRCALPHA)
 GROWTH = 24
 RECALC = 25
@@ -120,14 +121,14 @@ class DefaultGameScene(object):
         self.ui = UI(1, self.plant, self.model)
         self.entities = []
         for i in range(0,10):
-            bug = Bug((190*random.randint(0,10),900+random.randint(0,500)),pygame.Rect(0,890,config.SCREEN_WIDTH,600),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)],self.camera)
+            bug = Bug((190*random.randint(0,10),900+random.randint(0,200)),pygame.Rect(0,900,config.SCREEN_WIDTH,240),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)],self.camera)
             self.entities.append(bug)
         #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
         #shop items are to be defined by the level
         add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf)
 
-        self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant.upgrade_points)
+        self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant)
         self.shop.add_shop_item(["watering","blue_grain","spraycan"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
@@ -169,8 +170,6 @@ class DefaultGameScene(object):
 
     def render(self, screen):
         screen.fill((0,0,0))
-        temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
-
         self.environment.draw_background(temp_surface)
         self.shop.draw(temp_surface)
         self.ui.draw(temp_surface)

@@ -288,6 +288,9 @@ class Slider():
 
 
     def update(self):
+        if self.organ is not None:
+            if self.organ.active:
+                self.active = True
         if not self.active:
             return
 
@@ -342,7 +345,7 @@ class Slider():
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if hover and event.button == 1:
-                print(event.type, "Hopefully a slider move", hover, self.drag)
+                #print(event.type, "Hopefully a slider move", hover, self.drag)
                 self.drag = True
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.drag:
@@ -407,7 +410,7 @@ class Textbox:
         if e.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(e.pos):
                 self.active = True
-                print(self.active)
+                #print(self.active)
             else:
                 self.active = False
         if not self.active:

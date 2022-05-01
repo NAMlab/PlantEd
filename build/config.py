@@ -65,7 +65,7 @@ def get_y(x,dict):
     P = dict["shift"]# shift
     d = dict["skew"]# skewness
     temp = M + A * math.sin(F*((x-P)+d*(math.sin(F*(x-P))/2)))
-    print(temp)
+    #print(temp)
     return temp
 
 

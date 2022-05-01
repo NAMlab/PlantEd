@@ -33,6 +33,7 @@ rain_sound.set_volume(0.05)
 
 class Environment:
     def __init__(self, plant, model, nitrate, water, gametime, activate_hawk=None):
+        self.s = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         self.w = SCREEN_WIDTH
         self.model = model
         self.gametime = gametime
@@ -60,16 +61,16 @@ class Environment:
         self.sun = assets.img("sun/sun.png", (256, 256))
         self.cloud = pygame.transform.scale(assets.img("cloud.png"), (420, 240)).convert_alpha()
         self.cloud_dark = pygame.transform.scale(assets.img("cloud_dark.png"), (420, 240)).convert_alpha()
-        self.rain = ParticleSystem(500, spawn_box=Rect(SCREEN_WIDTH / 2-150, 100, 300, 30),
+        '''self.rain = ParticleSystem(50, spawn_box=Rect(SCREEN_WIDTH / 2-150, 100, 300, 30),
                                     boundary_box=Rect(SCREEN_WIDTH/2-150,0,300,SCREEN_HEIGHT-250),
                                     color=(0,0,100), apply_gravity=True, speed=[0, 180],
-                                    active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)
-        '''self.rain = ParticleSystem(500, spawn_box=Rect(SCREEN_WIDTH/2-self.cloud.get_width()/2, 60,
-                                                      self.cloud.get_width()/2, self.cloud.get_height()-20),
-                                   boundary_box=Rect(SCREEN_WIDTH/2-self.cloud.get_width()/2, 60,
-                                                     self.cloud.get_width()/2,SCREEN_HEIGHT-250),
-                                size=5, color=config.BLUE, apply_gravity=False,
-                                   speed=[0, 150], spread=[0, 0], active=False)'''
+                                    active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)'''
+        self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH/2-110, 110,
+                                                      220, 20),
+                                   boundary_box=Rect(SCREEN_WIDTH/2-self.cloud.get_width()/2-80, 20,
+                                                     160,SCREEN_HEIGHT-250),
+                                size=8, color=config.BLUE, apply_gravity=False,
+                                   speed=[0, 150], spread=[0, 0], active=False, rectangle=True)
 
         self.nitrate = StillParticles(80, spawn_box=Rect(self.w/2-400,950,800,300),
                                     boundary_box=Rect(1200,900,400,300),
@@ -102,24 +103,27 @@ class Environment:
         #    self.draw = False
         #    return
         #self.draw = True
-        s = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         # sun-->Photon_intensity, moon, water_lvl
 
         sun_intensity = self.get_sun_intensity()
-        #self.sun_pos_spline.draw(s)
-        day_time = self.get_day_time_t()
-        if day_time > 0 and day_time < 1:
-            sunpos = self.sun_pos_spline.get_point(day_time)
-            sunpos = (sunpos[0] - self.sun.get_width() / 2, sunpos[1] - self.sun.get_height() / 2)
-            s.blit(self.sun, sunpos)
+
         if sun_intensity > 0:
             color = self.get_color(orange, blue, sun_intensity)
         else:
             color = self.get_color(orange, (0, 0, 0), abs(sun_intensity))
 
             for pos in self.star_pos_size:
-                pygame.draw.circle(s, (255, 255, 255, abs(sun_intensity) * 128), pos[0], pos[1])
-                pygame.draw.circle(s, (255, 255, 255, abs(sun_intensity) * 180), pos[0], max(pos[1] - 5, 0))
+                pygame.draw.circle(self.s, (255, 255, 255, abs(sun_intensity) * 128), pos[0], pos[1])
+                pygame.draw.circle(self.s, (255, 255, 255, abs(sun_intensity) * 180), pos[0], max(pos[1] - 5, 0))
+        self.s.fill(color)
+
+        # self.sun_pos_spline.draw(s)
+        day_time = self.get_day_time_t()
+        if day_time > 0 and day_time < 1:
+            sunpos = self.sun_pos_spline.get_point(day_time)
+            sunpos = (sunpos[0] - self.sun.get_width() / 2, sunpos[1] - self.sun.get_height() / 2)
+            self.s.blit(self.sun, sunpos)
+
         '''if sun_intensity > 0:
             color = self.get_color(orange, blue, sun_intensity)
             # sun_intensity 0, 1 -->
@@ -134,15 +138,15 @@ class Environment:
                 pygame.draw.circle(s, (255,255,255, abs(sun_intensity)*180), pos[0], max(pos[1]-5,0))
         '''
         if self.state == CLOUD:
-            s.blit(self.cloud, (960-self.cloud.get_width()/2, 50))
+            self.s.blit(self.cloud, (960-self.cloud.get_width()/2, 50))
         if self.state == RAIN:
-            s.blit(self.cloud_dark, (960-self.cloud_dark.get_width()/2, 50))
+            self.s.blit(self.cloud_dark, (960-self.cloud_dark.get_width()/2, 50))
 
-        screen.fill(color)
+
 
         #for animation in self.animations:
         #    s.blit(animation.image, animation.pos)
-        screen.blit(s, (0, 0))
+        screen.blit(self.s, (0, 0))
         screen.blit(self.background, (0,-140))
 
         #if self.model.water_pool > 0:

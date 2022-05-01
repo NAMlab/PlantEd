@@ -84,6 +84,8 @@ class UI:
         self.plant_details_topleft = plant_details_topleft
         self.organ_details_topleft = organ_details_topleft
 
+        self.s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+
 
         self.sliders = []
         self.button_sprites = pygame.sprite.Group()
@@ -201,14 +203,15 @@ class UI:
 
     def draw_ui(self, screen):
         # new surface to get alpha
-        s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
-        self.draw_plant_details(s)
-        self.draw_production(s)
-        self.draw_organ_details(s)
+        #self.s.fill((0,0,0))
+        self.s.fill((0,0,0,0))
+        self.draw_plant_details(self.s)
+        self.draw_production(self.s)
+        self.draw_organ_details(self.s)
         #self.draw_starch_details(s)
         # name plant, make textbox
-        self.textbox.draw(s)
-        screen.blit(s, (0, 0))
+        self.textbox.draw(self.s)
+        screen.blit(self.s, (0, 0))
 
     def draw_plant_details(self, s):
         # details
@@ -358,13 +361,13 @@ class UI:
         self.root_slider = Slider((topleft[0]+160, topleft[1] + 110, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[2],
                                   plant=self.plant, percent=100)
-        self.starch_slider = Slider((topleft[0] + 240, topleft[1] + 110, 15, 200), config.FONT, (50, 20),
-                                  organ=self.plant.organ_starch,
-                                  plant=self.plant, active=False)
+        #self.starch_slider = Slider((topleft[0] + 240, topleft[1] + 110, 15, 200), config.FONT, (50, 20),
+        #                          organ=self.plant.organ_starch,
+        #                          plant=self.plant, active=False)
         self.sliders.append(self.leaf_slider)
         self.sliders.append(self.stem_slider)
         self.sliders.append(self.root_slider)
-        self.sliders.append(self.starch_slider)
+        #self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
 
         '''self.sliders.append(

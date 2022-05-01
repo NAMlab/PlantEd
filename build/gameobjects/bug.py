@@ -32,7 +32,7 @@ class Bug():
 
     def handle_event(self, e):
         if e.type == pygame.MOUSEBUTTONDOWN:
-            print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
+            #print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
             #if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
                 self.set_random_direction()

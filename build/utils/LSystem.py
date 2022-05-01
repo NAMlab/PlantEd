@@ -6,30 +6,30 @@ import numpy as np
 # tier 1 roots
 apply_gravity = False
 # [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
-first_tier_root = {"growth_duration" : 100*40*1,
-                   "max_branches" : 20,
-                   "max_length_basal" : 30,
-                   "max_length_branching" : 400,
-                   "max_length_apex" : 40,
-                   "initial_speed" : 10,
-                   "max_tries": 8,
-                   "branch_rate" : 75}
-second_tier_root = {"growth_duration" : 100*40*1,
+first_tier_root = {"growth_duration" : 2,
                    "max_branches" : 10,
-                    "max_length_basal": 10,
+                   "max_length_basal" : 40,
+                   "max_length_branching" : 250,
+                   "max_length_apex" : 45,
+                   "initial_speed" : 15,
+                   "max_tries": 8,
+                   "branch_rate" : 999}
+second_tier_root = {"growth_duration" : 2,
+                   "max_branches" : 5,
+                    "max_length_basal": 20,
                     "max_length_branching": 150,
-                    "max_length_apex": 30,
-                    "initial_speed": 7,
-                    "max_tries" : 7,
-                    "branch_rate" : 75}
-third_tier_root = {"growth_duration" : 100*40*1,
+                    "max_length_apex": 10,
+                    "initial_speed": 30,
+                    "max_tries" : 8,
+                    "branch_rate" : 990}
+third_tier_root = {"growth_duration" : 2,
                    "max_branches" : 0,
-                   "max_length_basal": 5,
-                   "max_length_branching": 15,
+                   "max_length_basal": 10,
+                   "max_length_branching": 35,
                    "max_length_apex": 5,
-                   "initial_speed": 6,
+                   "initial_speed": 15,
                    "max_tries" : 2,
-                   "branch_rate" : 100}
+                   "branch_rate" : 1000}
 # depending on tier, sucessor get i+1 tier
 root_tier = [first_tier_root, second_tier_root, third_tier_root]
 
@@ -63,7 +63,7 @@ class Letter:
 
     def draw(self, screen, start_pos):
         end_pos = (start_pos[0]+self.dir[0]*self.length,start_pos[1]+self.dir[1]*self.length)
-        pygame.draw.line(screen,(0,0,0),start_pos, end_pos, 6-self.tier)
+        pygame.draw.line(screen,(0,0,0),start_pos, end_pos, 7-self.tier)
         pygame.draw.line(screen,(255,255,255),start_pos, end_pos, 4-self.tier)
         for branch in self.branches:
             next_start_pos = (start_pos[0] + self.dir[0] * branch.t * self.length,
@@ -81,18 +81,24 @@ class LSystem:
         else:
             self.first_letters = [self.create_root(tier=0,dir=(0,1))]
 
-    def update(self, dt):
+    def init_root(self, position, direction=(0,1),mass=0):
+        self.first_letters.append(self.create_root(tier=0,dir=direction,growth_offset=mass))
+        self.positions.append(position)
+
+    def update(self, mass):
         for letter in self.first_letters:
-            self.apply_rules(letter)
+            self.apply_rules(letter, mass)
 
     def handle_event(self,e):
         if e.type == pygame.KEYDOWN and e.key == pygame.K_i:
-            self.apply_rules(self.first_letter)
-            self.first_letter.print()
+            #self.apply_rules(self.first_letters[0])
+            print(self.positions, self.first_letters)
+            for letter in self.first_letters:
+                letter.print()
         if e.type == pygame.KEYDOWN and e.key == pygame.K_b:
             self.create_branch(self.first_letter)
 
-    def create_root(self, tier, dir=None, t=1, growth_offset=None, init_length=0):
+    def create_root(self, tier, dir=None, t=1, growth_offset=0, init_length=0):
         tier_init = root_tier[tier]
         init_dir = dir if dir is not None else (0, 1)
         # one root creates 3 letters
@@ -101,28 +107,44 @@ class LSystem:
         # 200 -> branching -> can produce more 200 additional to branches
         # 300 -> apex
         # basel grows first, then branching, then apex. Once apex is done, branches start to grow
-        time = growth_offset if growth_offset else pygame.time.get_ticks()
-        apex = Letter(300, tier, self.get_random_direction(tier_init["max_tries"], init_dir), init_dir, time + tier_init["growth_duration"]*2,
-                      time + tier_init["growth_duration"]*3, tier_init["max_length_apex"], tier_init["initial_speed"])
-        branching = Letter(200, tier, self.get_random_direction(tier_init["max_tries"], init_dir), init_dir, time + tier_init["growth_duration"],
-                           time + tier_init["growth_duration"]*2, tier_init["max_length_branching"], tier_init["initial_speed"],
+
+
+        sum_length = tier_init["max_length_basal"] + tier_init["max_length_branching"] + tier_init["max_length_apex"]
+        growth_duration = tier_init["growth_duration"]
+
+        basal_growth_duration = growth_duration / sum_length * tier_init["max_length_basal"]
+        branching_growth_duration =  growth_duration / sum_length * tier_init["max_length_branching"]
+        apex_growth_duration =  growth_duration / sum_length * tier_init["max_length_apex"]
+        time = growth_offset if growth_offset else 0#pygame.time.get_ticks()
+        apex = Letter(300, tier, self.get_random_direction(tier_init["max_tries"], init_dir), init_dir, time + basal_growth_duration + branching_growth_duration,
+                      time + basal_growth_duration + branching_growth_duration + apex_growth_duration, tier_init["max_length_apex"], tier_init["initial_speed"])
+        branching = Letter(200, tier, self.get_random_direction(tier_init["max_tries"], init_dir), init_dir, time + basal_growth_duration,
+                           time + basal_growth_duration + branching_growth_duration, tier_init["max_length_branching"], tier_init["initial_speed"],
                            tier_init["max_branches"], branches=[apex], branch_rate=tier_init["branch_rate"])
-        basal = Letter(100, tier, init_dir, init_dir,time, time + tier_init["growth_duration"],
+        basal = Letter(100, tier, init_dir, init_dir,time, time + basal_growth_duration,
                        tier_init["max_length_basal"], tier_init["initial_speed"], branches=[branching], t=t,
                        init_length=init_length, branch_rate=tier_init["branch_rate"])
         return basal
 
-    def apply_rules(self, letter):
-        current_time = pygame.time.get_ticks()
+    def apply_rules(self, letter, mass):
+        #current_time = pygame.time.get_ticks()
         if letter.id > 99:
-            self.grow_section(letter)
+            self.grow_section(letter, mass)
         # random branching
         for branch in letter.branches:
-            self.apply_rules(branch)
-        if letter.id == 200 and letter.growth_start_time*1.05 < current_time:
-            if random.uniform(0,100) > letter.branch_rate:
+            self.apply_rules(branch, mass)
+        if letter.id == 200 and letter.growth_start_time*1.005 < mass:
+
+            # length, max_length, -> delta_rate + baserate = chance
+            # delta_length = max_length/max_branches
+            # length % delta_length = delta_rate
+
+            # normalized length per branch
+            delta_length = (letter.length/letter.max_length)/10
+            if random.uniform(0,1) > 1 - delta_length:
+                #print("create it", delta_length, letter.length/letter.max_length)
                 self.create_branch(letter)
-            if random.uniform(0,100) > 90 and letter.length < letter.max_length:
+            if random.uniform(0,1000) > 997 and letter.length < letter.max_length:
                 self.create_segment(letter)
 
 
@@ -136,28 +158,28 @@ class LSystem:
                            tier_init["max_branches"], branches=[letter.branches[-1]], n_branches=letter.n_branches)
         if letter.n_branches > 0:
             letter.branches.pop(len(letter.branches)-1)
-            letter.branches.append(segment)
+        letter.branches.append(segment)
         letter.id = 1
 
 
-    def grow_section(self, letter):
-        current_ticks = pygame.time.get_ticks()
+    def grow_section(self, letter, mass):
+        #current_ticks = pygame.time.get_ticks()
         #print(letter.tier, letter.id, current_ticks, letter.growth_start_time, letter.grwoth_end_time)
         # max length reached
         if letter.length >= letter.max_length:
             letter.length = letter.max_length
             return
         # not started growing
-        if letter.growth_start_time > current_ticks:
+        if letter.growth_start_time > mass:
             return
         # growth time finished
-        if letter.grwoth_end_time < current_ticks:
+        if letter.grwoth_end_time < mass:
             return
-        letter.length = self.grow_axial(letter.max_length, letter.initial_speed,current_ticks -letter.growth_start_time)
+        letter.length = self.grow_axial(letter.max_length, letter.initial_speed,mass -letter.growth_start_time)
         #print(letter.id, letter.tier, letter.length, letter.max_length, letter.initial_speed, current_ticks-letter.growth_start_time)
 
     def grow_axial(self, max_length, initial_speed, t):
-        delta_length = max_length * (1 - math.exp(-1 * (initial_speed / max_length * t/1000)))
+        delta_length = max_length * (1 - math.exp(-1 * (initial_speed / max_length * t)))
         return delta_length
 
     def create_branch(self, letter):
@@ -174,8 +196,9 @@ class LSystem:
             letter.n_branches += 1
 
     def print(self):
-        print(self.first_letter.dir[0], self.first_letter.dir[1])
-        self.first_letter.print()
+        pass
+        #print(self.first_letter.dir[0], self.first_letter.dir[1])
+        #self.first_letter.print()
 
     def draw(self,screen):
         for i in range(0,len(self.first_letters)):
@@ -198,7 +221,7 @@ class LSystem:
             if growth_dir is not None:
                 angle_growth_xy = self.angle_between(growth_dir, (x, y))
                 angle_growth_dir = self.angle_between(growth_dir, dir)
-            if (angle_down_xy + angle_down_xy + angle_growth_xy)/3 < (angle_down_dir+angle_down_dir+angle_growth_dir)/3:
+            if (angle_down_xy + angle_growth_xy)/2 < (angle_down_dir+angle_growth_dir)/2:
                 dir = (x,y)
             #if self.angle_between(down, (x, y)) < self.angle_between(down, dir):  # downward directions get promoted
             #    dir = (x, y)

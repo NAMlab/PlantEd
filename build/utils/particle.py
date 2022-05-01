@@ -67,7 +67,8 @@ class PointsParticle(Particle):
 class ParticleSystem:
     def __init__(self, max_particles, spawn_box=Rect(0, 0, 0, 0), boundary_box=None, color=(0, 0, 0),
                  direction=None, size=10, lifetime=None, apply_gravity=False, speed=None, size_over_lifetime=True,
-                 images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True, color_spectrum=False, wide_spread=False):
+                 images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True,
+                 color_spectrum=False, wide_spread=False, rectangle=False):
         if speed is None:
             speed = [0.0, 0.0]
         self.apply_gravity = apply_gravity
@@ -93,6 +94,7 @@ class ParticleSystem:
         self.particle_counter = 0
         self.wide_spread = wide_spread
         self.color_spectrum = color_spectrum
+        self.rectangle = rectangle
 
     def update(self, dt):
         if not self.active:
@@ -185,7 +187,10 @@ class ParticleSystem:
                     size = particle.lifetime
                 else:
                     size = particle.size
-                pygame.draw.circle(screen, particle.color, (particle.x, particle.y), size)
+                if self.rectangle:
+                    pygame.draw.rect(screen, particle.color, (particle.x, particle.y, 2,self.size))
+                else:
+                    pygame.draw.circle(screen, particle.color, (particle.x, particle.y), size)
 
             #screen.blit(self.circle_surf(size*2, (20, 20, 60)), (particle.x-size*2, particle.y-size*2), special_flags=BLEND_RGB_ADD)
 

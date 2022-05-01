@@ -282,7 +282,7 @@ class Beziere:
         #pygame.draw.lines(screen, config.GREEN, False, self.points_to_draw, width=5)
 
         # draw control points
-        for i in range (0,len(self.list_of_points)):
-            #point = (self.list_of_points[i][0]+self.offsets[i][0],self.list_of_points[i][1]+self.offsets[i][1])
-            point = (self.list_of_points[i][0],self.list_of_points[i][1])
-            pygame.draw.circle(screen, (255,0,0),point, 5)
+        #for i in range (0,len(self.list_of_points)):
+        #    #point = (self.list_of_points[i][0]+self.offsets[i][0],self.list_of_points[i][1]+self.offsets[i][1])
+        #    point = (self.list_of_points[i][0],self.list_of_points[i][1])
+        #    pygame.draw.circle(screen, (255,0,0),point, 5)

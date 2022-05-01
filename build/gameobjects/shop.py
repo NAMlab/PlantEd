@@ -14,12 +14,12 @@ shopitems have action and button and cost
 '''
 
 class Shop:
-    def __init__(self, rect, shop_items, model, cols=2, green_thumbs=10, margin=10):
+    def __init__(self, rect, shop_items, model, plant, cols=2, margin=10):
         self.rect = rect
         self.shop_items = shop_items
         self.margin = margin
         self.model = model
-        self.green_thumbs = green_thumbs
+        self.plant = plant
         self.green_thumbs_icon = assets.img("green_thumb.png",(26,26))
         self.current_cost = 0
         self.animations = []
@@ -67,7 +67,8 @@ class Shop:
     def buy(self):
         for item in self.shop_items:
             if item.selected:
-                if self.green_thumbs - item.cost >= 0:
+                if self.plant.upgrade_points - item.cost >= 0:
+                    self.plant.upgrade_points -= item.cost
                     item.callback()
                     item.selected = False
                     #cost = config.FONT.render("{}".format(self.current_cost), False, (255, 255, 255))
