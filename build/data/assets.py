@@ -17,7 +17,7 @@ true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSy
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
 
 def img(path, size=None):
-    path = os.path.join("../assets", path)
+    path = os.path.join("assets", path)
     global _image_library
     image = _image_library.get(path)
     if image == None:
@@ -31,7 +31,7 @@ def img(path, size=None):
 
 
 def sfx(path, volume=None):
-    path = os.path.join("../assets", path)
+    path = os.path.join("assets", path)
     global _sound_library
     sound = _sound_library.get(path)
     if sound == None:
@@ -43,7 +43,7 @@ def sfx(path, volume=None):
     return sound
 
 def song(path, volume=None):
-    path = os.path.join("../assets", path)
+    path = os.path.join("assets", path)
     global _music_library
     music = _music_library.get(path)
     if music == None:

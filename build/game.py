@@ -69,8 +69,9 @@ def shake():
 # unittests, dir that contains all tests, one test file for one class, secure class function
 # pipenv for git, enable cloners to see all depencies
 
-#pygame.mixer.music.load('../assets/background_music.mp3', 0.05)
-#pygame.mixer.music.play(-1,0)
+pygame.mixer.music.load('../assets/background_music.mp3')
+pygame.mixer.music.set_volume(0.05)
+pygame.mixer.music.play(-1,0)
 
 # seperate high to low level --> less function calls, less clutter
 class DevScene(object):
@@ -129,7 +130,7 @@ class DefaultGameScene(object):
         add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf)
 
         self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant)
-        self.shop.add_shop_item(["watering","blue_grain","spraycan"])
+        self.shop.add_shop_item(["watering","blue_grain"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 
@@ -149,6 +150,11 @@ class DefaultGameScene(object):
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
+            if e.type == WIN:
+                if self.log:
+                    self.log.write_log(self.textbox.text)
+                scoring.upload_score(self.textbox.text, self.gametime.get_time())
+                self.manager.go_to(CustomScene())
             self.shop.handle_event(e)
             self.ui.handle_event(e)
             self.plant.handle_event(e)
@@ -198,11 +204,12 @@ class TitleScene(object):
         self.images = [assets.img("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
         self.centre = (SCREEN_WIDTH/2-self.images[0].get_width()/2, SCREEN_HEIGHT/7)
         self.particle_systems = []
-        self.watering_can = Watering_can((0, 0))#assets.img("watering_can_outlined.png")
+        self.watering_can = Watering_can((0, 0),callback=self.grow_plant)#assets.img("watering_can_outlined.png")
+        self.watering_can.activate(40)
         self.plant_size = 0
         self.plant_growth_pos = []
         self.offset = repeat((0, 0))
-        self.max_plant_size = 100
+        self.max_plant_size = 200
         self.image = self.images[0]
         self.mouse_pos = pygame.mouse.get_pos()
         pygame.mouse.set_visible(False)
@@ -214,6 +221,9 @@ class TitleScene(object):
         self.start_game_text = self.sfont.render('> press space to start <', True, (255, 255, 255))
         self.text2 = self.water_plant_text
 
+    def grow_plant(self, rate):
+        self.plant_size += 1
+
     def render(self, screen):
         tmp_screen.fill((50, 50, 50))
         tmp_screen.blit(self.image, self.centre)
@@ -222,12 +232,14 @@ class TitleScene(object):
         for system in self.particle_systems:
             if system.active:
                 system.draw(screen)
-        tmp_screen.blit(self.watering_can, (self.mouse_pos[0],self.mouse_pos[1]-100))
+        self.watering_can.draw(tmp_screen)
+        #tmp_screen.blit(self.watering_can, (self.mouse_pos[0],self.mouse_pos[1]-100))
         screen.blit(tmp_screen, next(self.offset))
 
     def update(self, dt):
         step = self.max_plant_size / (len(self.images))
         index = int(self.plant_size/step)
+        self.watering_can.update(dt)
         if index < len(self.images):
             self.image = self.images[index]
         if self.mouse_pos[0] > SCREEN_WIDTH / 3 and self.mouse_pos[0] < SCREEN_WIDTH / 3 * 2 and self.particle_systems[0].active:
@@ -242,13 +254,13 @@ class TitleScene(object):
         for e in events:
             if e.type == KEYDOWN and e.key == K_SPACE:
                 if self.plant_size > self.max_plant_size:
-                    self.manager.go_to(GameScene(0))
+                    pygame.mouse.set_visible(False)
+                    self.manager.go_to(DefaultGameScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
-            if e.type == KEYDOWN and e.key == K_a:
-                self.offset = shake()
-            if e.type == MOUSEBUTTONDOWN:
+            self.watering_can.handle_event(e)
+            '''if e.type == MOUSEBUTTONDOWN:
                 self.particle_systems[0].activate()
                 self.watering_can = assets.img("watering_can_outlined_tilted.png")
             if e.type == MOUSEMOTION:
@@ -256,7 +268,7 @@ class TitleScene(object):
                 self.particle_systems[0].spawn_box = pygame.Rect(self.mouse_pos[0], self.mouse_pos[1], 0, 0)
             if e.type == MOUSEBUTTONUP:
                 self.particle_systems[0].deactivate()
-                self.watering_can = assets.img("watering_can_outlined.png")
+                self.watering_can = assets.img("watering_can_outlined.png")'''
 
 class CustomScene(object):
     def __init__(self):
@@ -324,7 +336,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(DefaultGameScene())
+        self.go_to(TitleScene())
 
     def go_to(self, scene):
         self.scene = scene

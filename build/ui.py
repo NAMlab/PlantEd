@@ -86,7 +86,6 @@ class UI:
 
         self.s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
 
-
         self.sliders = []
         self.button_sprites = pygame.sprite.Group()
         self.particle_systems = []
@@ -94,6 +93,22 @@ class UI:
         self.animations = []
 
         #put somewhere
+        topleft = self.organ_details_topleft
+        self.biomass_particle = ParticleSystem(20, spawn_box=Rect(200, 495, 25, 25), lifetime=8, color=config.GREEN,
+                           apply_gravity=False,
+                           speed=[0, -4], spread=[2, -2], active=True)
+
+        self.starch_particle = ParticleSystem(20, spawn_box=Rect(200, 535, 25, 25), lifetime=8, color=config.WHITE,
+                           apply_gravity=False,
+                           speed=[0, 4], spread=[2, -2], active=False)
+
+        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(230, 745, 55, 0), lifetime=8, color=config.WHITE,
+                                              apply_gravity=False,
+                                              speed=[0, 4], spread=[2, 0], active=False)
+
+        self.particle_systems.append(self.biomass_particle)
+        self.particle_systems.append(self.starch_particle)
+        self.particle_systems.append(self.drain_starch_particle)
 
         self.tool_tip_manager = ToolTipManager(config.tooltipps, callback=self.plant.get_biomass)
         self.button_sprites.add(ToggleButton(240, config.SCREEN_HEIGHT - 50, 64, 32,
@@ -118,7 +133,7 @@ class UI:
         #self.animations.append(Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)], 720, (250, 500)))
         #self.animations.append(Animation([assets.img("stomata/stomata_open_test.png")],720,(250,500)))
         self.init_production_ui()
-        self.init_organ_ui()
+        #self.init_organ_ui()
 
     def handle_event(self, e):
         for button in self.button_sprites:
@@ -131,14 +146,10 @@ class UI:
         self.textbox.handle_event(e)
 
     def update(self, dt):
-        if self.plant.target_organ.type == self.plant.STARCH:
-            self.starch_consumption_slider.visible = True
-        else:
-            self.starch_consumption_slider.visible = False
         for slider in self.sliders:
             slider.update()
         for system in self.particle_systems:
-            system.update(dt*math.sqrt(self.gametime.GAMESPEED))
+            system.update(dt)
         self.tool_tip_manager.update()
         for element in self.floating_elements:
             element.update(dt)
@@ -157,8 +168,6 @@ class UI:
             screen.blit(animation.image,animation.pos)
         self.tool_tip_manager.draw(screen)
 
-
-
     # this should focus on UI components
     def activate_biomass_objective(self):
         if self.model.objective == STARCH_OUT:
@@ -175,6 +184,8 @@ class UI:
             self.starch_particle.particles.clear()
             # is this the right place?'''
             self.model.set_objective(BIOMASS)
+            self.starch_particle.deactivate()
+            self.biomass_particle.activate()
 
 
     def activate_starch_objective(self):
@@ -191,14 +202,18 @@ class UI:
             self.starch_particle.particle_counter = 0
             self.starch_particle.particles.clear()'''
             self.model.set_objective(STARCH_OUT)
+            self.starch_particle.activate()
+            self.biomass_particle.deactivate()
 
     def toggle_starch_as_resource(self):
         #self.starch_particle.particles.clear()
         if self.model.use_starch:
             #self.starch_particle.active = False
+            self.drain_starch_particle.deactivate()
             self.model.deactivate_starch_resource()
         else:
             #self.starch_particle.active = True
+            self.drain_starch_particle.activate()
             self.model.activate_starch_resource()
 
     def draw_ui(self, screen):
@@ -207,7 +222,7 @@ class UI:
         self.s.fill((0,0,0,0))
         self.draw_plant_details(self.s)
         self.draw_production(self.s)
-        self.draw_organ_details(self.s)
+        #self.draw_organ_details(self.s)
         #self.draw_starch_details(s)
         # name plant, make textbox
         self.textbox.draw(self.s)
@@ -273,9 +288,7 @@ class UI:
             topleft = (topleft[0]+160, topleft[1])
         elif self.plant.target_organ.type == self.plant.STARCH:
             image = assets.img("starch.png", (128, 128))
-            topleft = (topleft[0]+240, topleft[1])
-            self.starch_consumption_slider.x = topleft[0]+138
-            self.starch_consumption_slider.y = topleft[1]
+            topleft = (topleft[0]+260, topleft[1])
 
         # draw plant image + exp + lvl + rate + mass
 
@@ -315,9 +328,9 @@ class UI:
     def init_organ_ui(self):
         topleft = self.organ_details_topleft
         # below so it does not get in group
-        self.starch_consumption_slider = Slider((0, 0, 15, 182), config.FONT, (50, 20),
+        self.starch_consumption_slider = Slider((topleft[0], topleft[1], 15, 182), config.FONT, (50, 20),
                                                 organ=self.plant.organ_starch, plant=self.plant, percent=30,
-                                                visible=False)
+                                                visible=True)
         self.sliders.append(self.starch_consumption_slider)
         self.starch_consumption_slider.x = topleft[0] + 138
         self.starch_consumption_slider.y = topleft[1]
@@ -326,18 +339,19 @@ class UI:
         topleft = self.production_topleft
         # init organs
         radioButtons = [
-            RadioButton(topleft[0], topleft[1] + 40, 64, 64,
+            RadioButton(topleft[0], topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_leaf, self.activate_biomass_objective],
-                        config.FONT, image=assets.img("leaf_small.png")),
-            RadioButton(topleft[0]+80, topleft[1] + 40, 64, 64,
+                        config.FONT, image=assets.img("leaf_small.png",(100,100))),
+            RadioButton(topleft[0]+110, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_stem, self.activate_biomass_objective],
-                        config.FONT, image=assets.img("stem_small.png")),
-            RadioButton(topleft[0]+160, topleft[1] + 40, 64, 64,
+                        config.FONT, image=assets.img("stem_small.png",(100,100))),
+            RadioButton(topleft[0]+220, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_root, self.activate_biomass_objective],
-                        config.FONT, image=assets.img("roots_small.png")),
-            RadioButton(topleft[0]+240, topleft[1] + 40, 64, 64,
-                        [self.plant.set_target_organ_starch, self.activate_starch_objective],
-                        config.FONT, image=assets.img("starch.png"))
+                        config.FONT, image=assets.img("roots_small.png",(100,100))),
+            RadioButton(topleft[0] + 110, topleft[1] + 540, 100,100,
+                        [self.plant.set_target_organ_starch],
+                        config.FONT, image=assets.img("starch.png",(100,100)))
+
         ]
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
@@ -347,18 +361,35 @@ class UI:
         #self.button_sprites.add(
         #    ToggleButton(topleft[0] + 100, topleft[1] + 385, 210, 40, [], config.FONT, "Photosysnthesis", pressed=True,
         #                 fixed=True))
-        toggle_starch_button = ToggleButton(topleft[0] + 304, topleft[1] + 40, 16, 64,
-                                            [self.toggle_starch_as_resource], config.SMALL_FONT,
-                                            "Drain", vertical=True)
-        self.plant.organ_starch.toggle_button = toggle_starch_button
-        self.button_sprites.add(toggle_starch_button)
-        self.leaf_slider = Slider((topleft[0], topleft[1] + 110, 15, 200), config.FONT, (50, 20),
+        production_buttons = [RadioButton(topleft[0] + 20, topleft[1] + 390, 160, 30,
+                                          [self.activate_biomass_objective], config.FONT,
+                                          "Produce Biomass", border_radius=3),
+                              RadioButton(topleft[0] + 20, topleft[1] + 432, 160,30,
+                                            [self.activate_starch_objective],
+                                            config.FONT, "Produce Starch", border_radius=3)]
+
+        production_buttons[0].setRadioButtons(production_buttons)
+        production_buttons[1].setRadioButtons(production_buttons)
+        production_buttons[0].button_down = True
+
+
+        #self.plant.organ_starch.toggle_button = produce_biomass_button
+        self.button_sprites.add(production_buttons[0])
+        self.button_sprites.add(production_buttons[1])
+
+        starch_toggle_button = ToggleButton(topleft[0] + 215, topleft[1] + 615, 60, 22,
+                                          [self.toggle_starch_as_resource], config.FONT,
+                                          "Drain", vertical=False)
+        self.button_sprites.add(starch_toggle_button)
+        self.plant.organ_starch.toggle_button = starch_toggle_button
+
+        self.leaf_slider = Slider((topleft[0]+25, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[0],
                                   plant=self.plant, active=False)
-        self.stem_slider = Slider((topleft[0]+80, topleft[1] + 110, 15, 200), config.FONT, (50, 20),
+        self.stem_slider = Slider((topleft[0]+25+110, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[1],
                                   plant=self.plant, active=False)
-        self.root_slider = Slider((topleft[0]+160, topleft[1] + 110, 15, 200), config.FONT, (50, 20),
+        self.root_slider = Slider((topleft[0]+25+220, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[2],
                                   plant=self.plant, percent=100)
         #self.starch_slider = Slider((topleft[0] + 240, topleft[1] + 110, 15, 200), config.FONT, (50, 20),
@@ -369,6 +400,10 @@ class UI:
         self.sliders.append(self.root_slider)
         #self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
+
+        self.starch_consumption_slider = Slider((topleft[0] + 220, topleft[1] + 500, 15, 110), config.FONT, (50, 20),
+                                                organ=self.plant.organ_starch, plant=self.plant, percent=30)
+        self.sliders.append(self.starch_consumption_slider)
 
         '''self.sliders.append(
             Slider((topleft[0] + 536, topleft[1] + 70, 15, 200), config.FONT, (50, 20), organ=self.plant.organ_starch,
@@ -393,13 +428,45 @@ class UI:
         self.particle_systems.append(self.starch_particle)'''
 
     # weird to have extra method for one element
+
+    def draw_organ_detail_temp(self, s, organ, pos, name, show_level=True):
+        topleft = pos
+        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 100, 30), border_radius=3)
+        label = config.FONT.render(name, True, (0, 0, 0))  # title
+        s.blit(label, dest=(topleft[0] + 50 - label.get_width() / 2, topleft[1]))
+
+        if show_level:
+            pygame.draw.circle(s, config.WHITE_TRANSPARENT, (topleft[0] + 20, topleft[1] + 60), 20)
+            pygame.draw.circle(s, config.WHITE, (topleft[0] + 20, topleft[1] + 60), 20, width=3)
+            level = organ.level
+            level_label = config.FONT.render("{:.0f}".format(level), True, (0, 0, 0))
+            s.blit(level_label, (topleft[0] + 20 - level_label.get_width() / 2, topleft[1] + 60 - level_label.get_height() / 2))
+
+        exp_width = 100
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1]+120, exp_width, 16), border_radius=3)
+        needed_exp = organ.get_threshold()
+        exp = organ.mass / needed_exp
+        width = min(int(exp_width / 1 * exp), exp_width)
+        pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1]+120, width, 16), border_radius=3)  # exp
+        text_organ_mass = config.SMALL_FONT.render("{:.2f} / {threshold}".format(organ.mass,
+                                                threshold=organ.get_threshold()),
+                                                True, (0, 0, 0))
+        s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+120))  # Todo change x, y
+
+
+
+
     def draw_production(self, s):
         topleft = self.production_topleft
         # headbox
-        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 320, 30), border_radius=3)
-        production_text = config.FONT.render("Production", True, (0, 0, 0))  # title
-        s.blit(production_text, dest=(topleft[0]+160-production_text.get_width()/2, topleft[1]))
+        self.draw_organ_detail_temp(s,self.plant.organs[0],topleft,"Leaf")
+        self.draw_organ_detail_temp(s,self.plant.organs[1],(topleft[0]+110,topleft[1]),"Stem")
+        self.draw_organ_detail_temp(s,self.plant.organs[2],(topleft[0]+220,topleft[1]),"Root")
 
+        self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+110,topleft[1]+500),"Starch", False)
+
+        #self.draw_organ_detail_temp(s,3,(topleft[0]+330,topleft[1]),"Starch")
+        #pygame.draw.line(s,config.WHITE_TRANSPARENT,(topleft[0]+260,topleft[1]+40),(topleft[0]+260,topleft[1]+300),width=2)
         # rest of production consists of sliders and buttons
 
     def draw_starch_details(self, s):

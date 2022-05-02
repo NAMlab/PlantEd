@@ -8,7 +8,7 @@ from fba import dynamic_model
 
 
 class Watering_can:
-    def __init__(self, pos, model, amount=0, rate=0.15, cost=1): # take from config
+    def __init__(self, pos, model=None, amount=0, rate=0.15, cost=1, active=False, callback=None): # take from config
         self.pos = pos
         self.model = model
         self.image = assets.img("watering_can_outlined.png")
@@ -17,8 +17,9 @@ class Watering_can:
         self.rate = rate
         self.default_rate = 0.15 #add to config
         self.cost = cost
-        self.active = False
+        self.active = active
         self.pouring = False
+        self.callback = callback
         self.can_particle_system = ParticleSystem(90, spawn_box=Rect(self.pos[0], self.pos[1], 0, 0), lifetime=12,
                                                   color=config.BLUE,apply_gravity=True,speed=[0, 60],
                                                   spread=[10, 0], active=False)
@@ -43,7 +44,11 @@ class Watering_can:
     def update(self,dt):
         if self.active and self.pouring:
             self.can_particle_system.update(dt)
-            self.model.water_pool += self.rate
+            if self.model:
+                self.model.water_pool += self.rate
+            if self.callback:
+                print("wata")
+                self.callback(self.rate)
             if self.amount < 0:
                 self.amount = 0
                 self.deactivate()

@@ -72,6 +72,18 @@ class Letter:
             branch.draw(screen, next_start_pos)
 
 
+    def draw_highlighted(self, screen, start_pos):
+        end_pos = (start_pos[0]+self.dir[0]*self.length,start_pos[1]+self.dir[1]*self.length)
+        pygame.draw.line(screen, (255, 255, 255), start_pos, end_pos, 9 - self.tier)
+        pygame.draw.line(screen,(0,0,0),start_pos, end_pos, 7-self.tier)
+        pygame.draw.line(screen,(255,255,255),start_pos, end_pos, 4-self.tier)
+        for branch in self.branches:
+            next_start_pos = (start_pos[0] + self.dir[0] * branch.t * self.length,
+                              start_pos[1] + self.dir[1] * branch.t * self.length)
+            # get t of branch, calc length
+            branch.draw_highlighted(screen, next_start_pos)
+
+
 class LSystem:
     def __init__(self, positions, directions=None):
         self.positions = positions
@@ -205,6 +217,10 @@ class LSystem:
             self.first_letters[i].draw(screen, self.positions[i])
         #self.first_letter.draw(screen, self.pos)
         #self.first_letter
+
+    def draw_highlighted(self,screen):
+        for i in range(0,len(self.first_letters)):
+            self.first_letters[i].draw_highlighted(screen, self.positions[i])
 
     def get_random_direction(self, tries, growth_dir=None, down=(0,1)):
         dir = (random.uniform(0,2)-1,random.uniform(0,2)-1)

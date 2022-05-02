@@ -37,7 +37,7 @@ class Plant:
     def __init__(self, pos, model, camera):
         self.x = pos[0]
         self.y = pos[1]
-        self.upgrade_points = 10
+        self.upgrade_points = 0
         self.model = model
         self.camera = camera
         self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
@@ -51,7 +51,7 @@ class Plant:
         # Fix env constraints
 
     def get_growth_rate(self):
-        growth_rate = 0.2 if self.get_biomass() < 4 else 0
+        growth_rate = 0.01 if self.get_biomass() < 4 else 0
         for i in range(0,3):
             growth_rate += self.organs[i].growth_rate
         return growth_rate
@@ -65,7 +65,7 @@ class Plant:
 
     def update_growth_rates(self, growth_rate):
         growth_rate_organs = growth_rate[0]
-        growth_rate_organs += 0.08 if self.get_biomass() < 10 and growth_rate[0] > 0 else 0
+        growth_rate_organs += 0.05 if self.get_biomass() < 4 and growth_rate[0] > 0 else 0
         for organ in self.organs:
             organ.update_growth_rate(growth_rate_organs)
         self.organ_starch.update_growth_rate(growth_rate[1])
@@ -432,14 +432,18 @@ class Root(Organ):
         super().reach_threshold()
 
     def draw(self, screen):
-        pygame.draw.line(screen,config.BLACK,(self.x+1,self.y+30), (self.x,self.y+45),6)
-        pygame.draw.line(screen,config.WHITE,(self.x+1,self.y+30), (self.x,self.y+45),4)
-        self.ls.draw(screen)
+        if self.type == self.plant.target_organ.type:
+            pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 8)
+            self.ls.draw_highlighted(screen)
+        else:
+            self.ls.draw(screen)
+        pygame.draw.line(screen, config.BLACK, (self.x + 1, self.y + 30), (self.x, self.y + 45), 6)
+        pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 4)
         #for curve in self.curves:
         #    curve.draw(screen)
         '''if not self.pivot:
             self.pivot = (0,0)
-        if self.type == self.plant.target_organ.type:
+        
             outlines = self.get_outline()
             s = pygame.Surface((self.image.get_width(),self.image.get_height()),pygame.SRCALPHA)
             pygame.draw.lines(s,config.WHITE, True,outlines,2)
