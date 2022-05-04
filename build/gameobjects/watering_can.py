@@ -47,7 +47,6 @@ class Watering_can:
             if self.model:
                 self.model.water_pool += self.rate
             if self.callback:
-                print("wata")
                 self.callback(self.rate)
             if self.amount < 0:
                 self.amount = 0

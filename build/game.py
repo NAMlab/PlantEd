@@ -108,6 +108,7 @@ class Camera:
 
 class DefaultGameScene(object):
     def __init__(self):
+        pygame.mouse.set_visible(True)
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
         self.log = Log()                        # can be turned off
@@ -150,10 +151,12 @@ class DefaultGameScene(object):
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
+            if e.type == KEYDOWN and e.key == K_x:
+                print(pygame.mouse.get_pos())
             if e.type == WIN:
                 if self.log:
-                    self.log.write_log(self.textbox.text)
-                scoring.upload_score(self.textbox.text, self.gametime.get_time())
+                    self.log.write_log(self.ui.textbox.text)
+                scoring.upload_score(self.ui.textbox.text, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             self.shop.handle_event(e)
             self.ui.handle_event(e)

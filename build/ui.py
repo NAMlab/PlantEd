@@ -136,6 +136,8 @@ class UI:
         #self.init_organ_ui()
 
     def handle_event(self, e):
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_x:
+            print(self.tool_tip_manager.current_tip)
         for button in self.button_sprites:
             # all button_sprites handle their events
             button.handle_event(e)
