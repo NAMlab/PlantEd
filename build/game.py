@@ -24,11 +24,12 @@ from gameobjects.watering_can import Watering_can
 from gameobjects.blue_grain import Blue_grain
 from gameobjects.shop import Shop, Shop_Item
 from gameobjects.bug import Bug
-from ui import UI, FloatingElement
+from ui import UI
 from camera import Camera
 import random
 from skillsystem import Skill_System, Skill
 from utils.LSystem import LSystem, Letter
+from analysis import scoring
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -147,15 +148,18 @@ class DefaultGameScene(object):
                 nitrate_pool, water_pool = self.model.get_pools()
                 self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
                 self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
+                self.log.append_row(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool,
+                                    self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
                 self.plant.grow()
             if e.type == KEYDOWN and e.key == K_ESCAPE:
+                self.log.close_file()
+                scoring.upload_score(self.ui.textbox.text, self.gametime.get_time())
                 pygame.quit()
                 sys.exit()
-            if e.type == KEYDOWN and e.key == K_x:
-                print(pygame.mouse.get_pos())
             if e.type == WIN:
                 if self.log:
                     self.log.write_log(self.ui.textbox.text)
+                    self.log.close_file()
                 scoring.upload_score(self.ui.textbox.text, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             self.shop.handle_event(e)

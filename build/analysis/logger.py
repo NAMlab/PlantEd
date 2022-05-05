@@ -1,8 +1,12 @@
 import os
 from datetime import datetime
+import csv
 
 class Log():
     def __init__(self):
+        self.file = open('logfile.csv', 'w')
+        self.writer = csv.writer(self.file)
+        self.writer.writerow(["gr", "sr", "time", "speed", "water", "nitrate", "leaf_mass", "stem_mass", "root_mass", "starch_mass"])
         self.path_to_log = os.path.join(os.getcwd(), os.pardir)
         self.loglist = {'growth': [],
                         'gametime': [],
@@ -15,6 +19,15 @@ class Log():
                         'root_mass': [],
                         'starch_pool': [],}
 
+    '''self.log.append_row(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool,
+                        nitrate_pool,
+                        self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass,
+                        self.plant.organ_starch.mass)'''
+    def close_file(self):
+        self.file.close()
+
+    def append_row(self, gr, sr, time, speed, water, nitrate, leaf_mass, stem_mass, root_mass, starch_mass):
+        self.writer.writerow([gr, sr, time, speed, water, nitrate, leaf_mass, stem_mass, root_mass, starch_mass])
 
     def append_log(self, growth, starch, gametime, gamespeed, water, nitrate):
         self.loglist['growth'].append(str(growth))

@@ -16,68 +16,22 @@ from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
 
 from data import assets
 
+HOVER_MESSAGE = pygame.USEREVENT+2
+
 '''
 UI: set up all UI elements, update them, link them to functions
 @param  scale:size UI dynamically
         Components may differ from level to level --> should be set by file
             Dict active groups for: Organs plus Sliders, Starch deposit, Organ Detail
 '''
-# there is a chance random int leads to no movement
-class FloatingElement:
-    # bounding rect defines the floating space
-    def __init__(self, pos, bounding_rect, image=None, animation=None, active=True):
-        self.pos = pos
-        self.bounding_rect = bounding_rect
-        self.image = image
-        self.animation = animation
-        self.dir = ((random.randint(0,2)-1), (random.randint(0,2)-1)) #random direction -1,1 -1,1
-        self.active = active
-
-    def update(self, dt):
-        if self.animation is not None:
-            self.animation.update(dt)
-        if self.active:
-            self.move(dt)
-
-    def move(self, dt):
-        if not self.bounding_rect.collidepoint(self.pos[0],self.pos[1]):
-            self.dir = (-1*self.dir[0], -1*self.dir[1])
-        x = self.dir[0] * dt * 10
-        y = self.dir[1] * dt * 10
-        self.pos = (self.pos[0]+x, self.pos[1]+y)
-
-    def draw(self, screen):
-        #pygame.draw.rect(screen,config.WHITE,self.bounding_rect, width=2, border_radius=3)
-        if self.animation:
-            screen.blit(self.animation.image,(self.pos[0],self.pos[1]))
-        elif self.image:
-            screen.blit(self.image, (self.pos[0],self.pos[1]))
-
-class InfoElement:
-    '''
-    InfoElement is hidden (I) until pressed, then it opens and shows an animation/image, text
-    '''
-    def __init__(self, rect, image, animation=None, headline=None, text=None, active=False):
-        self.info_icon = assets.img("drain_icon.png",(16,16))
-        self.rect = rect
-        self.image = image
-        self.animaiton = animation
-        self.headline = headline
-        self.text = text
-        self.active = active
-
-    def update(self, dt):
-        pass
-
-    def draw(self, screen):
-        pygame.draw.rect(screen, config.WHITE,self.rect, border_radius=3, width=2)
-
 class UI:
     def __init__(self, scale, plant, model, production_topleft=(10,100), plant_details_topleft=(10,10),organ_details_topleft=(10,430)):
         self.name = "Plant"
         self.plant = plant
         self.model = model
         self.gametime = GameTime.instance()
+        self.hover_message = None
+        self.hover_timer = 60
 
         # layout positions
         self.production_topleft = production_topleft
@@ -137,7 +91,8 @@ class UI:
 
     def handle_event(self, e):
         if e.type == pygame.KEYDOWN and e.key == pygame.K_x:
-            print(self.tool_tip_manager.current_tip)
+            print(pygame.mouse.get_pos())
+            #print(self.tool_tip_manager.current_tip)
         for button in self.button_sprites:
             # all button_sprites handle their events
             button.handle_event(e)
@@ -146,6 +101,10 @@ class UI:
         for tips in self.tool_tip_manager.tool_tips:
             tips.handle_event(e)
         self.textbox.handle_event(e)
+        if e.type == pygame.MOUSEMOTION:
+            self.hover_message = None
+            self.hover_timer = 1000
+
 
     def update(self, dt):
         for slider in self.sliders:
@@ -158,6 +117,25 @@ class UI:
         for animation in self.animations:
             animation.update()
 
+        # maybe put it to event and make userevent
+        self.hover_timer -= 1/dt
+        if self.hover_timer <= 0:
+            x,y = pygame.mouse.get_pos()
+            if 10 < x < 760 and 10 < y < 50:
+                if 10 < x < 90:
+                    message = "Level"
+                if 90 < x < 199:
+                    message = "Mass"
+                if 199 < x < 320:
+                    message = "Money"
+                if 320 < x < 440:
+                    message = "Water"
+                if 440 < x < 580:
+                    message = "Nitrate"
+                if 580 < x < 760:
+                    message = "Starch"
+                self.post_hover_message(message)
+
     def draw(self, screen):
         for system in self.particle_systems:
             system.draw(screen)
@@ -169,6 +147,14 @@ class UI:
         for animation in self.animations:
             screen.blit(animation.image,animation.pos)
         self.tool_tip_manager.draw(screen)
+        if self.hover_message:
+            x,y = pygame.mouse.get_pos()
+            pygame.draw.rect(screen,config.WHITE,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
+            screen.blit(self.hover_message,(x+10,y+3))
+
+
+    def post_hover_message(self, message):
+        self.hover_message = config.FONT.render("{}".format(message),True,config.BLACK)
 
     # this should focus on UI components
     def activate_biomass_objective(self):
