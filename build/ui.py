@@ -90,9 +90,9 @@ class UI:
         #self.init_organ_ui()
 
     def handle_event(self, e):
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_x:
+        '''if e.type == pygame.KEYDOWN and e.key == pygame.K_x:
             print(pygame.mouse.get_pos())
-            #print(self.tool_tip_manager.current_tip)
+            #print(self.tool_tip_manager.current_tip)'''
         for button in self.button_sprites:
             # all button_sprites handle their events
             button.handle_event(e)
@@ -104,6 +104,27 @@ class UI:
         if e.type == pygame.MOUSEMOTION:
             self.hover_message = None
             self.hover_timer = 1000
+            self.check_mouse_pos()
+
+
+    def check_mouse_pos(self):
+        x, y = pygame.mouse.get_pos()
+        if 10 < x < 760 and 10 < y < 50:
+            message = None
+            if 10 < x < 90:
+                message = "Level is a combination of all three organ levels."
+            if 90 < x < 260:
+                message = "Plant Mass, measured as dry weight in gramm."
+            if 260 < x < 320:
+                message = "Green Thumbs are used to buy items in the shop."
+            if 320 < x < 440:
+                message = "Water availability in the environment."
+            if 440 < x < 580:
+                message = "Nitrate availability in the environment."
+            if 580 < x < 760:
+                message = "Starch that your plant has stored."
+            if message is not None:
+                self.post_hover_message(message)
 
 
     def update(self, dt):
@@ -119,22 +140,6 @@ class UI:
 
         # maybe put it to event and make userevent
         self.hover_timer -= 1/dt
-        if self.hover_timer <= 0:
-            x,y = pygame.mouse.get_pos()
-            if 10 < x < 760 and 10 < y < 50:
-                if 10 < x < 90:
-                    message = "Level"
-                if 90 < x < 199:
-                    message = "Mass"
-                if 199 < x < 320:
-                    message = "Money"
-                if 320 < x < 440:
-                    message = "Water"
-                if 440 < x < 580:
-                    message = "Nitrate"
-                if 580 < x < 760:
-                    message = "Starch"
-                self.post_hover_message(message)
 
     def draw(self, screen):
         for system in self.particle_systems:
@@ -147,9 +152,9 @@ class UI:
         for animation in self.animations:
             screen.blit(animation.image,animation.pos)
         self.tool_tip_manager.draw(screen)
-        if self.hover_message:
+        if self.hover_message is not None and self.hover_timer <= 0:
             x,y = pygame.mouse.get_pos()
-            pygame.draw.rect(screen,config.WHITE,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
+            pygame.draw.rect(screen,config.WHITE_TRANSPARENT,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
             screen.blit(self.hover_message,(x+10,y+3))
 
 
@@ -230,16 +235,17 @@ class UI:
         # biomass
         biomass_text = config.FONT.render("Mass:", True, (0, 0, 0))
         s.blit(biomass_text, dest=(topleft[0]+80, topleft[1]+6))
-        biomass = config.FONT.render("{:.2f}".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
-        s.blit(biomass, dest=(topleft[0]+biomass_text.get_width()+90, topleft[1]+6))
+        biomass = config.FONT.render("{:.2f} gramm".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
+        s.blit(biomass, dest=(topleft[0]+biomass_text.get_width()+85, topleft[1]+6))
 
         # skillpoints greenthumb
         #s.blit(assets.img("green_thumb.png", (25, 25)),
         #       (topleft[0]+200, topleft[1] + 7))
-        skillpoints_text = config.FONT.render("Thumbs:", True, (0, 0, 0))
-        s.blit(skillpoints_text, dest=(topleft[0] + 190, topleft[1] + 6))
+        #skillpoints_text = config.FONT.render("Thumbs:", True, (0, 0, 0))
+        #s.blit(skillpoints_text, dest=(topleft[0] + 190, topleft[1] + 6))
         skillpoints = config.FONT.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(skillpoints, dest=(topleft[0]+skillpoints_text.get_width()+200, topleft[1]+6))
+        s.blit(skillpoints, dest=(topleft[0]+255, topleft[1]+6))
+        s.blit(assets.img("green_thumb.png",(20,20)),(topleft[0]+skillpoints.get_width() + 270,topleft[1]+10))
 
         # water
         water_level_text = config.FONT.render("Water:", True, (0, 0, 0))

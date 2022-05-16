@@ -150,7 +150,7 @@ class Seedling:
 
 
 class Organ:
-    def __init__(self, x, y, name, organ_type,callback=None, plant=None, image=None, pivot=None, mass=1, growth_rate=0, thresholds=None, rect=None, active=False):
+    def __init__(self, x, y, name, organ_type,callback=None, plant=None, image=None, pivot=None, mass=1, growth_rate=0, thresholds=None, rect=None, active=False, base_mass=1):
         if thresholds is None:
             thresholds = [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
         self.x = x
@@ -164,7 +164,7 @@ class Organ:
         self.name = name
         self.type = organ_type
         self.mass = mass
-        self.base_mass = 1
+        self.base_mass = base_mass
         self.growth_rate = growth_rate
         self.percentage = 0
         self.thresholds = thresholds
@@ -221,7 +221,8 @@ class Organ:
         return self.thresholds[self.active_threshold]
 
     def activate(self):
-        self.mass = self.base_mass
+        if self.mass < self.base_mass:
+            self.mass = self.base_mass
         self.active = True
 
     def draw(self, screen):
@@ -256,10 +257,10 @@ class Leaf(Organ):
         self.particle_systems = []
 
     def handle_event(self, event):
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_u:
+        '''if event.type == pygame.KEYDOWN and event.key == pygame.K_u:
             self.particle_system.activate()
         if event.type == pygame.KEYDOWN and event.key == pygame.K_j:
-            self.particle_system.deactivate()
+            self.particle_system.deactivate()'''
         if event.type == pygame.MOUSEBUTTONUP:
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
@@ -403,7 +404,7 @@ class Root(Organ):
         self.selected = 0
         positions = [(x,y+45)]
         directions = [(0,1)]
-        self.ls = LSystem(positions, directions)
+        self.ls = LSystem(directions, positions)
 
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
@@ -419,6 +420,7 @@ class Root(Organ):
 
     def update(self, dt):
         self.ls.update(self.mass)
+
         #for curve in self.curves:
         #    curve.update(dt)
 
@@ -426,7 +428,7 @@ class Root(Organ):
         self.ls.handle_event(event)
 
         if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-            self.ls.init_root((self.x, self.y + 20), (-0.2, 1), self.mass)
+            self.ls.create_new_first_letter((-1,0),pygame.mouse.get_pos(), self.mass)
 
     def reach_threshold(self):
         super().reach_threshold()
@@ -458,8 +460,8 @@ class Stem(Organ):
         self.leaf = leaf
         self.width = 15
         self.highlight = None
-        super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
-        self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x+3, self.y - 150)])
+        super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active, base_mass=1)
+        self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x+3, self.y - 150), (self.x+3, self.y - 160)])
 
     def update(self, dt):
         self.curve.update(dt)

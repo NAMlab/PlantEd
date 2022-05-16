@@ -1,92 +1,48 @@
 import matplotlib.pyplot as plt
 from os import path
+import pandas as pd
 
 def main(dir):
-    dir = dir
+    df = pd.read_csv('../logfile.csv')
+    plot_all_single(df)
+    #hourly_gr = df.gr / df.speed * 3600
 
-    with open(path.join(dir,"gametime.txt"), "r") as f:
-        lines = f.readlines()
-    gametimes = [float(l.strip())/1000 for l in lines]
+def plot_all_single(df):
+    plot_vec("gr", df.gr, df.time, "days", "growth rate in gramm/seconds", False, "black")
+    plot_vec("sr", df.sr, df.time, "days", "starch rate in gramm/seconds", False, "magenta")
+    plot_vec("leaf_mass", df.leaf_mass, df.time, "days", "leaf mass (gDW)", False, "green")
+    plot_vec("stem_mass", df.stem_mass, df.time, "days", "stem mass (gDW)", False, "yellow")
+    plot_vec("root_mass", df.root_mass, df.time, "days", "root mass (gDW)", False, "red")
+    plot_vec("starch_mass", df.starch_mass, df.time, "days", "starch mass (gDW)", False, "black")
+    plot_vec("water_pool", df.water, df.time, "days", "water (mol)", False, "gray")
+    plot_vec("nitrate_pool", df.nitrate, df.time, "days", "nitrate (mol)", False, "cyan")
+    # plot_all(df)
 
-    with open(path.join(dir,"growth.txt"), "r") as f:
-        lines = f.readlines()
-    growth_rates = [float(l.strip()) for l in lines]
+def plot_vec(name,vec, time, xlabel=None, ylabel=None, plot=False, color="black"):
+    seconds = time / 1000 * 240
+    minutes = seconds / 60
+    hours = minutes / 60
+    days = hours / 24
+    #print(seconds, minutes, hours, days)
+    plt.plot(days, vec,color=color)
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylabel:
+        plt.ylabel(ylabel)
+    if plot:
+        plt.show()
+    plt.savefig("{}.svg".format(name))
+    plt.close()
 
-    with open(path.join(dir,"starch.txt"), "r") as f:
-        lines = f.readlines()
-    starch = [float(l.strip()) for l in lines]
-
-    with open(path.join(dir,"gamespeed.txt"), "r") as f:
-        lines = f.readlines()
-    gamespeeds = [float(l.strip()) for l in lines]
-
-    with open(path.join(dir,"water.txt"), "r") as f:
-        lines = f.readlines()
-    waters = [float(l.strip()) for l in lines]
-
-    with open(path.join(dir,"nitrate.txt"), "r") as f:
-        lines = f.readlines()
-    nitrates = [float(l.strip()) for l in lines]
-
-    with open(path.join(dir,"leaf_mass.txt"), "r") as f:
-        lines = f.readlines()
-    leaf_mass = [float(l.strip()) for l in lines]
-
-    with open(path.join(dir,"stem_mass.txt"), "r") as f:
-        lines = f.readlines()
-    stem_mass = [float(l.strip()) for l in lines]
-
-    with open(path.join(dir,"root_mass.txt"), "r") as f:
-        lines = f.readlines()
-    root_mass = [float(l.strip()) for l in lines]
-
-    with open(path.join(dir,"starch_pool.txt"), "r") as f:
-        lines = f.readlines()
-    starch_pool = [float(l.strip()) for l in lines]
-
-    actual_gr = []
-    for i in range (0,len(growth_rates)):
-        rate = growth_rates[i] / gamespeeds[i] if gamespeeds[i] != 0 else growth_rates[i] /1
-        actual_gr.append(rate)
-
-    plt.figure(figsize=(16, 8))
-    plt.subplot(321)
-    plt.plot(gametimes, actual_gr)
-    plt.xlabel("time in s")
-    plt.ylabel("gr")
-
-    #plt.plot(gametimes, growth_rates, "r")
-    plt.subplot(322)
-    plt.plot(gametimes, waters, "b")
-    plt.xlabel("time in s")
-    plt.ylabel("water in mol")
-
-    plt.subplot(323)
-    plt.plot(gametimes, starch, "b")
-    plt.xlabel("time in s")
-    plt.ylabel("starch in mol")
-
-    plt.subplot(324)
-    plt.plot(gametimes, nitrates, "g")
-    plt.xlabel("time in s")
-    plt.ylabel("nitrate in mol")
-
-    plt.subplot(325)
-    plt.plot(gametimes, starch_pool, "b")
-    plt.ylabel("starch_pool in g")
-
-    plt.subplot(326)
-    plt.plot(gametimes, leaf_mass, "g")
-    plt.ylabel("leaf_mass in g")
-    plt.plot(gametimes, stem_mass, "r")
-    plt.ylabel("stem_mass in g")
-    plt.plot(gametimes, root_mass, "b")
-    plt.ylabel("root_mass in g")
-
-
-    #äplt.show()
-    plt.savefig(path.join(dir,'plot.png'))
-
+def plot_all(df):
+    fig, axs = plt.subplots(len(df.columns),figsize=(10,30),sharex=True)
+    fig
+    time = df.time
+    for i in range(0,len(df.columns)):
+        axs[i].plot(time, df[df.columns[i]])
+    plt.savefig("plot.svg")
+    plt.show()
+    plt.close()
 
 if __name__ == "__main__":
     main('')

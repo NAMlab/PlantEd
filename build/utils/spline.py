@@ -231,10 +231,10 @@ class Beziere:
         self.forces.append(force)
 
     def handle_event(self,e):
-        if e.type == KEYDOWN and e.key == K_PLUS:
+        '''if e.type == KEYDOWN and e.key == K_PLUS:
             self.forces.append((10, 0))
         if e.type == KEYDOWN and e.key == K_MINUS:
-            self.forces = []
+            self.forces = []'''
         if e.type == MOUSEMOTION and self.pressed > -1:
             mouse_pos = pygame.mouse.get_pos()
             self.list_of_points[self.pressed] = mouse_pos

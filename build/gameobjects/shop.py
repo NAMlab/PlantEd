@@ -14,10 +14,11 @@ shopitems have action and button and cost
 '''
 
 class Shop:
-    def __init__(self, rect, shop_items, model, plant, cols=2, margin=10):
+    def __init__(self, rect, shop_items, model, plant, cols=2, margin=10, post_hover_message=None):
         self.rect = rect
         self.shop_items = shop_items
         self.margin = margin
+        self.post_hover_message = post_hover_message
         self.model = model
         self.plant = plant
         self.green_thumbs_icon = assets.img("green_thumb.png",(26,26))
@@ -55,11 +56,11 @@ class Shop:
     def add_shop_item(self, keywords):
         for keyword in keywords:
             if keyword == "watering":
-                self.shop_items.append(Shop_Item(assets.img("watering_can_outlined_tilted.png", (64, 64)), self.watering_can.activate))
+                self.shop_items.append(Shop_Item(assets.img("watering_can_outlined_tilted.png", (64, 64)), self.watering_can.activate,post_hover_message=self.post_hover_message, message="Buy a watering can to increase availability."))
             elif keyword == "blue_grain":
-                self.shop_items.append(Shop_Item(assets.img("blue_grain_0.png", (64, 64)), self.blue_grain.activate))
+                self.shop_items.append(Shop_Item(assets.img("blue_grain_0.png", (64, 64)), self.blue_grain.activate, post_hover_message=self.post_hover_message, message="Blue grain increases nitrate in the ground."))
             elif keyword == "spraycan":
-                self.shop_items.append(Shop_Item(assets.img("spraycan_icon.png", (64, 64)), self.spraycan.activate))
+                self.shop_items.append(Shop_Item(assets.img("spraycan_icon.png", (64, 64)), self.spraycan.activate, post_hover_message=self.post_hover_message, message="Spray em!"))
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.init_layout()
@@ -123,11 +124,13 @@ class Shop:
 
 
 class Shop_Item:
-    def __init__(self, image, callback, cost=1, info_text=None, rect=(0,0,0,0), selected_color=(255,255,255), hover_color = (128,128,128,128), border_width=3):
+    def __init__(self, image, callback, cost=1, info_text=None, rect=(0,0,0,0), selected_color=(255,255,255), hover_color = (128,128,128,128), border_width=3, post_hover_message=None, message=None):
         self.image = image
         self.callback = callback
         self.cost = cost
         self.info_text = info_text
+        self.post_hover_message = post_hover_message
+        self.message = message
         self.rect = pygame.Rect(rect[0],rect[1],rect[2],rect[3]) # ugly
         self.selected_color = selected_color
         self.hover_color = hover_color
@@ -144,6 +147,8 @@ class Shop_Item:
         if e.type == pygame.MOUSEMOTION:
             x,y = pygame.mouse.get_pos()
             if self.rect.collidepoint(x,y):
+                if self.post_hover_message is not None:
+                    self.post_hover_message(self.message)
                 if not self.selected:
                     self.hover = True
             else:

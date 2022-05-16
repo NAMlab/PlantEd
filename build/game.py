@@ -38,6 +38,8 @@ pygame.init()
 ctypes.windll.user32.SetProcessDPIAware()
 true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
+#pygame.display.toggle_fullscreen()
+#print(pygame.display.list_modes(depth=0, flags=pygame.FULLSCREEN, display=0))
 #screen = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
 #screen_high = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.DOUBLEBUF)
 tmp_screen = pygame.display.set_mode(true_res, pygame.SRCALPHA)
@@ -102,10 +104,11 @@ class Camera:
         self.offset_y = offset_y
 
     def handle_event(self, e):
-        if e.type == KEYDOWN and e.key == K_w:
+        pass
+        '''if e.type == KEYDOWN and e.key == K_w:
             self.offset_y -= 100
         if e.type == KEYDOWN and e.key == K_s:
-            self.offset_y += 100
+            self.offset_y += 100'''
 
 class DefaultGameScene(object):
     def __init__(self):
@@ -129,9 +132,9 @@ class DefaultGameScene(object):
         #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
         #shop items are to be defined by the level
-        add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf)
+        add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf, post_hover_message=self.ui.post_hover_message, message="Leaves enable your plant to produce energy.")
 
-        self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant)
+        self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant, post_hover_message=self.ui.post_hover_message)
         self.shop.add_shop_item(["watering","blue_grain"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
@@ -146,14 +149,14 @@ class DefaultGameScene(object):
                 self.model.calc_growth_rate()
                 growth_rate, starch_rate, starch_intake = self.model.get_rates()
                 nitrate_pool, water_pool = self.model.get_pools()
-                self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
-                self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
+                #self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
+                #self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
                 self.log.append_row(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool,
                                     self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
                 self.plant.grow()
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.log.close_file()
-                scoring.upload_score(self.ui.textbox.text, self.gametime.get_time())
+                scoring.upload_score(self.ui.textbox.text, -1)
                 pygame.quit()
                 sys.exit()
             if e.type == WIN:
@@ -343,7 +346,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(TitleScene())
+        self.go_to(DefaultGameScene())
 
     def go_to(self, scene):
         self.scene = scene
@@ -501,10 +504,10 @@ class GameScene():
 
             #if e.type == KEYDOWN and e.key == K_SPACE:
             #    self.manager.go_to(GameScene(0))
-            if e.type == KEYDOWN and e.key == K_UP:
+            '''if e.type == KEYDOWN and e.key == K_UP:
                 self.gametime.change_speed()
             if e.type == KEYDOWN and e.key == K_DOWN:
-                self.gametime.change_speed(0.5)
+                self.gametime.change_speed(0.5)'''
 
             self.textbox.handle_event(e)
             for button in self.button_sprites:
@@ -538,8 +541,6 @@ class GameScene():
                     self.blue_grain["active"] = False
                     pygame.mouse.set_visible(True)
 
-            if e.type == KEYDOWN and e.key == K_a:
-                pass
             for slider in self.sliders:
                 slider.handle_event(e)
             self.plant.handle_event(e)
