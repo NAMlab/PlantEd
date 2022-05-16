@@ -135,7 +135,7 @@ class DefaultGameScene(object):
         add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf, post_hover_message=self.ui.post_hover_message, message="Leaves enable your plant to produce energy.")
 
         self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant, post_hover_message=self.ui.post_hover_message)
-        self.shop.add_shop_item(["watering","blue_grain"])
+        self.shop.add_shop_item(["watering","blue_grain", "root_item"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 

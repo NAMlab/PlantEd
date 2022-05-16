@@ -424,11 +424,16 @@ class Root(Organ):
         #for curve in self.curves:
         #    curve.update(dt)
 
+    def create_new_root(self, mouse_pos):
+        pos = (self.x,self.y+45)
+        dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))
+        self.ls.create_new_first_letter(dir, pos, self.mass)
+
     def handle_event(self, event):
         self.ls.handle_event(event)
 
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-            self.ls.create_new_first_letter((-1,0),pygame.mouse.get_pos(), self.mass)
+        #if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+        #    self.ls.create_new_first_letter((-1,0),pygame.mouse.get_pos(), self.mass)
 
     def reach_threshold(self):
         super().reach_threshold()
