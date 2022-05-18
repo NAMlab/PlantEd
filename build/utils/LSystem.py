@@ -3,11 +3,11 @@ import random
 import pygame
 import numpy as np
 
-first_tier_root = {"max_length" : 200,
+first_tier_root = {"max_length" : 400,
                    "duration" : 3,
                    "tries" : 5,
                    "max_branches" : 10}
-second_tier_root = {"max_length" : 110,
+second_tier_root = {"max_length" : 200,
                    "duration" : 2,
                     "tries" : 3,
                     "max_branches" : 5}
@@ -54,7 +54,7 @@ class Letter:
             branch.draw_highlighted(screen, next_start_pos)
 
     def print(self, offset=""):
-        print(offset, self.id, self.tier, self.length, self.max_length, self.mass_start, self.mass_end, self.branching_t)
+        print(offset, self.id, self.tier, self.length, self.max_length, self.mass_start, self.mass_end, self.branching_t, len(self.branches))
         for branch in self.branches:
             branch.print(offset="   " + offset)
 
@@ -115,8 +115,9 @@ class LSystem:
             branch = self.create_root(self.get_ortogonal(letter.dir), mass, tier=letter.tier + 1, t=t)
             apex = letter.branches.pop(-1)
             letter.branches.append(branch)
-            segment = Letter(letter.id, letter.tier, letter.dir, letter.max_length-letter.length,
-                                  mass, letter.mass_end, letter.max_branches-len(letter.branches), [apex], t=1)
+            segment = Letter(letter.id, letter.tier, self.get_random_dir(tier_list[letter.tier]["tries"],letter.dir),
+                             letter.max_length-letter.length, mass, letter.mass_end,
+                             letter.max_branches-len(letter.branches), [apex], t=1)
             segment.branching_t = letter.branching_t
             letter.branching_t = []
             letter.id = 99
