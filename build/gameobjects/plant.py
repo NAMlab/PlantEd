@@ -63,10 +63,11 @@ class Plant:
             pygame.event.post(pygame.event.Event(WIN))
 
     def update_growth_rates(self, growth_rates):
+        print(growth_rates)
         for i in range(0,3):
             self.organs[i].update_growth_rate(growth_rates[i])
-        self.organ_starch.update_growth_rate(growth_rate[3])
-        self.organ_starch.starch_intake = growth_rate[4]
+        self.organ_starch.update_growth_rate(growth_rates[3])
+        self.organ_starch.starch_intake = growth_rates[4]
 
     def get_biomass(self):
         biomass = 0
@@ -176,7 +177,7 @@ class Organ:
         self.percentage = percentage
 
     def update_growth_rate(self, growth_rate):
-        self.growth_rate = self.mass * gram_mol * growth_rate * self.percentage/100
+        self.growth_rate = self.mass * gram_mol * growth_rate
 
     def get_rate(self):
         return self.growth_rate
@@ -279,7 +280,7 @@ class Leaf(Organ):
             return None
 
     def update_growth_rate(self, growth_rate):
-        self.growth_rate = self.get_mass() * gram_mol * growth_rate * self.percentage/100
+        self.growth_rate = self.get_mass() * gram_mol * growth_rate
 
     def grow(self):
         growth_per_leaf = self.growth_rate/len(self.leaves) if len(self.leaves) > 0 else 0
@@ -620,12 +621,9 @@ class Starch(Organ):
         self.growth_rate = growth_rate
 
     def drain(self):
-        delta = self.mass - self.model.get_rates()[2] * self.percentage/100
+        delta = self.mass - self.model.get_rates()[4] * 0.3
         if delta < 0:
             self.mass = 0
             self.toggle_button.deactivate()
         else:
             self.mass = delta
-
-    def get_intake(self):
-        return self.model.get_rates()[2] * self.percentage/100

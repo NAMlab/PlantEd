@@ -296,13 +296,13 @@ class UI:
         # init organs
         radioButtons = [
             RadioButton(topleft[0], topleft[1] + 40, 100, 100,
-                        [self.plant.set_target_organ_leaf, self.activate_biomass_objective],
+                        [self.plant.set_target_organ_leaf],
                         config.FONT, image=assets.img("leaf_small.png",(100,100))),
             RadioButton(topleft[0]+110, topleft[1] + 40, 100, 100,
-                        [self.plant.set_target_organ_stem, self.activate_biomass_objective],
+                        [self.plant.set_target_organ_stem],
                         config.FONT, image=assets.img("stem_small.png",(100,100))),
             RadioButton(topleft[0]+220, topleft[1] + 40, 100, 100,
-                        [self.plant.set_target_organ_root, self.activate_biomass_objective],
+                        [self.plant.set_target_organ_root],
                         config.FONT, image=assets.img("roots_small.png",(100,100))),
             RadioButton(topleft[0] + 110, topleft[1] + 540, 100,100,
                         [self.plant.set_target_organ_starch],
@@ -329,9 +329,9 @@ class UI:
         production_buttons[0].button_down = True'''
 
 
-        #self.plant.organ_starch.toggle_button = produce_biomass_button
+        '''#self.plant.organ_starch.toggle_button = produce_biomass_button
         self.button_sprites.add(production_buttons[0])
-        self.button_sprites.add(production_buttons[1])
+        self.button_sprites.add(production_buttons[1])'''
 
         starch_toggle_button = ToggleButton(topleft[0] + 215, topleft[1] + 615, 60, 22,
                                           [self.toggle_starch_as_resource], config.FONT,
@@ -348,18 +348,16 @@ class UI:
         self.root_slider = Slider((topleft[0]+25+220, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[2],
                                   plant=self.plant, percent=100)
-        #self.starch_slider = Slider((topleft[0] + 240, topleft[1] + 110, 15, 200), config.FONT, (50, 20),
-        #                          organ=self.plant.organ_starch,
-        #                          plant=self.plant, active=False)
+        self.starch_consumption_slider = Slider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
+                                                organ=self.plant.organ_starch, plant=self.plant, percent=0)
+
         self.sliders.append(self.leaf_slider)
         self.sliders.append(self.stem_slider)
         self.sliders.append(self.root_slider)
-        #self.sliders.append(self.starch_slider)
+        self.sliders.append(self.starch_consumption_slider)
         SliderGroup([slider for slider in self.sliders], 100)
 
-        self.starch_consumption_slider = Slider((topleft[0] + 220, topleft[1] + 500, 15, 110), config.FONT, (50, 20),
-                                                organ=self.plant.organ_starch, plant=self.plant, percent=30)
-        self.sliders.append(self.starch_consumption_slider)
+
 
         '''self.sliders.append(
             Slider((topleft[0] + 536, topleft[1] + 70, 15, 200), config.FONT, (50, 20), organ=self.plant.organ_starch,

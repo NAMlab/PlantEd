@@ -150,7 +150,8 @@ class DefaultGameScene(object):
                 stem_percent = self.plant.organs[1].percentage
                 root_percent = self.plant.organs[2].percentage
                 starch_percent = self.plant.organ_starch.percentage
-                self.model.calc_growth_rate(leaf_percent, starch_percent, root_percent, starch_percent)
+                print(leaf_percent, stem_percent, root_percent, starch_percent)
+                self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
                 #growth_rate, starch_rate, starch_intake = self.model.get_rates()
                 #nitrate_pool, water_pool = self.model.get_pools()
                 #self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
@@ -185,7 +186,7 @@ class DefaultGameScene(object):
         self.shop.update(dt)
         self.ui.update(dt)
         self.plant.update(dt, self.model.get_photon_upper())
-        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0), self.plant.organ_starch.percentage)
+        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0))
 
 
     def render(self, screen):

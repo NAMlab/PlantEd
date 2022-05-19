@@ -1,7 +1,7 @@
 import cobra
 import config
 import os
-from helpers import (
+from fba.helpers import (
     autotroph,
     heterotroph,
     update_objective,
@@ -59,14 +59,14 @@ class DynamicModel:
         self.starch_rate = 0
 
         self.init_constraints()
-        self.calc_growth_rate()
+        self.calc_growth_rate(0.1,0.1,1,0.1)
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
         self.nitrate_pool = max_nitrate_pool_low
         self.water_pool = 1
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.1)))
-        self.set_bounds(PHOTON, (0, 0))
+        self.set_bounds(PHOTON, (0, 100))
 
         '''forced_ATP = (
                 0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound
@@ -88,8 +88,8 @@ class DynamicModel:
         atp = 0.00727 /24
         nadhp = 0.00256 /24
 
-    def calc_growth_rate(self, root_percent, stem_percent, leaf_percent, starch_percent):
-        update_objective(root_percent, stem_percent, leaf_percent, starch_percent)
+    def calc_growth_rate(self, leaf_percent, stem_percent, root_percent, starch_percent):
+        update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent)
         solution = self.model.optimize()
         gamespeed = self.gametime.GAMESPEED
 
@@ -156,15 +156,13 @@ class DynamicModel:
     def activate_starch_resource(self):
         self.use_starch = True
         self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
-        self.calc_growth_rate()
 
     def deactivate_starch_resource(self):
         self.use_starch = False
         self.set_bounds(STARCH_IN, (0, 0))
-        self.calc_growth_rate()
 
-    def update(self, root_mass, PLA, sun_intensity, starch_percentage):
-        self.update_bounds(root_mass, PLA*sun_intensity*50, starch_percentage)
+    def update(self, root_mass, PLA, sun_intensity):
+        self.update_bounds(root_mass, PLA*sun_intensity*50)
         self.update_pools()
         #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
 
@@ -181,15 +179,17 @@ class DynamicModel:
             self.water_pool = 0
         # starch gets handled separatly in Organ Starch
 
-    def update_bounds(self, root_mass, photon_in, starch_percenatage):
+    def update_bounds(self, root_mass, photon_in):
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
         if self.use_starch:
-            self.set_bounds(STARCH_IN, (0, self.starch_intake_max*starch_percenatage/100))
+            self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
+            #print(self.starch_intake_max, self.starch_intake)
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)*40))
         if self.water_pool <= 0:
             self.set_bounds(WATER, (0,0))
         else:
             self.set_bounds(WATER, (-1000,1000))
         self.set_bounds(PHOTON,(0,photon_in))
+        #self.set_bounds(PHOTON,(0,0))
