@@ -11,7 +11,7 @@ class Plant():
         if i % 10 == 0:
             self.model.calc_growth_rate()
             self.model.update(self.biomass, 0, 1)
-            gr, sr, si = self.model.get_rates()
+            #gr, sr, si = self.model.get_rates()
             self.biomass += gr * self.biomass
             print(self.biomass, gr, sr, si, self.biomass/2*30)
         if i == 0 or i == 24*10*3-1:

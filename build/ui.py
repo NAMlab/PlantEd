@@ -157,46 +157,8 @@ class UI:
             pygame.draw.rect(screen,config.WHITE_TRANSPARENT,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
             screen.blit(self.hover_message,(x+10,y+3))
 
-
     def post_hover_message(self, message):
         self.hover_message = config.FONT.render("{}".format(message),True,config.BLACK)
-
-    # this should focus on UI components
-    def activate_biomass_objective(self):
-        if self.model.objective == STARCH_OUT:
-            '''# to much code
-            photosysnthesis_lines = self.photosynthesis_particle.points
-            photosysnthesis_lines[3] = [330, 100]
-            self.photosynthesis_particle.change_points(photosysnthesis_lines)
-            self.photosynthesis_particle.particle_counter = 0
-            self.photosynthesis_particle.particles.clear()
-            starch_lines = self.starch_particle.points
-            starch_lines[3] = [330, 100]
-            self.starch_particle.change_points(starch_lines)
-            self.starch_particle.particle_counter = 0
-            self.starch_particle.particles.clear()
-            # is this the right place?'''
-            self.model.set_objective(BIOMASS)
-            self.starch_particle.deactivate()
-            self.biomass_particle.activate()
-
-
-    def activate_starch_objective(self):
-        # change particle system to follow new lines
-        if self.model.objective == BIOMASS:
-            '''photosysnthesis_lines = self.photosynthesis_particle.points
-            photosysnthesis_lines[3] = [430, 100]
-            self.photosynthesis_particle.change_points(photosysnthesis_lines)
-            self.photosynthesis_particle.particle_counter = 0
-            self.photosynthesis_particle.particles.clear()
-            starch_lines = self.starch_particle.points
-            starch_lines[3] = [430, 100]
-            self.starch_particle.change_points(starch_lines)
-            self.starch_particle.particle_counter = 0
-            self.starch_particle.particles.clear()'''
-            self.model.set_objective(STARCH_OUT)
-            self.starch_particle.activate()
-            self.biomass_particle.deactivate()
 
     def toggle_starch_as_resource(self):
         #self.starch_particle.particles.clear()
@@ -355,7 +317,7 @@ class UI:
         #self.button_sprites.add(
         #    ToggleButton(topleft[0] + 100, topleft[1] + 385, 210, 40, [], config.FONT, "Photosysnthesis", pressed=True,
         #                 fixed=True))
-        production_buttons = [RadioButton(topleft[0] + 20, topleft[1] + 390, 160, 30,
+        '''production_buttons = [RadioButton(topleft[0] + 20, topleft[1] + 390, 160, 30,
                                           [self.activate_biomass_objective], config.FONT,
                                           "Produce Biomass", border_radius=3),
                               RadioButton(topleft[0] + 20, topleft[1] + 432, 160,30,
@@ -364,7 +326,7 @@ class UI:
 
         production_buttons[0].setRadioButtons(production_buttons)
         production_buttons[1].setRadioButtons(production_buttons)
-        production_buttons[0].button_down = True
+        production_buttons[0].button_down = True'''
 
 
         #self.plant.organ_starch.toggle_button = produce_biomass_button

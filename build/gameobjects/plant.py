@@ -40,7 +40,6 @@ class Plant:
         self.upgrade_points = 0
         self.model = model
         self.camera = camera
-        self.growth_rate = self.model.get_rates()[0]  # in seconds ingame second = second * 240
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, stem[0], stem[1], mass=0.1, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, roots[0], roots[1], mass=0.8, active=True)
@@ -63,13 +62,11 @@ class Plant:
         if lvl >= 20:
             pygame.event.post(pygame.event.Event(WIN))
 
-    def update_growth_rates(self, growth_rate):
-        growth_rate_organs = growth_rate[0]
-        growth_rate_organs += 0.05 if self.get_biomass() < 4 and growth_rate[0] > 0 else 0
-        for organ in self.organs:
-            organ.update_growth_rate(growth_rate_organs)
-        self.organ_starch.update_growth_rate(growth_rate[1])
-        self.organ_starch.starch_intake = growth_rate[2]
+    def update_growth_rates(self, growth_rates):
+        for i in range(0,3):
+            self.organs[i].update_growth_rate(growth_rates[i])
+        self.organ_starch.update_growth_rate(growth_rate[3])
+        self.organ_starch.starch_intake = growth_rate[4]
 
     def get_biomass(self):
         biomass = 0
