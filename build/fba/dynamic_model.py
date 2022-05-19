@@ -1,25 +1,17 @@
 import cobra
 import config
 import os
-from helpers import (
-    autotroph,
-    heterotroph,
-    update_objective,
-    create_objective,
-    get_ndaph_atp,
-    get_ngam,
-)
 
 
 # states for objective
-BIOMASS = "AraCore_Biomass_tx_leaf"
-STARCH_OUT = "Starch_out_tx_root"
-STARCH_IN = "Starch_in_tx_root"
+BIOMASS = "leaf_AraCore_Biomass_tx"
+STARCH_OUT = "root_Starch_out_tx"
+STARCH_IN = "root_Starch_in_tx"
 
 # intake reaction names
-NITRATE = "Nitrate_tx_root"
-WATER = "H2O_tx_root"
-PHOTON = "Photon_tx_leaf"
+NITRATE = "root_Nitrate_tx"
+WATER = "root_H2O_tx"
+PHOTON = "leaf_Photon_tx"
 
 # mol
 Vmax = 0.8
@@ -29,16 +21,14 @@ Km = 4
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, gametime, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/PlantEd_model.sbml")):
+    def __init__(self, gametime, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/whole_plant.sbml")):
         self.model = model
         self.gametime = gametime
         self.log = log
         self.plant_mass = plant_mass
         self.use_starch = False
         # model.objective can be changed by this string, but not compared, workaround: self.objective
-        #self.objective = BIOMASS
-        self.model.objective = create_objective(self.model)
-        self.set_bounds(STARCH_OUT, (0, 1000))
+        self.objective = BIOMASS
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
@@ -53,10 +43,8 @@ class DynamicModel:
         self.starch_intake_max = 1              # upper bound /h
 
         # growth rates for each objective
-        self.root_rate = 0
-        self.stem_rate = 0
-        self.leaf_rate = 0
         self.starch_rate = 0
+        self.biomass_rate = 0
 
         self.init_constraints()
         self.calc_growth_rate()
@@ -88,27 +76,19 @@ class DynamicModel:
         atp = 0.00727 /24
         nadhp = 0.00256 /24
 
-    def calc_growth_rate(self, root_percent, stem_percent, leaf_percent, starch_percent):
-        update_objective(root_percent, stem_percent, leaf_percent, starch_percent)
+    def calc_growth_rate(self):
         solution = self.model.optimize()
         gamespeed = self.gametime.GAMESPEED
 
-        #self.biomass_rate = solution.objective_value / 60 / 60 * 240 * gamespeed  # make it every ingame second
-        self.root_rate = solution.fluxes.get("AraCore_Biomass_tx_root")/ 60 / 60 * 240 * gamespeed
-        self.stem_rate = solution.fluxes.get("AraCore_Biomass_tx_stem")/ 60 / 60 * 240 * gamespeed
-        self.leaf_rate = solution.fluxes.get("AraCore_Biomass_tx_leaf")/ 60 / 60 * 240 * gamespeed
-        self.starch_rate = solution.fluxes.get("Starch_out_tx_stem")/ 60 / 60 * 240 * gamespeed
-
-        '''if self.objective == BIOMASS:
+        if self.objective == BIOMASS:
             self.biomass_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
-            #print(self.biomass_rate)
             self.starch_rate = 0
         elif self.objective == STARCH_OUT:
             # Todo find fix for low production
             # beware workaround just 10fold
             self.starch_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
             self.biomass_rate = 0
-        # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth'''
+        # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth
 
         # hourly rates
         self.water_intake = solution.fluxes[WATER]#self.get_flux(WATER)
@@ -120,7 +100,7 @@ class DynamicModel:
         #    self.log.append_log(self.biomass_rate, self.starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, self.water_pool, self.nitrate_pool)
 
     def get_rates(self):
-        return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
+        return (self.biomass_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
 
     def get_pools(self):
         return (self.nitrate_pool, self.water_pool)
@@ -147,11 +127,36 @@ class DynamicModel:
         # day --> sec (240 real sec = 1 ingame sec)
         return max(((Vmax*self.nitrate_pool)/(Km+self.nitrate_pool))*mass/24,0) #hour
 
+    def get_rate(self):
+        if self.objective == BIOMASS:
+            return self.biomass_rate
+        elif self.objective == STARCH_OUT:
+            return self.starch_rate
+        else:
+            return -1
+
+    def get_objective_is_biomass(self):
+        if self.objective == BIOMASS:
+            return True
+        else:
+            return False
+
     def set_bounds(self, reaction, bounds):
         self.model.reactions.get_by_id(reaction).bounds = bounds
 
     def get_bounds(self, reaction):
         return self.model.reactions.get_by_id(reaction).bounds
+
+    def set_objective(self, objective):
+        if objective == BIOMASS:
+            self.objective = BIOMASS
+            self.set_bounds(STARCH_OUT, (0, 0))
+            self.model.objective = BIOMASS
+        elif objective == STARCH_OUT:
+            self.objective = STARCH_OUT
+            self.set_bounds(STARCH_OUT, (0, 1000))
+            self.model.objective = STARCH_OUT
+        self.calc_growth_rate()
 
     def activate_starch_resource(self):
         self.use_starch = True
