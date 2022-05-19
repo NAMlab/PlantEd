@@ -199,17 +199,7 @@ class DefaultGameScene(object):
         self.plant.draw(temp_surface)
         self.environment.draw_foreground(temp_surface)
         #self.skill_system.draw(temp_surface)
-
         screen.blit(temp_surface,(0,self.camera.offset_y))
-
-
-        '''self.environment.draw_background(tmp_screen)
-        self.shop.draw(screen)
-        self.ui.draw(screen)
-        for entity in self.entities:
-            entity.draw(screen)
-        self.plant.draw(screen)
-        self.environment.draw_foreground(screen)'''
 
 class TitleScene(object):
     def __init__(self):
@@ -275,15 +265,6 @@ class TitleScene(object):
                 pygame.quit()
                 sys.exit()
             self.watering_can.handle_event(e)
-            '''if e.type == MOUSEBUTTONDOWN:
-                self.particle_systems[0].activate()
-                self.watering_can = assets.img("watering_can_outlined_tilted.png")
-            if e.type == MOUSEMOTION:
-                self.mouse_pos = pygame.mouse.get_pos()
-                self.particle_systems[0].spawn_box = pygame.Rect(self.mouse_pos[0], self.mouse_pos[1], 0, 0)
-            if e.type == MOUSEBUTTONUP:
-                self.particle_systems[0].deactivate()
-                self.watering_can = assets.img("watering_can_outlined.png")'''
 
 class CustomScene(object):
     def __init__(self):
@@ -365,20 +346,16 @@ class SceneMananger(object):
 
 def main():
     pygame.init()
-
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
     pygame.display.set_caption("PlantEd_0.1")
     timer = pygame.time.Clock()
     running = True
-
     #camera = Camera()
     manager = SceneMananger()
 
 
     while running:
         dt = timer.tick(60)/1000.0
-
-
         #fps = str(int(timer.get_fps()))
         #fps_text = config.FONT.render(fps, False, (255,255,255))
         #print(fps)

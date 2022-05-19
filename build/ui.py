@@ -356,31 +356,6 @@ class UI:
         self.sliders.append(self.root_slider)
         self.sliders.append(self.starch_consumption_slider)
         SliderGroup([slider for slider in self.sliders], 100)
-
-
-
-        '''self.sliders.append(
-            Slider((topleft[0] + 536, topleft[1] + 70, 15, 200), config.FONT, (50, 20), organ=self.plant.organ_starch,
-                   plant=self.plant, percent=30))
-        self.photosynthesis_particle = PointParticleSystem([[topleft[0] + 330, topleft[1] + 405],
-                                                            [topleft[0] + 380, topleft[1] + 405],
-                                                            [topleft[0] + 380, topleft[1] + 100],
-                                                            [topleft[0] + 330, topleft[1] + 100]],
-                                                           self.model.get_photon_upper(),
-                                                           images=[assets.img("photo_energy.png", (15, 15))],
-                                                           speed=(2, 0), callback=self.model.get_photon_upper,
-                                                           nmin=0, nmax=80)
-        self.particle_systems.append(self.photosynthesis_particle)
-        self.starch_particle = PointParticleSystem([[topleft[0] + 430, topleft[1] + 405],
-                                                    [topleft[0] + 380, topleft[1] + 405],
-                                                    [topleft[0] + 380, topleft[1] + 100],
-                                                    [topleft[0] + 330, topleft[1] + 100]],
-                                                   30, images=[assets.img("starch_energy.png", (15, 15))],
-                                                   speed=(2, 0), active=False,
-                                                   callback=self.plant.organ_starch.get_intake, factor=20,
-                                                   nmin=1, nmax=40)
-        self.particle_systems.append(self.starch_particle)'''
-
     # weird to have extra method for one element
 
     def draw_organ_detail_temp(self, s, organ, pos, name, show_level=True):
@@ -408,8 +383,6 @@ class UI:
         s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+120))  # Todo change x, y
 
 
-
-
     def draw_production(self, s):
         topleft = self.production_topleft
         # headbox
@@ -433,14 +406,3 @@ class UI:
                              (topleft[0] + 560, topleft[1] + 300 + i * 10), width=4)
             pygame.draw.line(s, (255, 0, 0), (topleft[0] + 575, topleft[1] + 280 + i * 10),
                              (topleft[0] + 560, topleft[1] + 300 + i * 10), width=4)
-
-        '''# draw starch pool
-        pool_height = 180
-        pool_rect = (topleft[0] + 138, topleft[1], 32, pool_height)
-        pygame.draw.rect(s, config.WHITE_TRANSPARENT, pool_rect, border_radius=3)
-        pool_limit = self.plant.organ_starch.get_threshold()
-        pool_level = self.plant.organ_starch.mass * pool_height / pool_limit
-        pool_rect = Rect(pool_rect[0], pool_rect[1] + pool_height - pool_level, 32, pool_level)
-        pygame.draw.rect(s, config.WHITE, pool_rect, border_radius=3)
-        pool_level_text = config.FONT.render("{:.1f}".format(self.plant.organ_starch.mass), True, (0, 0, 0))  # title
-        s.blit(pool_level_text, pool_level_text.get_rect(center=pool_rect.center))'''

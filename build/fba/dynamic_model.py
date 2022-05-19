@@ -38,7 +38,6 @@ class DynamicModel:
         # model.objective can be changed by this string, but not compared, workaround: self.objective
         #self.objective = BIOMASS
         self.model.objective = create_objective(self.model)
-        self.set_bounds(STARCH_OUT, (0, 1000))
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
@@ -67,22 +66,7 @@ class DynamicModel:
         self.water_pool = 1
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.1)))
         self.set_bounds(PHOTON, (0, 100))
-
-        '''forced_ATP = (
-                0.0049 * self.model.reactions.get_by_id("leaf_Photon_tx").upper_bound
-                + 2.7851
-        )
-        # This ensures that the sum of the three ATP are always forced_ATP
-        multi_ATPase = self.model.problem.Constraint(
-            (
-                    self.model.reactions.get_by_id("leaf_ATPase_tx").flux_expression
-                    + self.model.reactions.get_by_id("root_ATPase_tx").flux_expression
-                    + self.model.reactions.get_by_id("stem_ATPase_tx").flux_expression
-            ),
-            ub=forced_ATP,
-            lb=forced_ATP,
-        )
-        self.model.add_cons_vars([multi_ATPase])'''
+        self.set_bounds(STARCH_OUT, (0, 1000))
 
         # Literature ATP NADPH: 7.27 and 2.56 mmol gDW−1 day−1
         atp = 0.00727 /24
@@ -99,25 +83,11 @@ class DynamicModel:
         self.leaf_rate = solution.fluxes.get("AraCore_Biomass_tx_leaf")/ 60 / 60 * 240 * gamespeed
         self.starch_rate = solution.fluxes.get("Starch_out_tx_stem")/ 60 / 60 * 240 * gamespeed
 
-        '''if self.objective == BIOMASS:
-            self.biomass_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
-            #print(self.biomass_rate)
-            self.starch_rate = 0
-        elif self.objective == STARCH_OUT:
-            # Todo find fix for low production
-            # beware workaround just 10fold
-            self.starch_rate = solution.objective_value/60/60*240*gamespeed# make it every ingame second
-            self.biomass_rate = 0
-        # it does not mater what intake gets limited beforehand, after all intakes are needed for UI, Growth'''
-
         # hourly rates
         self.water_intake = solution.fluxes[WATER]#self.get_flux(WATER)
         self.nitrate_intake = solution.fluxes[NITRATE]#self.get_flux(NITRATE)
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         self.photon_intake = solution.fluxes[PHOTON]
-
-        #if self.log:
-        #    self.log.append_log(self.biomass_rate, self.starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, self.water_pool, self.nitrate_pool)
 
     def get_rates(self):
         return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)

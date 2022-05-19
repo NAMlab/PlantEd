@@ -491,18 +491,6 @@ class Stem(Organ):
                 t = self.curve.find_closest(mouse_pos)
                 point = self.curve.get_point(t)
                 self.highlight = (point[0],point[1],t)
-
-
-                '''if self.get_rect()[0].collidepoint(mouse_pos):
-                    print("collide")
-                    global_x, global_y = pygame.mouse.get_pos()
-                    global_pos = (global_x, global_y)
-                    x, dir = self.get_image_mask_x(self.get_local_pos(global_pos), self.image)
-                    if x is not None:
-                        x = self.get_global_x(x)
-                        if self.pivot:
-                            x -= self.pivot[0]
-                        self.highlight = [x, global_y, dir]'''
             else:
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
@@ -554,21 +542,6 @@ class Stem(Organ):
             color = config.GRAY if dist_to_stem > 20 else config.WHITE
             pygame.draw.line(screen, color, (self.highlight[0],self.highlight[1]),(mouse_x,mouse_y))
             pygame.draw.circle(screen, color, (int(self.highlight[0]), int(self.highlight[1])), 10)
-
-
-        '''
-        super().draw(screen)
-        pygame.draw.rect(screen, (0,0,0), self.get_rect()[0], width=2)
-        #if self.leaf.can_add_leaf:
-            #image = assets.img("leaf_small.png")
-            #screen.blit(image, pygame.mouse.get_pos())
-        if self.highlight:
-            size = 10
-            pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size, width=int(size/3))
-            pygame.draw.circle(screen, (255,255,255, 180),(int(self.highlight[0]-size/2), int(self.highlight[1]-size/2)), size/3)
-        for thorn in self.thorns:
-            screen.blit(thorn["image"], thorn["position"])
-        '''
 
     def get_rect(self):
         if self.image:
