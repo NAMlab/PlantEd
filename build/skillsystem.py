@@ -3,9 +3,10 @@ from gameobjects.plant import Plant
 import config
 from utils.button import RadioButton
 from data import assets
+from utils.button import Button
 
 class Skill:
-    def __init__(self, image_grey, image, pos=(0,0), callback=None, active=False, cost=0):
+    def __init__(self, image_grey, image, pos=(0,0), callback=None, active=False, cost=1):
         self.image_normal = pygame.Surface((64, 64), pygame.SRCALPHA)
         self.image_skilled = pygame.Surface((64,64),pygame.SRCALPHA)
         self.image_normal.blit(image_grey, (0, 0))
@@ -18,13 +19,17 @@ class Skill:
         self.selected = False
         self.visible = False
         self.hover = False
+        self.skills = []
+
+    def activate(self):
+        self.active = True
+        self.image = self.image_skilled
 
     def handle_event(self, e):
-        if self.active:
+        if self.active: #active = skilled already
             return
         if not self.visible:
             return
-
         mouse_pos = pygame.mouse.get_pos()
         if e.type == pygame.MOUSEMOTION and not self.selected:
             if self.get_rect().collidepoint(mouse_pos):
@@ -37,6 +42,8 @@ class Skill:
                     self.selected = False
                     self.hover = True
                 else:
+                    for skill in self.skills:
+                        skill.selected = False
                     self.selected = True
                     self.hover = False
 
@@ -56,7 +63,7 @@ class Skill:
 class Skill_System:
     def __init__(self, pos, plant, leaf_skills=[], stem_skills=[], root_skills=[], starch_skills=[], cols=2):
         self.pos = pos
-        self.rect = (pos[0],pos[1],200,220)
+        self.rect = (pos[0],pos[1],200,245)
         self.plant = plant
         self.margin = 20
         self.cols = cols
@@ -64,16 +71,23 @@ class Skill_System:
                        stem_skills,
                        root_skills,
                        starch_skills]
+        for skills in self.skills:
+            for skill in skills:
+                skill.skills = skills
         self.active_skills = 0
+        self.current_cost = 0
         self.skills_label = config.FONT.render("Leaf Upgrades",False,config.BLACK)
 
+        self.buy_button = Button(self.rect[0]+self.rect[2]-self.margin-64,
+                                 self.rect[1]+self.rect[3]-30,64,64,[self.buy],config.FONT,"Buy")
+        self.green_thumbs_icon = assets.img("green_thumb.png", (26, 26))
         self.init_layout()
         self.set_target(0)
 
         #target_buttons[0].button_down = True
 
     def update(self, dt):
-        if self.active_skills+1 != self.plant.target_organ:
+        if self.active_skills+1 != self.plant.target_organ.type:
             if self.plant.target_organ.type == self.plant.LEAF:
                 self.set_target(0)
                 self.skills_label = config.BIG_FONT.render("Leaf Upgrades", True, config.BLACK)
@@ -87,16 +101,43 @@ class Skill_System:
                 self.set_target(3)
                 self.skills_label = config.BIG_FONT.render("Starch Upgrades", True, config.BLACK)
 
+    def update_current_cost(self):
+        self.current_cost = 0
+        for skill in self.skills[self.active_skills]:
+            if skill.selected:
+                self.current_cost += skill.cost
+
     def handle_event(self,e):
+        self.buy_button.handle_event(e)
         for skill in self.skills[self.active_skills]:
             skill.handle_event(e)
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            self.update_current_cost()
 
     def set_target(self, skills_id):
         for skill in self.skills[self.active_skills]:
             skill.visible = False
+            skill.selected = False
         self.active_skills = skills_id
         for skill in self.skills[self.active_skills]:
             skill.visible = True
+        self.update_current_cost()
+
+    def buy(self):
+        for skill in self.skills[self.active_skills]:
+            if skill.selected:
+                if self.plant.upgrade_points - skill.cost >= 0:
+                    self.plant.upgrade_points -= skill.cost
+                    if skill.callback is not None:
+                        skill.callback()
+                    skill.selected = False
+                    skill.activate()
+                    self.update_current_cost()
+                    #cost = config.FONT.render("{}".format(self.current_cost), False, (255, 255, 255))
+                    #self.animations.append(LabelAnimation(cost, item.cost, 120, self.cost_label_pos))
+                else:
+                    # throw insufficient funds, maybe post hover msg
+                    pass
 
     def draw(self, screen):
         s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
@@ -107,22 +148,26 @@ class Skill_System:
         #draw shoplike rect and buy button, also draw all skills, but first layout stuff
         for skill in self.skills[self.active_skills]:
             skill.draw(s)
+        self.buy_button.draw(s)
+        cost = config.BIG_FONT.render("{}".format(self.current_cost), False, (0, 0, 0))
+        s.blit(self.green_thumbs_icon, (self.rect[0] + 70, self.rect[1]+self.rect[3]-self.margin))
+        s.blit(cost, (self.rect[0]+50, self.rect[1]+self.rect[3]-self.margin))
         screen.blit(s, (0,0))
 
     def init_layout(self):
         for i in range(0,len(self.skills[0])):
             x = self.margin + ((64 + self.margin*2) * (i%self.cols)) # 10 for left, 20 + img_width for right
-            y = self.margin + ((64 + self.margin) * int(i/2)) # 10 for first, every row + 32 + margin
+            y = self.margin + ((64 + self.margin/2) * int(i/2)) # 10 for first, every row + 32 + margin
             self.skills[0][i].pos = (x+self.pos[0],y+self.pos[1]+45)
         for i in range(0,len(self.skills[1])):
             x = self.margin + ((64 + self.margin*2) * (i%self.cols)) # 10 for left, 20 + img_width for right
-            y = self.margin + ((64 + self.margin) * int(i/2)) # 10 for first, every row + 32 + margin
+            y = self.margin + ((64 + self.margin/2) * int(i/2)) # 10 for first, every row + 32 + margin
             self.skills[1][i].pos = (x+self.pos[0],y+self.pos[1]+45)
         for i in range(0,len(self.skills[2])):
             x = self.margin + ((64 + self.margin*2) * (i%self.cols)) # 10 for left, 20 + img_width for right
-            y = self.margin + ((64 + self.margin) * int(i/2)) # 10 for first, every row + 32 + margin
+            y = self.margin + ((64 + self.margin/2) * int(i/2)) # 10 for first, every row + 32 + margin
             self.skills[2][i].pos = (x+self.pos[0],y+self.pos[1]+45)
         for i in range(0,len(self.skills[3])):
             x = self.margin + ((64 + self.margin*2) * (i%self.cols)) # 10 for left, 20 + img_width for right
-            y = self.margin + ((64 + self.margin) * int(i/2)) # 10 for first, every row + 32 + margin
+            y = self.margin + ((64 + self.margin/2) * int(i/2)) # 10 for first, every row + 32 + margin
             self.skills[3][i].pos = (x+self.pos[0],y+self.pos[1]+45)

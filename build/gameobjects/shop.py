@@ -121,8 +121,12 @@ class Shop:
             item.draw(s)
         self.buy_button.draw(s)
         cost = config.BIG_FONT.render("{}".format(self.current_cost),False,(0,0,0))
-        s.blit(self.green_thumbs_icon,(self.rect[0]+self.rect[2]-self.margin*4-self.green_thumbs_icon.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-self.green_thumbs_icon.get_height()))
-        s.blit(cost, (self.rect[0]+self.rect[2]-self.margin*5-self.green_thumbs_icon.get_width()-cost.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-cost.get_height()))
+
+        s.blit(self.green_thumbs_icon, (self.rect[0] + 70, self.rect[1] + self.rect[3] - self.margin-50))
+        s.blit(cost, (self.rect[0] + 50, self.rect[1] + self.rect[3] - self.margin-50))
+
+        #s.blit(self.green_thumbs_icon,(self.rect[0]+self.rect[2]-self.margin*4-self.green_thumbs_icon.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-self.green_thumbs_icon.get_height()))
+        #s.blit(cost, (self.rect[0]+self.rect[2]-self.margin*5-self.green_thumbs_icon.get_width()-cost.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-cost.get_height()))
         screen.blit(s,(0,0))
         self.watering_can.draw(screen)
         self.blue_grain.draw(screen)

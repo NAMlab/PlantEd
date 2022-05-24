@@ -123,7 +123,7 @@ class DefaultGameScene(object):
         example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
         example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
         example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,3)]
-        self.skill_system = Skill_System((1700,520),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
+        self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
         self.ui = UI(1, self.plant, self.model)
         self.entities = []
         for i in range(0,10):
@@ -134,7 +134,7 @@ class DefaultGameScene(object):
         #shop items are to be defined by the level
         add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf, post_hover_message=self.ui.post_hover_message, message="Leaves enable your plant to produce energy.")
 
-        self.shop = Shop(Rect(1700, 220, 200, 290), [add_leaf_item], self.model, self.plant, post_hover_message=self.ui.post_hover_message)
+        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.plant, post_hover_message=self.ui.post_hover_message)
         self.shop.add_shop_item(["watering","blue_grain", "root_item"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
