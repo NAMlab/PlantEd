@@ -63,7 +63,6 @@ class Plant:
             pygame.event.post(pygame.event.Event(WIN))
 
     def update_growth_rates(self, growth_rates):
-        print(growth_rates)
         for i in range(0,3):
             self.organs[i].update_growth_rate(growth_rates[i])
         self.organ_starch.update_growth_rate(growth_rates[3])

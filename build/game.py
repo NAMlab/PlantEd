@@ -119,11 +119,11 @@ class DefaultGameScene(object):
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
-        #example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,4)]
-        #example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
-        #example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
-        #example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,3)]
-        #self.skill_system = Skill_System((1700,520),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
+        example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,4)]
+        example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
+        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
+        example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,3)]
+        self.skill_system = Skill_System((1700,520),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
         self.ui = UI(1, self.plant, self.model)
         self.entities = []
         for i in range(0,10):
@@ -150,7 +150,7 @@ class DefaultGameScene(object):
                 stem_percent = self.plant.organs[1].percentage
                 root_percent = self.plant.organs[2].percentage
                 starch_percent = self.plant.organ_starch.percentage
-                print(leaf_percent, stem_percent, root_percent, starch_percent)
+                #print(leaf_percent, stem_percent, root_percent, starch_percent)
                 self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
                 #growth_rate, starch_rate, starch_intake = self.model.get_rates()
                 #nitrate_pool, water_pool = self.model.get_pools()
@@ -177,7 +177,7 @@ class DefaultGameScene(object):
             for entity in self.entities:
                 entity.handle_event(e)
             self.camera.handle_event(e)
-            #self.skill_system.handle_event(e)
+            self.skill_system.handle_event(e)
 
     def update(self, dt):
         for entity in self.entities:
@@ -185,6 +185,7 @@ class DefaultGameScene(object):
         self.environment.update(dt)
         self.shop.update(dt)
         self.ui.update(dt)
+        self.skill_system.update(dt)
         self.plant.update(dt, self.model.get_photon_upper())
         self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0))
 
@@ -198,7 +199,7 @@ class DefaultGameScene(object):
             entity.draw(temp_surface)
         self.plant.draw(temp_surface)
         self.environment.draw_foreground(temp_surface)
-        #self.skill_system.draw(temp_surface)
+        self.skill_system.draw(temp_surface)
         screen.blit(temp_surface,(0,self.camera.offset_y))
 
 class TitleScene(object):

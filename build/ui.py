@@ -48,20 +48,20 @@ class UI:
 
         #put somewhere
         topleft = self.organ_details_topleft
-        self.biomass_particle = ParticleSystem(20, spawn_box=Rect(200, 495, 25, 25), lifetime=8, color=config.GREEN,
+        '''self.biomass_particle = ParticleSystem(20, spawn_box=Rect(200, 495, 25, 25), lifetime=8, color=config.GREEN,
                            apply_gravity=False,
                            speed=[0, -4], spread=[2, -2], active=True)
 
         self.starch_particle = ParticleSystem(20, spawn_box=Rect(200, 535, 25, 25), lifetime=8, color=config.WHITE,
                            apply_gravity=False,
-                           speed=[0, 4], spread=[2, -2], active=False)
+                           speed=[0, 4], spread=[2, -2], active=False)'''
 
-        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(230, 745, 55, 0), lifetime=8, color=config.WHITE,
+        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+465, self.production_topleft[1]+40, 0, 100), lifetime=8, color=config.WHITE,
                                               apply_gravity=False,
-                                              speed=[0, 4], spread=[2, 0], active=False)
+                                              speed=[4, 0], spread=[0, 4], active=False)
 
-        self.particle_systems.append(self.biomass_particle)
-        self.particle_systems.append(self.starch_particle)
+        #self.particle_systems.append(self.biomass_particle)
+        #self.particle_systems.append(self.starch_particle)
         self.particle_systems.append(self.drain_starch_particle)
 
         self.tool_tip_manager = ToolTipManager(config.tooltipps, callback=self.plant.get_biomass)
@@ -90,9 +90,6 @@ class UI:
         #self.init_organ_ui()
 
     def handle_event(self, e):
-        '''if e.type == pygame.KEYDOWN and e.key == pygame.K_x:
-            print(pygame.mouse.get_pos())
-            #print(self.tool_tip_manager.current_tip)'''
         for button in self.button_sprites:
             # all button_sprites handle their events
             button.handle_event(e)
@@ -284,12 +281,12 @@ class UI:
     def init_organ_ui(self):
         topleft = self.organ_details_topleft
         # below so it does not get in group
-        self.starch_consumption_slider = Slider((topleft[0], topleft[1], 15, 182), config.FONT, (50, 20),
+        '''self.starch_consumption_slider = Slider((topleft[0], topleft[1], 15, 182), config.FONT, (50, 20),
                                                 organ=self.plant.organ_starch, plant=self.plant, percent=30,
                                                 visible=True)
         self.sliders.append(self.starch_consumption_slider)
         self.starch_consumption_slider.x = topleft[0] + 138
-        self.starch_consumption_slider.y = topleft[1]
+        self.starch_consumption_slider.y = topleft[1]'''
 
     def init_production_ui(self):
         topleft = self.production_topleft
@@ -304,7 +301,7 @@ class UI:
             RadioButton(topleft[0]+220, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_root],
                         config.FONT, image=assets.img("roots_small.png",(100,100))),
-            RadioButton(topleft[0] + 110, topleft[1] + 540, 100,100,
+            RadioButton(topleft[0] + 330, topleft[1] + 40, 100,100,
                         [self.plant.set_target_organ_starch],
                         config.FONT, image=assets.img("starch.png",(100,100)))
 
@@ -333,9 +330,9 @@ class UI:
         self.button_sprites.add(production_buttons[0])
         self.button_sprites.add(production_buttons[1])'''
 
-        starch_toggle_button = ToggleButton(topleft[0] + 215, topleft[1] + 615, 60, 22,
+        starch_toggle_button = ToggleButton(topleft[0] + 440, topleft[1] + 40, 25, 100,
                                           [self.toggle_starch_as_resource], config.FONT,
-                                          "Drain", vertical=False)
+                                          "Consume", vertical=True)
         self.button_sprites.add(starch_toggle_button)
         self.plant.organ_starch.toggle_button = starch_toggle_button
 
@@ -347,14 +344,15 @@ class UI:
                                   plant=self.plant, active=False)
         self.root_slider = Slider((topleft[0]+25+220, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[2],
-                                  plant=self.plant, percent=100)
-        self.starch_consumption_slider = Slider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
-                                                organ=self.plant.organ_starch, plant=self.plant, percent=0)
+                                  plant=self.plant, percent=100, active=False)
+        self.starch_slider = Slider((topleft[0]+25+330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
+                                    organ=self.plant.organ_starch,
+                                    plant=self.plant, active=False)
 
         self.sliders.append(self.leaf_slider)
         self.sliders.append(self.stem_slider)
         self.sliders.append(self.root_slider)
-        self.sliders.append(self.starch_consumption_slider)
+        self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
     # weird to have extra method for one element
 
@@ -390,7 +388,7 @@ class UI:
         self.draw_organ_detail_temp(s,self.plant.organs[1],(topleft[0]+110,topleft[1]),"Stem")
         self.draw_organ_detail_temp(s,self.plant.organs[2],(topleft[0]+220,topleft[1]),"Root")
 
-        self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+110,topleft[1]+500),"Starch", False)
+        self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),"Starch", False)
 
         #self.draw_organ_detail_temp(s,3,(topleft[0]+330,topleft[1]),"Starch")
         #pygame.draw.line(s,config.WHITE_TRANSPARENT,(topleft[0]+260,topleft[1]+40),(topleft[0]+260,topleft[1]+300),width=2)

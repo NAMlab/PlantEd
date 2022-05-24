@@ -288,11 +288,15 @@ class Slider():
 
 
     def update(self):
-        if self.organ is not None:
+        if self.plant is not None:
+            if self.plant.get_biomass() > self.plant.seedling.max:
+                self.active = True
+        '''if self.organ is not None:
             if self.organ.active:
                 self.active = True
+        #whats that?
         if not self.active:
-            return
+            return'''
 
 
     def get_percentage(self):

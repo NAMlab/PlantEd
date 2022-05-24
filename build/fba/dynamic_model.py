@@ -63,7 +63,7 @@ class DynamicModel:
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
         self.nitrate_pool = max_nitrate_pool_low
-        self.water_pool = 1
+        self.water_pool = self.max_water_pool
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.1)))
         self.set_bounds(PHOTON, (0, 100))
         self.set_bounds(STARCH_OUT, (0, 1000))
@@ -161,5 +161,5 @@ class DynamicModel:
             self.set_bounds(WATER, (0,0))
         else:
             self.set_bounds(WATER, (-1000,1000))
-        self.set_bounds(PHOTON,(0,photon_in))
-        #self.set_bounds(PHOTON,(0,0))
+        #self.set_bounds(PHOTON,(0,photon_in))
+        self.set_bounds(PHOTON,(0,200))
