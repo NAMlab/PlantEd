@@ -9,6 +9,7 @@ Functions that create Constraints are:
     get_nitrate_nh4
     create_objective
 """
+from contextlib import suppress
 from pathlib import Path
 from typing import Dict, List
 
@@ -75,10 +76,10 @@ def autotroph(model: Model, **kwargs) -> Solution:
     _model = model
 
     try:
-        _model.reactions.get_by_id("Photon_tx").bounds = (0, 100)
+        _model.reactions.get_by_id("Photon_tx").bounds = (0, 200)
 
     except KeyError:
-        _model.reactions.get_by_id("Photon_tx_leaf").bounds = (0, 100)
+        _model.reactions.get_by_id("Photon_tx_leaf").bounds = (0, 200)
 
     try:
         _model.exchanges.get_by_id("GLC_tx").bounds = (0, 0)
@@ -112,14 +113,13 @@ def heterotroph(model: Model, **kwargs) -> Solution:
         _model.reactions.get_by_id("Photon_tx_leaf").bounds = (0, 0)
 
     try:
-        _model.exchanges.get_by_id("GLC_tx").bounds = (0, 1000)
-        _model.exchanges.get_by_id("Sucrose_tx").bounds = (0, 1000)
-        # TODO: ask
+        _model.exchanges.get_by_id("GLC_tx").bounds = (0, 0)
+        _model.exchanges.get_by_id("Sucrose_tx").bounds = (0, 0)
         _model.exchanges.get_by_id("Starch_in_tx").bounds = (0, 1000)
 
     except KeyError:
-        _model.exchanges.get_by_id("GLC_tx_root").bounds = (0, 1000)
-        _model.exchanges.get_by_id("Sucrose_tx_root").bounds = (0, 1000)
+        _model.exchanges.get_by_id("GLC_tx_root").bounds = (0, 0)
+        _model.exchanges.get_by_id("Sucrose_tx_root").bounds = (0, 0)
         _model.exchanges.get_by_id("Starch_in_tx_root").bounds = (0, 1000)
 
     try:
@@ -129,9 +129,10 @@ def heterotroph(model: Model, **kwargs) -> Solution:
         return None
 
 
-def get_ngam(model: Model, reaction: str) -> Constraint:
+def update_ngam(model: Model, reaction: str) -> None:
     """
-    Returns a Constraint that represents Non-Growth Associated Maintenance.
+    Creates a Constraint that represents Non-Growth Associated
+    Maintenance and add/updates it into model.
     The Constraint is named "NGAM". Argument 'reaction' represents the
     identifier of the ATPase. It should be 'ATPase_tx'
     """
@@ -157,10 +158,13 @@ def get_ngam(model: Model, reaction: str) -> Constraint:
         Add(*(reaction.flux_expression for reaction in reactions)),
         ub=forced_ATP,
         lb=forced_ATP,
+        name=f"{msg}ATPase_constraint",
     )
-    cons.name = f"{msg}ATPase_constraint"
 
-    return cons
+    with suppress(KeyError):
+        model.remove_cons_vars([model.constraints[f"{msg}ATPase_constraint"]])
+
+    model.add_cons_vars([cons])
 
 
 def get_ndaph_atp(model: Model, nadph: str, atpase: str) -> Constraint:
@@ -182,24 +186,6 @@ def get_ndaph_atp(model: Model, nadph: str, atpase: str) -> Constraint:
     )
 
     cons.name = f"{atp_reaction.id}_{nadph}_constraint"
-    return cons
-
-
-def get_nitrate_nh4(
-    model: Model, nitrate_rxn: str, nh4_rxn: str
-) -> Constraint:
-    """
-    Returns a Constraint for the same uptake of Nitrate and NH4
-    """
-
-    nitrate: Reaction = model.reactions.get_by_id(nitrate_rxn)
-    nh4: Reaction = model.reactions.get_by_id(nh4_rxn)
-
-    cons: Constraint = model.problem.Constraint(
-        Add(nitrate.flux_expression) - Add(nh4.flux_expression), lb=0, ub=0
-    )
-    cons.name = "Nitrate_NH4_constraint"
-
     return cons
 
 
@@ -276,8 +262,9 @@ def normalize(model: Model, root: float, stem: float, leaf: float):
 def create_objective(model: Model, direction: str = "max") -> Objective:
     """
     Returns a Objective which can be used by the PlantED model. Additionally,
-    the funcions creates and adds two constraints "root_stem" and "stem_leaf",
-    which are responsable for the rate of the different biomass reactions.
+    the function creates and adds three constraints "root_stem",
+    "stem_leaf" and "biomass_organ", which are responsable for the rate
+    of the different biomass reactions.
     """
 
     root: Reaction = model.reactions.get_by_id("AraCore_Biomass_tx_root")
@@ -285,15 +272,19 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
     leaf: Reaction = model.reactions.get_by_id("AraCore_Biomass_tx_leaf")
     starch: Reaction = model.reactions.get_by_id("Starch_out_tx_stem")
 
-    # Is is not necessary to add add to the equation as long there is a
-    # constraint between it and the biomass
+    # It is important to add all expression because we might get an
+    # optimization of 0
     objective = model.problem.Objective(
         expression=Add(leaf.flux_expression)
         + Add(root.flux_expression)
-        + Add(stem.flux_expression),
+        + Add(stem.flux_expression)
+        + Add(starch.flux_expression),
         direction=direction,
         name="multi_objective",
     )
+
+    # These constraints are responsable for the different ratios in the
+    # objective
 
     root_stem: Constraint = model.problem.Constraint(
         Add(root.flux_expression) - Add(stem.flux_expression),

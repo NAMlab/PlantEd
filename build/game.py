@@ -357,8 +357,8 @@ def main():
 
     while running:
         dt = timer.tick(60)/1000.0
-        #fps = str(int(timer.get_fps()))
-        #fps_text = config.FONT.render(fps, False, (255,255,255))
+        fps = str(int(timer.get_fps()))
+        fps_text = config.FONT.render(fps, False, (255,255,255))
         #print(fps)
 
         if pygame.event.get(QUIT):
@@ -370,7 +370,7 @@ def main():
         manager.scene.update(dt)
         manager.scene.render(screen)
         #camera.render(screen)
-        #screen.blit(fps_text, (800, 30))
+        screen.blit(fps_text, (800, 30))
         pygame.display.update()
 
 if __name__ == "__main__":

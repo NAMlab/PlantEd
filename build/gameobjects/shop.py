@@ -16,6 +16,12 @@ shopitems have action and button and cost
 
 class Shop:
     def __init__(self, rect, shop_items, model, plant, cols=2, margin=10, post_hover_message=None):
+        #performance imrpove test
+        self.s = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA)
+        self.shop_label = config.BIG_FONT.render("Shop",True,(0,0,0))
+        self.current_cost_label = config.BIG_FONT.render("0",False,(0,0,0))
+
+
         self.rect = rect
         self.shop_items = shop_items
         self.margin = margin
@@ -29,7 +35,7 @@ class Shop:
         self.blue_grain = Blue_grain((0,0), self.model)
         self.spraycan = Spraycan((0,0), self.model,3,2)
         self.root_item = Root_Item(self.plant.organs[2].create_new_root,self.plant)
-        self.buy_button = Button(self.rect[0]+self.rect[2]-self.margin*2-64,self.rect[1]+self.rect[3]-self.margin-64,64,64,[self.buy],config.FONT,"BUY")
+        self.buy_button = Button(self.rect[2]-self.margin*2-64,self.rect[3]-self.margin-64,64,64,[self.buy],config.FONT,"BUY", offset=(rect[0],rect[1]))
         self.init_layout()
 
     def init_layout(self):
@@ -48,7 +54,8 @@ class Shop:
                 y = i+1 * self.margin + img_width * i + self.margin * i
                 # looks dirty, maybe zip?
                 if len(self.shop_items) > i*columns+j:
-                    self.shop_items[i*columns+j].rect = pygame.Rect(x+self.rect[0],y+self.rect[1]+50, img_width, img_width)
+                    self.shop_items[i*columns+j].rect = pygame.Rect(x,y+50, img_width, img_width)
+                    self.shop_items[i * columns + j].offset = (self.rect[0],self.rect[1])
 
     def add_shop_item(self, shop_item):
         self.shop_items.append(shop_item)
@@ -76,6 +83,7 @@ class Shop:
                     self.plant.upgrade_points -= item.cost
                     item.callback()
                     item.selected = False
+                    self.update_current_cost()
                     #cost = config.FONT.render("{}".format(self.current_cost), False, (255, 255, 255))
                     #self.animations.append(LabelAnimation(cost, item.cost, 120, self.cost_label_pos))
                 else:
@@ -83,19 +91,23 @@ class Shop:
                     pass
 
     def update(self, dt):
-        self.current_cost = 0
         self.watering_can.update(dt)
         self.blue_grain.update(dt)
         self.spraycan.update(dt)
         self.root_item.update(dt)
         self.buy_button.update(dt)
-        for item in self.shop_items:
-            if item.selected:
-                self.current_cost += item.cost
+
         for item in self.shop_items:
             item.update(dt)
         for anim in self.animations:
             anim.update()
+
+    def update_current_cost(self):
+        self.current_cost = 0
+        for item in self.shop_items:
+            if item.selected:
+                self.current_cost += item.cost
+        self.current_cost_label = config.BIG_FONT.render("{}".format(self.current_cost), False, (0, 0, 0))
 
     def handle_event(self, e):
         x,y = pygame.mouse.get_pos()
@@ -103,6 +115,8 @@ class Shop:
             #self.confirm_button.handle_event(e)
         for item in self.shop_items:
             item.handle_event(e)
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            self.update_current_cost()
         self.watering_can.handle_event(e)
         self.blue_grain.handle_event(e)
         self.spraycan.handle_event(e)
@@ -111,23 +125,20 @@ class Shop:
 
     def draw(self, screen):
         # s should only be as big as rect, for the moment its fine
-        s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
-        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (self.rect[0],self.rect[1]+45,self.rect[2],self.rect[3]-45), border_radius=3)
+        pygame.draw.rect(self.s, config.WHITE_TRANSPARENT, (0,45,self.rect[2],self.rect[3]-45), border_radius=3)
         #pygame.draw.rect(s, (255,255,255), self.rect, int(self.margin/2))
-        pygame.draw.rect(s,config.WHITE,(self.rect[0],self.rect[1],self.rect[2],40),border_radius=3)
-        shop_label = config.BIG_FONT.render("Shop",True,(0,0,0))
-        s.blit(shop_label,dest=(self.rect[0]+self.rect[2]/2-shop_label.get_width()/2,self.rect[1]+5))
+        pygame.draw.rect(self.s,config.WHITE,(0,0,self.rect[2],40),border_radius=3)
+        self.s.blit(self.shop_label,dest=(self.rect[2]/2-self.shop_label.get_width()/2,5))
         for item in self.shop_items:
-            item.draw(s)
-        self.buy_button.draw(s)
-        cost = config.BIG_FONT.render("{}".format(self.current_cost),False,(0,0,0))
+            item.draw(self.s)
+        self.buy_button.draw(self.s)
 
-        s.blit(self.green_thumbs_icon, (self.rect[0] + 70, self.rect[1] + self.rect[3] - self.margin-50))
-        s.blit(cost, (self.rect[0] + 50, self.rect[1] + self.rect[3] - self.margin-50))
+        self.s.blit(self.green_thumbs_icon, (70, self.rect[3] - self.margin-50))
+        self.s.blit(self.current_cost_label, (50, self.rect[3] - self.margin-50))
 
         #s.blit(self.green_thumbs_icon,(self.rect[0]+self.rect[2]-self.margin*4-self.green_thumbs_icon.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-self.green_thumbs_icon.get_height()))
         #s.blit(cost, (self.rect[0]+self.rect[2]-self.margin*5-self.green_thumbs_icon.get_width()-cost.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-cost.get_height()))
-        screen.blit(s,(0,0))
+        screen.blit(self.s,(self.rect[0],self.rect[1]))
         self.watering_can.draw(screen)
         self.blue_grain.draw(screen)
         self.spraycan.draw(screen)
@@ -135,7 +146,8 @@ class Shop:
 
 
 class Shop_Item:
-    def __init__(self, image, callback, cost=1, info_text=None, rect=(0,0,0,0), selected_color=(255,255,255), hover_color = (128,128,128,128), border_width=3, post_hover_message=None, message=None):
+    def __init__(self, image, callback, cost=1, info_text=None, rect=(0,0,0,0), selected_color=(255,255,255),
+                 hover_color = (128,128,128,128), border_width=3, post_hover_message=None, message=None, offset=(0,0)):
         self.image = image
         self.callback = callback
         self.cost = cost
@@ -149,6 +161,7 @@ class Shop_Item:
         self.hover = False
         self.selected = False
         self.shop_items = []
+        self.offset = offset
 
     def update(self, dt):
         pass
@@ -156,8 +169,8 @@ class Shop_Item:
     # pass event to buttons to check if bought, also handle hover
     def handle_event(self, e):
         if e.type == pygame.MOUSEMOTION:
-            x,y = pygame.mouse.get_pos()
-            if self.rect.collidepoint(x,y):
+            pos = (e.pos[0] - self.offset[0], e.pos[1] - self.offset[1])
+            if self.rect.collidepoint(pos):
                 if self.post_hover_message is not None:
                     self.post_hover_message(self.message)
                 if not self.selected:
@@ -166,8 +179,8 @@ class Shop_Item:
                 self.hover = False
 
         if e.type == pygame.MOUSEBUTTONDOWN:
-            x, y = pygame.mouse.get_pos()
-            if self.rect.collidepoint(x, y):
+            pos = (e.pos[0] - self.offset[0], e.pos[1] - self.offset[1])
+            if self.rect.collidepoint(pos):
                 if self.selected:
                     self.selected = False
                     self.hover = True

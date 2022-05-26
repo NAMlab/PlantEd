@@ -417,7 +417,6 @@ class Root(Organ):
 
     def update(self, dt):
         self.ls.update(self.mass)
-
         #for curve in self.curves:
         #    curve.update(dt)
 

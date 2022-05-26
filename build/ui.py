@@ -13,7 +13,6 @@ import random
 
 # constants in dynamic model, beter in config? dont think so
 from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
-
 from data import assets
 
 HOVER_MESSAGE = pygame.USEREVENT+2
@@ -23,6 +22,11 @@ UI: set up all UI elements, update them, link them to functions
 @param  scale:size UI dynamically
         Components may differ from level to level --> should be set by file
             Dict active groups for: Organs plus Sliders, Starch deposit, Organ Detail
+            
+            
+Topleft: Stats Bar              Init positions, , labels, Update Value Labels
+Below: 4 Organs, Production
+            
 '''
 class UI:
     def __init__(self, scale, plant, model, production_topleft=(10,100), plant_details_topleft=(10,10),organ_details_topleft=(10,430)):
@@ -32,6 +36,12 @@ class UI:
         self.gametime = GameTime.instance()
         self.hover_message = None
         self.hover_timer = 60
+
+        #performance boost:
+        self.label_leaf = config.FONT.render("Leaf", True, (0, 0, 0))  # title
+        self.label_stem = config.FONT.render("Stem", True, (0, 0, 0))  # title
+        self.label_root = config.FONT.render("Root", True, (0, 0, 0))  # title
+        self.label_starch = config.FONT.render("Starch", True, (0, 0, 0))  # title
 
         # layout positions
         self.production_topleft = production_topleft
@@ -356,10 +366,9 @@ class UI:
         SliderGroup([slider for slider in self.sliders], 100)
     # weird to have extra method for one element
 
-    def draw_organ_detail_temp(self, s, organ, pos, name, show_level=True):
+    def draw_organ_detail_temp(self, s, organ, pos, label, show_level=True):
         topleft = pos
         pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 100, 30), border_radius=3)
-        label = config.FONT.render(name, True, (0, 0, 0))  # title
         s.blit(label, dest=(topleft[0] + 50 - label.get_width() / 2, topleft[1]))
 
         if show_level:
@@ -384,17 +393,17 @@ class UI:
     def draw_production(self, s):
         topleft = self.production_topleft
         # headbox
-        self.draw_organ_detail_temp(s,self.plant.organs[0],topleft,"Leaf")
-        self.draw_organ_detail_temp(s,self.plant.organs[1],(topleft[0]+110,topleft[1]),"Stem")
-        self.draw_organ_detail_temp(s,self.plant.organs[2],(topleft[0]+220,topleft[1]),"Root")
+        self.draw_organ_detail_temp(s,self.plant.organs[0],topleft,self.label_leaf)
+        self.draw_organ_detail_temp(s,self.plant.organs[1],(topleft[0]+110,topleft[1]),self.label_stem)
+        self.draw_organ_detail_temp(s,self.plant.organs[2],(topleft[0]+220,topleft[1]),self.label_root)
 
-        self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),"Starch", False)
+        self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),self.label_starch, False)
 
         #self.draw_organ_detail_temp(s,3,(topleft[0]+330,topleft[1]),"Starch")
         #pygame.draw.line(s,config.WHITE_TRANSPARENT,(topleft[0]+260,topleft[1]+40),(topleft[0]+260,topleft[1]+300),width=2)
         # rest of production consists of sliders and buttons
 
-    def draw_starch_details(self, s):
+    '''def draw_starch_details(self, s):
         topleft = self.organ_details_topleft
         # draw starch details
         #lvl_pos = (topleft[0] + 128, topleft[1], 64, 64)
@@ -403,4 +412,4 @@ class UI:
             pygame.draw.line(s, (255, 0, 0), (topleft[0] + 545, topleft[1] + 280 + i * 10),
                              (topleft[0] + 560, topleft[1] + 300 + i * 10), width=4)
             pygame.draw.line(s, (255, 0, 0), (topleft[0] + 575, topleft[1] + 280 + i * 10),
-                             (topleft[0] + 560, topleft[1] + 300 + i * 10), width=4)
+                             (topleft[0] + 560, topleft[1] + 300 + i * 10), width=4)'''

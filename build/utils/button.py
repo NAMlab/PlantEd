@@ -12,7 +12,8 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None, button_sound=None, active=True):
+                 image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None,
+                 button_sound=None, active=True, offset=(0,0)):
         super().__init__()
         self.posted = False
         self.button_sound = button_sound
@@ -23,6 +24,7 @@ class Button(pygame.sprite.Sprite):
         self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
+        self.offset = offset
         if image:
             self.button_image.blit(image.copy(), (0, 0))
             self.hover_image.blit(image.copy(), (0, 0))
@@ -59,20 +61,23 @@ class Button(pygame.sprite.Sprite):
         if not self.active:
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(event.pos):
+            pos = (event.pos[0]-self.offset[0], event.pos[1]-self.offset[1])
+            if self.rect.collidepoint(pos):
                 self.image = self.clicked_image
                 if self.button_sound:
                     pygame.mixer.Sound.play(self.button_sound)
                 self.button_down = True
         elif event.type == pygame.MOUSEBUTTONUP:
+            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
             # If the rect collides with the mouse pos.
-            if self.rect.collidepoint(event.pos) and self.button_down:
+            if self.rect.collidepoint(pos) and self.button_down:
                 for callback in self.callbacks:
                     callback()  # Call the function.
                 self.image = self.hover_image
             self.button_down = False
         elif event.type == pygame.MOUSEMOTION:
-            collided = self.rect.collidepoint(event.pos)
+            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            collided = self.rect.collidepoint(pos)
             if collided and not self.button_down:
                 self.image = self.hover_image
                 if not self.posted and self.post_hover_message:

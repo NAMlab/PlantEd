@@ -6,14 +6,13 @@ from fba.helpers import (
     heterotroph,
     update_objective,
     create_objective,
-    get_ndaph_atp,
-    get_ngam,
+    get_ndaph_atp
 )
 
 
 # states for objective
 BIOMASS = "AraCore_Biomass_tx_leaf"
-STARCH_OUT = "Starch_out_tx_root"
+STARCH_OUT = "Starch_out_tx_leaf"
 STARCH_IN = "Starch_in_tx_root"
 
 # intake reaction names
@@ -37,7 +36,8 @@ class DynamicModel:
         self.use_starch = False
         # model.objective can be changed by this string, but not compared, workaround: self.objective
         #self.objective = BIOMASS
-        self.model.objective = create_objective(self.model)
+        objective = create_objective(self.model)
+        self.model.objective = objective
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
@@ -65,8 +65,9 @@ class DynamicModel:
         self.nitrate_pool = max_nitrate_pool_low
         self.water_pool = self.max_water_pool
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.1)))
-        self.set_bounds(PHOTON, (0, 100))
+        self.set_bounds(PHOTON, (0, 0))
         self.set_bounds(STARCH_OUT, (0, 1000))
+        self.set_bounds(STARCH_IN, (0, 0))
 
         # Literature ATP NADPH: 7.27 and 2.56 mmol gDW−1 day−1
         atp = 0.00727 /24
@@ -161,5 +162,5 @@ class DynamicModel:
             self.set_bounds(WATER, (0,0))
         else:
             self.set_bounds(WATER, (-1000,1000))
-        #self.set_bounds(PHOTON,(0,photon_in))
-        self.set_bounds(PHOTON,(0,200))
+        self.set_bounds(PHOTON,(0,photon_in))
+        #self.set_bounds(PHOTON,(0,200))

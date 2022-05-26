@@ -6,7 +6,7 @@ from data import assets
 from utils.button import Button
 
 class Skill:
-    def __init__(self, image_grey, image, pos=(0,0), callback=None, active=False, cost=1):
+    def __init__(self, image_grey, image, pos=(0,0), callback=None, active=False, cost=1, offset=(0,0)):
         self.image_normal = pygame.Surface((64, 64), pygame.SRCALPHA)
         self.image_skilled = pygame.Surface((64,64),pygame.SRCALPHA)
         self.image_normal.blit(image_grey, (0, 0))
@@ -30,14 +30,15 @@ class Skill:
             return
         if not self.visible:
             return
-        mouse_pos = pygame.mouse.get_pos()
         if e.type == pygame.MOUSEMOTION and not self.selected:
-            if self.get_rect().collidepoint(mouse_pos):
+            pos = (e.pos[0]-self.offset[0], e.pos[1]-self.offset[1])
+            if self.get_rect().collidepoint(pos):
                 self.hover = True
             else:
                 self.hover = False
         if e.type == pygame.MOUSEBUTTONDOWN:
-            if self.get_rect().collidepoint(mouse_pos):
+            pos = (e.pos[0] - self.offset[0], e.pos[1] - self.offset[1])
+            if self.get_rect().collidepoint(pos):
                 if self.selected:
                     self.selected = False
                     self.hover = True
@@ -62,7 +63,11 @@ class Skill:
 
 class Skill_System:
     def __init__(self, pos, plant, leaf_skills=[], stem_skills=[], root_skills=[], starch_skills=[], cols=2):
+        #performance improve test
+        self.s = s = pygame.Surface((200, 290), pygame.SRCALPHA)
+        self.current_cost_label = config.BIG_FONT.render("0", False, (0, 0, 0))
         self.pos = pos
+
         self.rect = (pos[0],pos[1],200,245)
         self.plant = plant
         self.margin = 20
@@ -78,8 +83,8 @@ class Skill_System:
         self.current_cost = 0
         self.skills_label = config.FONT.render("Leaf Upgrades",False,config.BLACK)
 
-        self.buy_button = Button(self.rect[0]+self.rect[2]-self.margin-64,
-                                 self.rect[1]+self.rect[3]-30,64,64,[self.buy],config.FONT,"Buy")
+        self.buy_button = Button(self.rect[2]-self.margin-64,
+                                 self.rect[3]-30,64,64,[self.buy],config.FONT,"Buy", offset=self.pos)
         self.green_thumbs_icon = assets.img("green_thumb.png", (26, 26))
         self.init_layout()
         self.set_target(0)
@@ -106,6 +111,7 @@ class Skill_System:
         for skill in self.skills[self.active_skills]:
             if skill.selected:
                 self.current_cost += skill.cost
+                self.current_cost_label = config.BIG_FONT.render("{}".format(self.current_cost), False, (0, 0, 0))
 
     def handle_event(self,e):
         self.buy_button.handle_event(e)
@@ -140,34 +146,36 @@ class Skill_System:
                     pass
 
     def draw(self, screen):
-        s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
-        pygame.draw.rect(s,config.WHITE,(self.rect[0],self.rect[1],self.rect[2],40),border_radius=3)
-        s.blit(self.skills_label,(self.rect[0]+self.rect[2]/2-self.skills_label.get_width()/2,self.rect[1]))
-        rect = (self.rect[0],self.rect[1]+45,self.rect[2],self.rect[3])
-        pygame.draw.rect(s,config.WHITE_TRANSPARENT,rect,border_radius=3)
+        pygame.draw.rect(self.s,config.WHITE,(0,0,self.rect[2],40),border_radius=3)
+        self.s.blit(self.skills_label,(self.rect[2]/2-self.skills_label.get_width()/2,0))
+        rect = (0,45,self.rect[2],self.rect[3])
+        pygame.draw.rect(self.s,config.WHITE_TRANSPARENT,rect,border_radius=3)
         #draw shoplike rect and buy button, also draw all skills, but first layout stuff
         for skill in self.skills[self.active_skills]:
-            skill.draw(s)
-        self.buy_button.draw(s)
-        cost = config.BIG_FONT.render("{}".format(self.current_cost), False, (0, 0, 0))
-        s.blit(self.green_thumbs_icon, (self.rect[0] + 70, self.rect[1]+self.rect[3]-self.margin))
-        s.blit(cost, (self.rect[0]+50, self.rect[1]+self.rect[3]-self.margin))
-        screen.blit(s, (0,0))
+            skill.draw(self.s)
+        self.buy_button.draw(self.s)
+        self.s.blit(self.green_thumbs_icon, (70, self.rect[3]-self.margin))
+        self.s.blit(self.current_cost_label, (50, self.rect[3]-self.margin))
+        screen.blit(self.s, (self.pos[0],self.pos[1]))
 
     def init_layout(self):
         for i in range(0,len(self.skills[0])):
             x = self.margin + ((64 + self.margin*2) * (i%self.cols)) # 10 for left, 20 + img_width for right
             y = self.margin + ((64 + self.margin/2) * int(i/2)) # 10 for first, every row + 32 + margin
-            self.skills[0][i].pos = (x+self.pos[0],y+self.pos[1]+45)
+            self.skills[0][i].pos = (x,y+45)
+            self.skills[0][i].offset = self.pos
         for i in range(0,len(self.skills[1])):
             x = self.margin + ((64 + self.margin*2) * (i%self.cols)) # 10 for left, 20 + img_width for right
             y = self.margin + ((64 + self.margin/2) * int(i/2)) # 10 for first, every row + 32 + margin
-            self.skills[1][i].pos = (x+self.pos[0],y+self.pos[1]+45)
+            self.skills[1][i].pos = (x,y+45)
+            self.skills[1][i].offset = self.pos
         for i in range(0,len(self.skills[2])):
             x = self.margin + ((64 + self.margin*2) * (i%self.cols)) # 10 for left, 20 + img_width for right
             y = self.margin + ((64 + self.margin/2) * int(i/2)) # 10 for first, every row + 32 + margin
-            self.skills[2][i].pos = (x+self.pos[0],y+self.pos[1]+45)
+            self.skills[2][i].pos = (x,y+45)
+            self.skills[2][i].offset = self.pos
         for i in range(0,len(self.skills[3])):
             x = self.margin + ((64 + self.margin*2) * (i%self.cols)) # 10 for left, 20 + img_width for right
             y = self.margin + ((64 + self.margin/2) * int(i/2)) # 10 for first, every row + 32 + margin
-            self.skills[3][i].pos = (x+self.pos[0],y+self.pos[1]+45)
+            self.skills[3][i].pos = (x,y+45)
+            self.skills[3][i].offset = self.pos
