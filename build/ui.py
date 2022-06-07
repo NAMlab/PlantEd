@@ -1,7 +1,7 @@
 import pygame
 from gameobjects.plant import Plant
 from utils.gametime import GameTime
-from utils.button import RadioButton, ToggleButton, Button, Slider, SliderGroup, Textbox
+from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup, Textbox
 from utils.tool_tip import ToolTip, ToolTipManager
 from utils.particle import ParticleSystem, PointParticleSystem, StillParticles
 from utils.animation import Animation
@@ -10,6 +10,7 @@ import math
 from pygame import rect, Rect
 from gameobjects.watering_can import Watering_can
 import random
+from skillsystem import Skill_System, Skill
 
 # constants in dynamic model, beter in config? dont think so
 from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
@@ -28,6 +29,7 @@ Topleft: Stats Bar              Init positions, , labels, Update Value Labels
 Below: 4 Organs, Production
             
 '''
+
 class UI:
     def __init__(self, scale, plant, model, production_topleft=(10,100), plant_details_topleft=(10,10),organ_details_topleft=(10,430)):
         self.name = "Plant"
@@ -36,6 +38,7 @@ class UI:
         self.gametime = GameTime.instance()
         self.hover_message = None
         self.hover_timer = 60
+
 
         #performance boost:
         self.label_leaf = config.FONT.render("Leaf", True, (0, 0, 0))  # title
@@ -98,6 +101,8 @@ class UI:
         #self.animations.append(Animation([assets.img("stomata/stomata_open_test.png")],720,(250,500)))
         self.init_production_ui()
         #self.init_organ_ui()
+        self.presets = [{},{},{}]
+        self.presets = [self.generate_preset(i) for i in range(0,3)]
 
     def handle_event(self, e):
         for button in self.button_sprites:
@@ -109,7 +114,7 @@ class UI:
             tips.handle_event(e)
         self.textbox.handle_event(e)
         if e.type == pygame.MOUSEMOTION:
-            self.hover_message = None
+            #self.hover_message = None
             self.hover_timer = 1000
             self.check_mouse_pos()
 
@@ -148,6 +153,27 @@ class UI:
         # maybe put it to event and make userevent
         self.hover_timer -= 1/dt
 
+    def apply_preset(self, id=0):
+        preset = self.presets[id]
+        self.leaf_slider.set_percentage(preset["leaf_slider"])
+        self.stem_slider.set_percentage(preset["stem_slider"])
+        self.root_slider.set_percentage(preset["root_slider"])
+        self.starch_slider.set_percentage(preset["starch_slider"])
+        if preset["consume_starch"] and not self.plant.organs[2].toggle_button.button_down:
+            self.plant.organs[2].toggle_button.activate()
+
+
+    def generate_preset(self, id=0):
+        active_consumption = False
+        '''if self.plant.organs[2].toggle_button is not None:
+            active_consumption = self.plant.organs[2].toggle_button.active'''
+        preset = {"leaf_slider" : self.leaf_slider.get_percentage(),
+                  "stem_slider" : self.stem_slider.get_percentage(),
+                  "root_slider" : self.root_slider.get_percentage(),
+                  "starch_slider" : self.starch_slider.get_percentage(),
+                  "consume_starch" : active_consumption}
+        self.presets[i] = preset
+
     def draw(self, screen):
         for system in self.particle_systems:
             system.draw(screen)
@@ -161,11 +187,16 @@ class UI:
         self.tool_tip_manager.draw(screen)
         if self.hover_message is not None and self.hover_timer <= 0:
             x,y = pygame.mouse.get_pos()
-            pygame.draw.rect(screen,config.WHITE_TRANSPARENT,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
+            if self.hover_message.get_width() > config.SCREEN_WIDTH-x:
+                x = x - self.hover_message.get_width()
+            pygame.draw.rect(screen,config.WHITE,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
             screen.blit(self.hover_message,(x+10,y+3))
 
-    def post_hover_message(self, message):
-        self.hover_message = config.FONT.render("{}".format(message),True,config.BLACK)
+    def post_hover_message(self, message=None):
+        if message is None:
+            self.hover_message = None
+        else:
+            self.hover_message = config.FONT.render("{}".format(message),True,config.BLACK)
 
     def toggle_starch_as_resource(self):
         #self.starch_particle.particles.clear()
@@ -313,13 +344,28 @@ class UI:
                         config.FONT, image=assets.img("roots_small.png",(100,100))),
             RadioButton(topleft[0] + 330, topleft[1] + 40, 100,100,
                         [self.plant.set_target_organ_starch],
-                        config.FONT, image=assets.img("starch.png",(100,100)))
+                        config.FONT, image=assets.img("starch.png",(100,100))),
 
         ]
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
+
+        radioButtons = [
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 150, 30, 30,
+                        [self.apply_preset], callback_var=0,save_preset=self.generate_preset,border_radius=15),
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 220, 20, 20,
+                        [self.apply_preset], callback_var=1,save_preset=self.generate_preset, border_radius=10),
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 290, 10, 10,
+                        [self.apply_preset], callback_var=2,save_preset=self.generate_preset, border_radius=5),
+
+        ]
+        for rb in radioButtons:
+            rb.setRadioButtons(radioButtons)
+            self.button_sprites.add(rb)
+        radioButtons[2].button_down = True
+
 
         #self.button_sprites.add(
         #    ToggleButton(topleft[0] + 100, topleft[1] + 385, 210, 40, [], config.FONT, "Photosysnthesis", pressed=True,
@@ -367,6 +413,7 @@ class UI:
     # weird to have extra method for one element
 
     def draw_organ_detail_temp(self, s, organ, pos, label, show_level=True):
+        skills = organ.skills
         topleft = pos
         pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 100, 30), border_radius=3)
         s.blit(label, dest=(topleft[0] + 50 - label.get_width() / 2, topleft[1]))
@@ -387,6 +434,15 @@ class UI:
         text_organ_mass = config.SMALL_FONT.render("{:.2f} / {threshold}".format(organ.mass,
                                                 threshold=organ.get_threshold()),
                                                 True, (0, 0, 0))
+
+        j = 0
+        for i in range(0,len(skills)):
+            if skills[i].active == True:
+                #pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0]+15,topleft[1]+360+i*75,70,70),border_radius=3)
+                pygame.draw.rect(s, config.WHITE, (topleft[0]+15,topleft[1]+360+j*75,70,70),3,border_radius=3)
+                s.blit(skills[i].image_skilled, (topleft[0]+17, topleft[1]+363+j*75))
+                j += 1
+
         s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+120))  # Todo change x, y
 
 

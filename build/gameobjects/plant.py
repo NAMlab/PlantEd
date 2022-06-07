@@ -37,7 +37,7 @@ class Plant:
     def __init__(self, pos, model, camera):
         self.x = pos[0]
         self.y = pos[1]
-        self.upgrade_points = 0
+        self.upgrade_points = 10
         self.model = model
         self.camera = camera
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
@@ -50,7 +50,7 @@ class Plant:
         # Fix env constraints
 
     def get_growth_rate(self):
-        growth_rate = 0.01 if self.get_biomass() < 4 else 0
+        growth_rate = 0.5 if self.get_biomass() < 4 else 0
         for i in range(0,3):
             growth_rate += self.organs[i].growth_rate
         return growth_rate
@@ -168,6 +168,7 @@ class Organ:
         self.active_threshold = 0
         self.level = 0
         self.update_image_size()
+        self.skills = []
 
     def update(self, dt):
         pass
@@ -399,9 +400,10 @@ class Root(Organ):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
         #self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
+        self.root_tier = 0
         positions = [(x,y+45)]
         directions = [(0,1)]
-        self.ls = LSystem(directions, positions)
+        self.ls = LSystem(directions, positions, self.root_tier)
 
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
@@ -424,6 +426,9 @@ class Root(Organ):
         pos = (self.x,self.y+45)
         dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))
         self.ls.create_new_first_letter(dir, pos, self.mass)
+
+    def set_root_tier(self, root_tier=1):
+        self.ls.set_root_tier(root_tier)
 
     def handle_event(self, event):
         self.ls.handle_event(event)
@@ -461,16 +466,23 @@ class Stem(Organ):
         self.leaf = leaf
         self.width = 15
         self.highlight = None
+        self.flower = False
+        self.sunflower = assets.img("sunflower.png",(64,64))
+        self.sunflower_pos = (0,0)
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active, base_mass=1)
         self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x+3, self.y - 150), (self.x+3, self.y - 160)])
 
     def update(self, dt):
         self.curve.update(dt)
         self.update_leaf_positions()
+        self.update_sunflower_position()
 
     def reach_threshold(self):
         super().reach_threshold()
         tip = self.curve.get_point(1)
+        if self.active_threshold > 1 and self.flower == False:
+            self.flower = True
+            self.update_sunflower_position()
         self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*30,tip[1]+(-1*random.randint(40,50))))
 
     def add_thorn(self, pos, dir):
@@ -506,6 +518,11 @@ class Stem(Organ):
             for leaf in self.leaf.leaves:
                 self.reassign_leaf_x(leaf)
 
+    def update_sunflower_position(self):
+        if self.flower:
+            pos = self.curve.get_point(1)
+            self.sunflower_pos = (pos[0]-32,pos[1]-32)
+
     def update_leaf_positions(self):
         for leaf in self.leaf.leaves:
             leaf["x"],leaf["y"] = self.curve.get_point(leaf["t"])
@@ -540,6 +557,8 @@ class Stem(Organ):
             color = config.GRAY if dist_to_stem > 20 else config.WHITE
             pygame.draw.line(screen, color, (self.highlight[0],self.highlight[1]),(mouse_x,mouse_y))
             pygame.draw.circle(screen, color, (int(self.highlight[0]), int(self.highlight[1])), 10)
+        if self.flower:
+            screen.blit(self.sunflower,self.sunflower_pos)
 
     def get_rect(self):
         if self.image:

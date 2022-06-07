@@ -6,7 +6,7 @@ from data import assets
 from utils.button import Button
 
 class Skill:
-    def __init__(self, image_grey, image, pos=(0,0), callback=None, active=False, cost=1, offset=(0,0)):
+    def __init__(self, image_grey, image, pos=(0,0), callback=None, active=False, cost=1, offset=(0,0), post_hover_message=None, message=None):
         self.image_normal = pygame.Surface((64, 64), pygame.SRCALPHA)
         self.image_skilled = pygame.Surface((64,64),pygame.SRCALPHA)
         self.image_normal.blit(image_grey, (0, 0))
@@ -20,6 +20,8 @@ class Skill:
         self.visible = False
         self.hover = False
         self.skills = []
+        self.post_hover_message = post_hover_message
+        self.message = message
 
     def activate(self):
         self.active = True
@@ -34,7 +36,11 @@ class Skill:
             pos = (e.pos[0]-self.offset[0], e.pos[1]-self.offset[1])
             if self.get_rect().collidepoint(pos):
                 self.hover = True
+                if self.post_hover_message is not None:
+                    self.post_hover_message(self.message)
             else:
+                if self.post_hover_message is not None and self.hover:
+                    self.post_hover_message()
                 self.hover = False
         if e.type == pygame.MOUSEBUTTONDOWN:
             pos = (e.pos[0] - self.offset[0], e.pos[1] - self.offset[1])
@@ -62,12 +68,12 @@ class Skill:
 
 
 class Skill_System:
-    def __init__(self, pos, plant, leaf_skills=[], stem_skills=[], root_skills=[], starch_skills=[], cols=2):
+    def __init__(self, pos, plant, leaf_skills=[], stem_skills=[], root_skills=[], starch_skills=[], cols=2, post_hover_message=None):
         #performance improve test
         self.s = s = pygame.Surface((200, 290), pygame.SRCALPHA)
         self.current_cost_label = config.BIG_FONT.render("0", False, (0, 0, 0))
         self.pos = pos
-
+        self.post_hover_message = post_hover_message
         self.rect = (pos[0],pos[1],200,245)
         self.plant = plant
         self.margin = 20
@@ -106,6 +112,13 @@ class Skill_System:
                 self.set_target(3)
                 self.skills_label = config.BIG_FONT.render("Starch Upgrades", True, config.BLACK)
 
+    def get_skills(self, organ_type):
+        for i in range(0,len(self.plant.organs)):
+            if self.plant.organs[i].type == organ_type:
+                return self.skills[i]
+        if organ_type == self.plant.STARCH:
+            return self.skills[3]
+
     def update_current_cost(self):
         self.current_cost = 0
         for skill in self.skills[self.active_skills]:
@@ -138,12 +151,11 @@ class Skill_System:
                         skill.callback()
                     skill.selected = False
                     skill.activate()
+                    self.plant.target_organ.skills.append(skill)
                     self.update_current_cost()
                     #cost = config.FONT.render("{}".format(self.current_cost), False, (255, 255, 255))
                     #self.animations.append(LabelAnimation(cost, item.cost, 120, self.cost_label_pos))
-                else:
-                    # throw insufficient funds, maybe post hover msg
-                    pass
+        self.update_current_cost()
 
     def draw(self, screen):
         pygame.draw.rect(self.s,config.WHITE,(0,0,self.rect[2],40),border_radius=3)

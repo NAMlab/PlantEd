@@ -119,12 +119,17 @@ class DefaultGameScene(object):
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
-        example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,4)]
-        example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
-        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,2)]
-        example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png")) for i in range(0,3)]
-        self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
         self.ui = UI(1, self.plant, self.model)
+        example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+                                     callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
+        example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+                                     post_hover_message=self.ui.post_hover_message, message="Skill Stem") for i in range(0,2)]
+        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+                                     post_hover_message=self.ui.post_hover_message, message="Skill Root") for i in range(0,2)]
+        example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+                                       post_hover_message=self.ui.post_hover_message, message="Skill Starch") for i in range(0,3)]
+        self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
+
         self.entities = []
         for i in range(0,10):
             bug = Bug((190*random.randint(0,10),900+random.randint(0,200)),pygame.Rect(0,900,config.SCREEN_WIDTH,240),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)],self.camera)
@@ -194,12 +199,13 @@ class DefaultGameScene(object):
         screen.fill((0,0,0))
         self.environment.draw_background(temp_surface)
         self.shop.draw(temp_surface)
-        self.ui.draw(temp_surface)
+
         for entity in self.entities:
             entity.draw(temp_surface)
         self.plant.draw(temp_surface)
         self.environment.draw_foreground(temp_surface)
         self.skill_system.draw(temp_surface)
+        self.ui.draw(temp_surface)
         screen.blit(temp_surface,(0,self.camera.offset_y))
 
 class TitleScene(object):

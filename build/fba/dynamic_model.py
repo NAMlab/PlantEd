@@ -50,6 +50,7 @@ class DynamicModel:
         self.water_intake = 0
         self.starch_intake = 0                  # actual starch consumption
         self.starch_intake_max = 1              # upper bound /h
+        self.percentages_sum = 0
 
         # growth rates for each objective
         self.root_rate = 0
@@ -74,7 +75,9 @@ class DynamicModel:
         nadhp = 0.00256 /24
 
     def calc_growth_rate(self, leaf_percent, stem_percent, root_percent, starch_percent):
-        update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent)
+        if self.percentages_sum != sum([leaf_percent,stem_percent,root_percent,starch_percent]):
+            update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent)
+            self.percentages_sum = sum([leaf_percent, stem_percent, root_percent, starch_percent])
         solution = self.model.optimize()
         gamespeed = self.gametime.GAMESPEED
 

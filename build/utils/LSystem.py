@@ -3,26 +3,45 @@ import random
 import pygame
 import numpy as np
 
-first_tier_root = {"max_length" : 400,
+
+tier_list_basic = [{"max_length" : 400,
                    "duration" : 3,
                    "tries" : 5,
-                   "max_branches" : 10}
-second_tier_root = {"max_length" : 200,
+                   "max_branches" : 10},
+                   {"max_length" : 200,
                    "duration" : 2,
                     "tries" : 3,
-                    "max_branches" : 5}
-third_tier_root = {"max_length" : 50,
+                    "max_branches" : 5},
+                   {"max_length" : 50,
                    "duration" : 1,
                    "tries" : 1,
-                   "max_branches" : 0}
-tier_list = [first_tier_root, second_tier_root, third_tier_root]
+                   "max_branches" : 0},
+                   ]
+
+
+tier_list_branching = [
+    {"max_length" : 300,
+     "duration" : 3,
+     "tries" : 7,
+     "max_branches" : 25},
+    {"max_length" : 150,
+     "duration" : 2,
+     "tries" : 5,
+     "max_branches" : 15},
+    {"max_length" : 30,
+     "duration" : 1,
+     "tries" : 1,
+     "max_branches" : 0}
+]
+
+tier_lists = [tier_list_basic, tier_list_branching]
+
 
 class Letter:
     def __init__(self, id, tier, dir, max_length, mass_start, mass_end, max_branches=None, branches = [], t=None):
         self.id = id
         self.tier = tier
         self.dir = dir
-
         self.branching_t = np.random.random(max_branches).tolist() if max_branches is not None else None    # branching dist
         self.t = t
         self.max_length = max_length
@@ -59,17 +78,18 @@ class Letter:
             branch.print(offset="   " + offset)
 
 class LSystem:
-    def __init__(self, directions=None, positions=None, first_letter=None, mass=0):
+    def __init__(self, directions=None, positions=None, root_tier=0, first_letter=None, mass=0):
         self.positions = positions if positions else [(0,0)]
         self.first_letters = []
         self.directions = directions
+        self.tier_list = tier_lists[root_tier]
         for dir in directions:
             self.first_letters.append(self.create_root(dir, mass))
 
     def create_root(self, dir=None, mass=0, tier=None, t=None):
         dir = dir if dir is not None else (0,1)
         next_tier = tier if tier else 0
-        dic = tier_list[next_tier]
+        dic = self.tier_list[next_tier]
 
         basal_length = dic["max_length"]/10*2
         branching_length = dic["max_length"]/10*6
@@ -87,6 +107,10 @@ class LSystem:
         basal = Letter(100,next_tier, self.get_random_dir(dic["tries"],dir), basal_length, mass, mass+basal_duration,
                       branches=[branching], t=t)
         return basal
+
+    def set_root_tier(self, root_tier):
+        self.tier_list = tier_lists[root_tier]
+        print("set")
 
     def update(self, mass):
         for letter in self.first_letters:
@@ -115,7 +139,7 @@ class LSystem:
             branch = self.create_root(self.get_ortogonal(letter.dir), mass, tier=letter.tier + 1, t=t)
             apex = letter.branches.pop(-1)
             letter.branches.append(branch)
-            segment = Letter(letter.id, letter.tier, self.get_random_dir(tier_list[letter.tier]["tries"],letter.dir),
+            segment = Letter(letter.id, letter.tier, self.get_random_dir(self.tier_list[letter.tier]["tries"],letter.dir),
                              letter.max_length-letter.length, mass, letter.mass_end,
                              letter.max_branches-len(letter.branches), [apex], t=1)
             segment.branching_t = letter.branching_t

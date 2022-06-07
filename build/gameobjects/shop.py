@@ -71,7 +71,7 @@ class Shop:
             elif keyword == "spraycan":
                 self.shop_items.append(Shop_Item(assets.img("spraycan_icon.png", (64, 64)), self.spraycan.activate, post_hover_message=self.post_hover_message, message="Spray em!"))
             elif keyword == "root_item":
-                self.shop_items.append(Shop_Item(assets.img("roots_small.png", (64,64)), self.root_item.activate))
+                self.shop_items.append(Shop_Item(assets.img("roots_small.png", (64,64)), self.root_item.activate, post_hover_message=self.post_hover_message, message="Buy another main root"))
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.init_layout()
@@ -110,7 +110,7 @@ class Shop:
         self.current_cost_label = config.BIG_FONT.render("{}".format(self.current_cost), False, (0, 0, 0))
 
     def handle_event(self, e):
-        x,y = pygame.mouse.get_pos()
+        #x,y = pygame.mouse.get_pos()
         #if self.rect.collidepoint(x,y):
             #self.confirm_button.handle_event(e)
         for item in self.shop_items:
@@ -176,6 +176,8 @@ class Shop_Item:
                 if not self.selected:
                     self.hover = True
             else:
+                if self.post_hover_message is not None and self.hover==True:
+                    self.post_hover_message(None)
                 self.hover = False
 
         if e.type == pygame.MOUSEBUTTONDOWN:

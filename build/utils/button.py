@@ -178,9 +178,12 @@ class RadioButton(pygame.sprite.Sprite):
             self.hover_image.blit(image.copy(), (0, 0))
             self.clicked_image.blit(image.copy(), (0, 0))
         else:
-            self.button_image.fill(button_color)
-            self.hover_image.fill(button_color)
-            self.clicked_image.fill(button_color)
+            pygame.draw.rect(self.button_image,button_color,(0,0,w,h),border_radius=border_radius)
+            pygame.draw.rect(self.hover_image,button_color,(0,0,w,h),border_radius=border_radius)
+            pygame.draw.rect(self.clicked_image,button_color,(0,0,w,h),border_radius=border_radius)
+            #self.button_image.fill(button_color)
+            #self.hover_image.fill(button_color)
+            #self.clicked_image.fill(button_color)
         pygame.draw.rect(self.hover_image, WHITE_TRANSPARENT, self.hover_image.get_rect(), self.border_w, border_radius=border_radius)
         pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=border_radius)
         if text and font:
@@ -210,6 +213,68 @@ class RadioButton(pygame.sprite.Sprite):
                         callback(self.callback_var)
                     else:
                         callback()
+        self.image = self.button_image
+        if self.button_down:
+            self.image = self.clicked_image
+        elif hover:
+            self.image = self.hover_image
+
+
+# image size has to be = w,h
+class DoubleRadioButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, w, h, callbacks, save_preset=None, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
+                 image=None, border_w=None, target=None, callback_var=None, border_radius=0):
+        super().__init__()
+        self.callback_var = callback_var
+        self.target = target if target else None
+        self.border_w = 5 if not border_w else border_w
+        self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
+        self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
+        self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
+        if image:
+            self.button_image.blit(image.copy(), (0, 0))
+            self.hover_image.blit(image.copy(), (0, 0))
+            self.clicked_image.blit(image.copy(), (0, 0))
+        else:
+            pygame.draw.rect(self.button_image,button_color,(0,0,w,h),border_radius=border_radius)
+            pygame.draw.rect(self.hover_image,button_color,(0,0,w,h),border_radius=border_radius)
+            pygame.draw.rect(self.clicked_image,button_color,(0,0,w,h),border_radius=border_radius)
+            #self.button_image.fill(button_color)
+            #self.hover_image.fill(button_color)
+            #self.clicked_image.fill(button_color)
+        pygame.draw.rect(self.hover_image, WHITE_TRANSPARENT, self.hover_image.get_rect(), self.border_w, border_radius=border_radius)
+        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=border_radius)
+        if text and font:
+            text_surf = font.render(text, True, text_color)
+            self.button_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
+            self.hover_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
+            self.clicked_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
+        self.image = self.button_image
+        self.rect = pygame.Rect(x, y, w, h)
+        # This function will be called when the button gets pressed.
+        self.callbacks = callbacks
+        self.save_preset = save_preset
+        self.button_down = False
+
+    def setRadioButtons(self, buttons):
+        self.buttons = buttons
+
+    def handle_event(self, event):
+        hover = self.rect.collidepoint(pygame.mouse.get_pos())
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if hover and event.button == 1:
+                if self.button_down == True:
+                    self.save_preset()
+                else:
+                    for callback in self.callbacks:
+                        if self.callback_var:
+                            callback(self.callback_var)
+                        else:
+                            callback()
+                if self.buttons:
+                    for rb in self.buttons:
+                        rb.button_down = False
+                self.button_down = True
         self.image = self.button_image
         if self.button_down:
             self.image = self.clicked_image
