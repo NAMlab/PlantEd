@@ -80,6 +80,12 @@ class Shop:
         for item in self.shop_items:
             if item.selected:
                 if self.plant.upgrade_points - item.cost >= 0:
+                    if item.condition is not None:
+                        if not item.condition():
+                            # condition not met
+                            if item.condition_not_met_message is not None:
+                                item.post_hover_message(item.condition_not_met_message,0)
+                            return
                     self.plant.upgrade_points -= item.cost
                     item.callback()
                     item.selected = False
@@ -147,7 +153,7 @@ class Shop:
 
 class Shop_Item:
     def __init__(self, image, callback, cost=1, info_text=None, rect=(0,0,0,0), selected_color=(255,255,255),
-                 hover_color = (128,128,128,128), border_width=3, post_hover_message=None, message=None, offset=(0,0)):
+                 hover_color = (128,128,128,128), border_width=3, condition=None, condition_not_met_message=None, post_hover_message=None, message=None, offset=(0,0)):
         self.image = image
         self.callback = callback
         self.cost = cost
@@ -160,6 +166,8 @@ class Shop_Item:
         self.border_width = border_width
         self.hover = False
         self.selected = False
+        self.condition = condition
+        self.condition_not_met_message = condition_not_met_message
         self.shop_items = []
         self.offset = offset
 

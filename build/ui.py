@@ -30,6 +30,12 @@ Below: 4 Organs, Production
             
 '''
 
+preset = {"leaf_slider" : 0,
+          "stem_slider" : 0,
+          "root_slider" : 100,
+          "starch_slider" : 0,
+          "consume_starch" : False}
+
 class UI:
     def __init__(self, scale, plant, model, production_topleft=(10,100), plant_details_topleft=(10,10),organ_details_topleft=(10,430)):
         self.name = "Plant"
@@ -101,8 +107,8 @@ class UI:
         #self.animations.append(Animation([assets.img("stomata/stomata_open_test.png")],720,(250,500)))
         self.init_production_ui()
         #self.init_organ_ui()
-        self.presets = [{},{},{}]
-        self.presets = [self.generate_preset(i) for i in range(0,3)]
+        #self.presets = [{},{},{}]
+        self.presets = [preset for i in range(0,3)]
 
     def handle_event(self, e):
         for button in self.button_sprites:
@@ -172,7 +178,7 @@ class UI:
                   "root_slider" : self.root_slider.get_percentage(),
                   "starch_slider" : self.starch_slider.get_percentage(),
                   "consume_starch" : active_consumption}
-        self.presets[i] = preset
+        self.presets[id] = preset
 
     def draw(self, screen):
         for system in self.particle_systems:
@@ -192,10 +198,13 @@ class UI:
             pygame.draw.rect(screen,config.WHITE,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
             screen.blit(self.hover_message,(x+10,y+3))
 
-    def post_hover_message(self, message=None):
+    def post_hover_message(self, message=None, timer=None):
         if message is None:
+            #deactivate hover message
             self.hover_message = None
         else:
+            if timer is not None:
+                self.hover_timer=timer
             self.hover_message = config.FONT.render("{}".format(message),True,config.BLACK)
 
     def toggle_starch_as_resource(self):
@@ -353,12 +362,12 @@ class UI:
         radioButtons[2].button_down = True
 
         radioButtons = [
-            DoubleRadioButton(topleft[0]+450, topleft[1] + 150, 30, 30,
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 170, 30, 30,
                         [self.apply_preset], callback_var=0,save_preset=self.generate_preset,border_radius=15),
-            DoubleRadioButton(topleft[0]+450, topleft[1] + 220, 20, 20,
-                        [self.apply_preset], callback_var=1,save_preset=self.generate_preset, border_radius=10),
-            DoubleRadioButton(topleft[0]+450, topleft[1] + 290, 10, 10,
-                        [self.apply_preset], callback_var=2,save_preset=self.generate_preset, border_radius=5),
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 240, 30, 30,
+                        [self.apply_preset], callback_var=1,save_preset=self.generate_preset, border_radius=15),
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 310, 30, 30,
+                        [self.apply_preset], callback_var=2,save_preset=self.generate_preset, border_radius=15),
 
         ]
         for rb in radioButtons:

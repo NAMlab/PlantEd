@@ -264,10 +264,11 @@ class DoubleRadioButton(pygame.sprite.Sprite):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if hover and event.button == 1:
                 if self.button_down == True:
-                    self.save_preset()
+                    self.save_preset(self.callback_var)
                 else:
                     for callback in self.callbacks:
-                        if self.callback_var:
+                        #print(self.callback_var)
+                        if self.callback_var is not None:
                             callback(self.callback_var)
                         else:
                             callback()

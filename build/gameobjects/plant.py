@@ -267,6 +267,10 @@ class Leaf(Organ):
     def activate_add_leaf(self):
         self.can_add_leaf = True
 
+    def check_can_add_leaf(self):
+        if len(self.leaves) <= self.active_threshold:
+            return True
+
     def remove_leaf(self, leaf=None):
         if not leaf:
             leaf = self.get_random_leave()
@@ -283,9 +287,25 @@ class Leaf(Organ):
         self.growth_rate = self.get_mass() * gram_mol * growth_rate
 
     def grow(self):
-        growth_per_leaf = self.growth_rate/len(self.leaves) if len(self.leaves) > 0 else 0
+        if self.growth_rate <= 0:
+            return
+        # get leaf age, if too old -> stop growth, then die later
+        growable_leaves = []
         for leaf in self.leaves:
+            if leaf["lifetime"]>leaf["age"]:
+                growable_leaves.append(leaf)
+            # if max age*2 -> kill leaf
+
+        growth_per_leaf = self.growth_rate/len(growable_leaves) if len(growable_leaves) > 0 else 0
+        for leaf in growable_leaves:
             leaf["mass"] += growth_per_leaf
+            leaf["age"] += 1 #seconds
+
+        print(leaf["age"],leaf["lifetime"])
+
+        # age 0
+        # max_age 1000
+
         # if reached a certain mass, gain one exp point, increase threshold
         self.mass = self.get_mass()
         if self.mass > self.thresholds[self.active_threshold]:
@@ -295,6 +315,7 @@ class Leaf(Organ):
         return sum([leaf["mass"] for leaf in self.leaves])+self.base_mass # basemass for seedling leaves
 
     def append_leaf(self, highlight):
+        time = pygame.time.get_ticks()
         pos = (highlight[0], highlight[1])
         dir = highlight[0] - pygame.mouse.get_pos()[0]
         if dir > 0:
@@ -314,6 +335,8 @@ class Leaf(Organ):
                 "mass": 0.0001,
                 "base_image_id": image_id,
                 "direction": dir,
+                "age": 0,
+                "lifetime": 60*60*24/240,
                 "growth_index": self.active_threshold} # to get relative size, depending on current threshold - init threshold
         self.update_leaf_image(leaf, init=True)
         self.particle_systems.append(ParticleSystem(20, spawn_box=Rect(leaf["x"], leaf["y"], 0, 0),
@@ -484,6 +507,7 @@ class Stem(Organ):
             self.flower = True
             self.update_sunflower_position()
         self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*30,tip[1]+(-1*random.randint(40,50))))
+        self.curve.width += 3
 
     def add_thorn(self, pos, dir):
         if dir > 0:
