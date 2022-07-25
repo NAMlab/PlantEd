@@ -11,7 +11,7 @@ class Watering_can:
     def __init__(self, pos, model=None, amount=0, rate=0.15, cost=1, active=False, callback=None): # take from config
         self.pos = pos
         self.model = model
-        self.image = assets.img("watering_can_outlined.png")
+        self.image = assets.img("watering_can.png")
         self.amount = amount
         self.default_amount = 10 #add to config
         self.rate = rate
@@ -33,7 +33,7 @@ class Watering_can:
         self.can_particle_system.activate()
 
     def deactivate(self):
-        self.image = assets.img("watering_can_outlined.png")
+        self.image = assets.img("watering_can.png")
         self.can_particle_system.deactivate()
         self.amount = 0
         self.active = False
@@ -58,12 +58,12 @@ class Watering_can:
         if not self.active:
             return
         if e.type == MOUSEBUTTONDOWN:
-            self.image = assets.img("watering_can_outlined_tilted.png")
+            self.image = assets.img("watering_can_tilted.png")
             self.pouring = True
             self.can_particle_system.activate()
             pygame.mixer.Sound.play(assets.sfx('water_can.mp3', 0.05), -1)
         if e.type == MOUSEBUTTONUP:
-            self.image = assets.img("watering_can_outlined.png")
+            self.image = assets.img("watering_can.png")
             self.can_particle_system.deactivate()
             pygame.mixer.Sound.stop(assets.sfx('water_can.mp3', 0.05))
             self.pouring = False

@@ -350,7 +350,7 @@ class UI:
                         config.FONT, image=assets.img("stem_small.png",(100,100))),
             RadioButton(topleft[0]+220, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_root],
-                        config.FONT, image=assets.img("roots_small.png",(100,100))),
+                        config.FONT, image=assets.img("root_deep.png",(100,100))),
             RadioButton(topleft[0] + 330, topleft[1] + 40, 100,100,
                         [self.plant.set_target_organ_starch],
                         config.FONT, image=assets.img("starch.png",(100,100))),

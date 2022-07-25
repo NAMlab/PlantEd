@@ -13,14 +13,11 @@ pygame.init()
 gram_mol = 0.5124299411
 WIN = pygame.USEREVENT+1
 pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
-leaves = [(assets.img("leaves/leaf_{index}.png".format(index=i)), pivot_pos[i]) for i in range(0, 7)]
-stem = (assets.img("stem.png"), (15, 1063))
-roots = (assets.img("roots.png"), (387, 36))
+leaves = [(assets.img("leaves/{index}.png".format(index=i)), pivot_pos[i]) for i in range(0, 6)]
+#stem = (assets.img("stem.png"), (15, 1063))
+#roots = (assets.img("roots.png"), (387, 36))
 
-thorn_l = (assets.img("thorn_l.png"))
-thorn_r = (assets.img("thorn_r.png"))
-
-beans_big = [assets.img("bean_growth/bean_{}.png".format(index)) for index in range(0, 6)]
+beans_big = [assets.img("bean_growth/{}.png".format(index)) for index in range(0, 4)]
 beans = []
 for bean in beans_big:
     beans.append(pygame.transform.scale(bean, (int(bean.get_width()/3), int(bean.get_height()/3))))
@@ -41,8 +38,8 @@ class Plant:
         self.model = model
         self.camera = camera
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
-        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, stem[0], stem[1], mass=0.1, leaf = organ_leaf, active=False)
-        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, roots[0], roots[1], mass=0.8, active=True)
+        organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, active=False)
+        organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=20, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
@@ -301,7 +298,7 @@ class Leaf(Organ):
             leaf["mass"] += growth_per_leaf
             leaf["age"] += 1 #seconds
 
-        print(leaf["age"],leaf["lifetime"])
+        #print(leaf["age"],leaf["lifetime"])
 
         # age 0
         # max_age 1000
@@ -419,7 +416,7 @@ class Leaf(Organ):
 
 class Root(Organ):
 
-    def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, mass, active):
+    def __init__(self, x, y, name, organ_type, callback, plant, image=None, pivot=None, mass=0, active=False):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
         #self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
@@ -485,7 +482,7 @@ class Root(Organ):
 '''
 
 class Stem(Organ):
-    def __init__(self, x, y, name, organ_type, callback, plant, image, pivot, leaf, mass, active):
+    def __init__(self, x, y, name, organ_type, callback, plant, image=None, pivot=None, leaf=None, mass=0, active=False):
         self.leaf = leaf
         self.width = 15
         self.highlight = None
@@ -560,7 +557,9 @@ class Stem(Organ):
     def reassign_leaf_x(self, leaf):
         global_pos = (leaf["x"], leaf["y"])
         dir = leaf["direction"]
-        rect = self.image.get_rect()
+        rect = self.get_rect()
+        rects = self.curve.get_rects()
+        print(rects)
         init_x = 0
         if dir > 0:
             init_x = rect[2]-1

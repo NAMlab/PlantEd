@@ -65,13 +65,13 @@ class Shop:
     def add_shop_item(self, keywords):
         for keyword in keywords:
             if keyword == "watering":
-                self.shop_items.append(Shop_Item(assets.img("watering_can_outlined_tilted.png", (64, 64)), self.watering_can.activate,post_hover_message=self.post_hover_message, message="Buy a watering can to increase availability."))
+                self.shop_items.append(Shop_Item(assets.img("watering_can_tilted.png", (64, 64)), self.watering_can.activate,post_hover_message=self.post_hover_message, message="Buy a watering can to increase availability."))
             elif keyword == "blue_grain":
                 self.shop_items.append(Shop_Item(assets.img("blue_grain_0.png", (64, 64)), self.blue_grain.activate, post_hover_message=self.post_hover_message, message="Blue grain increases nitrate in the ground."))
             elif keyword == "spraycan":
                 self.shop_items.append(Shop_Item(assets.img("spraycan_icon.png", (64, 64)), self.spraycan.activate, post_hover_message=self.post_hover_message, message="Spray em!"))
             elif keyword == "root_item":
-                self.shop_items.append(Shop_Item(assets.img("roots_small.png", (64,64)), self.root_item.activate, post_hover_message=self.post_hover_message, message="Buy another main root"))
+                self.shop_items.append(Shop_Item(assets.img("root_deep.png", (64,64)), self.root_item.activate, post_hover_message=self.post_hover_message, message="Buy another main root"))
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.init_layout()

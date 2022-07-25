@@ -59,8 +59,8 @@ class Environment:
         #drops = [pygame.transform.scale(assets.img("rain/raindrop{}.png".format(i)), (16, 16)) for i in range(0, 3)]
         #splash = [pygame.transform.scale(assets.img("rain/raindrop_splash{}.png".format(i)), (16, 16)) for i in range(0, 4)]
         self.sun = assets.img("sun/sun.png", (256, 256))
-        self.cloud = pygame.transform.scale(assets.img("cloud.png"), (420, 240)).convert_alpha()
-        self.cloud_dark = pygame.transform.scale(assets.img("cloud_dark.png"), (420, 240)).convert_alpha()
+        self.cloud = assets.img("clouds/cloud_0.png",(402,230))
+        self.cloud_dark = assets.img("clouds/cloud_dark_0.png",(402,230))
         '''self.rain = ParticleSystem(50, spawn_box=Rect(SCREEN_WIDTH / 2-150, 100, 300, 30),
                                     boundary_box=Rect(SCREEN_WIDTH/2-150,0,300,SCREEN_HEIGHT-250),
                                     color=(0,0,100), apply_gravity=True, speed=[0, 180],
