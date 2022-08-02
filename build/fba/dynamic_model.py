@@ -19,6 +19,7 @@ STARCH_IN = "Starch_in_tx_root"
 NITRATE = "Nitrate_tx_root"
 WATER = "H2O_tx_root"
 PHOTON = "Photon_tx_leaf"
+CO2 = "CO2_tx_leaf"
 
 # mol
 Vmax = 0.8
@@ -41,7 +42,7 @@ class DynamicModel:
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
-        self.max_water_pool = 10
+        self.max_water_pool = 1000
         self.temp = 20 # degree ceclsius
              # based on paper
         # copies of intake rates to drain form pools
@@ -92,6 +93,32 @@ class DynamicModel:
         self.nitrate_intake = solution.fluxes[NITRATE]#self.get_flux(NITRATE)
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         self.photon_intake = solution.fluxes[PHOTON]
+
+
+        # get water vapor from co2 intake
+        K = 291.18
+
+        ticks = self.gametime.get_time()
+        day = 1000 * 60 * 6
+        hour = day / 24
+        hours = (ticks % day) / hour
+
+        RH = config.get_y(hours,config.humidity)
+        T = config.get_y(hours,config.summer)
+
+        print("K: " , K, " Relative Humidity: " , RH, " Temperature: ", T, " Day: ", hours)
+
+        In_Concentration = config.water_concentration_at_temp[int(T+2)]
+        Out_Concentration = config.water_concentration_at_temp[int(T)]
+
+        print("In: ", In_Concentration, " Out: ", Out_Concentration)
+
+        Consumption_Factor = K * (In_Concentration - Out_Concentration*RH)
+
+        print("Facotr: ", Consumption_Factor, " CO2 Intake: ", solution.fluxes[CO2])
+        if solution.fluxes[CO2] > 0:
+            self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
+        print(self.water_intake)
 
     def get_rates(self):
         return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
@@ -166,4 +193,5 @@ class DynamicModel:
         else:
             self.set_bounds(WATER, (-1000,1000))
         self.set_bounds(PHOTON,(0,photon_in))
+        self.set_bounds(CO2,(-1000,0))
         #self.set_bounds(PHOTON,(0,200))

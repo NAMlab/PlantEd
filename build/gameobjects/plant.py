@@ -17,10 +17,10 @@ leaves = [(assets.img("leaves/{index}.png".format(index=i)), pivot_pos[i]) for i
 #stem = (assets.img("stem.png"), (15, 1063))
 #roots = (assets.img("roots.png"), (387, 36))
 
-beans_big = [assets.img("bean_growth/{}.png".format(index)) for index in range(0, 4)]
-beans = []
-for bean in beans_big:
-    beans.append(pygame.transform.scale(bean, (int(bean.get_width()/3), int(bean.get_height()/3))))
+beans = [assets.img("bean_growth/{}.png".format(index),(150,150)) for index in range(0, 4)]
+#beans = []
+#for bean in beans_big:
+#    beans.append(pygame.transform.scale(bean, (int(bean.get_width()/4), int(bean.get_height()/4))))
 plopp = assets.sfx('plopp.wav')
 plopp.set_volume(0.4)
 
@@ -106,6 +106,7 @@ class Plant:
         if self.get_biomass() > self.seedling.max and not self.organs[1].active:
             self.organs[1].activate()
             self.organs[0].activate()
+            self.organs[2].create_new_root(self.organs[2].mass,dir=(0,1))
             #if self.get_biomass() > self.seedling.max and not self.organs[0].active:
         for organ in self.organs:
             organ.update(dt)
@@ -131,8 +132,8 @@ class Plant:
 
 class Seedling:
     def __init__(self, x, y, images, max):
-        self.x = x -88
-        self.y = y -200
+        self.x = x -100
+        self.y = y -20
         self.images = images
         self.max = max
 
@@ -421,9 +422,9 @@ class Root(Organ):
         #self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
         self.root_tier = 0
-        positions = [(x,y+45)]
-        directions = [(0,1)]
-        self.ls = LSystem(directions, positions, self.root_tier)
+        #positions = [(x,y+45)]
+        #directions = [(0,1)]
+        self.ls = LSystem()
 
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
@@ -442,9 +443,11 @@ class Root(Organ):
         #for curve in self.curves:
         #    curve.update(dt)
 
-    def create_new_root(self, mouse_pos):
+    def create_new_root(self, mouse_pos=None, dir=None):
         pos = (self.x,self.y+45)
-        dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))
+        print(dir,pos)
+        if not dir:
+            dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))
         self.ls.create_new_first_letter(dir, pos, self.mass)
 
     def set_root_tier(self, root_tier=1):
@@ -461,12 +464,12 @@ class Root(Organ):
 
     def draw(self, screen):
         if self.type == self.plant.target_organ.type:
-            pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 8)
+            #pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 8)
             self.ls.draw_highlighted(screen)
         else:
             self.ls.draw(screen)
-        pygame.draw.line(screen, config.BLACK, (self.x + 1, self.y + 30), (self.x, self.y + 45), 6)
-        pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 4)
+        #pygame.draw.line(screen, config.BLACK, (self.x + 1, self.y + 30), (self.x, self.y + 45), 6)
+        #pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 4)
         #for curve in self.curves:
         #    curve.draw(screen)
         '''if not self.pivot:
@@ -534,10 +537,12 @@ class Stem(Organ):
                     self.callback()
 
     def update_image_size(self, factor=3, base=5):
-        super().update_image_size(factor, base)
-        if self.leaf:
-            for leaf in self.leaf.leaves:
-                self.reassign_leaf_x(leaf)
+        # there is no image, just beziere
+        pass
+        #super().update_image_size(factor, base)
+        #if self.leaf:
+            #for leaf in self.leaf.leaves:
+                #self.reassign_leaf_x(leaf)
 
     def update_sunflower_position(self):
         if self.flower:

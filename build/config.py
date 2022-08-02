@@ -1,5 +1,6 @@
 import pygame
 from utils.tool_tip import ToolTip
+import math
 
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
@@ -19,6 +20,7 @@ SCREEN_HEIGHT = 1080
 
 # COLORS
 WHITE = (255, 255, 255)
+DARK_WHITE = (180,170,148)
 GRAY = (145, 145, 145)
 WHITE_TRANSPARENT = (255, 255, 255, 128)
 GREY_TRANSPARENT = (128,128,128,128)
@@ -53,10 +55,14 @@ winter = {"Min_T" : -5,
           "skew" : 3.2}
 
 # HUMIDITY
-humidity = {"Min_H" : 0.4,
-          "Max_H" : 1,
-          "shift" : 10,
+humidity = {"Min_T" : 0.4,
+          "Max_T" : 1,
+          "shift" : -20.8,
           "skew" : 3.2}
+
+water_concentration_at_temp = [0.269,0.288,0.309,0.33,0.353,0.378,0.403,0.431,0.459,0.49,0.522,0.556,0.592,
+                               0.63,0.67,0.713,0.757,0.804,0.854,0.906,0.961,1.018,1.079,1.143,
+                               1.21,1.28,1.354,1.432,1.513,1.598,1.687,1.781,1.879,1.981,2.089,2.201,2.318,2.441,2.569,2.703]
 
 # provide season and x in hours to get temp or humidity
 def get_y(x,dict):

@@ -53,8 +53,8 @@ class Letter:
 
     def draw(self, screen, start_pos):
         end_pos = (start_pos[0] + self.dir[0] * self.length, start_pos[1] + self.dir[1] * self.length)
-        pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
-        pygame.draw.line(screen, (255, 255, 246), start_pos, end_pos, 4 - self.tier)
+        #pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
+        pygame.draw.line(screen, (180,170,148), start_pos, end_pos, 5 - self.tier)
         for branch in self.branches:
             next_start_pos = (start_pos[0] + self.dir[0] * branch.t * self.length,
                               start_pos[1] + self.dir[1] * branch.t * self.length)
@@ -63,9 +63,9 @@ class Letter:
 
     def draw_highlighted(self, screen, start_pos):
         end_pos = (start_pos[0] + self.dir[0] * self.length, start_pos[1] + self.dir[1] * self.length)
-        pygame.draw.line(screen, (255, 255, 255), start_pos, end_pos, 9 - self.tier)
-        pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
-        pygame.draw.line(screen, (255, 255, 255), start_pos, end_pos, 4 - self.tier)
+        pygame.draw.line(screen, (255, 255, 255), start_pos, end_pos, 7 - self.tier)
+        #pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
+        pygame.draw.line(screen, (180,170,148), start_pos, end_pos, 5 - self.tier)
         for branch in self.branches:
             next_start_pos = (start_pos[0] + self.dir[0] * branch.t * self.length,
                               start_pos[1] + self.dir[1] * branch.t * self.length)
@@ -78,8 +78,8 @@ class Letter:
             branch.print(offset="   " + offset)
 
 class LSystem:
-    def __init__(self, directions=None, positions=None, root_tier=0, first_letter=None, mass=0):
-        self.positions = positions if positions else [(0,0)]
+    def __init__(self, directions=[], positions=[], root_tier=0, first_letter=None, mass=0):
+        self.positions = positions #if positions else [(0,0)]
         self.first_letters = []
         self.directions = directions
         self.tier_list = tier_lists[root_tier]
