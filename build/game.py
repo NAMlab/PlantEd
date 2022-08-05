@@ -30,6 +30,7 @@ import random
 from skillsystem import Skill_System, Skill
 from utils.LSystem import LSystem, Letter
 from analysis import scoring
+from gameobjects.water_reservoir import Water_Reservoir, Water_Grid
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -81,68 +82,28 @@ pygame.mixer.music.play(-1,0)
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
-        self.gametime = GameTime.instance()
-        self.gametime.set_speed(10)
-        self.polygon = [(500,500),[],300,36]
-        n_verticies = self.polygon[3]
-        for i in range(0,n_verticies):
-            self.polygon[1].append(0)
-        self.noise = np.random.normal(0, 10, 360)
+        self.water_grid = Water_Grid()
+        self.water_grid.add_reservoir(Water_Reservoir((500,500),36,100))
         # numpy array for screen
         #directions = [(0,1)]
         #self.ls = LSystem([(900,110)])
 
     def render(self, screen):
-        screen.fill((50,50,50))
-        offset_x, offset_y = self.polygon[0]
-        n_verticies = len(self.polygon[1])
-        angle_offset = 360 / n_verticies
-
-        points=[]
-
-        for i in range(0,len(self.polygon[1])):
-            x,y = math.sin(math.radians(angle_offset*i))*self.polygon[1][i]+offset_x, math.cos(math.radians(angle_offset*i))*self.polygon[1][i]+offset_y
-            points.append((x,y))
-        print(points)
-        pygame.draw.polygon(screen,(10,40,190),points)
-
-        points = []
-        for i in range(0,len(self.polygon[1])):
-            x,y = math.cos(math.radians(angle_offset*i))*self.polygon[1][i]*0.5+offset_x, math.sin(math.radians(angle_offset*i))*self.polygon[1][i]*0.5+offset_y
-            points.append((x,y))
-        print(points)
-        pygame.draw.polygon(screen,(25,30,255),points)
+        screen.fill((50, 50, 50))
+        self.water_grid.draw(screen)
 
     def update(self, dt):
-        ticks = self.gametime.get_time()
-        day = 1000 * 60 * 6
-        hour = day / 24
-        hours = (ticks % day) / hour
-
-        # loop 0..24 -> 0..360
-        deg = hours / 24 * 3600
-
-        n_verticies = self.polygon[3]
-
-        angle_offset = 360/n_verticies
-        base_length = self.polygon[2]
-
-        for i in range (0,n_verticies):
-            self.polygon[1][i] = base_length+base_length*0.3*math.sin(math.radians(deg+angle_offset*i))  #if math.sin(math.radians(deg+angle_offset*i)) > 0 else base_length
-            #self.polygon[1][i] = self.polygon[1][i] + base_length*0.1*math.sin(math.radians(deg+angle_offset*i)) #if math.sin(math.radians(deg+angle_offset*i)) > 0 else base_length
-            #self.polygon[1][i] = self.polygon[1][i] + base_length*0.1*math.sin(math.radians(deg+angle_offset*i)) #if math.sin(math.radians(deg+angle_offset*i)) > 0 else base_length
-            self.polygon[1][i] = self.polygon[1][i] + base_length*0.05*math.sin(math.radians(1.2*deg+angle_offset*i)) #if math.sin(math.radians(deg+angle_offset*i)) > 0 else base_length
-            #self.polygon[1][i] =+ base_length*0.2*math.sin(math.radians(4*deg+angle_offset*i+120)) #if math.sin(math.radians(deg+angle_offset*i)) > 0 else base_length
-            if self.polygon[1][i] < base_length*0.8:
-                self.polygon[1][i] = base_length*0.8
-            print(deg + angle_offset * i, self.polygon[1][i])
-
+        self.water_grid.update(dt)
 
     def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
+            if e.type == KEYDOWN and e.key == K_r:
+                self.water_grid.raining += 0.1
+            if e.type == KEYDOWN and e.key == K_s:
+                self.water_grid.raining = 0
 
 class Camera:
     def __init__(self, offset_y):
