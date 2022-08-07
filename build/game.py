@@ -82,28 +82,24 @@ pygame.mixer.music.play(-1,0)
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
-        self.water_grid = Water_Grid()
-        self.water_grid.add_reservoir(Water_Reservoir((500,500),36,100))
+
         # numpy array for screen
         #directions = [(0,1)]
         #self.ls = LSystem([(900,110)])
 
     def render(self, screen):
         screen.fill((50, 50, 50))
-        self.water_grid.draw(screen)
+        pass
 
     def update(self, dt):
-        self.water_grid.update(dt)
+        pass
 
     def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
-            if e.type == KEYDOWN and e.key == K_r:
-                self.water_grid.raining += 0.1
-            if e.type == KEYDOWN and e.key == K_s:
-                self.water_grid.raining = 0
+
 
 class Camera:
     def __init__(self, offset_y):
@@ -126,6 +122,8 @@ class DefaultGameScene(object):
         self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
         self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model)
+        self.water_grid = Water_Grid()
+        self.water_grid.add_reservoir(Water_Reservoir((500, 500), 36, 100))
         example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
         example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
@@ -179,6 +177,10 @@ class DefaultGameScene(object):
                 scoring.upload_score(self.ui.textbox.text, -1)
                 pygame.quit()
                 sys.exit()
+            if e.type == KEYDOWN and e.key == K_r:
+                self.water_grid.raining += 0.05
+            if e.type == KEYDOWN and e.key == K_s:
+                self.water_grid.raining = 0
             if e.type == WIN:
                 if self.log:
                     self.log.write_log(self.ui.textbox.text)
@@ -200,6 +202,7 @@ class DefaultGameScene(object):
         self.environment.update(dt)
         self.shop.update(dt)
         self.ui.update(dt)
+        self.water_grid.update(dt)
         self.skill_system.update(dt)
         self.plant.update(dt, self.model.get_photon_upper())
         self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0))
@@ -213,7 +216,9 @@ class DefaultGameScene(object):
         for entity in self.entities:
             entity.draw(temp_surface)
         self.plant.draw(temp_surface)
+
         self.environment.draw_foreground(temp_surface)
+        self.water_grid.draw(temp_surface)
         self.skill_system.draw(temp_surface)
         self.ui.draw(temp_surface)
         screen.blit(temp_surface,(0,self.camera.offset_y))
@@ -349,7 +354,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(DevScene())
+        self.go_to(DefaultGameScene())
 
     def go_to(self, scene):
         self.scene = scene
