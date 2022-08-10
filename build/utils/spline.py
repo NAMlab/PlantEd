@@ -124,9 +124,10 @@ class Beziere:
         if self.growth_percentage < 1.0:
             self.growth_percentage += 0.01
             #point added to grow into
+            self.get_current_points_to_draw()
         else:
             self.growth_percentage = 1
-        self.get_current_points_to_draw()
+
         #self.apply_forces(dt)
 
     def find_closest(self, pos):

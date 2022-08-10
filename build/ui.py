@@ -75,9 +75,9 @@ class UI:
                            apply_gravity=False,
                            speed=[0, 4], spread=[2, -2], active=False)'''
 
-        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+465, self.production_topleft[1]+40, 0, 100), lifetime=8, color=config.WHITE,
+        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+355, self.production_topleft[1]+70, 50, 50), lifetime=10, color=config.WHITE,
                                               apply_gravity=False,
-                                              speed=[4, 0], spread=[0, 4], active=False)
+                                              speed=[0, 0], spread=[10, 10], active=False)
 
         #self.particle_systems.append(self.biomass_particle)
         #self.particle_systems.append(self.starch_particle)
@@ -105,10 +105,11 @@ class UI:
         #self.animations.append(Animation([assets.img("stomata/stomata_open_{}.png".format(i)) for i in range(0, 9)],720,(250,500)))
         #self.animations.append(Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)], 720, (250, 500)))
         #self.animations.append(Animation([assets.img("stomata/stomata_open_test.png")],720,(250,500)))
+        self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
         #self.init_organ_ui()
         #self.presets = [{},{},{}]
-        self.presets = [preset for i in range(0,3)]
+
 
     def handle_event(self, e):
         for button in self.button_sprites:
@@ -133,14 +134,14 @@ class UI:
                 message = "Level is a combination of all three organ levels."
             if 90 < x < 260:
                 message = "Plant Mass, measured as dry weight in gramm."
-            if 260 < x < 320:
+            if 275 < x < 335:
                 message = "Green Thumbs are used to buy items in the shop."
-            if 320 < x < 440:
+            '''if 320 < x < 440:
                 message = "Water availability in the environment."
             if 440 < x < 580:
                 message = "Nitrate availability in the environment."
             if 580 < x < 760:
-                message = "Starch that your plant has stored."
+                message = "Starch that your plant has stored."'''
             if message is not None:
                 self.post_hover_message(message)
 
@@ -179,10 +180,9 @@ class UI:
                   "starch_slider" : self.starch_slider.get_percentage(),
                   "consume_starch" : active_consumption}
         self.presets[id] = preset
+        return preset
 
     def draw(self, screen):
-        for system in self.particle_systems:
-            system.draw(screen)
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
         self.draw_ui(screen)
@@ -190,6 +190,8 @@ class UI:
             element.draw(screen)
         for animation in self.animations:
             screen.blit(animation.image,animation.pos)
+        for system in self.particle_systems:
+            system.draw(screen)
         self.tool_tip_manager.draw(screen)
         if self.hover_message is not None and self.hover_timer <= 0:
             x,y = pygame.mouse.get_pos()
@@ -233,7 +235,7 @@ class UI:
     def draw_plant_details(self, s):
         # details
         topleft = self.plant_details_topleft
-        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 750, 40), border_radius=3)
+        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 450, 40), border_radius=3)
 
         # plant lvl
         lvl_text = config.FONT.render("LvL:", True, (0, 0, 0))
@@ -253,10 +255,10 @@ class UI:
         #skillpoints_text = config.FONT.render("Thumbs:", True, (0, 0, 0))
         #s.blit(skillpoints_text, dest=(topleft[0] + 190, topleft[1] + 6))
         skillpoints = config.FONT.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(skillpoints, dest=(topleft[0]+255, topleft[1]+6))
-        s.blit(assets.img("green_thumb.png",(20,20)),(topleft[0]+skillpoints.get_width() + 270,topleft[1]+10))
+        s.blit(skillpoints, dest=(topleft[0]+265, topleft[1]+6))
+        s.blit(assets.img("green_thumb.png",(20,20)),(topleft[0]+skillpoints.get_width() + 280,topleft[1]+10))
 
-        # water
+        '''# water
         water_level_text = config.FONT.render("Water:", True, (0, 0, 0))
         s.blit(water_level_text, dest=(topleft[0]+310, topleft[1]+6))
         water_level = config.FONT.render("{:.2f}".format(self.model.water_pool), True, (0, 0, 0))  # title
@@ -272,7 +274,7 @@ class UI:
         starch_pool_text = config.FONT.render("Starch:", True, (0,0,0))
         s.blit(starch_pool_text, dest=(topleft[0]+570, topleft[1]+6))
         starch_pool = config.FONT.render("{:.2f}/{:.2f}".format(self.plant.organ_starch.mass, self.plant.organ_starch.get_threshold()),True,(0,0,0))
-        s.blit(starch_pool, dest=(topleft[0]+580+starch_pool_text.get_width(),topleft[1]+6))
+        s.blit(starch_pool, dest=(topleft[0]+580+starch_pool_text.get_width(),topleft[1]+6))'''
 
 
     def draw_organ_details(self, s):
@@ -361,21 +363,6 @@ class UI:
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
 
-        radioButtons = [
-            DoubleRadioButton(topleft[0]+450, topleft[1] + 170, 30, 30,
-                        [self.apply_preset], callback_var=0,save_preset=self.generate_preset,border_radius=15),
-            DoubleRadioButton(topleft[0]+450, topleft[1] + 240, 30, 30,
-                        [self.apply_preset], callback_var=1,save_preset=self.generate_preset, border_radius=15),
-            DoubleRadioButton(topleft[0]+450, topleft[1] + 310, 30, 30,
-                        [self.apply_preset], callback_var=2,save_preset=self.generate_preset, border_radius=15),
-
-        ]
-        for rb in radioButtons:
-            rb.setRadioButtons(radioButtons)
-            self.button_sprites.add(rb)
-        radioButtons[2].button_down = True
-
-
         #self.button_sprites.add(
         #    ToggleButton(topleft[0] + 100, topleft[1] + 385, 210, 40, [], config.FONT, "Photosysnthesis", pressed=True,
         #                 fixed=True))
@@ -419,7 +406,22 @@ class UI:
         self.sliders.append(self.root_slider)
         self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
-    # weird to have extra method for one element
+
+        preset = self.generate_preset()
+
+        radioButtons = [
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 170, 40, 40,
+                        [self.apply_preset,self.generate_preset], preset=preset, callback_var=0,border_radius=1),
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 240, 45, 45,
+                        [self.apply_preset,self.generate_preset], preset=preset, callback_var=1, border_radius=1),
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 310, 50, 50,
+                        [self.apply_preset,self.generate_preset], preset=preset, callback_var=2, border_radius=1),
+        ]
+        for rb in radioButtons:
+            rb.setRadioButtons(radioButtons)
+            self.button_sprites.add(rb)
+        radioButtons[2].button_down = True
+        # weird to have extra method for one element
 
     def draw_organ_detail_temp(self, s, organ, pos, label, show_level=True):
         skills = organ.skills

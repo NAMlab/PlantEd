@@ -7,6 +7,7 @@ import random
 import config
 from data import assets
 from utils.spline import Beziere
+from gameobjects.water_reservoir import Water_Reservoir, Water_Grid
 
 SUN = 0
 RAIN = 1
@@ -32,15 +33,16 @@ rain_sound.set_volume(0.05)
 
 
 class Environment:
-    def __init__(self, plant, model, nitrate, water, gametime, activate_hawk=None):
+    def __init__(self, plant, model, water_grid, nitrate, water, gametime, activate_hawk=None):
         self.s = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         self.w = SCREEN_WIDTH
         self.model = model
+        self.water_grid = water_grid
         self.gametime = gametime
         self.background = assets.img("soil.png").convert_alpha()
         #self.background_moist = pygame.transform.scale(assets.img("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
-        self.sun_pos_spline = Beziere([(-100,800),(960,-200),(2020,800)])
+        self.sun_pos_spline = Beziere([(-100,800),(960,-200),(2020,800)],res=10000).points_to_draw
         self.rain_rate = 0.0003
         self.font = pygame.font.SysFont('Arial', 56)
         self.sfont = pygame.font.SysFont('Arial', 32)
@@ -48,9 +50,11 @@ class Environment:
         self.wind_force = (0,0)
         self.wind_duration = 0 # at 60fps
         self.draw = True
+        self.raining = False
         self.activate_hawk = activate_hawk
         self.sprites = pygame.sprite.Group()
-        self.animations = []
+        rain_images = [assets.img("gif_rain/frame_{index}_delay-0.05s.png".format(index=i)) for i in range(0,21)]
+        self.animations = [Animation(rain_images,120,(480,0),running=False)]
         self.weather_events = []
         self.state = SUN # mask for weather 0sun,1rain,2cloud
         self.star_pos_size = [((random.randint(0,SCREEN_WIDTH), random.randint(0,SCREEN_HEIGHT/2)), random.randint(0,10)) for i in range(0,50)]
@@ -65,17 +69,17 @@ class Environment:
                                     boundary_box=Rect(SCREEN_WIDTH/2-150,0,300,SCREEN_HEIGHT-250),
                                     color=(0,0,100), apply_gravity=True, speed=[0, 180],
                                     active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)'''
-        self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH/2-110, 110,
+        '''self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH/2-110, 110,
                                                       220, 20),
                                    boundary_box=Rect(SCREEN_WIDTH/2-self.cloud.get_width()/2-80, 20,
                                                      160,SCREEN_HEIGHT-250),
                                 size=8, color=config.BLUE, apply_gravity=False,
-                                   speed=[0, 150], spread=[0, 0], active=False, rectangle=True)
+                                   speed=[0, 150], spread=[0, 0], active=False, rectangle=True)'''
 
-        self.nitrate = StillParticles(80, spawn_box=Rect(self.w/2-400,950,800,300),
-                                    boundary_box=Rect(1200,900,400,300),
-                                    color=(0,0,0), speed=[0, 0], callback=self.model.get_nitrate_percentage,
-                                    active=True, size=4, once=True)
+        self.nitrate = StillParticles(10, spawn_box=Rect(0,950,1920,300),
+                                    boundary_box=Rect(0,950,1920,300),
+                                    color=(0,0,0), images=[assets.img("nitrogen.png",(20,20))], speed=[0, 0], callback=self.model.get_nitrate_percentage,
+                                    active=True, size=4, factor=100, once=True)
         self.weather_events = config.e
 
 
@@ -84,9 +88,9 @@ class Environment:
         for animation in self.animations:
             animation.update()
         self.handle_weather_events()
-        self.rain.update(dt)
+        #self.rain.update(dt)
         self.nitrate.update(dt)
-        if self.rain.active:
+        if self.raining:
             self.model.water_pool += self.rain_rate * self.gametime.GAMESPEED
         for sprite in self.sprites:
             # sprites are able to cancle themselves, OneShotAnimation / Animation (loop)
@@ -120,7 +124,9 @@ class Environment:
         # self.sun_pos_spline.draw(s)
         day_time = self.get_day_time_t()
         if day_time > 0 and day_time < 1:
-            sunpos = self.sun_pos_spline.get_point(day_time)
+            #sunpos = self.sun_pos_spline.get_point(day_time)
+            sunpos = self.sun_pos_spline[(int(day_time*10000)-1)]
+
             sunpos = (sunpos[0] - self.sun.get_width() / 2, sunpos[1] - self.sun.get_height() / 2)
             self.s.blit(self.sun, sunpos)
 
@@ -138,9 +144,13 @@ class Environment:
                 pygame.draw.circle(s, (255,255,255, abs(sun_intensity)*180), pos[0], max(pos[1]-5,0))
         '''
         if self.state == CLOUD:
-            self.s.blit(self.cloud, (960-self.cloud.get_width()/2, 50))
+            self.s.blit(self.cloud, (430,-100))
+            self.s.blit(self.cloud, (810,-140))
+            self.s.blit(self.cloud, (1140,-110))
         if self.state == RAIN:
-            self.s.blit(self.cloud_dark, (960-self.cloud_dark.get_width()/2, 50))
+            self.s.blit(self.cloud_dark, (430,-100))
+            self.s.blit(self.cloud_dark, (810,-140))
+            self.s.blit(self.cloud_dark, (1140,-110))
 
 
 
@@ -162,9 +172,11 @@ class Environment:
 
     def draw_foreground(self, screen):
         self.draw_clock(screen)
-        self.rain.draw(screen)
+        #self.rain.draw(screen)
         self.nitrate.draw(screen)
         self.sprites.draw(screen)
+        for animation in self.animations:
+            animation.draw(screen)
 
     def handle_weather_events(self):
         time = self.gametime.get_time()
@@ -177,13 +189,19 @@ class Environment:
         self.state = event["type"]
         if self.state == RAIN:
             pygame.mixer.Sound.play(rain_sound, -1)
-            self.rain.activate()
+            self.raining = True
+            self.animations[0].running = True
+            self.water_grid.activate_rain()
         elif self.state == SUN:
             pygame.mixer.Sound.stop(rain_sound)
-            self.rain.deactivate()
+            self.raining = False
+            self.animations[0].running = False
+            self.water_grid.deactivate_rain()
         elif self.state == CLOUD:
             pygame.mixer.Sound.stop(rain_sound)
-            self.rain.deactivate()
+            self.raining = False
+            self.animations[0].running = False
+            self.water_grid.deactivate_rain()
         elif self.state == HAWK:
             pass
             #self.activate_hawk()

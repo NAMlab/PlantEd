@@ -20,16 +20,17 @@ class Watering_can:
         self.active = active
         self.pouring = False
         self.callback = callback
-        self.can_particle_system = ParticleSystem(90, spawn_box=Rect(self.pos[0], self.pos[1], 0, 0), lifetime=12,
-                                                  color=config.BLUE,apply_gravity=True,speed=[0, 60],
-                                                  spread=[10, 0], active=False)
+        self.rect = Rect(self.pos[0]+10,self.pos[1],20,20)
+        self.can_particle_system = ParticleSystem(290, spawn_box=self.rect, lifetime=12,
+                                                  color=config.BLUE,apply_gravity=10,speed=[-40, 0],
+                                                  spread=[20, 20], active=False)
 
     def activate(self, amount=None):
         self.amount = self.default_amount if amount is None else amount
         self.pos = pygame.mouse.get_pos()
         self.active = True
         pygame.mouse.set_visible(False)
-        self.can_particle_system.spawn_box = Rect(self.pos[0], self.pos[1] + 100, 0, 0)
+        self.can_particle_system.spawn_box = self.rect
         self.can_particle_system.activate()
 
     def deactivate(self):
@@ -69,8 +70,10 @@ class Watering_can:
             self.pouring = False
         if e.type == MOUSEMOTION:
             x, y = pygame.mouse.get_pos()
+
             self.pos = (x,y)
-            self.can_particle_system.spawn_box = Rect(x, y + 100, 0, 0)
+            self.rect = Rect(x + 10, y + 120, 20, 20)
+            self.can_particle_system.spawn_box = self.rect
 
     def draw(self, screen):
         if self.active:

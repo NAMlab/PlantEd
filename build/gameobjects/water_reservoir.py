@@ -28,6 +28,12 @@ class Water_Grid:
     def add_reservoir(self, reservoir):
         self.reservoirs.append(reservoir)
 
+    def activate_rain(self):
+        self.raining = 0.05
+
+    def deactivate_rain(self):
+        self.raining = 0
+
     def trickle(self, dt):
         for i in reversed(range(self.grid.shape[0]-1)):
             for j in range(0,self.grid.shape[1]):
@@ -52,17 +58,17 @@ class Water_Grid:
         for i in range(0,self.grid.shape[0]):
             for j in range(0,self.grid.shape[1]):
                 cell = self.grid[i,j]
-                if cell > 0:
+                if cell > 3:
                     #Todo make better loop, to draw at 0
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]
-                    pygame.draw.circle(screen, (10*i,10*i,255-i*5), (self.pos[0]+j * 100 + offset_x, self.pos[1]+i * 100 + offset_y), 10)
+                    pygame.draw.circle(screen, (0,10+offset_y,255-offset_x), (self.pos[0]+j * 100 + offset_x, self.pos[1]+i * 100 + offset_y), int(cell/50+5))
 
                     n_drops = int(cell/10)
                     for k in range(0,n_drops):
                         offset_x = self.offset_grid[0,k, i, j]
                         offset_y = self.offset_grid[1,k, i, j]
-                        pygame.draw.circle(screen,(10*i,10*i,255-i*5),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),10)
+                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/50+5))
 
         for reservoir in self.reservoirs:
             reservoir.draw(screen)

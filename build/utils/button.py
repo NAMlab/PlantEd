@@ -1,4 +1,5 @@
 import pygame
+import config
 
 BLACK = (0, 0, 0)
 WHITE_TRANSPARENT = (255, 255, 255, 128)
@@ -222,56 +223,92 @@ class RadioButton(pygame.sprite.Sprite):
 
 # image size has to be = w,h
 class DoubleRadioButton(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callbacks, save_preset=None, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, target=None, callback_var=None, border_radius=0):
+    def __init__(self, x, y, w, h, callbacks, button_color=WHITE_TRANSPARENT,
+                 border_w=None, callback_var=None, border_radius=0, preset=None):
         super().__init__()
+        self.w = w
+        self.h = h
+        self.button_color = button_color
         self.callback_var = callback_var
-        self.target = target if target else None
-        self.border_w = 5 if not border_w else border_w
+        self.border_radius = border_radius
+        self.border_w = 2 if not border_w else border_w
         self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
-        if image:
-            self.button_image.blit(image.copy(), (0, 0))
-            self.hover_image.blit(image.copy(), (0, 0))
-            self.clicked_image.blit(image.copy(), (0, 0))
+        self.hover_selected_image = pygame.Surface((w, h), pygame.SRCALPHA)
+        if preset:
+            self.generate_image_from_preset(preset)
         else:
             pygame.draw.rect(self.button_image,button_color,(0,0,w,h),border_radius=border_radius)
             pygame.draw.rect(self.hover_image,button_color,(0,0,w,h),border_radius=border_radius)
             pygame.draw.rect(self.clicked_image,button_color,(0,0,w,h),border_radius=border_radius)
+            pygame.draw.rect(self.hover_selected_image,button_color,(0,0,w,h),border_radius=border_radius)
             #self.button_image.fill(button_color)
             #self.hover_image.fill(button_color)
             #self.clicked_image.fill(button_color)
-        pygame.draw.rect(self.hover_image, WHITE_TRANSPARENT, self.hover_image.get_rect(), self.border_w, border_radius=border_radius)
+        pygame.draw.rect(self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w, border_radius=border_radius)
         pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=border_radius)
-        if text and font:
-            text_surf = font.render(text, True, text_color)
-            self.button_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.hover_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.clicked_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
+        pygame.draw.rect(self.hover_selected_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=border_radius)
+
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
         # This function will be called when the button gets pressed.
         self.callbacks = callbacks
-        self.save_preset = save_preset
         self.button_down = False
 
     def setRadioButtons(self, buttons):
         self.buttons = buttons
+
+    def generate_image_from_preset(self, preset):
+        self.button_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
+        self.hover_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
+        self.clicked_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
+        self.hover_selected_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
+
+
+        pygame.draw.rect(self.button_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
+        pygame.draw.rect(self.hover_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
+        pygame.draw.rect(self.clicked_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
+        pygame.draw.rect(self.hover_selected_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
+
+        line_width = self.w/4
+
+        leaf_height = preset["leaf_slider"]/100
+        stem_height = preset["stem_slider"]/100
+        root_height = preset["root_slider"]/100
+        starch_height = preset["starch_slider"]/100
+
+        print(leaf_height, stem_height, root_height, starch_height)
+
+        images = [self.button_image, self.hover_image, self.clicked_image, self.hover_selected_image]
+
+        h = self.h*0.8
+        margin = self.h*0.1
+
+        for i in range(0,len(images)):
+            pygame.draw.line(images[i],(255,255,255),(0*line_width,self.h-h*leaf_height-margin),(1*line_width,self.h-h*leaf_height-margin),4)
+            pygame.draw.line(images[i],(255,255,255),(1*line_width,self.h-h*stem_height-margin),(2*line_width,self.h-h*stem_height-margin),4)
+            pygame.draw.line(images[i],(255,255,255),(2*line_width,self.h-h*root_height-margin),(3*line_width,self.h-h*root_height-margin),4)
+            pygame.draw.line(images[i],(255,255,255),(3*line_width,self.h-h*starch_height-margin),(4*line_width,self.h-h*starch_height-margin),4)
+
+        pygame.draw.rect(self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w, border_radius=self.border_radius)
+        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=self.border_radius)
+        pygame.draw.rect(self.hover_selected_image, config.GREEN, self.clicked_image.get_rect(), self.border_w, border_radius=self.border_radius)
+
 
     def handle_event(self, event):
         hover = self.rect.collidepoint(pygame.mouse.get_pos())
         if event.type == pygame.MOUSEBUTTONDOWN:
             if hover and event.button == 1:
                 if self.button_down == True:
-                    self.save_preset(self.callback_var)
+                    preset = self.callbacks[1](self.callback_var)
+                    self.generate_image_from_preset(preset)
                 else:
-                    for callback in self.callbacks:
-                        #print(self.callback_var)
-                        if self.callback_var is not None:
-                            callback(self.callback_var)
-                        else:
-                            callback()
+                    if self.callback_var is not None:
+                        self.callbacks[0](self.callback_var)
+                    else:
+                        self.callbacks[0]()
+
                 if self.buttons:
                     for rb in self.buttons:
                         rb.button_down = False
@@ -279,8 +316,11 @@ class DoubleRadioButton(pygame.sprite.Sprite):
         self.image = self.button_image
         if self.button_down:
             self.image = self.clicked_image
-        elif hover:
-            self.image = self.hover_image
+        if hover:
+            if self.button_down:
+                self.image = self.hover_selected_image
+            else:
+                self.image = self.hover_image
 
 
 class OptionBox:

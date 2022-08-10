@@ -50,8 +50,11 @@ class Letter:
         self.max_branches = max_branches
         self.branches = branches
         self.length = 0
+        self.pos = (0,0)
 
     def draw(self, screen, start_pos):
+        if self.id == 300:
+            self.pos = start_pos
         end_pos = (start_pos[0] + self.dir[0] * self.length, start_pos[1] + self.dir[1] * self.length)
         #pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
         pygame.draw.line(screen, (180,170,148), start_pos, end_pos, 5 - self.tier)
@@ -62,6 +65,9 @@ class Letter:
             branch.draw(screen, next_start_pos)
 
     def draw_highlighted(self, screen, start_pos):
+        if self.id == 300 or self.id == 301:
+            pygame.draw.circle(screen,(255,0,0),start_pos,10)
+            self.pos = start_pos
         end_pos = (start_pos[0] + self.dir[0] * self.length, start_pos[1] + self.dir[1] * self.length)
         pygame.draw.line(screen, (255, 255, 255), start_pos, end_pos, 7 - self.tier)
         #pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
@@ -77,10 +83,14 @@ class Letter:
         for branch in self.branches:
             branch.print(offset="   " + offset)
 
+    def get_pos(self):
+        return self.pos
+
 class LSystem:
     def __init__(self, directions=[], positions=[], root_tier=0, first_letter=None, mass=0):
         self.positions = positions #if positions else [(0,0)]
         self.first_letters = []
+        self.apexes = []
         self.directions = directions
         self.tier_list = tier_lists[root_tier]
         for dir in directions:
@@ -113,14 +123,17 @@ class LSystem:
         print("set")
 
     def update(self, mass):
+        self.apexes = []
         for letter in self.first_letters:
             self.apply_rules(letter, mass)
 
     def apply_rules(self, letter, mass):
         if letter.max_length <= letter.length:
+            if letter.id == 300:
+                letter.id = 301
             letter.id = 99
         # growing
-        if letter.id > 99:
+        if letter.id > 99 and letter.id < 301:
             self.update_letter_length(letter, mass)
         # branching
         if letter.id == 200:
@@ -129,6 +142,11 @@ class LSystem:
                     # make branch, remove apex, apend branch, make segment, apend apex
 
                     self.create_branch(letter, mass)
+
+        if letter.id == 300 or letter.id == 301:
+            pos = letter.get_pos()
+            if pos != (0,0):
+                self.apexes.append(pos)
 
         for branch in letter.branches:
             self.apply_rules(branch, mass)

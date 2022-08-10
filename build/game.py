@@ -73,9 +73,9 @@ def shake():
 # unittests, dir that contains all tests, one test file for one class, secure class function
 # pipenv for git, enable cloners to see all depencies
 
-pygame.mixer.music.load('../assets/background_music.mp3')
-pygame.mixer.music.set_volume(0.05)
-pygame.mixer.music.play(-1,0)
+#pygame.mixer.music.load('../assets/background_music.mp3')
+#pygame.mixer.music.set_volume(0.05)
+#pygame.mixer.music.play(-1,0)
 
 
 # seperate high to low level --> less function calls, less clutter
@@ -120,10 +120,11 @@ class DefaultGameScene(object):
         self.log = Log()                        # can be turned off
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
-        self.environment = Environment(self.plant, self.model, 0, 0, self.gametime)
-        self.ui = UI(1, self.plant, self.model)
         self.water_grid = Water_Grid()
-        self.water_grid.add_reservoir(Water_Reservoir((500, 500), 36, 100))
+        self.water_grid.add_reservoir(Water_Reservoir((500, 990), 36, 50))
+        self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
+        self.ui = UI(1, self.plant, self.model)
+
         example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
         example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),

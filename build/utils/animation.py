@@ -65,7 +65,7 @@ class LabelAnimation(pygame.sprite.Sprite):
         return True
 
 class Animation(pygame.sprite.Sprite):
-    def __init__(self, images, duration, pos=[0,0], speed=1):
+    def __init__(self, images, duration, pos=[0,0], speed=1, running=True):
         super(Animation, self).__init__()
         self.pos = pos
         self.rect = Rect(pos[0], pos[1], 10, 10)
@@ -77,16 +77,27 @@ class Animation(pygame.sprite.Sprite):
         self.start_interval = self.interval
         self.index = 0
         self.speed = speed
+        self.running = running
+
+    def start(self):
+        self.running = True
+
+    def stop(self):
+        self.running = False
 
     def update(self):
-        time_elapsed = pygame.time.get_ticks() - self.start_time
-        if time_elapsed >= self.interval:
-            self.index += 1
-            if self.index >= len(self.images) - 1:
-                self.index = 0
-            self.interval += self.start_interval
-        self.image = self.images[self.index]
-        return True
+        if self.running:
+            time_elapsed = pygame.time.get_ticks() - self.start_time
+            if time_elapsed >= self.interval:
+                self.index += 1
+                if self.index >= len(self.images) - 1:
+                    self.index = 0
+                self.interval += self.start_interval
+            self.image = self.images[self.index]
+
+    def draw(self, screen):
+        if self.running:
+            screen.blit(self.image,self.pos)
 
 class MoveAnimation(pygame.sprite.Sprite):
     def __init__(self, images, duration, lines, speed=1):

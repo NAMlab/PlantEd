@@ -20,8 +20,8 @@ class Particle:
     def move(self, dt):
         self.x += self.speed[0] * dt * 6
         self.y += self.speed[1] * dt * 6
-        if self.apply_gravity:
-            self.speed[1] = self.speed[1] + 0.1
+        if self.apply_gravity > 0:
+            self.speed[1] = self.speed[1] + self.apply_gravity
             if abs(self.speed[0]) > 0:
                 self.speed[0] = self.speed[0] - 0.2 * dt * 6 * self.speed[0] / abs(self.speed[0])
             else:
@@ -66,7 +66,7 @@ class PointsParticle(Particle):
 
 class ParticleSystem:
     def __init__(self, max_particles, spawn_box=Rect(0, 0, 0, 0), boundary_box=None, color=(0, 0, 0),
-                 direction=None, size=10, lifetime=None, apply_gravity=False, speed=None, size_over_lifetime=True,
+                 direction=None, size=10, lifetime=None, apply_gravity=0, speed=None, size_over_lifetime=True,
                  images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True,
                  color_spectrum=False, wide_spread=False, rectangle=False):
         if speed is None:
@@ -214,7 +214,7 @@ class PointParticleSystem(ParticleSystem):
 
     def update(self, dt):
         if self.callback:
-            self.set_max_particles(max(int(self.callback()*5*self.factor),self.nmin))
+            self.set_max_particles(max(int(self.callback()*self.factor),self.nmin))
         if self.particle_counter < self.max_particles and random.randint(0, 10) < 1 and self.active:
             self.particle_counter += 1
             self.particles.append(PointsParticle(points=self.points, image=self.images[0], speed=self.speed))
@@ -231,14 +231,15 @@ class StillParticles(ParticleSystem):
                  images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True):
     '''
 
-    def __init__(self, max_particles, spawn_box, boundary_box, color, speed, size, once, active=True, callback=None):
-        super().__init__(max_particles, spawn_box, boundary_box, color, speed=speed, size=size, once=once,
+    def __init__(self, max_particles, spawn_box, boundary_box, color, speed, size, once, factor=1, images=None, active=True, callback=None):
+        super().__init__(max_particles, spawn_box, boundary_box, color, images=images, speed=speed, size=size, once=once,
                          active=active)
         self.callback = callback
+        self.factor = factor
 
     def update(self, dt):
         if self.callback:
-            self.max_particles = int(self.callback()*200) #max 0.0012/0.05
+            self.max_particles = int(self.callback()*self.factor) #max 0.0012/0.05
         while self.max_particles > len(self.particles):
             self.generate_particle()
         while self.max_particles < len(self.particles) and len(self.particles) > 0:
