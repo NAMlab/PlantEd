@@ -120,7 +120,6 @@ class LSystem:
 
     def set_root_tier(self, root_tier):
         self.tier_list = tier_lists[root_tier]
-        print("set")
 
     def update(self, mass):
         self.apexes = []

@@ -43,6 +43,7 @@ class Environment:
         #self.background_moist = pygame.transform.scale(assets.img("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.sun_pos_spline = Beziere([(-100,800),(960,-200),(2020,800)],res=10000).points_to_draw
+        self.sunpos = (0,0)
         self.rain_rate = 0.0003
         self.font = pygame.font.SysFont('Arial', 56)
         self.sfont = pygame.font.SysFont('Arial', 32)
@@ -97,7 +98,11 @@ class Environment:
             if not sprite.update():
                 self.sprites.remove(sprite) # dumb to remove during iteration, maybe don't
 
-        sun_intensity = self.get_sun_intensity()
+        day_time = self.get_day_time_t()
+        if day_time > 0 and day_time < 1:
+            self.sunpos = self.sun_pos_spline[(int(day_time * 10000) - 1)]
+            self.plant.organs[1].sunpos = self.sunpos
+        #sun_intensity = self.get_sun_intensity()
         #x = (self.sun_pos_night[0] + (self.sun_pos_noon[0] - self.sun_pos_night[0]) * sun_intensity)
         #y = (self.sun_pos_night[1] + (self.sun_pos_noon[1] - self.sun_pos_night[1]) * sun_intensity)
         #self.sun_pos = (x, y)
@@ -121,14 +126,13 @@ class Environment:
                 pygame.draw.circle(self.s, (255, 255, 255, abs(sun_intensity) * 180), pos[0], max(pos[1] - 5, 0))
         self.s.fill(color)
 
-        # self.sun_pos_spline.draw(s)
         day_time = self.get_day_time_t()
+        # self.sun_pos_spline.draw(s)
         if day_time > 0 and day_time < 1:
             #sunpos = self.sun_pos_spline.get_point(day_time)
-            sunpos = self.sun_pos_spline[(int(day_time*10000)-1)]
 
-            sunpos = (sunpos[0] - self.sun.get_width() / 2, sunpos[1] - self.sun.get_height() / 2)
-            self.s.blit(self.sun, sunpos)
+            offset_sunpos = (self.sunpos[0] - self.sun.get_width() / 2, self.sunpos[1] - self.sun.get_height() / 2)
+            self.s.blit(self.sun, offset_sunpos)
 
         '''if sun_intensity > 0:
             color = self.get_color(orange, blue, sun_intensity)

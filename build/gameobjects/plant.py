@@ -8,6 +8,7 @@ import math
 from utils.particle import ParticleSystem, Particle
 from pygame import Rect
 from utils.LSystem import LSystem, Letter
+from pygame.locals import *
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -490,10 +491,11 @@ class Stem(Organ):
         self.width = 15
         self.highlight = None
         self.flower = False
+        self.sunpos = (0,0)
         self.sunflower = assets.img("sunflower.png",(64,64))
         self.sunflower_pos = (0,0)
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active, base_mass=1)
-        self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x+3, self.y - 150), (self.x+3, self.y - 160)])
+        self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x+3, self.y - 150), (self.x+3, self.y - 190)])
 
     def update(self, dt):
         self.curve.update(dt)
@@ -519,6 +521,8 @@ class Stem(Organ):
 
     def handle_event(self, event):
         self.curve.handle_event(event)
+        if event.type == KEYDOWN and event.key == pygame.K_o:
+            self.curve.update_tip(point=self.sunpos)
         if event.type == pygame.MOUSEMOTION:
             if self.leaf.can_add_leaf:
                 mouse_pos = pygame.mouse.get_pos()

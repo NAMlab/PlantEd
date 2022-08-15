@@ -37,6 +37,8 @@ SMALL_FONT = pygame.font.SysFont('arial', 16)
 FONT = pygame.font.SysFont('arial', 24)
 TITLE_FONT = pygame.font.SysFont('arialblack', 24)
 BIG_FONT = pygame.font.SysFont('arial', 28)
+BIGGER_FONT = pygame.font.SysFont('arial', 36)
+MENU_TITLE = pygame.font.SysFont('arial',72)
 YELLOW_TRANSPARENT = (255,255,255,128)
 PURPLE = (171, 36, 255)
 

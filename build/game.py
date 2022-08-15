@@ -31,6 +31,7 @@ from skillsystem import Skill_System, Skill
 from utils.LSystem import LSystem, Letter
 from analysis import scoring
 from gameobjects.water_reservoir import Water_Reservoir, Water_Grid
+from gameobjects.level_card import Card
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -225,69 +226,45 @@ class DefaultGameScene(object):
         screen.blit(temp_surface,(0,self.camera.offset_y))
 
 class TitleScene(object):
-    def __init__(self):
+    def __init__(self, manager=None):
         super(TitleScene, self).__init__()
-        self.font = config.TITLE_FONT
-        self.sfont = config.FONT
-        self.images = [assets.img("plant_growth_pod/plant_growth_{index}.png".format(index=i)).convert_alpha() for i in range(0, 11)]
-        self.centre = (SCREEN_WIDTH/2-self.images[0].get_width()/2, SCREEN_HEIGHT/7)
-        self.particle_systems = []
-        self.watering_can = Watering_can((0, 0),callback=self.grow_plant)#assets.img("watering_can_outlined.png")
-        self.watering_can.activate(40)
-        self.plant_size = 0
-        self.plant_growth_pos = []
-        self.offset = repeat((0, 0))
-        self.max_plant_size = 200
-        self.image = self.images[0]
-        self.mouse_pos = pygame.mouse.get_pos()
-        pygame.mouse.set_visible(False)
-        self.particle_systems.append(
-            ParticleSystem(40, spawn_box=Rect(self.mouse_pos[0], self.mouse_pos[1], 0, 0), lifetime=8, color=BLUE ,apply_gravity=True,
-                           speed=[0,5], spread=[3,0], active = False))
-        self.text1 = self.font.render('PlantEd', True, (255, 255, 255))
-        self.water_plant_text = self.sfont.render('> water plant to start <', True, (255, 255, 255))
-        self.start_game_text = self.sfont.render('> press space to start <', True, (255, 255, 255))
-        self.text2 = self.water_plant_text
+        self.title = config.MENU_TITLE.render("PlantEd",True,config.WHITE)
+        self.center_h = config.SCREEN_HEIGHT/2+100
+        self.center_w = config.SCREEN_WIDTH/2
+        self.card_0 = Card((self.center_w-460,self.center_h),assets.img("gatersleben_icon.png",(512,512)), "Gatersleben",
+                           callback=manager.go_to, callback_var=DefaultGameScene,keywords="Beginner, Medium Temperatures")
+        self.card_1 = Card((self.center_w,self.center_h),assets.img("plant_growth_pod/plant_growth_10.png",(512,512)), "Tutorial",
+                           callback=manager.go_to, callback_var=DefaultGameScene,keywords="Beginner, Easy")
+        self.card_2 = Card((self.center_w+460,self.center_h),assets.img("desert_icon.png",(512,512)), "Egypt ",
+                           callback=manager.go_to, callback_var=DefaultGameScene,keywords="Intermediate, Hot, Dry")
 
-    def grow_plant(self, rate):
-        self.plant_size += 1
 
     def render(self, screen):
-        tmp_screen.fill((50, 50, 50))
-        tmp_screen.blit(self.image, self.centre)
-        tmp_screen.blit(self.text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
-        tmp_screen.blit(self.text2, (SCREEN_WIDTH/2-self.water_plant_text.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
-        for system in self.particle_systems:
-            if system.active:
-                system.draw(screen)
-        self.watering_can.draw(tmp_screen)
-        #tmp_screen.blit(self.watering_can, (self.mouse_pos[0],self.mouse_pos[1]-100))
-        screen.blit(tmp_screen, next(self.offset))
+        screen.fill((50,50,50))
+        screen.blit(self.title,(self.center_w-self.title.get_width()/2,200))
+        self.card_0.draw(screen)
+        self.card_1.draw(screen)
+        self.card_2.draw(screen)
 
     def update(self, dt):
-        step = self.max_plant_size / (len(self.images))
-        index = int(self.plant_size/step)
-        self.watering_can.update(dt)
-        if index < len(self.images):
-            self.image = self.images[index]
-        if self.mouse_pos[0] > SCREEN_WIDTH / 3 and self.mouse_pos[0] < SCREEN_WIDTH / 3 * 2 and self.particle_systems[0].active:
-            self.plant_size += 1
-        if self.plant_size > self.max_plant_size:
-            self.text2 = self.start_game_text
-        for system in self.particle_systems:
-            if system.active:
-                system.update(dt)
+        self.card_0.update(dt)
+        self.card_1.update(dt)
+        self.card_2.update(dt)
+
 
     def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN and e.key == K_SPACE:
-                if self.plant_size > self.max_plant_size:
-                    pygame.mouse.set_visible(False)
-                    self.manager.go_to(DefaultGameScene())
+                #if self.plant_size > self.max_plant_size:
+                #    pygame.mouse.set_visible(False)
+                self.manager.go_to(DefaultGameScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
-            self.watering_can.handle_event(e)
+            self.card_0.handle_event(e)
+            self.card_1.handle_event(e)
+            self.card_2.handle_event(e)
+            #self.watering_can.handle_event(e)
 
 class CustomScene(object):
     def __init__(self):
@@ -355,7 +332,7 @@ class CustomScene(object):
 
 class SceneMananger(object):
     def __init__(self):
-        self.go_to(DefaultGameScene())
+        self.go_to(TitleScene(self))
 
     def go_to(self, scene):
         self.scene = scene

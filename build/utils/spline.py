@@ -5,6 +5,7 @@ import pygame
 import math
 from pygame.locals import *
 import config
+import numpy as np
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
@@ -127,8 +128,25 @@ class Beziere:
             self.get_current_points_to_draw()
         else:
             self.growth_percentage = 1
-
         #self.apply_forces(dt)
+
+    def update_tip(self, id=-1, sunpos=(0,0)):
+        #x,y = self.list_of_points[-1]
+
+        #direction
+        #length
+
+        if sunpos[0] != 0:
+            target_x, target_y = sunpos
+
+            dist = math.sqrt((self.list_of_points[-2][0] - self.list_of_points[-1][0])**2+
+                             (self.list_of_points[-2][1] - self.list_of_points[-1][1])**2)
+
+            x = math.sin(dist)*(target_x-self.list_of_points[-2][0])
+            y = math.cos(dist)*(target_y-self.list_of_points[-2][1])
+
+            self.list_of_points[-1] = point
+            self.get_current_points_to_draw()
 
     def find_closest(self, pos):
         min_dist = 10000
@@ -289,3 +307,11 @@ class Beziere:
         #    #point = (self.list_of_points[i][0]+self.offsets[i][0],self.list_of_points[i][1]+self.offsets[i][1])
         #    point = (self.list_of_points[i][0],self.list_of_points[i][1])
         #    pygame.draw.circle(screen, (255,0,0),point, 5)
+
+        def unit_vector(self, vector):
+            return vector / np.linalg.norm(vector)
+
+        def angle_between(self, v1, v2):
+            v1_u = self.unit_vector(v1)
+            v2_u = self.unit_vector(v2)
+            return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))

@@ -248,7 +248,7 @@ class DoubleRadioButton(pygame.sprite.Sprite):
             #self.clicked_image.fill(button_color)
         pygame.draw.rect(self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w, border_radius=border_radius)
         pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=border_radius)
-        pygame.draw.rect(self.hover_selected_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=border_radius)
+        pygame.draw.rect(self.hover_selected_image, config.GREEN, self.clicked_image.get_rect(), self.border_w, border_radius=self.border_radius)
 
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
@@ -265,7 +265,6 @@ class DoubleRadioButton(pygame.sprite.Sprite):
         self.clicked_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
         self.hover_selected_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
 
-
         pygame.draw.rect(self.button_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
         pygame.draw.rect(self.hover_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
         pygame.draw.rect(self.clicked_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
@@ -277,8 +276,6 @@ class DoubleRadioButton(pygame.sprite.Sprite):
         stem_height = preset["stem_slider"]/100
         root_height = preset["root_slider"]/100
         starch_height = preset["starch_slider"]/100
-
-        print(leaf_height, stem_height, root_height, starch_height)
 
         images = [self.button_image, self.hover_image, self.clicked_image, self.hover_selected_image]
 
