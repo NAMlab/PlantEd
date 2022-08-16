@@ -113,6 +113,76 @@ class Camera:
         if e.type == KEYDOWN and e.key == K_s:
             self.offset_y += 100'''
 
+class OptionsScene():
+    def __init__(self):
+        self.options = config.load_options("options.json")
+
+        self.option_label = config.MENU_TITLE.render("Options",True, config.WHITE)
+        self.sound_label = config.MENU_SUBTITLE.render("Sound",True, config.WHITE)
+        self.music_label = config.BIGGER_FONT.render("Music",True, config.WHITE)
+        self.efects_label = config.BIGGER_FONT.render("Effects",True, config.WHITE)
+        self.network_label = config.MENU_SUBTITLE.render("Network",True, config.WHITE)
+        self.upload_score_label = config.BIGGER_FONT.render("Upload Score",True, config.WHITE)
+
+        self.label_surface = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+
+        center_w, center_h = config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2
+
+        self.music_slider = Slider((center_w-475, 550, 15, 200), config.FONT, (50, 20), percent=self.options["music"]*100,active=True)
+        self.effect_slider = Slider((center_w-175, 550, 15, 200), config.FONT, (50, 20),percent=self.options["effects"]*100, active=True)
+        self.upload_score_button = ToggleButton(center_w+300,500,50,50,None,pressed=self.options["upload_score"])
+        self.ok_button = Button(center_w-75,850,150,50,[self.return_to_menu],font=config.FONT, text="OK")
+
+        self.button_sprites = pygame.sprite.Group()
+        self.button_sprites.add(self.upload_score_button)
+        self.button_sprites.add(self.ok_button)
+
+        self.init_labels()
+
+    def return_to_menu(self):
+        self.manager.go_to(TitleScene(self.manager))
+
+    def init_labels(self):
+        center_w, center_h = config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT/2
+
+        pygame.draw.rect(self.label_surface,config.WHITE,(center_w-600,150,1200,800),5,10)
+
+        self.label_surface.blit(self.option_label, (center_w-self.option_label.get_width()/2,200))
+        self.label_surface.blit(self.sound_label, (center_w-300-self.sound_label.get_width()/2,400))
+        self.label_surface.blit(self.music_label, (center_w-450-self.music_label.get_width()/2,500))
+        self.label_surface.blit(self.efects_label, (center_w-150-self.efects_label.get_width()/2,500))
+        self.label_surface.blit(self.network_label, (center_w+300-self.network_label.get_width()/2,400))
+        self.label_surface.blit(self.upload_score_label, (center_w+150-self.upload_score_label.get_width()/2,500))
+
+    def update(self, dt):
+        pass
+
+    def handle_events(self, events):
+        for e in events:
+            if e.type == KEYDOWN:
+                if e.key == K_ESCAPE:
+                    config.write_options(config.OPTIONS_PATH,self.get_options())
+                    self.manager.go_to(TitleScene(self.manager))
+            self.music_slider.handle_event(e)
+            self.effect_slider.handle_event(e)
+            self.upload_score_button.handle_event(e)
+            self.ok_button.handle_event(e)
+
+    def get_options(self):
+        options = {"music": self.music_slider.get_percentage()/100,
+                   "effects": self.effect_slider.get_percentage()/100,
+                   "upload_score": self.upload_score_button.button_down}
+        return options
+
+    def render(self, screen):
+        screen.fill(config.BLACK)
+        screen.blit(self.label_surface,(0,0))
+        self.music_slider.draw(screen)
+        self.effect_slider.draw(screen)
+        self.button_sprites.draw(screen)
+
+
+
 class DefaultGameScene(object):
     def __init__(self):
         pygame.mouse.set_visible(True)
@@ -177,8 +247,9 @@ class DefaultGameScene(object):
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.log.close_file()
                 scoring.upload_score(self.ui.textbox.text, -1)
-                pygame.quit()
-                sys.exit()
+                self.model = None
+
+                self.manager.go_to(TitleScene(self.manager))
             if e.type == KEYDOWN and e.key == K_r:
                 self.water_grid.raining += 0.05
             if e.type == KEYDOWN and e.key == K_s:
@@ -234,9 +305,9 @@ class TitleScene(object):
         self.card_0 = Card((self.center_w-460,self.center_h),assets.img("gatersleben_icon.png",(512,512)), "Gatersleben",
                            callback=manager.go_to, callback_var=DefaultGameScene,keywords="Beginner, Medium Temperatures")
         self.card_1 = Card((self.center_w,self.center_h),assets.img("plant_growth_pod/plant_growth_10.png",(512,512)), "Tutorial",
-                           callback=manager.go_to, callback_var=DefaultGameScene,keywords="Beginner, Easy")
+                           callback=manager.go_to, callback_var=DevScene,keywords="Beginner, Easy")
         self.card_2 = Card((self.center_w+460,self.center_h),assets.img("desert_icon.png",(512,512)), "Egypt ",
-                           callback=manager.go_to, callback_var=DefaultGameScene,keywords="Intermediate, Hot, Dry")
+                           callback=manager.go_to, callback_var=OptionsScene,keywords="Intermediate, Hot, Dry")
 
 
     def render(self, screen):
@@ -254,10 +325,6 @@ class TitleScene(object):
 
     def handle_events(self, events):
         for e in events:
-            if e.type == KEYDOWN and e.key == K_SPACE:
-                #if self.plant_size > self.max_plant_size:
-                #    pygame.mouse.set_visible(False)
-                self.manager.go_to(DefaultGameScene())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()

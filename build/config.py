@@ -1,6 +1,7 @@
 import pygame
 from utils.tool_tip import ToolTip
 import math
+import json
 
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
@@ -14,6 +15,8 @@ RAIN = 1
 CLOUD = 2
 WIND = 3
 HAWK = 4
+
+OPTIONS_PATH = "options.json"
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
@@ -39,6 +42,7 @@ TITLE_FONT = pygame.font.SysFont('arialblack', 24)
 BIG_FONT = pygame.font.SysFont('arial', 28)
 BIGGER_FONT = pygame.font.SysFont('arial', 36)
 MENU_TITLE = pygame.font.SysFont('arial',72)
+MENU_SUBTITLE = pygame.font.SysFont('arial',56)
 YELLOW_TRANSPARENT = (255,255,255,128)
 PURPLE = (171, 36, 255)
 
@@ -76,6 +80,15 @@ def get_y(x,dict):
     temp = M + A * math.sin(F*((x-P)+d*(math.sin(F*(x-P))/2)))
     #print(temp)
     return temp
+
+def load_options(path):
+    with open(path) as convert_file:
+        options = json.load(convert_file)
+    return options
+
+def write_options(path, options):
+    with open(path, 'w') as convert_file:
+        convert_file.write(json.dumps(options))
 
 
 # PLANT

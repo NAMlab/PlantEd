@@ -12,7 +12,7 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # You can draw and update all sprites in a group by
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
+    def __init__(self, x, y, w, h, callbacks, callback_var=None, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
                  image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None,
                  button_sound=None, active=True, offset=(0,0)):
         super().__init__()
@@ -45,6 +45,7 @@ class Button(pygame.sprite.Sprite):
         self.rect = pygame.Rect(x, y, w, h)
         # This function will be called when the button gets pressed.
         self.callbacks = callbacks
+        self.callback_var = callback_var
         self.button_down = False
         if post_hover_message and hover_message:
             self.posted = False
@@ -73,7 +74,10 @@ class Button(pygame.sprite.Sprite):
             # If the rect collides with the mouse pos.
             if self.rect.collidepoint(pos) and self.button_down:
                 for callback in self.callbacks:
-                    callback()  # Call the function.
+                    if self.callback_var:
+                        callback[self.callback_var]
+                    else:
+                        callback()
                 self.image = self.hover_image
             self.button_down = False
         elif event.type == pygame.MOUSEMOTION:
@@ -132,8 +136,9 @@ class ToggleButton(pygame.sprite.Sprite):
         if pressed:
             self.image = self.clicked_image
             self.button_down = True
-            for callback in self.callback:
-                callback()
+            if self.callback:
+                for callback in self.callback:
+                    callback()
 
 
     def handle_event(self, event):
@@ -148,8 +153,9 @@ class ToggleButton(pygame.sprite.Sprite):
                     else:
                         self.image = self.clicked_image
                         self.button_down = True
-                    for callback in self.callback:
-                        callback()  # Call the function.
+                    if self.callback:
+                        for callback in self.callback:
+                            callback()  # Call the function.
 
     def activate(self):
         self.button_down = True
@@ -396,6 +402,7 @@ class Slider():
 
 
     def update(self):
+
         if self.plant is not None:
             if self.plant.get_biomass() > self.plant.seedling.max:
                 self.active = True
@@ -423,7 +430,8 @@ class Slider():
         line_height = self.h - self.slider_h
         slider_length = (100-percent)*line_height/100
         self.slider_y = slider_length
-        self.organ.percentage = self.get_percentage()
+        if self.organ:
+            self.organ.percentage = self.get_percentage()
 
     def sub_percentage(self, percent):
         delta = self.get_percentage() - percent
@@ -470,7 +478,7 @@ class Slider():
             if self.drag:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
                 self.slider_y = clamp(pygame.mouse.get_pos()[1], self.y, self.y - self.slider_h + self.h) - self.y
-
+                print(self.slider_y)
 
 class SliderGroup:
     def __init__(self, sliders, max_sum):
