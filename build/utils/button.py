@@ -12,9 +12,9 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # You can draw and update all sprites in a group by
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callbacks, callback_var=None, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
+    def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
                  image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None,
-                 button_sound=None, active=True, offset=(0,0)):
+                 button_sound=None, active=True, offset=(0,0), callback_var=None):
         super().__init__()
         self.posted = False
         self.button_sound = button_sound
@@ -75,7 +75,7 @@ class Button(pygame.sprite.Sprite):
             if self.rect.collidepoint(pos) and self.button_down:
                 for callback in self.callbacks:
                     if self.callback_var:
-                        callback[self.callback_var]
+                        callback(self.callback_var)
                     else:
                         callback()
                 self.image = self.hover_image

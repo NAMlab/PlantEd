@@ -74,9 +74,7 @@ def shake():
 # unittests, dir that contains all tests, one test file for one class, secure class function
 # pipenv for git, enable cloners to see all depencies
 
-#pygame.mixer.music.load('../assets/background_music.mp3')
-#pygame.mixer.music.set_volume(0.05)
-#pygame.mixer.music.play(-1,0)
+pygame.mixer.music.load('../assets/background_music.mp3')
 
 
 # seperate high to low level --> less function calls, less clutter
@@ -140,6 +138,7 @@ class OptionsScene():
         self.init_labels()
 
     def return_to_menu(self):
+        config.write_options(config.OPTIONS_PATH, self.get_options())
         self.manager.go_to(TitleScene(self.manager))
 
     def init_labels(self):
@@ -161,7 +160,6 @@ class OptionsScene():
         for e in events:
             if e.type == KEYDOWN:
                 if e.key == K_ESCAPE:
-                    config.write_options(config.OPTIONS_PATH,self.get_options())
                     self.manager.go_to(TitleScene(self.manager))
             self.music_slider.handle_event(e)
             self.effect_slider.handle_event(e)
@@ -185,6 +183,10 @@ class OptionsScene():
 
 class DefaultGameScene(object):
     def __init__(self):
+        options = config.load_options(config.OPTIONS_PATH)
+        pygame.mixer.music.set_volume(options["music"]/10)
+        pygame.mixer.music.play(-1, 0)
+
         pygame.mouse.set_visible(True)
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
