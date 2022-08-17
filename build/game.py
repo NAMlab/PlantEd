@@ -128,7 +128,7 @@ class OptionsScene():
 
         self.music_slider = Slider((center_w-475, 550, 15, 200), config.FONT, (50, 20), percent=self.options["music"]*100,active=True)
         self.effect_slider = Slider((center_w-175, 550, 15, 200), config.FONT, (50, 20),percent=self.options["effects"]*100, active=True)
-        self.upload_score_button = ToggleButton(center_w+300,500,50,50,None,pressed=self.options["upload_score"])
+        self.upload_score_button = ToggleButton(center_w+300,500,50,50,None,pressed=self.options["upload_score"], cross=True)
         self.ok_button = Button(center_w-75,850,150,50,[self.return_to_menu],font=config.FONT, text="OK")
 
         self.button_sprites = pygame.sprite.Group()
@@ -152,6 +152,8 @@ class OptionsScene():
         self.label_surface.blit(self.efects_label, (center_w-150-self.efects_label.get_width()/2,500))
         self.label_surface.blit(self.network_label, (center_w+300-self.network_label.get_width()/2,400))
         self.label_surface.blit(self.upload_score_label, (center_w+150-self.upload_score_label.get_width()/2,500))
+
+        self.label_surface.blit(assets.img("plant_growth_pod/plant_growth_10.png"),(1150,500))
 
     def update(self, dt):
         pass

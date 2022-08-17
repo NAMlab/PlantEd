@@ -28,7 +28,6 @@ class Card:
         self.focus = False
 
     def update(self, dt):
-        print(self.focus, self.focus_timer, self.image_index)
         if self.focus:
             if self.focus_timer > 1:
                 self.focus_timer = self.focus_timer - 1

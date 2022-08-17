@@ -446,7 +446,6 @@ class Root(Organ):
 
     def create_new_root(self, mouse_pos=None, dir=None):
         pos = (self.x,self.y+45)
-        print(dir,pos)
         if not dir:
             dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))
         self.ls.create_new_first_letter(dir, pos, self.mass)
@@ -568,7 +567,6 @@ class Stem(Organ):
         dir = leaf["direction"]
         rect = self.get_rect()
         rects = self.curve.get_rects()
-        print(rects)
         init_x = 0
         if dir > 0:
             init_x = rect[2]-1

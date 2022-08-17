@@ -2,6 +2,7 @@ import pygame
 from utils.tool_tip import ToolTip
 import math
 import json
+from data import assets
 
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
@@ -47,6 +48,7 @@ YELLOW_TRANSPARENT = (255,255,255,128)
 PURPLE = (171, 36, 255)
 
 PLANTNAME = 'GenEric'
+_OPTIONS = None
 
 # WEATHER
 # shift should be -20.8 according to Nadines paper. But this seems easier to grasp for the player as it is wamrest 1 to 6 pm
@@ -84,11 +86,22 @@ def get_y(x,dict):
 def load_options(path):
     with open(path) as convert_file:
         options = json.load(convert_file)
+        _OPTIONS = options
     return options
+
+def get_options(path):
+    if _OPTIONS is None:
+        load_options(path)
+    return _OPTIONS
 
 def write_options(path, options):
     with open(path, 'w') as convert_file:
         convert_file.write(json.dumps(options))
+
+def apply_volume(options):
+    volume = options["effects"]
+    for sound in assets._sound_library:
+        sound.set_volume(volume)
 
 
 # PLANT

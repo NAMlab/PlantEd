@@ -104,7 +104,7 @@ class Button(pygame.sprite.Sprite):
 
 class ToggleButton(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, pressed=False, fixed=False, vertical=False):
+                 image=None, border_w=None, pressed=False, fixed=False, vertical=False, cross=False):
         super().__init__()
         self.fixed = fixed
         self.border_w = int(5) if not border_w else border_w
@@ -120,7 +120,12 @@ class ToggleButton(pygame.sprite.Sprite):
             self.hover_image.fill(button_color)
             self.clicked_image.fill(button_color)
         pygame.draw.rect(self.hover_image, WHITE_TRANSPARENT, self.hover_image.get_rect(), self.border_w)
-        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w)
+        if cross:
+            pygame.draw.line(self.clicked_image, WHITE, (0,0),(w,h),self.border_w)
+            pygame.draw.line(self.clicked_image, WHITE, (0,h),(w,0),self.border_w)
+        else:
+            pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w)
+
         if text and font:
             text_surf = font.render(text, True, text_color)
             if vertical:
@@ -478,7 +483,6 @@ class Slider():
             if self.drag:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
                 self.slider_y = clamp(pygame.mouse.get_pos()[1], self.y, self.y - self.slider_h + self.h) - self.y
-                print(self.slider_y)
 
 class SliderGroup:
     def __init__(self, sliders, max_sum):
