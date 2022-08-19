@@ -410,11 +410,11 @@ class UI:
         preset = self.generate_preset()
 
         radioButtons = [
-            DoubleRadioButton(topleft[0]+450, topleft[1] + 170, 40, 40,
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 170, 45, 45,
                         [self.apply_preset,self.generate_preset], preset=preset, callback_var=0,border_radius=1),
             DoubleRadioButton(topleft[0]+450, topleft[1] + 240, 45, 45,
                         [self.apply_preset,self.generate_preset], preset=preset, callback_var=1, border_radius=1),
-            DoubleRadioButton(topleft[0]+450, topleft[1] + 310, 50, 50,
+            DoubleRadioButton(topleft[0]+450, topleft[1] + 310, 45, 45,
                         [self.apply_preset,self.generate_preset], preset=preset, callback_var=2, border_radius=1),
         ]
         for rb in radioButtons:

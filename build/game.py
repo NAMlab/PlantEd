@@ -126,14 +126,15 @@ class OptionsScene():
 
         center_w, center_h = config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2
 
-        self.music_slider = Slider((center_w-475, 550, 15, 200), config.FONT, (50, 20), percent=self.options["music"]*100,active=True)
-        self.effect_slider = Slider((center_w-175, 550, 15, 200), config.FONT, (50, 20),percent=self.options["effects"]*100, active=True)
-        self.upload_score_button = ToggleButton(center_w+300,500,50,50,None,pressed=self.options["upload_score"], cross=True)
-        self.ok_button = Button(center_w-75,850,150,50,[self.return_to_menu],font=config.FONT, text="OK")
+        self.music_slider = Slider((center_w-475, 450, 15, 200), config.FONT, (50, 20), percent=self.options["music"]*100,active=True)
+        self.effect_slider = Slider((center_w-175, 450, 15, 200), config.FONT, (50, 20),percent=self.options["effects"]*100, active=True)
+        self.upload_score_button = ToggleButton(center_w+300,400,50,50,None,pressed=self.options["upload_score"], cross=True)
+
+        self.back = Button(center_w-200,930,200,50,[self.cancel_return_to_menu],config.BIGGER_FONT, "BACK", config.LIGHT_GRAY,config.WHITE,border_w=2)
+        self.apply = Button(center_w+50,930,200,50,[self.return_to_menu],config.BIGGER_FONT, "APPLY", config.LIGHT_GRAY,config.WHITE,border_w=2)
 
         self.button_sprites = pygame.sprite.Group()
-        self.button_sprites.add(self.upload_score_button)
-        self.button_sprites.add(self.ok_button)
+        self.button_sprites.add([self.upload_score_button, self.back, self.apply])
 
         self.init_labels()
 
@@ -141,19 +142,22 @@ class OptionsScene():
         config.write_options(config.OPTIONS_PATH, self.get_options())
         self.manager.go_to(TitleScene(self.manager))
 
+    def cancel_return_to_menu(self):
+        self.manager.go_to(TitleScene(self.manager))
+
     def init_labels(self):
         center_w, center_h = config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT/2
 
-        pygame.draw.rect(self.label_surface,config.WHITE,(center_w-600,150,1200,800),5,10)
+        pygame.draw.line(self.label_surface,config.WHITE,(100,900),(1820,900))
 
-        self.label_surface.blit(self.option_label, (center_w-self.option_label.get_width()/2,200))
-        self.label_surface.blit(self.sound_label, (center_w-300-self.sound_label.get_width()/2,400))
-        self.label_surface.blit(self.music_label, (center_w-450-self.music_label.get_width()/2,500))
-        self.label_surface.blit(self.efects_label, (center_w-150-self.efects_label.get_width()/2,500))
-        self.label_surface.blit(self.network_label, (center_w+300-self.network_label.get_width()/2,400))
-        self.label_surface.blit(self.upload_score_label, (center_w+150-self.upload_score_label.get_width()/2,500))
+        self.label_surface.blit(self.option_label, (center_w-self.option_label.get_width()/2,100))
+        self.label_surface.blit(self.sound_label, (center_w-300-self.sound_label.get_width()/2,300))
+        self.label_surface.blit(self.music_label, (center_w-450-self.music_label.get_width()/2,400))
+        self.label_surface.blit(self.efects_label, (center_w-150-self.efects_label.get_width()/2,400))
+        self.label_surface.blit(self.network_label, (center_w+300-self.network_label.get_width()/2,300))
+        self.label_surface.blit(self.upload_score_label, (center_w+150-self.upload_score_label.get_width()/2,400))
 
-        self.label_surface.blit(assets.img("plant_growth_pod/plant_growth_10.png"),(1150,500))
+        self.label_surface.blit(assets.img("plant_growth_pod/plant_growth_10.png"),(1200,400))
 
     def update(self, dt):
         pass
@@ -166,7 +170,8 @@ class OptionsScene():
             self.music_slider.handle_event(e)
             self.effect_slider.handle_event(e)
             self.upload_score_button.handle_event(e)
-            self.ok_button.handle_event(e)
+            for button in self.button_sprites:
+                button.handle_event(e)
 
     def get_options(self):
         options = {"music": self.music_slider.get_percentage()/100,
@@ -175,7 +180,7 @@ class OptionsScene():
         return options
 
     def render(self, screen):
-        screen.fill(config.BLACK)
+        screen.fill(config.LIGHT_GRAY)
         screen.blit(self.label_surface,(0,0))
         self.music_slider.draw(screen)
         self.effect_slider.draw(screen)
@@ -306,50 +311,74 @@ class TitleScene(object):
         self.title = config.MENU_TITLE.render("PlantEd",True,config.WHITE)
         self.center_h = config.SCREEN_HEIGHT/2+100
         self.center_w = config.SCREEN_WIDTH/2
-        self.card_0 = Card((self.center_w-460,self.center_h),assets.img("gatersleben_icon.png",(512,512)), "Gatersleben",
+        self.card_0 = Card((self.center_w-460,self.center_h-100),assets.img("gatersleben_icon.png",(512,512)), "Gatersleben",
                            callback=manager.go_to, callback_var=DefaultGameScene,keywords="Beginner, Medium Temperatures")
-        self.card_1 = Card((self.center_w,self.center_h),assets.img("plant_growth_pod/plant_growth_10.png",(512,512)), "Tutorial",
+        self.card_1 = Card((self.center_w,self.center_h-100),assets.img("plant_growth_pod/plant_growth_10.png",(512,512)), "Tutorial",
                            callback=manager.go_to, callback_var=DevScene,keywords="Beginner, Easy")
-        self.card_2 = Card((self.center_w+460,self.center_h),assets.img("desert_icon.png",(512,512)), "Egypt ",
+        self.card_2 = Card((self.center_w+460,self.center_h-100),assets.img("desert_icon.png",(512,512)), "Egypt ",
                            callback=manager.go_to, callback_var=OptionsScene,keywords="Intermediate, Hot, Dry")
 
 
+        self.credit_button = Button(self.center_w-450,930,200,50,[self.go_to_credtis],config.BIGGER_FONT,"CREDTIS",config.LIGHT_GRAY,config.WHITE,border_w=2)
+        self.options_button = Button(self.center_w-200,930,200,50,[self.go_to_options],config.BIGGER_FONT, "OPTIONS", config.LIGHT_GRAY,config.WHITE,border_w=2)
+        self.scores_button = Button(self.center_w+50,930,200,50,[self.go_to_scores],config.BIGGER_FONT, "SCORES", config.LIGHT_GRAY,config.WHITE,border_w=2)
+        self.quit_button = Button(self.center_w+300,930,200,50,[self.quit],config.BIGGER_FONT, "QUIT", config.LIGHT_GRAY,config.WHITE,border_w=2)
+
+
+        self.button_sprites = pygame.sprite.Group()
+        self.button_sprites.add([self.quit_button,self.credit_button,self.options_button,self.scores_button])
+
     def render(self, screen):
         screen.fill((50,50,50))
-        screen.blit(self.title,(self.center_w-self.title.get_width()/2,200))
+        screen.blit(self.title,(self.center_w-self.title.get_width()/2,100))
         self.card_0.draw(screen)
         self.card_1.draw(screen)
         self.card_2.draw(screen)
+        pygame.draw.line(screen,config.WHITE,(100,900),(1820,900))
+        self.button_sprites.draw(screen)
 
     def update(self, dt):
         self.card_0.update(dt)
         self.card_1.update(dt)
         self.card_2.update(dt)
 
+    def quit(self):
+        pygame.quit()
+        sys.exit()
+
+    def go_to_options(self):
+        self.manager.go_to(OptionsScene())
+
+    def go_to_credtis(self):
+        self.manager.go_to(Credits())
+
+    def go_to_scores(self):
+        self.manager.go_to(CustomScene())
 
     def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN and e.key == K_ESCAPE:
-                pygame.quit()
-                sys.exit()
+                self.quit()
             self.card_0.handle_event(e)
             self.card_1.handle_event(e)
             self.card_2.handle_event(e)
+            for button in self.button_sprites:
+                button.handle_event(e)
             #self.watering_can.handle_event(e)
 
 class CustomScene(object):
     def __init__(self):
         super(CustomScene, self).__init__()
-        self.font = config.TITLE_FONT
-        self.sfont = config.FONT
-        self.centre = (SCREEN_WIDTH, SCREEN_HEIGHT/2)
-        self.text1 = self.font.render('PlantEd', True, (255,255,255))
-        self.text2 = self.font.render('Top 10 Plants!', True, (255,255,255))
-        self.text3 = self.sfont.render('> press any key to restart <', True, (255,255,255))
+        self.text1 = config.MENU_TITLE.render('Top Plants', True, (255,255,255))
+        #self.text3 = config.BIGGER_FONT.render('> press any key to restart <', True, (255,255,255))
 
-        self.name_txt = self.font.render('Name', True, (255,255,255))
-        self.score_txt = self.font.render('Score', True, (255,255,255))
-        self.submit_txt = self.font.render('Submit Date', True, (255,255,255))
+        self.name_txt = config.BIGGER_FONT.render('Name', True, (255,255,255))
+        self.score_txt = config.BIGGER_FONT.render('Score', True, (255,255,255))
+        self.submit_txt = config.BIGGER_FONT.render('Submit Date', True, (255,255,255))
+
+        self.button_sprites = pygame.sprite.Group()
+        self.back = Button(860,930,200,50,[self.return_to_menu],config.BIGGER_FONT, "BACK", config.LIGHT_GRAY,config.WHITE,border_w=2)
+        self.button_sprites.add(self.back)
 
         self.winners = scoring.get_scores()
         self.scores = []
@@ -360,12 +389,15 @@ class CustomScene(object):
 
         for winner in self.winners:
             score = self.get_day_time(winner['score'])
-            score = self.font.render(score, True, (255,255,255))
+            score = config.BIGGER_FONT.render(score, True, (255,255,255))
             self.scores.append(score)
-            name = self.font.render(winner['name'], True, (255, 255, 255))
+            name = config.BIGGER_FONT.render(winner['name'], True, (255, 255, 255))
             self.names.append(name)
-            datetime_added = self.font.render(datetime.utcfromtimestamp(winner['datetime_added']).strftime('%d/%m/%Y %H:%M'), True, (255, 255, 255))
+            datetime_added = config.BIGGER_FONT.render(datetime.utcfromtimestamp(winner['datetime_added']).strftime('%d/%m/%Y %H:%M'), True, (255, 255, 255))
             self.datetimes.append(datetime_added)
+
+    def return_to_menu(self):
+        self.manager.go_to(TitleScene(self.manager))
 
     def get_day_time(self, ticks):
         day = 1000*60*6
@@ -379,19 +411,21 @@ class CustomScene(object):
 
     def render(self, screen):
         screen.fill((50, 50, 50))
-        screen.blit(self.text1, (SCREEN_WIDTH/8, SCREEN_HEIGHT/8))
-        screen.blit(self.text2, (SCREEN_WIDTH/2-self.text2.get_width()/2, SCREEN_HEIGHT/3-SCREEN_HEIGHT/10))
-        pygame.draw.rect(screen, (255,255,255), (SCREEN_WIDTH/4, SCREEN_HEIGHT/3-SCREEN_HEIGHT/25+33,SCREEN_WIDTH/2, 5))
-        screen.blit(self.text3, (SCREEN_WIDTH/2-self.text3.get_width()/2, SCREEN_HEIGHT-SCREEN_HEIGHT/7))
+        screen.blit(self.text1, (SCREEN_WIDTH/2-self.text1.get_width()/2, 100))
 
-        screen.blit(self.name_txt, (SCREEN_WIDTH / 3 - self.name_txt.get_width()/2, SCREEN_HEIGHT / 3-50))
-        screen.blit(self.score_txt, (SCREEN_WIDTH / 2 - self.score_txt.get_width()/2, SCREEN_HEIGHT / 3-50))
-        screen.blit(self.submit_txt, (SCREEN_WIDTH / 3*2 - self.submit_txt.get_width()/2, SCREEN_HEIGHT / 3-50))
+        pygame.draw.line(screen, config.WHITE, (100, 300), (1820, 300))
+
+        #screen.blit(self.name_txt, (SCREEN_WIDTH / 4 - self.name_txt.get_width()/2, SCREEN_HEIGHT / 3))
+        #screen.blit(self.score_txt, (SCREEN_WIDTH / 2 - self.score_txt.get_width()/2, SCREEN_HEIGHT / 3))
+        #screen.blit(self.submit_txt, (SCREEN_WIDTH / 4*2 - self.submit_txt.get_width()/2, SCREEN_HEIGHT / 3))
 
         for i in range(0,min(10,len(self.winners))):
-            screen.blit(self.names[i], (SCREEN_WIDTH/3-self.names[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/25*i))
-            screen.blit(self.scores[i], (SCREEN_WIDTH/2-self.scores[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/25*i))
-            screen.blit(self.datetimes[i], (SCREEN_WIDTH/3*2-self.datetimes[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/25*i))
+            screen.blit(self.names[i], (SCREEN_WIDTH/4-self.names[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/20*i))
+            screen.blit(self.scores[i], (SCREEN_WIDTH/2-self.scores[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/20*i))
+            screen.blit(self.datetimes[i], (SCREEN_WIDTH/4*3-self.datetimes[i].get_width()/2, SCREEN_HEIGHT/3+SCREEN_HEIGHT/20*i))
+
+        pygame.draw.line(screen, config.WHITE, (100, 900), (1820, 900))
+        self.button_sprites.draw(screen)
 
     def update(self, dt):
         pass
@@ -399,7 +433,56 @@ class CustomScene(object):
     def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN:
-                self.manager.go_to(TitleScene())
+                self.manager.go_to(TitleScene(self.manager))
+            for button in self.button_sprites:
+                button.handle_event(e)
+
+class Credits():
+    def __init__(self):
+        super(Credits, self).__init__()
+        self.center_w, self.center_h = config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT/2
+        self.label_surface = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+
+        self.init_labels()
+        self.button_sprites = pygame.sprite.Group()
+        self.back = Button(860,930,200,50,[self.return_to_menu],config.BIGGER_FONT, "BACK", config.LIGHT_GRAY,config.WHITE,border_w=2)
+        self.button_sprites.add(self.back)
+
+    def return_to_menu(self):
+        self.manager.go_to(TitleScene(self.manager))
+
+    def init_labels(self):
+        self.label_surface.fill(config.LIGHT_GRAY)
+        self.made_by_label = config.MENU_TITLE.render("MADE BY",True,config.WHITE)
+        self.daniel = config.MENU_SUBTITLE.render("Daniel",True,config.WHITE)
+        self.jj = config.MENU_SUBTITLE.render("JJ",True,config.WHITE)
+        self.pouneh = config.MENU_SUBTITLE.render("Pouneh",True,config.WHITE)
+        self.nadine = config.MENU_SUBTITLE.render("Nadine",True,config.WHITE)
+        self.stefano = config.MENU_SUBTITLE.render("Stefano",True,config.WHITE)
+
+        pygame.draw.line(self.label_surface, config.WHITE, (100, 300), (1820, 300))
+
+        self.label_surface.blit(self.made_by_label,(self.center_w-self.made_by_label.get_width()/2,100))
+        self.label_surface.blit(self.daniel,(self.center_w-self.daniel.get_width()/2,400))
+        self.label_surface.blit(self.jj,(self.center_w-self.jj.get_width()/2,480))
+        self.label_surface.blit(self.pouneh,(self.center_w-self.pouneh.get_width()/2,560))
+        self.label_surface.blit(self.nadine,(self.center_w-self.nadine.get_width()/2,640))
+        self.label_surface.blit(self.stefano,(self.center_w-self.stefano.get_width()/2,720))
+
+    def update(self, dt):
+        pass
+
+    def handle_events(self, events):
+        for e in events:
+            if e.type == KEYDOWN:
+                if e.key == K_ESCAPE:
+                    self.return_to_menu()
+            for button in self.button_sprites:
+                button.handle_event(e)
+    def render(self, screen):
+        screen.blit(self.label_surface,(0,0))
+        self.button_sprites.draw(screen)
+
 
 class SceneMananger(object):
     def __init__(self):
@@ -429,7 +512,6 @@ def main():
         dt = timer.tick(60)/1000.0
         fps = str(int(timer.get_fps()))
         fps_text = config.FONT.render(fps, False, (255,255,255))
-        #print(fps)
 
         if pygame.event.get(QUIT):
             running = False
