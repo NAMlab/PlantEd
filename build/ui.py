@@ -79,9 +79,18 @@ class UI:
                                               apply_gravity=False,
                                               speed=[0, 0], spread=[10, 10], active=False)
 
+        self.open_stomata_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0] + 35,
+                                                                       self.production_topleft[1] + 70, 50, 50),
+                                                    lifetime=10, color=config.GRAY,
+                                                    apply_gravity=False,
+                                                    speed=[0, 0], spread=[10, 10], active=False)
+
         #self.particle_systems.append(self.biomass_particle)
         #self.particle_systems.append(self.starch_particle)
         self.particle_systems.append(self.drain_starch_particle)
+        self.particle_systems.append(self.open_stomata_particle)
+
+
 
         self.tool_tip_manager = ToolTipManager(config.tooltipps, callback=self.plant.get_biomass)
         self.button_sprites.add(ToggleButton(240, config.SCREEN_HEIGHT - 50, 64, 32,
@@ -208,6 +217,14 @@ class UI:
             if timer is not None:
                 self.hover_timer=timer
             self.hover_message = config.FONT.render("{}".format(message),True,config.BLACK)
+
+    def toggle_stomata(self):
+        if self.model.stomata_open == True:
+            self.model.close_stomata()
+            self.open_stomata_particle.deactivate()
+        else:
+            self.model.open_stomata()
+            self.open_stomata_particle.activate()
 
     def toggle_starch_as_resource(self):
         #self.starch_particle.particles.clear()
@@ -382,10 +399,13 @@ class UI:
         self.button_sprites.add(production_buttons[0])
         self.button_sprites.add(production_buttons[1])'''
 
-        starch_toggle_button = ToggleButton(topleft[0] + 440, topleft[1] + 40, 25, 100,
+        starch_toggle_button = ToggleButton(topleft[0] + 330, topleft[1] + 360, 100, 30,
                                           [self.toggle_starch_as_resource], config.FONT,
-                                          "Consume", vertical=True)
-        self.button_sprites.add(starch_toggle_button)
+                                          "Consume", vertical=False)
+        stomata_toggle_button = ToggleButton(topleft[0] + 0, topleft[1] + 360, 100, 30,
+                                            [self.toggle_stomata], config.FONT,
+                                            "Stomata", vertical=False)
+        self.button_sprites.add(starch_toggle_button, stomata_toggle_button)
         self.plant.organ_starch.toggle_button = starch_toggle_button
 
         self.leaf_slider = Slider((topleft[0]+25, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
@@ -450,8 +470,8 @@ class UI:
         for i in range(0,len(skills)):
             if skills[i].active == True:
                 #pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0]+15,topleft[1]+360+i*75,70,70),border_radius=3)
-                pygame.draw.rect(s, config.WHITE, (topleft[0]+15,topleft[1]+360+j*75,70,70),3,border_radius=3)
-                s.blit(skills[i].image_skilled, (topleft[0]+17, topleft[1]+363+j*75))
+                pygame.draw.rect(s, config.WHITE, (topleft[0]+15,topleft[1]+410+j*75,70,70),3,border_radius=3)
+                s.blit(skills[i].image_skilled, (topleft[0]+17, topleft[1]+413+j*75))
                 j += 1
 
         s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+120))  # Todo change x, y

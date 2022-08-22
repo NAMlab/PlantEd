@@ -39,6 +39,7 @@ class DynamicModel:
         #self.objective = BIOMASS
         objective = create_objective(self.model)
         self.model.objective = objective
+        self.stomata_open = False
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
         self.water_pool = 0
@@ -106,20 +107,29 @@ class DynamicModel:
         RH = config.get_y(hours,config.humidity)
         T = config.get_y(hours,config.summer)
 
-        print("K: " , K, " Relative Humidity: " , RH, " Temperature: ", T, " Day: ", hours)
+        #print("K: " , K, " Relative Humidity: " , RH, " Temperature: ", T, " Day: ", hours)
 
         In_Concentration = config.water_concentration_at_temp[int(T+2)]
         Out_Concentration = config.water_concentration_at_temp[int(T)]
 
-        print("In: ", In_Concentration, " Out: ", Out_Concentration)
+        #print("In: ", In_Concentration, " Out: ", Out_Concentration)
 
         Consumption_Factor = K * (In_Concentration - Out_Concentration*RH)
 
-        print("Facotr: ", Consumption_Factor, " CO2 Intake: ", solution.fluxes[CO2])
-        if solution.fluxes[CO2] > 0:
-            self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
-        print(self.water_intake)
-        print(self.water_pool, self.nitrate_pool)
+        #print("Facotr: ", Consumption_Factor, " CO2 Intake: ", solution.fluxes[CO2])
+        if self.stomata_open:
+            if solution.fluxes[CO2] > 0:
+                self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
+        #print(self.water_intake)
+        #print(self.water_pool, self.nitrate_pool)
+
+    def open_stomata(self):
+        self.stomata_open = True
+        self.set_bounds(CO2, (-1000,1000))
+
+    def close_stomata(self):
+        self.stomata_open = False
+        self.set_bounds(CO2, (0,0))
 
     def get_rates(self):
         return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
