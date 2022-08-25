@@ -516,7 +516,7 @@ class SliderGroup:
                         self.sliders_zero.append(s)
 
 class Textbox:
-    def __init__(self, x,y,w,h, font, text="name", color=(240,240,240,180), highlight_color=(255,255,255,255)):
+    def __init__(self, x,y,w,h, font, text="name", background_color=(240,240,240,180), highlight_color=(255,255,255),textcolor=(0,0,0)):
         self.x = x
         self.y = y
         self.w = w
@@ -524,13 +524,24 @@ class Textbox:
         self.rect = pygame.Rect(x,y,w,h)
         self.text = text
         self.font = font
-        self.render_text = self.font.render(self.text, True, (0,0,0))
-        self.color = color
+        self.textcolor = textcolor
+        self.render_text = self.font.render(self.text, True, self.textcolor)
+        self.cursor = self.font.render("I", True, self.textcolor)
+        self.background_color = background_color
         self.higlight_color = highlight_color
         self.active = False
-        self.max_chars = 10
+        self.hover = False
+        self.max_chars = 14
+        self.cursor_timer = 0
+        self.max_cursor_timer = 60
+
 
     def handle_event(self, e):
+        if e.type == pygame.MOUSEMOTION:
+            if self.rect.collidepoint(e.pos):
+                self.hover = True
+            else:
+                self.hover = False
         if e.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(e.pos):
                 self.active = True
@@ -540,22 +551,35 @@ class Textbox:
         if not self.active:
             return
         if e.type == pygame.KEYDOWN:
+            if e.key == pygame.K_RETURN:
+                self.active = False
+                return
             if e.key == pygame.K_BACKSPACE:
                 if len(self.text) > 0:
                     self.text = self.text[:-1]
             else:
                 if len(self.text) < self.max_chars:
                     self.text += e.unicode
-        self.render_text = self.font.render(self.text, True, (0,0,0))
+        self.render_text = self.font.render(self.text, True, self.textcolor)
+
+    def update(self, dt):
+        if self.active:
+            self.cursor_timer += 1
+            if self.cursor_timer == self.max_cursor_timer:
+                self.cursor_timer = 0
+
 
     def draw(self, screen):
-        if self.active:
-            pygame.draw.rect(screen, self.higlight_color, self.rect, border_radius=3)
-        else:
-            pygame.draw.rect(screen, self.color, self.rect, border_radius=3)
+        pygame.draw.rect(screen, self.background_color, self.rect, border_radius=3)
+
         #pygame.draw.rect(screen, self.border_color, self.rect, border_radius=3, width=3)
         screen.blit(self.render_text, (self.x+self.w/2-self.render_text.get_width()/2,self.y+self.h/2-self.render_text.get_height()/2))
+        if self.active:
+            if self.cursor_timer > self.max_cursor_timer/2:
+                screen.blit(self.cursor, (self.x+self.w/2+self.render_text.get_width()/2+1,self.y+self.h/2-self.render_text.get_height()/2))
+            pygame.draw.line(screen, self.higlight_color, (self.rect[0],self.rect[1]+self.rect[3]),(self.rect[0]+self.rect[2],self.rect[1]+self.rect[3]), width=3)
 
-
+        elif self.hover:
+            pygame.draw.line(screen, self.higlight_color, (self.rect[0],self.rect[1]+self.rect[3]),(self.rect[0]+self.rect[2],self.rect[1]+self.rect[3]), width=3)
 
 

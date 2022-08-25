@@ -3,12 +3,13 @@ from utils.tool_tip import ToolTip
 import math
 import json
 from data import assets
+import os
 
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
 # settings: HARD, INTERMEDIATE, EASY, Graphics - not yet
 
-pygame.init()
+#pygame.init()
 
 # ugly, no config -> see enums
 SUN = 0
@@ -17,7 +18,11 @@ CLOUD = 2
 WIND = 3
 HAWK = 4
 
+current_dir = os.path.abspath(os.getcwd())
+
 OPTIONS_PATH = "options.json"
+
+#OPTIONS_PATH = OPTIONS_PATH.replace('/', os.sep).replace('\\', os.sep)
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
@@ -86,14 +91,10 @@ def get_y(x,dict):
     return temp
 
 def load_options(path):
-    with open(path) as convert_file:
-        options = json.load(convert_file)
-        _OPTIONS = options
-    return options
-
-def get_options(path):
-    if _OPTIONS is None:
-        load_options(path)
+    global _OPTIONS
+    if _OPTIONS == None:
+        with open(path) as convert_file:
+            _OPTIONS = json.load(convert_file)
     return _OPTIONS
 
 def write_options(path, options):

@@ -121,6 +121,7 @@ class OptionsScene():
         self.efects_label = config.BIGGER_FONT.render("Effects",True, config.WHITE)
         self.network_label = config.MENU_SUBTITLE.render("Network",True, config.WHITE)
         self.upload_score_label = config.BIGGER_FONT.render("Upload Score",True, config.WHITE)
+        self.name_label = config.MENU_SUBTITLE.render("Name", True, config.WHITE)
 
         self.label_surface = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
 
@@ -135,6 +136,9 @@ class OptionsScene():
 
         self.button_sprites = pygame.sprite.Group()
         self.button_sprites.add([self.upload_score_button, self.back, self.apply])
+
+        self.textbox = Textbox(center_w+160, 600, 280, 50, config.BIGGER_FONT, self.options["name"],background_color=config.LIGHT_GRAY, textcolor=config.WHITE, highlight_color=config.WHITE)
+
 
         self.init_labels()
 
@@ -156,11 +160,12 @@ class OptionsScene():
         self.label_surface.blit(self.efects_label, (center_w-150-self.efects_label.get_width()/2,400))
         self.label_surface.blit(self.network_label, (center_w+300-self.network_label.get_width()/2,300))
         self.label_surface.blit(self.upload_score_label, (center_w+150-self.upload_score_label.get_width()/2,400))
+        self.label_surface.blit(self.name_label, (center_w + 300 - self.name_label.get_width() / 2, 500))
 
         self.label_surface.blit(assets.img("plant_growth_pod/plant_growth_10.png"),(1200,400))
 
     def update(self, dt):
-        pass
+        self.textbox.update(dt)
 
     def handle_events(self, events):
         for e in events:
@@ -172,11 +177,13 @@ class OptionsScene():
             self.upload_score_button.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
+            self.textbox.handle_event(e)
 
     def get_options(self):
         options = {"music": self.music_slider.get_percentage()/100,
                    "effects": self.effect_slider.get_percentage()/100,
-                   "upload_score": self.upload_score_button.button_down}
+                   "upload_score": self.upload_score_button.button_down,
+                   "name": self.textbox.text}
         return options
 
     def render(self, screen):
@@ -185,6 +192,7 @@ class OptionsScene():
         self.music_slider.draw(screen)
         self.effect_slider.draw(screen)
         self.button_sprites.draw(screen)
+        self.textbox.draw(screen)
 
 
 
@@ -255,7 +263,8 @@ class DefaultGameScene(object):
                 self.plant.grow()
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.log.close_file()
-                scoring.upload_score(self.ui.textbox.text, -1)
+                # Todo, fix naming
+                #scoring.upload_score("self.ui.textbox.text", -1)
                 self.model = None
 
                 self.manager.go_to(TitleScene(self.manager))
@@ -329,7 +338,7 @@ class TitleScene(object):
         self.button_sprites.add([self.quit_button,self.credit_button,self.options_button,self.scores_button])
 
     def render(self, screen):
-        screen.fill((50,50,50))
+        screen.fill(config.LIGHT_GRAY)
         screen.blit(self.title,(self.center_w-self.title.get_width()/2,100))
         self.card_0.draw(screen)
         self.card_1.draw(screen)
@@ -457,6 +466,7 @@ class Credits():
         self.daniel = config.MENU_SUBTITLE.render("Daniel",True,config.WHITE)
         self.jj = config.MENU_SUBTITLE.render("JJ",True,config.WHITE)
         self.pouneh = config.MENU_SUBTITLE.render("Pouneh",True,config.WHITE)
+        self.mona = config.MENU_SUBTITLE.render("Mona",True,config.WHITE)
         self.nadine = config.MENU_SUBTITLE.render("Nadine",True,config.WHITE)
         self.stefano = config.MENU_SUBTITLE.render("Stefano",True,config.WHITE)
 
@@ -466,8 +476,9 @@ class Credits():
         self.label_surface.blit(self.daniel,(self.center_w-self.daniel.get_width()/2,400))
         self.label_surface.blit(self.jj,(self.center_w-self.jj.get_width()/2,480))
         self.label_surface.blit(self.pouneh,(self.center_w-self.pouneh.get_width()/2,560))
-        self.label_surface.blit(self.nadine,(self.center_w-self.nadine.get_width()/2,640))
-        self.label_surface.blit(self.stefano,(self.center_w-self.stefano.get_width()/2,720))
+        self.label_surface.blit(self.mona,(self.center_w-self.mona.get_width()/2,640))
+        self.label_surface.blit(self.nadine,(self.center_w-self.nadine.get_width()/2,720))
+        self.label_surface.blit(self.stefano,(self.center_w-self.stefano.get_width()/2,780))
 
     def update(self, dt):
         pass

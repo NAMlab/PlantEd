@@ -1,9 +1,9 @@
 import pygame
 from gameobjects.plant import Plant
 from utils.gametime import GameTime
-from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup, Textbox
+from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup
 from utils.tool_tip import ToolTip, ToolTipManager
-from utils.particle import ParticleSystem, PointParticleSystem, StillParticles
+from utils.particle import ParticleSystem, PointParticleSystem, StillParticles, Inwards_Particle_System
 from utils.animation import Animation
 import config
 import math
@@ -38,7 +38,9 @@ preset = {"leaf_slider" : 0,
 
 class UI:
     def __init__(self, scale, plant, model, production_topleft=(10,100), plant_details_topleft=(10,10),organ_details_topleft=(10,430)):
-        self.name = "Plant"
+        self.name_label = config.FONT.render(config.load_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
+        #print(config.OPTIONS_PATH)#config.BIGGER_FONT.render(config.get_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
+        #print(config.load_options("options.json"))
         self.plant = plant
         self.model = model
         self.gametime = GameTime.instance()
@@ -79,16 +81,21 @@ class UI:
                                               apply_gravity=False,
                                               speed=[0, 0], spread=[10, 10], active=False)
 
-        self.open_stomata_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0] + 35,
-                                                                       self.production_topleft[1] + 70, 50, 50),
-                                                    lifetime=10, color=config.GRAY,
-                                                    apply_gravity=False,
-                                                    speed=[0, 0], spread=[10, 10], active=False)
+        self.open_stomata_particle_in = Inwards_Particle_System(20, spawn_box=Rect(self.production_topleft[0] + 10,
+                                                                       self.production_topleft[1] + 80, 100, 50),
+                                                    lifetime=6, color=config.GRAY, active=False, center=(50,0))
+
+        self.open_stomata_particle_out = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+55,
+                                                                           self.production_topleft[1]+80, 10, 0),
+                                                        lifetime=10, color=config.WHITE,
+                                                        apply_gravity=False,
+                                                        speed=[0, -4], spread=[5, 5], active=False)
 
         #self.particle_systems.append(self.biomass_particle)
         #self.particle_systems.append(self.starch_particle)
         self.particle_systems.append(self.drain_starch_particle)
-        self.particle_systems.append(self.open_stomata_particle)
+        self.particle_systems.append(self.open_stomata_particle_in)
+        self.particle_systems.append(self.open_stomata_particle_out)
 
 
 
@@ -107,7 +114,6 @@ class UI:
             self.button_sprites.add(rb)
         speed_options[1].button_down = True
 
-        self.textbox = Textbox(config.SCREEN_WIDTH/2-90, 50, 180, 30, config.FONT, self.name)
 
         #assets.img("stomata/stomata_open_{}.png".format(0))
 
@@ -128,7 +134,6 @@ class UI:
             slider.handle_event(e)
         for tips in self.tool_tip_manager.tool_tips:
             tips.handle_event(e)
-        self.textbox.handle_event(e)
         if e.type == pygame.MOUSEMOTION:
             #self.hover_message = None
             self.hover_timer = 1000
@@ -221,10 +226,12 @@ class UI:
     def toggle_stomata(self):
         if self.model.stomata_open == True:
             self.model.close_stomata()
-            self.open_stomata_particle.deactivate()
+            self.open_stomata_particle_in.deactivate()
+            self.open_stomata_particle_out.deactivate()
         else:
             self.model.open_stomata()
-            self.open_stomata_particle.activate()
+            self.open_stomata_particle_in.activate()
+            self.open_stomata_particle_out.activate()
 
     def toggle_starch_as_resource(self):
         #self.starch_particle.particles.clear()
@@ -246,7 +253,6 @@ class UI:
         #self.draw_organ_details(self.s)
         #self.draw_starch_details(s)
         # name plant, make textbox
-        self.textbox.draw(self.s)
         screen.blit(self.s, (0, 0))
 
     def draw_plant_details(self, s):
@@ -274,6 +280,8 @@ class UI:
         skillpoints = config.FONT.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
         s.blit(skillpoints, dest=(topleft[0]+265, topleft[1]+6))
         s.blit(assets.img("green_thumb.png",(20,20)),(topleft[0]+skillpoints.get_width() + 280,topleft[1]+10))
+
+        s.blit(self.name_label,(topleft[0]+350,topleft[1]+6))
 
         '''# water
         water_level_text = config.FONT.render("Water:", True, (0, 0, 0))

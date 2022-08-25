@@ -138,7 +138,7 @@ class ParticleSystem:
         else:
             color = self.color
 
-        lifetime = self.lifetime * random.random() if self.lifetime else self.lifetime
+        lifetime = self.lifetime * random.random()
         self.particles.append(
             Particle(x, y, color=color, image=image, speed=speed, size=self.size, apply_gravity=self.apply_gravity,
                      lifetime=lifetime))
@@ -267,3 +267,43 @@ class StillParticles(ParticleSystem):
             Particle(x, y, color=self.color, image=image, speed=speed, size=self.size, apply_gravity=self.apply_gravity,
                      lifetime=self.lifetime))
         self.particle_counter += 1
+
+class Inwards_Particle_System(ParticleSystem):
+    def __init__(self, max_particles, spawn_box, color, size=None, lifetime=None, active=False, center=None):
+        super().__init__(max_particles, spawn_box=spawn_box, size=size, lifetime=lifetime, color=color, active=active)
+        self.center = (center[0]+spawn_box[0],center[1]+spawn_box[1]) if center else (self.spawn_box[0] + self.spawn_box[2] / 2, self.spawn_box[1] + self.spawn_box[3] / 2)
+
+    def generate_particle(self):
+        x,y = random.random()*self.spawn_box[2]+self.spawn_box[0], random.random()*self.spawn_box[3]+self.spawn_box[1]
+        speed = ((self.center[0]-x)/10,(self.center[1]-y)/10)
+        self.particles.append(
+            Particle(x,y,self.lifetime,self.color,speed,self.size)
+        )
+
+    def check_boundaries(self, particle):
+        if particle.x - self.center[0] < 10:
+            if particle.y - self.center[1] < 10:
+                return False
+        return True
+
+    def update(self, dt):
+        if not self.active:
+            return
+        if self.particle_counter < self.max_particles and self.active:
+            if self.once:
+                while (self.particle_counter < self.max_particles and self.active):
+                    self.generate_particle()
+            else:
+                self.generate_particle()
+        for particle in self.particles:
+            if self.check_boundaries(particle):
+                particle.move(dt)
+            else:
+                if self.despawn_animation:
+                    self.despawn_animation(self.despawn_images, 100, (particle.x, particle.y))
+                self.particles.remove(particle)
+        if len(self.particles) <= 0 and self.once:
+            self.active = False
+        self.particles = [particle for particle in self.particles if particle.active == True]
+        if not self.once:
+            self.particle_counter = len(self.particles)
