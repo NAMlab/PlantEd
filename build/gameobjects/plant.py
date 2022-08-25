@@ -18,7 +18,7 @@ leaves = [(assets.img("leaves/{index}.png".format(index=i)), pivot_pos[i]) for i
 #stem = (assets.img("stem.png"), (15, 1063))
 #roots = (assets.img("roots.png"), (387, 36))
 
-beans = [assets.img("bean_growth/{}.png".format(index),(150,150)) for index in range(0, 4)]
+beans = [assets.img("bean_growth/{}.png".format(index),(150,150)) for index in range(0, 6)]
 #beans = []
 #for bean in beans_big:
 #    beans.append(pygame.transform.scale(bean, (int(bean.get_width()/4), int(bean.get_height()/4))))
@@ -445,7 +445,7 @@ class Root(Organ):
         #    curve.update(dt)
 
     def create_new_root(self, mouse_pos=None, dir=None):
-        pos = (self.x,self.y+45)
+        pos = (self.x+5,self.y+50)
         if not dir:
             dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))
         self.ls.create_new_first_letter(dir, pos, self.mass)
