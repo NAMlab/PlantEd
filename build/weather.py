@@ -175,7 +175,7 @@ class Environment:
                 int(color0[2] * (1 - grad) + color1[2] * grad))
 
     def draw_foreground(self, screen):
-        self.draw_clock(screen)
+        #self.draw_clock(screen)
         #self.rain.draw(screen)
         self.nitrate.draw(screen)
         self.sprites.draw(screen)
@@ -221,21 +221,6 @@ class Environment:
         hours = (ticks % day) / hour
         minutes = (ticks % hour) / min
         return days, hours, minutes
-
-    def draw_clock(self, screen):
-        # clock
-        days, hours, minutes = self.get_day_time()
-        output_string = "Day {0} {1:02}:{2:02}".format(days, int(hours), int(minutes))
-        clock_text = self.sfont.render(output_string, True, (0, 0, 0))
-        pygame.draw.rect(screen, (255, 255, 255, 180), Rect(self.w/2-90, 10, 180, 30), border_radius=3)
-        screen.blit(clock_text, clock_text.get_rect(center=(self.w / 2, 24)))
-        # headbox
-
-        '''
-        day_time = self.get_sun_intensity()
-        sun_intensity = self.sfont.render("{:.2}".format(day_time), True, (0, 0, 0))
-        screen.blit(sun_intensity, sun_intensity.get_rect(center=(self.w / 2 + 150, 20)))
-        '''
 
     def get_sun_intensity(self):
         return -(np.sin(np.pi/2-np.pi/5+((self.gametime.get_time()/(1000 * 60 * 6)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval

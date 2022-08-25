@@ -134,7 +134,10 @@ class Shop:
         pygame.draw.rect(self.s, config.WHITE_TRANSPARENT, (0,45,self.rect[2],self.rect[3]-45), border_radius=3)
         #pygame.draw.rect(s, (255,255,255), self.rect, int(self.margin/2))
         pygame.draw.rect(self.s,config.WHITE,(0,0,self.rect[2],40),border_radius=3)
-        self.s.blit(self.shop_label,dest=(self.rect[2]/2-self.shop_label.get_width()/2,5))
+        self.s.blit(self.shop_label,(10,5))
+        green_thumbs_label = config.BIG_FONT.render("{}".format(self.plant.upgrade_points),True,config.BLACK)
+        self.s.blit(green_thumbs_label,(self.rect[2]-90-green_thumbs_label.get_width(),5))
+        self.s.blit(assets.img("green_thumb.png",(26,26)),(self.rect[2]-80,6))
         for item in self.shop_items:
             item.draw(self.s)
         self.buy_button.draw(self.s)

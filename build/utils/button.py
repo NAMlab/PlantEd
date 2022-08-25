@@ -531,7 +531,7 @@ class Textbox:
         self.higlight_color = highlight_color
         self.active = False
         self.hover = False
-        self.max_chars = 14
+        self.max_chars = 10
         self.cursor_timer = 0
         self.max_cursor_timer = 60
 

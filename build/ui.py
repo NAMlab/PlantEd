@@ -249,6 +249,7 @@ class UI:
         #self.s.fill((0,0,0))
         self.s.fill((0,0,0,0))
         self.draw_plant_details(self.s)
+        self.draw_clock(self.s)
         self.draw_production(self.s)
         #self.draw_organ_details(self.s)
         #self.draw_starch_details(s)
@@ -258,30 +259,33 @@ class UI:
     def draw_plant_details(self, s):
         # details
         topleft = self.plant_details_topleft
-        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 450, 40), border_radius=3)
+        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 500, 40), border_radius=3)
+
+        # name
+        s.blit(self.name_label, (topleft[0]+10, topleft[1] + 6))
 
         # plant lvl
         lvl_text = config.FONT.render("LvL:", True, (0, 0, 0))
-        s.blit(lvl_text, dest=(topleft[0]+10, topleft[1]+6))
+        s.blit(lvl_text, dest=(topleft[0]+200, topleft[1]+6))
         level = config.FONT.render("{:.0f}".format(self.plant.get_level()), True, (0, 0, 0))  # title
-        s.blit(level, dest=(topleft[0]+lvl_text.get_width()+20, topleft[1]+6))
+        s.blit(level, dest=(topleft[0]+lvl_text.get_width()+220, topleft[1]+6))
 
         # biomass
         biomass_text = config.FONT.render("Mass:", True, (0, 0, 0))
-        s.blit(biomass_text, dest=(topleft[0]+80, topleft[1]+6))
-        biomass = config.FONT.render("{:.2f} gramm".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
-        s.blit(biomass, dest=(topleft[0]+biomass_text.get_width()+85, topleft[1]+6))
+        s.blit(biomass_text, dest=(topleft[0]+300, topleft[1]+6))
+        biomass = config.FONT.render("{:.2f} g".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
+        s.blit(biomass, dest=(topleft[0]+biomass_text.get_width()+320, topleft[1]+6))
 
         # skillpoints greenthumb
         #s.blit(assets.img("green_thumb.png", (25, 25)),
         #       (topleft[0]+200, topleft[1] + 7))
         #skillpoints_text = config.FONT.render("Thumbs:", True, (0, 0, 0))
         #s.blit(skillpoints_text, dest=(topleft[0] + 190, topleft[1] + 6))
-        skillpoints = config.FONT.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
+        '''skillpoints = config.FONT.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
         s.blit(skillpoints, dest=(topleft[0]+265, topleft[1]+6))
-        s.blit(assets.img("green_thumb.png",(20,20)),(topleft[0]+skillpoints.get_width() + 280,topleft[1]+10))
+        s.blit(assets.img("green_thumb.png",(20,20)),(topleft[0]+skillpoints.get_width() + 280,topleft[1]+10))'''
 
-        s.blit(self.name_label,(topleft[0]+350,topleft[1]+6))
+
 
         '''# water
         water_level_text = config.FONT.render("Water:", True, (0, 0, 0))
@@ -301,6 +305,22 @@ class UI:
         starch_pool = config.FONT.render("{:.2f}/{:.2f}".format(self.plant.organ_starch.mass, self.plant.organ_starch.get_threshold()),True,(0,0,0))
         s.blit(starch_pool, dest=(topleft[0]+580+starch_pool_text.get_width(),topleft[1]+6))'''
 
+    def get_day_time(self):
+        ticks = self.gametime.get_time()
+        day = 1000*60*6
+        hour = day/24
+        min = hour/60
+        days = int(ticks/day)
+        hours = (ticks % day) / hour
+        minutes = (ticks % hour) / min
+        return days, hours, minutes
+
+    def draw_clock(self, s):
+        days, hours, minutes = self.get_day_time()
+        output_string = "Day {0} {1:02}:{2:02}".format(days, int(hours), int(minutes))
+        clock_text = config.FONT.render(output_string, True, config.BLACK)
+        pygame.draw.rect(s, config.WHITE, Rect(config.SCREEN_WIDTH / 2 - 90, 10, 180, 40), border_radius=3)
+        s.blit(clock_text, (config.SCREEN_WIDTH/2-clock_text.get_width()/2,16))
 
     def draw_organ_details(self, s):
         topleft = self.organ_details_topleft
