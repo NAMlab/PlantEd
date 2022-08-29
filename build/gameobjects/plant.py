@@ -62,7 +62,11 @@ class Plant:
 
     def update_growth_rates(self, growth_rates):
         for i in range(0,3):
-            self.organs[i].update_growth_rate(growth_rates[i])
+            # Todo remove cheat
+            if self.get_biomass() < 4:
+                self.organs[i].update_growth_rate(growth_rates[i]+0.2)
+            else:
+                self.organs[i].update_growth_rate(growth_rates[i])
         self.organ_starch.update_growth_rate(growth_rates[3])
         self.organ_starch.starch_intake = growth_rates[4]
 
@@ -389,7 +393,8 @@ class Leaf(Organ):
 
     def draw(self, screen):
         if self.can_add_leaf:
-            screen.blit(assets.img("leaf_small.png"), pygame.mouse.get_pos())
+            x,y = pygame.mouse.get_pos()
+            screen.blit(assets.img("leaf_small.png"), (x,y-self.plant.camera.offset_y))
 
         for leaf in self.leaves:
             screen.blit(leaf["image"], (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))
@@ -524,8 +529,10 @@ class Stem(Organ):
             self.curve.update_tip(point=self.sunpos)
         if event.type == pygame.MOUSEMOTION:
             if self.leaf.can_add_leaf:
-                mouse_pos = pygame.mouse.get_pos()
-                t = self.curve.find_closest(mouse_pos)
+                x,y = pygame.mouse.get_pos()
+                y -= self.plant.camera.offset_y
+                print(x,y)
+                t = self.curve.find_closest((x,y))
                 point = self.curve.get_point(t)
                 self.highlight = (point[0],point[1],t)
             else:
@@ -583,6 +590,7 @@ class Stem(Organ):
             self.curve.draw(screen)
         if self.highlight:
             mouse_x, mouse_y = pygame.mouse.get_pos()
+            mouse_y = mouse_y-self.plant.camera.offset_y
             dist_to_stem = math.sqrt((mouse_x - self.highlight[0])**2 + (mouse_y - self.highlight[1])**2)
             color = config.GRAY if dist_to_stem > 20 else config.WHITE
             pygame.draw.line(screen, color, (self.highlight[0],self.highlight[1]),(mouse_x,mouse_y))

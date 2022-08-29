@@ -7,7 +7,7 @@ import random
 # a grid of integers, indicating water amount
 # falling down over time, into base water level -> lowest line of the grid
 class Water_Grid:
-    def __init__(self, pos=(0,900), grid_size=(2,20), max_water=250):
+    def __init__(self, pos=(0,900), grid_size=(6,20), max_water=250):
         self.pos = pos
         self.grid = np.zeros(grid_size)
         self.raining = 0

@@ -10,7 +10,6 @@ class Root_Item:
         self.cost = cost
         self.callback = callback
         self.active = False
-        self.validation_rect = Rect(0,config.SCREEN_HEIGHT-200,config.SCREEN_WIDTH,200)
         self.particle_system = ParticleSystem(100, spawn_box=Rect(self.plant.x, self.plant.y+45, 0, 0), lifetime=8,
                                                   color=config.WHITE,apply_gravity=False,speed=[0,0],
                                                   spread=[20, 20], active=False, once=True)
@@ -22,13 +21,18 @@ class Root_Item:
         if self.active:
             if e.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                if self.validation_rect.collidepoint(mouse_pos):
+                if self.get_validation_rect().collidepoint(mouse_pos):
                     self.callback(pygame.mouse.get_pos())
                     self.deactivate()
+                    self.particle_system.spawn_box = Rect(self.plant.x, self.get_validation_rect()[1]+45,0,0)
                     self.particle_system.activate()
 
     def activate(self):
         self.active = True
+
+    def get_validation_rect(self):
+        y = 880 + self.plant.camera.offset_y
+        return Rect(0,y,config.SCREEN_WIDTH,config.SCREEN_HEIGHT)
 
     def deactivate(self):
         self.active = False
@@ -37,9 +41,10 @@ class Root_Item:
         self.particle_system.draw(screen)
         if self.active:
             mouse_pos = pygame.mouse.get_pos()
-            if self.validation_rect.collidepoint(mouse_pos):
-                pygame.draw.line(screen, config.WHITE, (self.plant.x,self.plant.y+45),mouse_pos,3)
+            plant_x, plant_y = self.plant.x,self.plant.y+45+self.plant.camera.offset_y
+            if self.get_validation_rect().collidepoint(mouse_pos):
+                pygame.draw.line(screen, config.WHITE, (plant_x, plant_y),mouse_pos,3)
                 pygame.draw.circle(screen, config.WHITE, mouse_pos, 3)
             else:
-                pygame.draw.line(screen, config.GRAY, (self.plant.x,self.plant.y+45),mouse_pos,3)
+                pygame.draw.line(screen, config.GRAY, (plant_x, plant_y),mouse_pos,3)
                 pygame.draw.circle(screen, config.GRAY, mouse_pos, 3)

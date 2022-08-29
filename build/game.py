@@ -103,13 +103,20 @@ class DevScene(object):
 class Camera:
     def __init__(self, offset_y):
         self.offset_y = offset_y
+        self.target_offset = self.offset_y
+        self.speed = 10
+
+    def update(self, dt):
+        diff = self.target_offset - self.offset_y
+        if diff != 0:
+            diff = diff/abs(diff)
+            self.offset_y += diff*self.speed
 
     def handle_event(self, e):
-        pass
-        '''if e.type == KEYDOWN and e.key == K_w:
-            self.offset_y -= 100
+        if e.type == KEYDOWN and e.key == K_w:
+            self.target_offset = 0
         if e.type == KEYDOWN and e.key == K_s:
-            self.offset_y += 100'''
+            self.target_offset = -400
 
 class OptionsScene():
     def __init__(self):
@@ -162,7 +169,7 @@ class OptionsScene():
         self.label_surface.blit(self.upload_score_label, (center_w+150-self.upload_score_label.get_width()/2,400))
         self.label_surface.blit(self.name_label, (center_w + 300 - self.name_label.get_width() / 2, 500))
 
-        self.label_surface.blit(assets.img("plant_growth_pod/plant_growth_10.png"),(1200,400))
+        self.label_surface.blit(assets.img("plant_growth_pod/plant_growth_10.png"),(1300,400))
 
     def update(self, dt):
         self.textbox.update(dt)
@@ -225,7 +232,7 @@ class DefaultGameScene(object):
 
         self.entities = []
         for i in range(0,10):
-            bug = Bug((190*random.randint(0,10),900+random.randint(0,200)),pygame.Rect(0,900,config.SCREEN_WIDTH,240),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)],self.camera)
+            bug = Bug((190*random.randint(0,10),900+random.randint(0,200)),pygame.Rect(0,900,config.SCREEN_WIDTH,240),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)], self.camera)
             self.entities.append(bug)
         #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
@@ -288,6 +295,7 @@ class DefaultGameScene(object):
             self.skill_system.handle_event(e)
 
     def update(self, dt):
+        self.camera.update(dt)
         for entity in self.entities:
             entity.update(dt)
         self.environment.update(dt)
@@ -302,7 +310,6 @@ class DefaultGameScene(object):
     def render(self, screen):
         screen.fill((0,0,0))
         self.environment.draw_background(temp_surface)
-        self.shop.draw(temp_surface)
 
         for entity in self.entities:
             entity.draw(temp_surface)
@@ -310,9 +317,12 @@ class DefaultGameScene(object):
 
         self.environment.draw_foreground(temp_surface)
         self.water_grid.draw(temp_surface)
-        self.skill_system.draw(temp_surface)
-        self.ui.draw(temp_surface)
+
         screen.blit(temp_surface,(0,self.camera.offset_y))
+
+        self.ui.draw(screen)
+        self.skill_system.draw(screen)
+        self.shop.draw(screen)
 
 class TitleScene(object):
     def __init__(self, manager=None):
@@ -320,11 +330,11 @@ class TitleScene(object):
         self.title = config.MENU_TITLE.render("PlantEd",True,config.WHITE)
         self.center_h = config.SCREEN_HEIGHT/2+100
         self.center_w = config.SCREEN_WIDTH/2
-        self.card_0 = Card((self.center_w-460,self.center_h-100),assets.img("gatersleben_icon.png",(512,512)), "Gatersleben",
+        self.card_0 = Card((self.center_w-460,self.center_h-100),assets.img("menu/gatersleben.JPG",(512,512)), "Gatersleben",
                            callback=manager.go_to, callback_var=DefaultGameScene,keywords="Beginner, Medium Temperatures")
-        self.card_1 = Card((self.center_w,self.center_h-100),assets.img("plant_growth_pod/plant_growth_10.png",(512,512)), "Tutorial",
+        self.card_1 = Card((self.center_w,self.center_h-100),assets.img("menu/tutorial.JPG",(512,512)), "Tutorial",
                            callback=manager.go_to, callback_var=DevScene,keywords="Beginner, Easy")
-        self.card_2 = Card((self.center_w+460,self.center_h-100),assets.img("desert_icon.png",(512,512)), "Egypt ",
+        self.card_2 = Card((self.center_w+460,self.center_h-100),assets.img("menu/dev.jpg",(512,512)), "Dev ",
                            callback=manager.go_to, callback_var=OptionsScene,keywords="Intermediate, Hot, Dry")
 
 
