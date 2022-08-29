@@ -118,6 +118,12 @@ class Camera:
         if e.type == KEYDOWN and e.key == K_s:
             self.target_offset = -400
 
+    def move_up(self):
+        self.target_offset = 0
+
+    def move_down(self):
+        self.target_offset = -400
+
 class OptionsScene():
     def __init__(self):
         self.options = config.load_options("options.json")
@@ -218,7 +224,7 @@ class DefaultGameScene(object):
         self.water_grid = Water_Grid()
         self.water_grid.add_reservoir(Water_Reservoir((500, 990), 36, 50))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
-        self.ui = UI(1, self.plant, self.model)
+        self.ui = UI(1, self.plant, self.model, self.camera)
 
         example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]

@@ -101,6 +101,108 @@ class Button(pygame.sprite.Sprite):
         self.x = pos[0]
         self.y = pos[1]
 
+class Arrow_Button(pygame.sprite.Sprite):
+    def __init__(self, x, y, w, h, callbacks, arrow_dir, font=None, text='', arrow_color=WHITE,
+                 border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None,
+                 button_sound=None, active=True, offset=(0,0), callback_var=None):
+        super().__init__()
+        self.posted = False
+        self.button_sound = button_sound
+        self.post_hover_message = post_hover_message
+        self.hover_message_image = hover_message_image
+        self.border_w = int(w / 10) if not border_w else border_w
+        self.active = active
+        self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
+        self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
+        self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
+        self.offset = offset
+
+
+        if arrow_dir == 0:
+            pygame.draw.line(self.button_image,arrow_color,(0+border_w,h-border_w),(w/2,0+border_w),width=border_w)
+            pygame.draw.line(self.button_image,arrow_color,(w-border_w,h-border_w),(w/2,0+border_w),width=border_w)
+            pygame.draw.line(self.hover_image, arrow_color, (0 + border_w, h - border_w), (w / 2, 0 + border_w),
+                             width=border_w+2)
+            pygame.draw.line(self.hover_image, arrow_color, (w - border_w, h - border_w), (w / 2, 0 + border_w),
+                             width=border_w+2)
+            pygame.draw.line(self.clicked_image, arrow_color, (0 + border_w, h - border_w), (w / 2, 0 + border_w),
+                             width=border_w+4)
+            pygame.draw.line(self.clicked_image, arrow_color, (w - border_w, h - border_w), (w / 2, 0 + border_w),
+                             width=border_w+4)
+        else:
+            pygame.draw.line(self.button_image, arrow_color, (0 + border_w, border_w), (w / 2, h - border_w),
+                             width=border_w)
+            pygame.draw.line(self.button_image, arrow_color, (w - border_w, border_w), (w / 2, h - border_w),
+                             width=border_w)
+            pygame.draw.line(self.hover_image, arrow_color, (0 + border_w, border_w), (w / 2, h - border_w),
+                             width=border_w+2)
+            pygame.draw.line(self.hover_image, arrow_color, (w - border_w, border_w), (w / 2, h - border_w),
+                             width=border_w+2)
+            pygame.draw.line(self.clicked_image, arrow_color, (0 + border_w, border_w), (w / 2, h - border_w),
+                             width=border_w+4)
+            pygame.draw.line(self.clicked_image, arrow_color, (w - border_w, border_w), (w / 2, h - border_w),
+                             width=border_w+4)
+
+        self.image = self.button_image
+        self.rect = pygame.Rect(x, y, w, h)
+        # This function will be called when the button gets pressed.
+        self.callbacks = callbacks
+        self.callback_var = callback_var
+        self.button_down = False
+        if post_hover_message and hover_message:
+            self.posted = False
+            hover_message = font.render(hover_message, True, text_color)
+            w = hover_message.get_width()+10
+            if self.hover_message_image:
+                w += hover_message_image.get_width() +10
+            self.hover_message = pygame.Surface((w, hover_message.get_height()+10), pygame.SRCALPHA)
+            self.hover_message.fill(WHITE_TRANSPARENT)
+            self.hover_message.blit(hover_message, (5,5))
+            if self.hover_message_image:
+                self.hover_message.blit(self.hover_message_image,(hover_message.get_width()+10, 8))
+
+    def handle_event(self, event):
+        if not self.active:
+            return
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = (event.pos[0]-self.offset[0], event.pos[1]-self.offset[1])
+            if self.rect.collidepoint(pos):
+                self.image = self.clicked_image
+                if self.button_sound:
+                    pygame.mixer.Sound.play(self.button_sound)
+                self.button_down = True
+        elif event.type == pygame.MOUSEBUTTONUP:
+            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            # If the rect collides with the mouse pos.
+            if self.rect.collidepoint(pos) and self.button_down:
+                for callback in self.callbacks:
+                    if self.callback_var:
+                        callback(self.callback_var)
+                    else:
+                        callback()
+                self.image = self.hover_image
+            self.button_down = False
+        elif event.type == pygame.MOUSEMOTION:
+            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            collided = self.rect.collidepoint(pos)
+            if collided and not self.button_down:
+                self.image = self.hover_image
+                if not self.posted and self.post_hover_message:
+                    self.posted = True
+                    self.post_hover_message(self.hover_message)
+            elif not collided and not self.button_down:
+                if self.post_hover_message and self.posted:
+                    self.posted = False
+                    self.post_hover_message(None)
+                self.image = self.button_image
+
+    def draw(self, screen):
+        screen.blit(self.image, (self.rect[0],self.rect[1]))
+
+    def set_pos(self, pos):
+        self.x = pos[0]
+        self.y = pos[1]
+
 
 class ToggleButton(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,

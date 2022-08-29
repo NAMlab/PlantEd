@@ -1,7 +1,7 @@
 import pygame
 from gameobjects.plant import Plant
 from utils.gametime import GameTime
-from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup
+from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup, Arrow_Button
 from utils.tool_tip import ToolTip, ToolTipManager
 from utils.particle import ParticleSystem, PointParticleSystem, StillParticles, Inwards_Particle_System
 from utils.animation import Animation
@@ -37,7 +37,8 @@ preset = {"leaf_slider" : 0,
           "consume_starch" : False}
 
 class UI:
-    def __init__(self, scale, plant, model, production_topleft=(10,100), plant_details_topleft=(10,10),organ_details_topleft=(10,430)):
+    def __init__(self, scale, plant, model, camera, production_topleft=(10,100), plant_details_topleft=(10,10),
+                 organ_details_topleft=(10,430)):
         self.name_label = config.FONT.render(config.load_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
         #print(config.OPTIONS_PATH)#config.BIGGER_FONT.render(config.get_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
         #print(config.load_options("options.json"))
@@ -46,7 +47,7 @@ class UI:
         self.gametime = GameTime.instance()
         self.hover_message = None
         self.hover_timer = 60
-
+        self.camera = camera
 
         #performance boost:
         self.label_leaf = config.FONT.render("Leaf", True, (0, 0, 0))  # title
@@ -103,6 +104,11 @@ class UI:
         self.button_sprites.add(ToggleButton(240, config.SCREEN_HEIGHT - 50, 64, 32,
                                              [self.tool_tip_manager.toggle_activate], config.FONT,
                                              text="HINT", pressed=True))
+
+
+        self.button_sprites.add(Arrow_Button(config.SCREEN_WIDTH/2-100,60,200,50,[self.camera.move_up],0,border_w=3))
+        self.button_sprites.add(Arrow_Button(config.SCREEN_WIDTH/2-100,config.SCREEN_HEIGHT-60,200,40,[self.camera.move_down],2,border_w=3))
+
         # init speed control
         speed_options = [RadioButton(140, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.play], config.FONT,
                                      image=assets.img("normal_speed.png")),
