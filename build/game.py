@@ -81,6 +81,19 @@ pygame.mixer.music.load('../assets/background_music.mp3')
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
+        self.gametime = GameTime.instance()
+        # n dots -> resolution
+        # height dot
+        # blue under -> polygon of dots
+        n_dots = config.SCREEN_HEIGHT-200
+
+        self.base_height = 200
+
+        self.dots = [[0,config.SCREEN_HEIGHT]]
+        for i in range(0,n_dots+1):
+            delta_x = config.SCREEN_WIDTH/n_dots
+            self.dots.append([delta_x*i,self.base_height])
+        self.dots.append([config.SCREEN_WIDTH,config.SCREEN_HEIGHT])
 
         # numpy array for screen
         #directions = [(0,1)]
@@ -88,10 +101,20 @@ class DevScene(object):
 
     def render(self, screen):
         screen.fill((50, 50, 50))
-        pass
+        pygame.draw.polygon(screen,config.BLUE,self.dots)
+
 
     def update(self, dt):
-        pass
+        ticks = self.gametime.get_time()
+        day = 1000 * 60 * 6
+        hour = day / 24
+        hours = (ticks % day) / hour
+        deg = hours / 24 * 360
+        angle_offset = 360 / len(self.dots)
+
+        for i in range(1, len(self.dots)-1):
+            self.dots[i][1] = self.base_height + self.base_height * 0.1 * math.sin(math.radians(
+                30 * deg + angle_offset * i))
 
     def handle_events(self, events):
         for e in events:

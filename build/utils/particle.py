@@ -68,7 +68,7 @@ class ParticleSystem:
     def __init__(self, max_particles, spawn_box=Rect(0, 0, 0, 0), boundary_box=None, color=(0, 0, 0),
                  direction=None, size=10, lifetime=None, apply_gravity=0, speed=None, size_over_lifetime=True,
                  images=[], despawn_images=[], despawn_animation=None, spread=None, once=False, active=True,
-                 color_spectrum=False, wide_spread=False, rectangle=False):
+                 color_spectrum=0, wide_spread=False, rectangle=False):
         if speed is None:
             speed = [0.0, 0.0]
         self.apply_gravity = apply_gravity
@@ -133,8 +133,12 @@ class ParticleSystem:
             if self.spread[1] > 0:
                 speed[1] = (speed[1] + ((random.randint(0, 20) - 10) / 10) * self.spread[1])
 
-        if self.color_spectrum:
-            color = (random.randint(0,50), self.color[1], random.randint(130, 230))
+        if self.color_spectrum > 0:
+            r,g,b = self.color
+            r = min(255,r+random.randint(0,self.color_spectrum))
+            g = min(255,g+random.randint(0,self.color_spectrum))
+            b = min(255,g+random.randint(0,self.color_spectrum))
+            color = (r,g,b)
         else:
             color = self.color
 

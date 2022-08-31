@@ -8,19 +8,18 @@ from fba import dynamic_model
 
 
 class Watering_can:
-    def __init__(self, pos, model=None, amount=0, rate=0.15, cost=1, active=False, callback=None): # take from config
-        self.pos = pos
+    def __init__(self, pos, model=None, amount=0, rate=0.05, cost=1, active=False, callback=None): # take from config
+        self.pos = (pos[0]-20,pos[1]-120)
         self.model = model
-        self.image = assets.img("watering_can.png")
+        self.image = assets.img("watering_can.png",(214,147))
         self.amount = amount
         self.default_amount = 10 #add to config
         self.rate = rate
-        self.default_rate = 0.15 #add to config
         self.cost = cost
         self.active = active
         self.pouring = False
         self.callback = callback
-        self.rect = Rect(self.pos[0]+10,self.pos[1],20,20)
+        self.rect = Rect(self.pos[0],self.pos[1],20,20)
         self.can_particle_system = ParticleSystem(290, spawn_box=self.rect, lifetime=12,
                                                   color=config.BLUE,apply_gravity=10,speed=[-40, 0],
                                                   spread=[20, 20], active=False)
@@ -34,7 +33,7 @@ class Watering_can:
         self.can_particle_system.activate()
 
     def deactivate(self):
-        self.image = assets.img("watering_can.png")
+        self.image = assets.img("watering_can.png",(214,147))
         self.can_particle_system.deactivate()
         self.amount = 0
         self.active = False
@@ -59,12 +58,12 @@ class Watering_can:
         if not self.active:
             return
         if e.type == MOUSEBUTTONDOWN:
-            self.image = assets.img("watering_can_tilted.png")
+            self.image = assets.img("watering_can_tilted.png",(182,148))
             self.pouring = True
             self.can_particle_system.activate()
             pygame.mixer.Sound.play(assets.sfx('water_can.mp3', 0.05), -1)
         if e.type == MOUSEBUTTONUP:
-            self.image = assets.img("watering_can.png")
+            self.image = assets.img("watering_can.png",(214,147))
             self.can_particle_system.deactivate()
             pygame.mixer.Sound.stop(assets.sfx('water_can.mp3', 0.05))
             self.pouring = False
@@ -72,7 +71,7 @@ class Watering_can:
             x, y = pygame.mouse.get_pos()
 
             self.pos = (x,y)
-            self.rect = Rect(x + 10, y + 120, 20, 20)
+            self.rect = Rect(self.pos[0], self.pos[1]+100, 20, 20)
             self.can_particle_system.spawn_box = self.rect
 
     def draw(self, screen):

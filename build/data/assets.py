@@ -25,7 +25,8 @@ def img(path, size=None):
         image = pygame.image.load(canonicalized_path).convert_alpha()
         _image_library[path] = image
     if size is not None:
-        return pygame.transform.scale(image, size).convert_alpha()
+        if not (image.get_width() == size[0] and image.get_height() == size[1]):
+            return pygame.transform.scale(image, size).convert_alpha()
     return image
 
 

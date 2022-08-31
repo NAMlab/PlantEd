@@ -42,6 +42,7 @@ class DynamicModel:
         self.stomata_open = False
         # define init pool and rates in JSON or CONFIG
         self.nitrate_pool = 0
+        self.nitrate_delta_amount = 0
         self.water_pool = 0
         self.max_water_pool = 1000
         self.temp = 20 # degree ceclsius
@@ -166,6 +167,9 @@ class DynamicModel:
     def get_bounds(self, reaction):
         return self.model.reactions.get_by_id(reaction).bounds
 
+    def increase_nitrate(self, amount):
+        self.nitrate_delta_amount = amount
+
     def activate_starch_resource(self):
         self.use_starch = True
         self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
@@ -191,6 +195,9 @@ class DynamicModel:
         if self.water_pool < 0:
             self.water_pool = 0
         # starch gets handled separatly in Organ Starch
+        if self.nitrate_delta_amount > 0:
+            self.nitrate_pool += 0.1 * gamespeed
+            self.nitrate_delta_amount -= 0.1 * gamespeed
 
     def update_bounds(self, root_mass, photon_in):
         # update photon intake based on sun_intensity

@@ -13,7 +13,8 @@ from pygame.locals import *
 pygame.init()
 gram_mol = 0.5124299411
 WIN = pygame.USEREVENT+1
-pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
+#pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
+pivot_pos = [(286,113),(76,171),(254,78),(19,195),(271,114),(47,114)]
 leaves = [(assets.img("leaves/{index}.png".format(index=i)), pivot_pos[i]) for i in range(0, 6)]
 #stem = (assets.img("stem.png"), (15, 1063))
 #roots = (assets.img("roots.png"), (387, 36))
@@ -394,7 +395,7 @@ class Leaf(Organ):
     def draw(self, screen):
         if self.can_add_leaf:
             x,y = pygame.mouse.get_pos()
-            screen.blit(assets.img("leaf_small.png"), (x,y-self.plant.camera.offset_y))
+            screen.blit(assets.img("leaf_small.png",(128,128)), (x,y-self.plant.camera.offset_y))
 
         for leaf in self.leaves:
             screen.blit(leaf["image"], (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))

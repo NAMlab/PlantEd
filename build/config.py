@@ -53,6 +53,7 @@ MENU_TITLE = pygame.font.SysFont('timesnewroman',72)
 MENU_SUBTITLE = pygame.font.SysFont('timesnewroman',56)
 YELLOW_TRANSPARENT = (255,255,255,128)
 PURPLE = (171, 36, 255)
+BROWN = (161,148,120)
 
 PLANTNAME = 'GenEric'
 _OPTIONS = None
