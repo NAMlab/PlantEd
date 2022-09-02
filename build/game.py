@@ -30,7 +30,7 @@ import random
 from skillsystem import Skill_System, Skill
 from utils.LSystem import LSystem, Letter
 from analysis import scoring
-from gameobjects.water_reservoir import Water_Reservoir, Water_Grid
+from gameobjects.water_reservoir import Water_Reservoir, Water_Grid, Base_water
 from gameobjects.level_card import Card
 
 currentdir = os.path.abspath('..')
@@ -81,40 +81,13 @@ pygame.mixer.music.load('../assets/background_music.mp3')
 class DevScene(object):
     def __init__(self):
         super(DevScene, self).__init__()
-        self.gametime = GameTime.instance()
-        # n dots -> resolution
-        # height dot
-        # blue under -> polygon of dots
-        n_dots = config.SCREEN_HEIGHT-200
-
-        self.base_height = 200
-
-        self.dots = [[0,config.SCREEN_HEIGHT]]
-        for i in range(0,n_dots+1):
-            delta_x = config.SCREEN_WIDTH/n_dots
-            self.dots.append([delta_x*i,self.base_height])
-        self.dots.append([config.SCREEN_WIDTH,config.SCREEN_HEIGHT])
-
-        # numpy array for screen
-        #directions = [(0,1)]
-        #self.ls = LSystem([(900,110)])
+        pass
 
     def render(self, screen):
         screen.fill((50, 50, 50))
-        pygame.draw.polygon(screen,config.BLUE,self.dots)
-
 
     def update(self, dt):
-        ticks = self.gametime.get_time()
-        day = 1000 * 60 * 6
-        hour = day / 24
-        hours = (ticks % day) / hour
-        deg = hours / 24 * 360
-        angle_offset = 360 / len(self.dots)
-
-        for i in range(1, len(self.dots)-1):
-            self.dots[i][1] = self.base_height + self.base_height * 0.1 * math.sin(math.radians(
-                30 * deg + angle_offset * i))
+        pass
 
     def handle_events(self, events):
         for e in events:
@@ -245,7 +218,10 @@ class DefaultGameScene(object):
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
         self.water_grid = Water_Grid()
-        self.water_grid.add_reservoir(Water_Reservoir((500, 990), 36, 50))
+        self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
+        self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
+        self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
+        self.water_grid.add_base_water(Base_water(10,100,config.SCREEN_WIDTH,config.SCREEN_HEIGHT+400,config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model, self.camera)
 
