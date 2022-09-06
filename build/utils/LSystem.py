@@ -87,7 +87,9 @@ class Letter:
         return self.pos
 
 class LSystem:
-    def __init__(self, directions=[], positions=[], root_tier=0, first_letter=None, mass=0):
+    def __init__(self, root_grid, water_grid_pos, directions=[], positions=[], root_tier=0, first_letter=None, mass=0):
+        self.root_grid = root_grid
+        self.water_grid_pos = water_grid_pos
         self.positions = positions #if positions else [(0,0)]
         self.first_letters = []
         self.apexes = []
@@ -128,11 +130,9 @@ class LSystem:
 
     def apply_rules(self, letter, mass):
         if letter.max_length <= letter.length:
-            if letter.id == 300:
-                letter.id = 301
             letter.id = 99
         # growing
-        if letter.id > 99 and letter.id < 301:
+        if letter.id > 99:
             self.update_letter_length(letter, mass)
         # branching
         if letter.id == 200:
@@ -142,10 +142,13 @@ class LSystem:
 
                     self.create_branch(letter, mass)
 
-        if letter.id == 300 or letter.id == 301:
+        #calc root pos in water grid
+        if letter.id == 300:
             pos = letter.get_pos()
-            if pos != (0,0):
-                self.apexes.append(pos)
+            x = max(0,int((pos[0]-self.water_grid_pos[0])/100))
+            y = max(0,int((pos[1]-self.water_grid_pos[1])/100))
+            #print(x,y,pos, self.root_grid, self.water_grid_pos)
+            self.root_grid[y,x] = 1
 
         for branch in letter.branches:
             self.apply_rules(branch, mass)
@@ -208,6 +211,8 @@ class LSystem:
             letter.print()
 
     def handle_event(self, e):
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_p:
+            print(self.root_grid)
         if e.type == pygame.KEYDOWN and e.key == pygame.K_l:
             self.print()
 

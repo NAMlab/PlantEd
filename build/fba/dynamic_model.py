@@ -29,12 +29,15 @@ Km = 4
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, gametime, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/PlantEd_model.sbml")):
+    def __init__(self, gametime, water_grid, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/PlantEd_model.sbml")):
         self.model = model
         self.gametime = gametime
+        self.water_grid = water_grid
         self.log = log
         self.plant_mass = plant_mass
         self.use_starch = False
+
+        self.apexes = [] # root apexes
         # model.objective can be changed by this string, but not compared, workaround: self.objective
         #self.objective = BIOMASS
         objective = create_objective(self.model)
@@ -206,6 +209,11 @@ class DynamicModel:
         if self.use_starch:
             self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
             #print(self.starch_intake_max, self.starch_intake)
+
+        # Todo do it
+        #water_in = self.water_grid.get_water_intake(root_mass, apexes)
+
+
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)*40))
         if self.water_pool <= 0:
             self.set_bounds(WATER, (0,0))

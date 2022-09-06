@@ -215,12 +215,12 @@ class DefaultGameScene(object):
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
         self.log = Log()                        # can be turned off
-        self.model = DynamicModel(self.gametime, self.log)
-        self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera)
-        self.water_grid = Water_Grid()
+        self.water_grid = Water_Grid(pos=(0,900))
         self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
         self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
         self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
+        self.model = DynamicModel(self.gametime, self.log)
+        self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera, self.water_grid)
         self.water_grid.add_base_water(Base_water(10,100,config.SCREEN_WIDTH,config.SCREEN_HEIGHT+400,config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model, self.camera)
@@ -264,6 +264,15 @@ class DefaultGameScene(object):
                 stem_percent = self.plant.organs[1].percentage
                 root_percent = self.plant.organs[2].percentage
                 starch_percent = self.plant.organ_starch.percentage
+
+                # get root grid, water grid
+                root_grid = self.plant.organs[2].get_root_grid()
+                water_grid = self.water_grid.grid
+
+                print(root_grid)
+                print(water_grid)
+                print(np.multiply(root_grid, water_grid))
+
                 #print(leaf_percent, stem_percent, root_percent, starch_percent)
                 self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
                 #growth_rate, starch_rate, starch_intake = self.model.get_rates()

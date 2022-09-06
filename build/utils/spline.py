@@ -285,20 +285,31 @@ class Beziere:
         print(self.points_to_draw)
 
     def draw_highlighted(self, screen):
-        for i in range(1,len(self.points_to_draw)):
-            tapering = self.width/len(self.points_to_draw)
-            pygame.draw.line(screen, config.WHITE, self.points_to_draw[i-1],self.points_to_draw[i],width=int(self.width-tapering*i))
+
+        half = len(self.points_to_draw) / 2
+
+        # tapering
+        for i in range(1, len(self.points_to_draw)):
+            tapering = 0
+            if i > half:
+                tapering = self.width / half
+            pygame.draw.line(screen, config.WHITE, self.points_to_draw[i - 1], self.points_to_draw[i],
+                                 width=int(self.width - tapering * i))
         self.draw(screen)
 
     def draw(self, screen):
         # draw should not contain logic, points_to_draw are drawn without further calculation
         #draw list_of_points
 
+        half = len(self.points_to_draw)/2
+
         # tapering
         for i in range(1,len(self.points_to_draw)):
-            tapering = self.width / len(self.points_to_draw)
-            pygame.draw.line(screen, (0,0,0), self.points_to_draw[i-1],self.points_to_draw[i],width=int(self.width-tapering*i))
-            pygame.draw.line(screen, self.color, self.points_to_draw[i-1],self.points_to_draw[i],width=int((self.width-2)-tapering*i))
+            tapering = 0
+            if i > half:
+                tapering = self.width / half
+            #pygame.draw.line(screen, (0,0,0), self.points_to_draw[i-1],self.points_to_draw[i],width=int(self.width-tapering*i))
+            pygame.draw.line(screen, self.color, self.points_to_draw[i-1],self.points_to_draw[i],width=int(self.width-(i-half)*tapering))
         #pygame.draw.lines(screen, (0,0,0), False, self.points_to_draw, width=7)
         #pygame.draw.lines(screen, config.GREEN, False, self.points_to_draw, width=5)
 

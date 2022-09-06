@@ -41,6 +41,13 @@ class Water_Grid:
     def deactivate_rain(self):
         self.raining = 0
 
+    def get_shape(self):
+        return self.grid.shape
+
+    def get_water_intake(self, root_mass, apexes):
+        pass
+        # list of apexes match with grid
+
     def trickle(self, dt):
         for i in reversed(range(1,self.grid.shape[0])):
             for j in range(0,self.grid.shape[1]):
@@ -63,7 +70,6 @@ class Water_Grid:
         # Todo maybe shitty to just delete it
         #self.grid[-1,:] = 0
 
-
     def print_grid(self):
         print(self.grid)
 
@@ -74,8 +80,8 @@ class Water_Grid:
         for i in range(0,self.grid.shape[0]-1):
             for j in range(0,self.grid.shape[1]):
                 cell = self.grid[i,j]
-                number = config.FONT.render("{:2f}".format(cell),True,config.BLACK,config.WHITE)
-                screen.blit(number,(j*100,900+i*100))
+                #number = config.FONT.render("{:2f}".format(cell),True,config.BLACK,config.WHITE)
+                #screen.blit(number,(j*100,900+i*100))
                 if cell > 0:
                     #Todo make better loop, to draw at 0
                     offset_x = self.offset_grid[0, 0, i, j]
@@ -112,7 +118,6 @@ class Base_water:
         self.dots.append([self.width, self.y])
 
     def update(self,dt,lower_amount):
-        print(lower_amount)
         if self.n_dots > 0:
             ticks = self.gametime.get_time()
             day = 1000 * 60 * 6

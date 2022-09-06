@@ -9,6 +9,7 @@ from utils.particle import ParticleSystem, Particle
 from pygame import Rect
 from utils.LSystem import LSystem, Letter
 from pygame.locals import *
+import numpy as np
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -33,12 +34,13 @@ class Plant:
     ROOTS = 3
     STARCH = 4
 
-    def __init__(self, pos, model, camera):
+    def __init__(self, pos, model, camera, water_grid):
         self.x = pos[0]
         self.y = pos[1]
         self.upgrade_points = 10
         self.model = model
         self.camera = camera
+        self.water_grid = water_grid
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
@@ -374,13 +376,13 @@ class Leaf(Organ):
                 self.particle_systems[i].deactivate()
 
 
-    def update_image_size(self, factor=10, base=30):
+    def update_image_size(self, factor=7, base=40):
         if not self.leaves:
             return
         for leaf in self.leaves:
             self.update_leaf_image(leaf, factor, base)
 
-    def update_leaf_image(self, leaf, factor=10, base=30, init=False):
+    def update_leaf_image(self, leaf, factor=7, base=80, init=False):
         base_image = leaves[leaf["base_image_id"]][0]
         base_offset = leaves[leaf["base_image_id"]][1]
         ratio = base_image.get_height() / base_image.get_width()
@@ -431,7 +433,10 @@ class Root(Organ):
         self.root_tier = 0
         #positions = [(x,y+45)]
         #directions = [(0,1)]
-        self.ls = LSystem()
+        root_grid = np.zeros(self.plant.water_grid.get_shape())
+        water_grid_pos = self.plant.water_grid.pos
+
+        self.ls = LSystem(root_grid, water_grid_pos)
 
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
@@ -447,17 +452,21 @@ class Root(Organ):
 
     def update(self, dt):
         self.ls.update(self.mass)
+        self.plant.model.apexes = self.ls.apexes
         #for curve in self.curves:
         #    curve.update(dt)
 
     def create_new_root(self, mouse_pos=None, dir=None):
-        pos = (self.x+5,self.y+50)
+        pos = (self.x-5,self.y+40)
         if not dir:
             dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))
         self.ls.create_new_first_letter(dir, pos, self.mass)
 
     def set_root_tier(self, root_tier=1):
         self.ls.set_root_tier(root_tier)
+
+    def get_root_grid(self):
+        return self.ls.root_grid
 
     def handle_event(self, event):
         self.ls.handle_event(event)
@@ -500,7 +509,7 @@ class Stem(Organ):
         self.sunflower = assets.img("sunflower.png",(64,64))
         self.sunflower_pos = (0,0)
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active, base_mass=1)
-        self.curve = Beziere([(self.x, self.y), (self.x - 5, self.y - 50), (self.x+3, self.y - 150), (self.x+3, self.y - 190)])
+        self.curve = Beziere([(self.x-5, self.y+40), (self.x-5, self.y), (self.x - 15, self.y - 50), (self.x+13, self.y - 150), (self.x+3, self.y - 190)])
 
     def update(self, dt):
         self.curve.update(dt)
@@ -513,8 +522,8 @@ class Stem(Organ):
         if self.active_threshold > 1 and self.flower == False:
             self.flower = True
             self.update_sunflower_position()
-        self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*30,tip[1]+(-1*random.randint(40,50))))
-        self.curve.width += 3
+        self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*50,tip[1]+(-1*random.randint(40,60))))
+        self.curve.width += 1
 
     def add_thorn(self, pos, dir):
         if dir > 0:
@@ -532,7 +541,6 @@ class Stem(Organ):
             if self.leaf.can_add_leaf:
                 x,y = pygame.mouse.get_pos()
                 y -= self.plant.camera.offset_y
-                print(x,y)
                 t = self.curve.find_closest((x,y))
                 point = self.curve.get_point(t)
                 self.highlight = (point[0],point[1],t)
