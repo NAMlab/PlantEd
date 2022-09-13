@@ -216,16 +216,16 @@ class DefaultGameScene(object):
         self.gametime = GameTime.instance()
         self.log = Log()                        # can be turned off
         self.water_grid = Water_Grid(pos=(0,900))
-        self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
-        self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
-        self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
+        #self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
+        #self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
+        #self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera, self.water_grid)
         self.water_grid.add_base_water(Base_water(10,100,config.SCREEN_WIDTH,config.SCREEN_HEIGHT+400,config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model, self.camera)
 
-        example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+        '''example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
         example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      post_hover_message=self.ui.post_hover_message, message="Skill Stem") for i in range(0,2)]
@@ -234,7 +234,7 @@ class DefaultGameScene(object):
         example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                        post_hover_message=self.ui.post_hover_message, message="Skill Starch") for i in range(0,3)]
         self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
-
+'''
         self.entities = []
         for i in range(0,10):
             bug = Bug((190*random.randint(0,10),900+random.randint(0,200)),pygame.Rect(0,900,config.SCREEN_WIDTH,240),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)], self.camera)
@@ -269,10 +269,6 @@ class DefaultGameScene(object):
                 root_grid = self.plant.organs[2].get_root_grid()
                 water_grid = self.water_grid.grid
 
-                print(root_grid)
-                print(water_grid)
-                print(np.multiply(root_grid, water_grid))
-
                 #print(leaf_percent, stem_percent, root_percent, starch_percent)
                 self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
                 #growth_rate, starch_rate, starch_intake = self.model.get_rates()
@@ -306,7 +302,7 @@ class DefaultGameScene(object):
             for entity in self.entities:
                 entity.handle_event(e)
             self.camera.handle_event(e)
-            self.skill_system.handle_event(e)
+            #self.skill_system.handle_event(e)
 
     def update(self, dt):
         self.camera.update(dt)
@@ -316,7 +312,7 @@ class DefaultGameScene(object):
         self.shop.update(dt)
         self.ui.update(dt)
         self.water_grid.update(dt)
-        self.skill_system.update(dt)
+        #self.skill_system.update(dt)
         self.plant.update(dt, self.model.get_photon_upper())
         self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0))
 
@@ -335,7 +331,7 @@ class DefaultGameScene(object):
         screen.blit(temp_surface,(0,self.camera.offset_y))
 
         self.ui.draw(screen)
-        self.skill_system.draw(screen)
+        #self.skill_system.draw(screen)
         self.shop.draw(screen)
 
 class TitleScene(object):

@@ -114,7 +114,7 @@ class Plant:
         if self.get_biomass() > self.seedling.max and not self.organs[1].active:
             self.organs[1].activate()
             self.organs[0].activate()
-            self.organs[2].create_new_root(self.organs[2].mass,dir=(0,1))
+            self.organs[2].create_new_root(dir=(0,1))
             #if self.get_biomass() > self.seedling.max and not self.organs[0].active:
         for organ in self.organs:
             organ.update(dt)
@@ -376,9 +376,7 @@ class Leaf(Organ):
                 self.particle_systems[i].deactivate()
 
 
-    def update_image_size(self, factor=7, base=40):
-        if not self.leaves:
-            return
+    def update_image_size(self, factor=7, base=80):
         for leaf in self.leaves:
             self.update_leaf_image(leaf, factor, base)
 
@@ -386,7 +384,8 @@ class Leaf(Organ):
         base_image = leaves[leaf["base_image_id"]][0]
         base_offset = leaves[leaf["base_image_id"]][1]
         ratio = base_image.get_height() / base_image.get_width()
-        threshold = self.active_threshold - leaf["growth_index"] if not init else 0
+        threshold = self.active_threshold - leaf["growth_index"] #if not init else 0
+        print(threshold)
         new_width = (threshold * factor) + base
         new_height = int(new_width * ratio)
         new_width = int(new_width)
@@ -457,13 +456,17 @@ class Root(Organ):
         #    curve.update(dt)
 
     def create_new_root(self, mouse_pos=None, dir=None):
+        dist=None
+        if mouse_pos:
+            dist = math.sqrt(((mouse_pos[0]-self.x)**2+(mouse_pos[1]-self.y)**2))
+            print(dist)
         pos = (self.x-5,self.y+40)
-        if not dir:
+        if not dir and mouse_pos:
             dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))
-        self.ls.create_new_first_letter(dir, pos, self.mass)
+        self.ls.create_new_first_letter(dir, pos, self.mass, dist=dist)
 
-    def set_root_tier(self, root_tier=1):
-        self.ls.set_root_tier(root_tier)
+    '''def set_root_tier(self, root_tier=1):
+        self.ls.set_root_tier(root_tier)'''
 
     def get_root_grid(self):
         return self.ls.root_grid

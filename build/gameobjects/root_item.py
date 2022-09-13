@@ -2,6 +2,7 @@ import config
 import pygame
 from utils.particle import ParticleSystem
 from pygame import Rect
+import math
 
 class Root_Item:
     def __init__(self, callback, plant, cost=1): # take from config
@@ -42,6 +43,7 @@ class Root_Item:
         if self.active:
             mouse_pos = pygame.mouse.get_pos()
             plant_x, plant_y = self.plant.x,self.plant.y+45+self.plant.camera.offset_y
+            #length = math.sqrt((plant_x-mouse_pos[0])**2+(plant_y-mouse_pos[1])**2)
             if self.get_validation_rect().collidepoint(mouse_pos):
                 pygame.draw.line(screen, config.WHITE, (plant_x, plant_y),mouse_pos,3)
                 pygame.draw.circle(screen, config.WHITE, mouse_pos, 3)

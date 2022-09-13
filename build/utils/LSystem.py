@@ -19,28 +19,59 @@ tier_list_basic = [{"max_length" : 400,
                    ]
 
 
-tier_list_branching = [
-    {"max_length" : 300,
-     "duration" : 3,
-     "tries" : 7,
-     "max_branches" : 25},
+short_root = [
     {"max_length" : 150,
-     "duration" : 2,
+     "duration" : 3,
      "tries" : 5,
-     "max_branches" : 15},
+     "max_branches" : 5},
+    {"max_length" : 100,
+     "duration" : 2,
+     "tries" : 4,
+     "max_branches" : 5},
     {"max_length" : 30,
      "duration" : 1,
      "tries" : 1,
      "max_branches" : 0}
 ]
 
-tier_lists = [tier_list_basic, tier_list_branching]
+medium_root = [
+    {"max_length" : 600,
+     "duration" : 3,
+     "tries" : 5,
+     "max_branches" : 5},
+    {"max_length" : 250,
+     "duration" : 2,
+     "tries" : 4,
+     "max_branches" : 3},
+    {"max_length" : 50,
+     "duration" : 1,
+     "tries" : 1,
+     "max_branches" : 0}
+]
+
+long_root = [
+    {"max_length" : 800,
+     "duration" : 3,
+     "tries" : 6,
+     "max_branches" : 3},
+    {"max_length" : 450,
+     "duration" : 2,
+     "tries" : 5,
+     "max_branches" : 2},
+    {"max_length" : 90,
+     "duration" : 1,
+     "tries" : 1,
+     "max_branches" : 0}
+]
+
+root_classes = [short_root, medium_root, long_root]
 
 
 class Letter:
-    def __init__(self, id, tier, dir, max_length, mass_start, mass_end, max_branches=None, branches = [], t=None):
+    def __init__(self, id, root_class, tier, dir, max_length, mass_start, mass_end, max_branches=None, branches = [], t=None):
         self.id = id
         self.tier = tier
+        self.root_class = root_class
         self.dir = dir
         self.branching_t = np.random.random(max_branches).tolist() if max_branches is not None else None    # branching dist
         self.t = t
@@ -87,21 +118,21 @@ class Letter:
         return self.pos
 
 class LSystem:
-    def __init__(self, root_grid, water_grid_pos, directions=[], positions=[], root_tier=0, first_letter=None, mass=0):
+    def __init__(self, root_grid, water_grid_pos, directions=[], positions=[], first_letter=None, mass=0):
         self.root_grid = root_grid
         self.water_grid_pos = water_grid_pos
         self.positions = positions #if positions else [(0,0)]
         self.first_letters = []
         self.apexes = []
         self.directions = directions
-        self.tier_list = tier_lists[root_tier]
+        self.root_classes = root_classes
         for dir in directions:
             self.first_letters.append(self.create_root(dir, mass))
 
-    def create_root(self, dir=None, mass=0, tier=None, t=None):
+    def create_root(self, dir=None, mass=0, root_class=0,tier=None, t=None):
         dir = dir if dir is not None else (0,1)
         next_tier = tier if tier else 0
-        dic = self.tier_list[next_tier]
+        dic = self.root_classes[root_class][next_tier]
 
         basal_length = dic["max_length"]/10*2
         branching_length = dic["max_length"]/10*6
@@ -111,17 +142,17 @@ class LSystem:
         branching_duration = dic["duration"]/10*6
         apex_duration = dic["duration"]/10*2
 
-        apex = Letter(300, next_tier,self.get_random_dir(dic["tries"],dir), apex_length, mass + basal_duration + branching_duration,
+        apex = Letter(300, root_class, next_tier,self.get_random_dir(dic["tries"],dir), apex_length, mass + basal_duration + branching_duration,
                       mass + basal_duration + branching_duration + apex_duration, t=1)
-        branching = Letter(200,next_tier, self.get_random_dir(dic["tries"],dir), branching_length, mass+basal_duration, mass+basal_duration+branching_duration,
+        branching = Letter(200, root_class,next_tier, self.get_random_dir(dic["tries"],dir), branching_length, mass+basal_duration, mass+basal_duration+branching_duration,
                            max_branches=dic["max_branches"],branches=[apex], t=1)
         branching.branching_t.sort()
-        basal = Letter(100,next_tier, self.get_random_dir(dic["tries"],dir), basal_length, mass, mass+basal_duration,
+        basal = Letter(100, root_class,next_tier, self.get_random_dir(dic["tries"],dir), basal_length, mass, mass+basal_duration,
                       branches=[branching], t=t)
         return basal
 
-    def set_root_tier(self, root_tier):
-        self.tier_list = tier_lists[root_tier]
+    '''def set_root_tier(self, root_tier):
+        self.tier_list = tier_lists[root_tier]'''
 
     def update(self, mass):
         self.apexes = []
@@ -145,8 +176,9 @@ class LSystem:
         #calc root pos in water grid
         if letter.id == 300:
             pos = letter.get_pos()
-            x = max(0,int((pos[0]-self.water_grid_pos[0])/100))
-            y = max(0,int((pos[1]-self.water_grid_pos[1])/100))
+            # todo fix ugly hard coded numbers
+            x = min(19,max(0,int((pos[0]-self.water_grid_pos[0])/100)))
+            y = min(5,max(0,int((pos[1]-self.water_grid_pos[1])/100)))
             #print(x,y,pos, self.root_grid, self.water_grid_pos)
             self.root_grid[y,x] = 1
 
@@ -156,10 +188,10 @@ class LSystem:
     def create_branch(self, letter, mass):
         if letter.branching_t[0] < letter.length/letter.max_length:
             t = letter.branching_t.pop(0)
-            branch = self.create_root(self.get_ortogonal(letter.dir), mass, tier=letter.tier + 1, t=t)
+            branch = self.create_root(self.get_ortogonal(letter.dir), mass, root_class=letter.root_class, tier=letter.tier+1, t=t)
             apex = letter.branches.pop(-1)
             letter.branches.append(branch)
-            segment = Letter(letter.id, letter.tier, self.get_random_dir(self.tier_list[letter.tier]["tries"],letter.dir),
+            segment = Letter(letter.id, letter.root_class, letter.tier, self.get_random_dir(self.root_classes[letter.root_class][letter.tier]["tries"],letter.dir),
                              letter.max_length-letter.length, mass, letter.mass_end,
                              letter.max_branches-len(letter.branches), [apex], t=1)
             segment.branching_t = letter.branching_t
@@ -167,9 +199,19 @@ class LSystem:
             letter.id = 99
             letter.branches.append(segment)
 
-    def create_new_first_letter(self, dir, pos, mass):
+    def create_new_first_letter(self, dir, pos, mass, dist=None):
+        root_class = 0
+        if dist:
+            if dist < 300:
+                root_class = 0
+            elif dist < 600:
+                root_class = 1
+            else:
+                root_class = 2
+        print(root_class)
         self.positions.append(pos)
-        self.first_letters.append(self.create_root(dir, mass))
+        self.first_letters.append(self.create_root(dir, mass,root_class=root_class))
+
 
     def update_letter_length(self, letter, mass):
         if mass > letter.mass_start:
@@ -177,11 +219,12 @@ class LSystem:
             #print(letter.length, letter.mass_start, letter.mass_end, mass)
 
     def get_random_dir(self, tries, growth_dir=None, down=(0, 1)):
-        dir = (random.uniform(0, 2) - 1, random.uniform(0, 2) - 1)
+        phi = random.uniform(0, math.pi)
+        dir = (math.cos(phi),math.sin(phi))
         for i in range(0, tries):
-            phi = random.uniform(0, 2 * math.pi)
+            phi = random.uniform(0, math.pi)
             x = math.cos(phi)
-            y = math.sin(phi/2)
+            y = math.sin(phi)
 
             angle_down_xy = self.angle_between(down, (x, y))
             angle_down_dir = self.angle_between(down, dir)
@@ -191,7 +234,7 @@ class LSystem:
             if growth_dir is not None:
                 angle_growth_xy = self.angle_between(growth_dir, (x, y))
                 angle_growth_dir = self.angle_between(growth_dir, dir)
-            if (angle_down_xy + angle_growth_xy) / 2 < (angle_down_dir + angle_growth_dir) / 2:
+            if (angle_down_xy + angle_growth_xy*3) < (angle_down_dir + angle_growth_dir*3):
                 dir = (x, y)
             # if self.angle_between(down, (x, y)) < self.angle_between(down, dir):  # downward directions get promoted
             #    dir = (x, y)
