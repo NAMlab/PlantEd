@@ -37,7 +37,7 @@ class DynamicModel:
         self.plant_mass = plant_mass
         self.use_starch = False
 
-        self.apexes = [] # root apexes
+        #self.apexes = [] # root apexes
         # model.objective can be changed by this string, but not compared, workaround: self.objective
         #self.objective = BIOMASS
         objective = create_objective(self.model)

@@ -8,12 +8,13 @@ from fba import dynamic_model
 
 
 class Watering_can:
-    def __init__(self, pos, model=None, amount=0, rate=0.05, cost=1, active=False, callback=None): # take from config
+    def __init__(self, pos, model=None, water_grid=None, amount=None, rate=0.3, cost=1, active=False, callback=None): # take from config
         self.pos = (pos[0]-20,pos[1]-120)
         self.model = model
+        self.water_grid = water_grid
         self.image = assets.img("watering_can.png",(214,147))
         self.amount = amount
-        self.default_amount = 10 #add to config
+        self.default_amount = rate*60*3 #add to config
         self.rate = rate
         self.cost = cost
         self.active = active
@@ -44,8 +45,9 @@ class Watering_can:
     def update(self,dt):
         if self.active and self.pouring:
             self.can_particle_system.update(dt)
-            if self.model:
-                self.model.water_pool += self.rate
+            if self.water_grid:
+                #self.model.water_pool += self.rate
+                self.water_grid.pour(self.rate,dt,self.pos)
             if self.callback:
                 self.callback(self.rate)
             if self.amount < 0:
@@ -69,7 +71,6 @@ class Watering_can:
             self.pouring = False
         if e.type == MOUSEMOTION:
             x, y = pygame.mouse.get_pos()
-
             self.pos = (x,y)
             self.rect = Rect(self.pos[0], self.pos[1]+100, 20, 20)
             self.can_particle_system.spawn_box = self.rect

@@ -15,7 +15,7 @@ shopitems have action and button and cost
 '''
 
 class Shop:
-    def __init__(self, rect, shop_items, model, plant, cols=2, margin=10, post_hover_message=None):
+    def __init__(self, rect, shop_items, model, water_grid, plant, cols=2, margin=10, post_hover_message=None):
         #performance imrpove test
         self.s = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA)
         self.shop_label = config.BIG_FONT.render("Shop",True,(0,0,0))
@@ -27,11 +27,12 @@ class Shop:
         self.margin = margin
         self.post_hover_message = post_hover_message
         self.model = model
+        self.water_grid = water_grid
         self.plant = plant
         self.green_thumbs_icon = assets.img("green_thumb.png",(26,26))
         self.current_cost = 0
         self.animations = []
-        self.watering_can = Watering_can((0,0), self.model)
+        self.watering_can = Watering_can((0,0), self.model, self.water_grid)
         self.blue_grain = Blue_grain((0,0), self.model)
         self.spraycan = Spraycan((0,0), self.model,3,2)
         self.root_item = Root_Item(self.plant.organs[2].create_new_root,self.plant)

@@ -20,14 +20,24 @@ class Water_Grid:
         self.grid_screen = pygame.Surface((1920, 1080), pygame.SRCALPHA)
         self.gametime = GameTime.instance()
 
+        self.drain_grid = None
+        self.drain_rate = None
+
     def update(self, dt):
         if self.raining > 0 and self.grid[0,0] < self.max_water:
             self.grid[0,:] += self.raining
         self.trickle(dt)
+        if self.drain_rate is not None and self.drain_grid is not None:
+            for (x, y), value in np.ndenumerate(self.grid):
+                self.grid[x,y] -= self.drain_rate*self.drain_grid[x,y]*self.gametime.GAMESPEED
         for reservoir in self.reservoirs:
             reservoir.update(dt)
         for base_water in self.base_waters:
             base_water.update(dt, self.grid[-1,0])
+
+    def pour(self, rate, dt, pos):
+        self.grid[0,int(pos[0]/100)] += rate
+        print(self.grid[0,int(pos[0]/100)])
 
     def add_reservoir(self, reservoir):
         self.reservoirs.append(reservoir)
@@ -82,7 +92,7 @@ class Water_Grid:
                 cell = self.grid[i,j]
                 #number = config.FONT.render("{:2f}".format(cell),True,config.BLACK,config.WHITE)
                 #screen.blit(number,(j*100,900+i*100))
-                if cell > 0:
+                if cell > 1:
                     #Todo make better loop, to draw at 0
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]

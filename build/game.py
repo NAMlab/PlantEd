@@ -248,7 +248,7 @@ class DefaultGameScene(object):
                                   post_hover_message=self.ui.post_hover_message,
                                   message="Leaves enable your plant to produce energy.")
 
-        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.plant, post_hover_message=self.ui.post_hover_message)
+        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid, self.plant, post_hover_message=self.ui.post_hover_message)
         self.shop.add_shop_item(["watering","blue_grain", "root_item"])
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
@@ -264,10 +264,6 @@ class DefaultGameScene(object):
                 stem_percent = self.plant.organs[1].percentage
                 root_percent = self.plant.organs[2].percentage
                 starch_percent = self.plant.organ_starch.percentage
-
-                # get root grid, water grid
-                root_grid = self.plant.organs[2].get_root_grid()
-                water_grid = self.water_grid.grid
 
                 #print(leaf_percent, stem_percent, root_percent, starch_percent)
                 self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
@@ -305,6 +301,19 @@ class DefaultGameScene(object):
             #self.skill_system.handle_event(e)
 
     def update(self, dt):
+
+        # get root grid, water grid
+        root_grid = self.plant.organs[2].get_root_grid()
+        water_grid = self.water_grid.grid
+
+        # calc base rate depending on mass
+        drain_rate = 0.001 #+ 1 * self.plant.organs[2].mass
+
+        drain_grid = np.multiply(root_grid, water_grid)
+
+        self.water_grid.drain_grid = drain_grid
+        self.water_grid.drain_rate = drain_rate
+
         self.camera.update(dt)
         for entity in self.entities:
             entity.update(dt)

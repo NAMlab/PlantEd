@@ -451,7 +451,7 @@ class Root(Organ):
 
     def update(self, dt):
         self.ls.update(self.mass)
-        self.plant.model.apexes = self.ls.apexes
+        #self.plant.model.apexes = self.ls.apexes
         #for curve in self.curves:
         #    curve.update(dt)
 
