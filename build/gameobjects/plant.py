@@ -385,7 +385,6 @@ class Leaf(Organ):
         base_offset = leaves[leaf["base_image_id"]][1]
         ratio = base_image.get_height() / base_image.get_width()
         threshold = self.active_threshold - leaf["growth_index"] #if not init else 0
-        print(threshold)
         new_width = (threshold * factor) + base
         new_height = int(new_width * ratio)
         new_width = int(new_width)
@@ -459,7 +458,6 @@ class Root(Organ):
         dist=None
         if mouse_pos:
             dist = math.sqrt(((mouse_pos[0]-self.x)**2+(mouse_pos[1]-self.y)**2))
-            print(dist)
         pos = (self.x-5,self.y+40)
         if not dir and mouse_pos:
             dir = (mouse_pos[0] - self.x, mouse_pos[1]-(self.y+45))

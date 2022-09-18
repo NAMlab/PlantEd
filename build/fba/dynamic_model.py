@@ -99,7 +99,6 @@ class DynamicModel:
         self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
         self.photon_intake = solution.fluxes[PHOTON]
 
-
         # get water vapor from co2 intake
         K = 291.18
 
@@ -110,22 +109,14 @@ class DynamicModel:
 
         RH = config.get_y(hours,config.humidity)
         T = config.get_y(hours,config.summer)
-
-        #print("K: " , K, " Relative Humidity: " , RH, " Temperature: ", T, " Day: ", hours)
-
         In_Concentration = config.water_concentration_at_temp[int(T+2)]
         Out_Concentration = config.water_concentration_at_temp[int(T)]
-
-        #print("In: ", In_Concentration, " Out: ", Out_Concentration)
-
         Consumption_Factor = K * (In_Concentration - Out_Concentration*RH)
 
         #print("Facotr: ", Consumption_Factor, " CO2 Intake: ", solution.fluxes[CO2])
         if self.stomata_open:
             if solution.fluxes[CO2] > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
-        #print(self.water_intake)
-        #print(self.water_pool, self.nitrate_pool)
 
     def open_stomata(self):
         self.stomata_open = True
@@ -137,6 +128,9 @@ class DynamicModel:
 
     def get_rates(self):
         return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
+
+    def get_actual_water_drain(self):
+        return self.water_intake
 
     def get_pools(self):
         return (self.nitrate_pool, self.water_pool)
@@ -181,8 +175,8 @@ class DynamicModel:
         self.use_starch = False
         self.set_bounds(STARCH_IN, (0, 0))
 
-    def update(self, root_mass, PLA, sun_intensity):
-        self.update_bounds(root_mass, PLA*sun_intensity*50)
+    def update(self, root_mass, PLA, sun_intensity, max_water_drain):
+        self.update_bounds(root_mass, PLA*sun_intensity*50, max_water_drain)
         self.update_pools()
         #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
 
@@ -194,15 +188,12 @@ class DynamicModel:
         #    self.nitrate_pool = max_nitrate_pool_low
         if self.nitrate_pool < 0:
             self.nitrate_pool = 0
-        self.water_pool -= self.water_intake/60/60*gamespeed
-        if self.water_pool < 0:
-            self.water_pool = 0
         # starch gets handled separatly in Organ Starch
         if self.nitrate_delta_amount > 0:
             self.nitrate_pool += 0.1 * gamespeed
             self.nitrate_delta_amount -= 0.1 * gamespeed
 
-    def update_bounds(self, root_mass, photon_in):
+    def update_bounds(self, root_mass, photon_in, max_water_drain):
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water, co2? maybe later in dev
@@ -215,10 +206,5 @@ class DynamicModel:
 
 
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)*40))
-        if self.water_pool <= 0:
-            self.set_bounds(WATER, (0,0))
-        else:
-            self.set_bounds(WATER, (-1000,1000))
+        self.set_bounds(WATER, (-1000,max_water_drain))
         self.set_bounds(PHOTON,(0,photon_in))
-        self.set_bounds(CO2,(-1000,0))
-        #self.set_bounds(PHOTON,(0,200))

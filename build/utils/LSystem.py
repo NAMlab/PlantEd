@@ -97,7 +97,7 @@ class Letter:
 
     def draw_highlighted(self, screen, start_pos):
         if self.id == 300 or self.id == 301:
-            pygame.draw.circle(screen,(255,0,0),start_pos,10)
+            #pygame.draw.circle(screen,(255,0,0),start_pos,10)
             self.pos = start_pos
         end_pos = (start_pos[0] + self.dir[0] * self.length, start_pos[1] + self.dir[1] * self.length)
         pygame.draw.line(screen, (255, 255, 255), start_pos, end_pos, 7 - self.tier)

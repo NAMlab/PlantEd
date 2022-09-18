@@ -303,16 +303,10 @@ class DefaultGameScene(object):
     def update(self, dt):
 
         # get root grid, water grid
-        root_grid = self.plant.organs[2].get_root_grid()
-        water_grid = self.water_grid.grid
+        self.water_grid.calc_drainage_grid(self.plant.organs[2].get_root_grid())
+        self.water_grid.actual_drain_rate = self.model.get_actual_water_drain()
+        self.water_grid.update(dt)
 
-        # calc base rate depending on mass
-        drain_rate = 0.001 #+ 1 * self.plant.organs[2].mass
-
-        drain_grid = np.multiply(root_grid, water_grid)
-
-        self.water_grid.drain_grid = drain_grid
-        self.water_grid.drain_rate = drain_rate
 
         self.camera.update(dt)
         for entity in self.entities:
@@ -320,10 +314,10 @@ class DefaultGameScene(object):
         self.environment.update(dt)
         self.shop.update(dt)
         self.ui.update(dt)
-        self.water_grid.update(dt)
+
         #self.skill_system.update(dt)
         self.plant.update(dt, self.model.get_photon_upper())
-        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0))
+        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),self.water_grid.max_drain_rate)
 
 
     def render(self, screen):

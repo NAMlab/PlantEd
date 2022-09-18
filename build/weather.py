@@ -91,8 +91,6 @@ class Environment:
         self.handle_weather_events()
         #self.rain.update(dt)
         self.nitrate.update(dt)
-        if self.raining:
-            self.model.water_pool += self.rain_rate * self.gametime.GAMESPEED
         for sprite in self.sprites:
             # sprites are able to cancle themselves, OneShotAnimation / Animation (loop)
             if not sprite.update():
