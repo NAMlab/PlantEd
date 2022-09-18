@@ -28,6 +28,7 @@ class Water_Grid:
 
         # drain grid defines where the roots are able to drain water
         self.drainage_grid = None
+        self.root_grid = None
         self.max_drain_rate = 0          #according to root and predefined intake
         self.default_drain_rate_cell = DRAIN_DEFAULT     #actual based on model
         self.actual_drain_rate = 0         # sum of cell rates, calculated by model
@@ -54,16 +55,22 @@ class Water_Grid:
             self.max_drain_rate = self.drainage_grid.sum() * self.default_drain_rate_cell
 
     def calc_drainage_grid(self, root_grid):
+        self.root_grid = root_grid
         self.drainage_grid = np.multiply(root_grid, self.grid)
 
     def drain_grid(self):
-        if self.actual_drain_rate > 0:
-            self.actual_drain_rate_cell = self.actual_drain_rate / (self.max_drain_rate/self.default_drain_rate_cell)
         if self.drainage_grid is not None:
-            for (x, y), value in np.ndenumerate(self.grid):
-                print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
-                if self.grid[x,y] > 0:
-                    self.grid[x,y] -= self.actual_drain_rate_cell*self.gametime.GAMESPEED
+            grid_sum = self.root_grid.sum()
+            self.actual_drain_rate_cell = self.actual_drain_rate / grid_sum
+
+            if self.root_grid is not None:
+                for (x, y), value in np.ndenumerate(self.grid):
+                    #print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
+                    if self.grid[x,y] > 0:
+                        print(self.actual_drain_rate, self.actual_drain_rate_cell, self.root_grid[x,y])
+                        self.grid[x,y] -= self.actual_drain_rate_cell*self.root_grid[x,y]*self.gametime.GAMESPEED
+                    else:
+                        self.grid[x,y] = 0
 
         # negative delta = take, positive give
         grid_sum = self.grid.sum()
@@ -129,13 +136,13 @@ class Water_Grid:
                     #Todo make better loop, to draw at 0
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]
-                    pygame.draw.circle(screen, (0,10+offset_y,255-offset_x), (self.pos[0]+j * 100 + offset_x, self.pos[1]+i * 100 + offset_y), int(cell/20+5))
+                    pygame.draw.circle(screen, (0,10+offset_y,255-offset_x), (self.pos[0]+j * 100 + offset_x, self.pos[1]+i * 100 + offset_y), int(cell/30+5))
 
                     n_drops = min(24,int(cell/10))
                     for k in range(0,n_drops):
                         offset_x = self.offset_grid[0,k, i, j]
                         offset_y = self.offset_grid[1,k, i, j]
-                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/20+5))
+                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/30+5))
 
         for reservoir in self.reservoirs:
             reservoir.draw(screen)

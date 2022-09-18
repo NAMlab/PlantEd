@@ -267,20 +267,22 @@ class UI:
         topleft = self.plant_details_topleft
         pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 500, 40), border_radius=3)
 
-        # name
-        s.blit(self.name_label, (topleft[0]+10, topleft[1] + 6))
 
         # plant lvl
         lvl_text = config.FONT.render("LvL:", True, (0, 0, 0))
-        s.blit(lvl_text, dest=(topleft[0]+200, topleft[1]+6))
+        s.blit(lvl_text, dest=(topleft[0]+10, topleft[1]+6))
         level = config.FONT.render("{:.0f}".format(self.plant.get_level()), True, (0, 0, 0))  # title
-        s.blit(level, dest=(topleft[0]+lvl_text.get_width()+220, topleft[1]+6))
+        s.blit(level, dest=(topleft[0]+lvl_text.get_width()+30, topleft[1]+6))
 
         # biomass
         biomass_text = config.FONT.render("Mass:", True, (0, 0, 0))
-        s.blit(biomass_text, dest=(topleft[0]+300, topleft[1]+6))
+        s.blit(biomass_text, dest=(topleft[0]+110, topleft[1]+6))
         biomass = config.FONT.render("{:.2f} g".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
-        s.blit(biomass, dest=(topleft[0]+biomass_text.get_width()+320, topleft[1]+6))
+        s.blit(biomass, dest=(topleft[0]+biomass_text.get_width()+130, topleft[1]+6))
+
+
+        # name
+        s.blit(self.name_label, (topleft[0]+300, topleft[1] + 6))
 
         # skillpoints greenthumb
         #s.blit(assets.img("green_thumb.png", (25, 25)),

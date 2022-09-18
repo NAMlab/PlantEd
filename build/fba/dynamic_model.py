@@ -115,7 +115,7 @@ class DynamicModel:
 
         #print("Facotr: ", Consumption_Factor, " CO2 Intake: ", solution.fluxes[CO2])
         if self.stomata_open:
-            if solution.fluxes[CO2] > 0:
+            if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
 
     def open_stomata(self):
