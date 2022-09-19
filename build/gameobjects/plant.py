@@ -507,7 +507,7 @@ class Stem(Organ):
         self.highlight = None
         self.flower = False
         self.sunpos = (0,0)
-        self.sunflower = assets.img("sunflower.png",(64,64))
+        self.sunflower = assets.img("sunflower.png",(128,128))
         self.sunflower_pos = (0,0)
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active, base_mass=1)
         self.curve = Beziere([(self.x-5, self.y+40), (self.x-5, self.y), (self.x - 15, self.y - 50), (self.x+13, self.y - 150), (self.x+3, self.y - 190)])
@@ -520,7 +520,7 @@ class Stem(Organ):
     def reach_threshold(self):
         super().reach_threshold()
         tip = self.curve.get_point(1)
-        if self.active_threshold > 1 and self.flower == False:
+        if self.active_threshold > 3 and self.flower == False:
             self.flower = True
             self.update_sunflower_position()
         self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*50,tip[1]+(-1*random.randint(40,60))))

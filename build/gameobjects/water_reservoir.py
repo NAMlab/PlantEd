@@ -46,7 +46,7 @@ class Water_Grid:
         for reservoir in self.reservoirs:
             reservoir.update(dt)
         for base_water in self.base_waters:
-            base_water.update(dt, self.grid[-1,0])
+            base_water.update(dt, self.grid[-1,0]/10)
 
 
     def set_max_drain_rate(self):
@@ -61,7 +61,8 @@ class Water_Grid:
     def drain_grid(self):
         if self.drainage_grid is not None:
             grid_sum = self.root_grid.sum()
-            self.actual_drain_rate_cell = self.actual_drain_rate / grid_sum
+            if grid_sum > 0:
+                self.actual_drain_rate_cell = self.actual_drain_rate / grid_sum
 
             if self.root_grid is not None:
                 for (x, y), value in np.ndenumerate(self.grid):
@@ -78,7 +79,8 @@ class Water_Grid:
         self.water_pool = grid_sum
 
     def pour(self, rate, dt, pos):
-        self.grid[0,int(pos[0]/100)] += rate *self.gametime.GAMESPEED
+        if not self.grid[0,int(pos[0]/100)] > self.max_water:
+            self.grid[0,int(pos[0]/100)] += rate *self.gametime.GAMESPEED
         #print(self.grid[0,int(pos[0]/100)])
 
     def add_reservoir(self, reservoir):
@@ -136,13 +138,13 @@ class Water_Grid:
                     #Todo make better loop, to draw at 0
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]
-                    pygame.draw.circle(screen, (0,10+offset_y,255-offset_x), (self.pos[0]+j * 100 + offset_x, self.pos[1]+i * 100 + offset_y), int(cell/30+5))
+                    pygame.draw.circle(screen, (0,10+offset_y,255-offset_x), (self.pos[0]+j * 100 + offset_x, self.pos[1]+i * 100 + offset_y), int(cell/50+5))
 
                     n_drops = min(24,int(cell/10))
                     for k in range(0,n_drops):
                         offset_x = self.offset_grid[0,k, i, j]
                         offset_y = self.offset_grid[1,k, i, j]
-                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/30+5))
+                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/50+5))
 
         for reservoir in self.reservoirs:
             reservoir.draw(screen)

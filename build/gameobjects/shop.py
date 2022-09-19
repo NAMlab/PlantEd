@@ -15,7 +15,7 @@ shopitems have action and button and cost
 '''
 
 class Shop:
-    def __init__(self, rect, shop_items, model, water_grid, plant, cols=2, margin=10, post_hover_message=None):
+    def __init__(self, rect, shop_items, model, water_grid, plant, cols=2, margin=10, post_hover_message=None, active=True):
         #performance imrpove test
         self.s = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA)
         self.shop_label = config.BIG_FONT.render("Shop",True,(0,0,0))
@@ -29,6 +29,7 @@ class Shop:
         self.model = model
         self.water_grid = water_grid
         self.plant = plant
+        self.active = active
         self.green_thumbs_icon = assets.img("green_thumb.png",(26,26))
         self.current_cost = 0
         self.animations = []
@@ -117,6 +118,8 @@ class Shop:
         self.current_cost_label = config.BIG_FONT.render("{}".format(self.current_cost), False, (0, 0, 0))
 
     def handle_event(self, e):
+        if not self.active:
+            return
         #x,y = pygame.mouse.get_pos()
         #if self.rect.collidepoint(x,y):
             #self.confirm_button.handle_event(e)
@@ -131,6 +134,8 @@ class Shop:
         self.root_item.handle_event(e)
 
     def draw(self, screen):
+        if not self.active:
+            return
         # s should only be as big as rect, for the moment its fine
         pygame.draw.rect(self.s, config.WHITE_TRANSPARENT, (0,45,self.rect[2],self.rect[3]-45), border_radius=3)
         #pygame.draw.rect(s, (255,255,255), self.rect, int(self.margin/2))

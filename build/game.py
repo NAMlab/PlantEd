@@ -248,8 +248,9 @@ class DefaultGameScene(object):
                                   post_hover_message=self.ui.post_hover_message,
                                   message="Leaves enable your plant to produce energy.")
 
-        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid, self.plant, post_hover_message=self.ui.post_hover_message)
+        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid, self.plant, post_hover_message=self.ui.post_hover_message, active=False)
         self.shop.add_shop_item(["watering","blue_grain", "root_item"])
+
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 
@@ -287,9 +288,9 @@ class DefaultGameScene(object):
                 self.water_grid.raining = 0
             if e.type == WIN:
                 if self.log:
-                    self.log.write_log(self.ui.textbox.text)
+                    self.log.write_log(self.ui.name_label)
                     self.log.close_file()
-                scoring.upload_score(self.ui.textbox.text, self.gametime.get_time())
+                scoring.upload_score(self.ui.name_label, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             self.shop.handle_event(e)
             self.ui.handle_event(e)
@@ -301,12 +302,10 @@ class DefaultGameScene(object):
             #self.skill_system.handle_event(e)
 
     def update(self, dt):
-
         # get root grid, water grid
         self.water_grid.calc_drainage_grid(self.plant.organs[2].get_root_grid())
         self.water_grid.actual_drain_rate = self.model.get_actual_water_drain()
         self.water_grid.update(dt)
-
 
         self.camera.update(dt)
         for entity in self.entities:
@@ -317,6 +316,10 @@ class DefaultGameScene(object):
 
         #self.skill_system.update(dt)
         self.plant.update(dt, self.model.get_photon_upper())
+
+        if self.plant.seedling.max < self.plant.get_biomass():
+            self.shop.active = True
+
         self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),self.water_grid.max_drain_rate)
 
 
