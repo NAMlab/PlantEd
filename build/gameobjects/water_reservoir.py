@@ -67,7 +67,7 @@ class Water_Grid:
                 for (x, y), value in np.ndenumerate(self.grid):
                     #print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
                     if self.grid[x,y] > 0:
-                        print(self.actual_drain_rate, self.actual_drain_rate_cell, self.root_grid[x,y])
+                        #print(self.actual_drain_rate, self.actual_drain_rate_cell, self.root_grid[x,y])
                         self.grid[x,y] -= self.actual_drain_rate_cell*self.root_grid[x,y]*self.gametime.GAMESPEED
                     else:
                         self.grid[x,y] = 0
@@ -78,7 +78,7 @@ class Water_Grid:
         self.water_pool = grid_sum
 
     def pour(self, rate, dt, pos):
-        self.grid[0,int(pos[0]/100)] += rate
+        self.grid[0,int(pos[0]/100)] += rate *self.gametime.GAMESPEED
         #print(self.grid[0,int(pos[0]/100)])
 
     def add_reservoir(self, reservoir):
@@ -130,8 +130,8 @@ class Water_Grid:
         for i in range(0,self.grid.shape[0]-1):
             for j in range(0,self.grid.shape[1]):
                 cell = self.grid[i,j]
-                number = config.FONT.render("{:2f}".format(cell),True,config.BLACK,config.WHITE)
-                screen.blit(number,(j*100,900+i*100))
+                #number = config.FONT.render("{:2f}".format(cell),True,config.BLACK,config.WHITE)
+                #screen.blit(number,(j*100,900+i*100))
                 if cell > 1:
                     #Todo make better loop, to draw at 0
                     offset_x = self.offset_grid[0, 0, i, j]

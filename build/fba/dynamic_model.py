@@ -130,7 +130,7 @@ class DynamicModel:
         return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
 
     def get_actual_water_drain(self):
-        return self.water_intake
+        return self.water_intake/60/60*240
 
     def get_pools(self):
         return (self.nitrate_pool, self.water_pool)
