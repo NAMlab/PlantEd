@@ -8,7 +8,7 @@ from fba import dynamic_model
 
 
 class Watering_can:
-    def __init__(self, pos, model=None, water_grid=None, amount=None, rate=0.3, cost=1, active=False, callback=None): # take from config
+    def __init__(self, pos, model=None, water_grid=None, amount=None, rate=50, cost=1, active=False, callback=None): # take from config
         self.pos = (pos[0]-20,pos[1]-120)
         self.model = model
         self.water_grid = water_grid

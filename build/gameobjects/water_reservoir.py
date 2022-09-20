@@ -5,17 +5,22 @@ from utils.gametime import GameTime
 import random
 import config
 
-DRAIN_DEFAULT = 0.0001
-RAIN_RATE = 0.005
 
-# a grid of integers, indicating water amount
+# normal plant intake 83 (flux)
+# Grid 6*20 = 120 * 0.75 = 80 -> /60/60*240 to convert from hourly to each second -> 5.3 = 120 * 0.05, double to enable more growth
+DRAIN_DEFAULT = 0.1 # *3600/240 to adjust to hourly
+
+# rain should be much more than consumption
+RAIN_RATE = 2
+
+
 # falling down over time, into base water level -> lowest line of the grid
 class Water_Grid:
-    def __init__(self, pos=(0,900), grid_size=(6,20), max_water=240):
+    def __init__(self, pos=(0,900), grid_size=(6,20), max_water=50000):
         self.pos = pos
         self.grid = np.zeros(grid_size)
         self.raining = 0
-        self.trickle_amount = 0.01
+        self.trickle_amount = 0.00005
         self.reservoirs = []
         self.base_waters = []
         self.max_water = max_water
@@ -27,7 +32,6 @@ class Water_Grid:
         self.water_pool_delta = 0
 
         # drain grid defines where the roots are able to drain water
-        self.drainage_grid = None
         self.root_grid = None
         self.max_drain_rate = 0          #according to root and predefined intake
         self.default_drain_rate_cell = DRAIN_DEFAULT     #actual based on model
@@ -46,32 +50,31 @@ class Water_Grid:
         for reservoir in self.reservoirs:
             reservoir.update(dt)
         for base_water in self.base_waters:
-            base_water.update(dt, self.grid[-1,0]/10)
+            base_water.update(dt)
 
 
     def set_max_drain_rate(self):
-        if self.drainage_grid is not None:
-            #print(self.drainage_grid.sum(), self.default_drain_rate_cell)
-            self.max_drain_rate = self.drainage_grid.sum() * self.default_drain_rate_cell
+        # print(self.drainage_grid.sum(), self.default_drain_rate_cell)
+        self.max_drain_rate = self.root_grid.sum() * self.default_drain_rate_cell
 
-    def calc_drainage_grid(self, root_grid):
+    def set_root_grid(self, root_grid):
         self.root_grid = root_grid
-        self.drainage_grid = np.multiply(root_grid, self.grid)
 
     def drain_grid(self):
-        if self.drainage_grid is not None:
+        if self.root_grid is not None:
             grid_sum = self.root_grid.sum()
             if grid_sum > 0:
                 self.actual_drain_rate_cell = self.actual_drain_rate / grid_sum
+                print("MAX_DEFAULT_RATE: ",self.max_drain_rate, " ACTUAL_MAX_RATE: ", self.actual_drain_rate, " MAX_CELL: ", self.actual_drain_rate_cell)
+            for (x, y), value in np.ndenumerate(self.grid):
+                # print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
+                delta = self.actual_drain_rate_cell * self.root_grid[x, y] * self.gametime.GAMESPEED
+                if self.grid[x, y] - delta >= 0:
+                    # print(self.actual_drain_rate, self.actual_drain_rate_cell, self.root_grid[x,y])
+                    self.grid[x, y] -= delta
+                else:
+                    self.grid[x, y] = 0
 
-            if self.root_grid is not None:
-                for (x, y), value in np.ndenumerate(self.grid):
-                    #print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
-                    if self.grid[x,y] > 0:
-                        #print(self.actual_drain_rate, self.actual_drain_rate_cell, self.root_grid[x,y])
-                        self.grid[x,y] -= self.actual_drain_rate_cell*self.root_grid[x,y]*self.gametime.GAMESPEED
-                    else:
-                        self.grid[x,y] = 0
 
         # negative delta = take, positive give
         grid_sum = self.grid.sum()
@@ -109,7 +112,7 @@ class Water_Grid:
                 # print(i, i-1, j, "Current_Cell: ", self.grid[i, j], "Upper_CELL:", self.grid[i -1, j])
 
                 upper_cell = self.grid[i - 1, j]
-                adjusted_trickle = self.trickle_amount * upper_cell * self.gametime.GAMESPEED / 50 * random.random()
+                adjusted_trickle = self.trickle_amount * self.gametime.GAMESPEED * upper_cell * random.random()
 
                 # check if zero in upper cell
                 delta_trickle = self.grid[i - 1, j] - adjusted_trickle
@@ -132,20 +135,20 @@ class Water_Grid:
         for i in range(0,self.grid.shape[0]-1):
             for j in range(0,self.grid.shape[1]):
                 cell = self.grid[i,j]
-                #number = config.FONT.render("{:2f}".format(cell),True,config.BLACK,config.WHITE)
-                #screen.blit(number,(j*100,900+i*100))
-                if cell > 1:
+                number = config.FONT.render("{:.2f}".format(cell),True,config.BLACK,config.WHITE)
+
+                if cell > 20:
                     #Todo make better loop, to draw at 0
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]
-                    pygame.draw.circle(screen, (0,10+offset_y,255-offset_x), (self.pos[0]+j * 100 + offset_x, self.pos[1]+i * 100 + offset_y), int(cell/50+5))
+                    pygame.draw.circle(screen, (0,10+offset_y,255-offset_x), (self.pos[0]+j * 100 + offset_x, self.pos[1]+i * 100 + offset_y), int(cell/(self.max_water/5)+5))
 
-                    n_drops = min(24,int(cell/10))
+                    n_drops = min(24,int(cell/(self.max_water/20)))
                     for k in range(0,n_drops):
                         offset_x = self.offset_grid[0,k, i, j]
                         offset_y = self.offset_grid[1,k, i, j]
-                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/50+5))
-
+                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/(self.max_water/5)+5))
+                screen.blit(number, (j * 100, 900 + i * 100))
         for reservoir in self.reservoirs:
             reservoir.draw(screen)
 
@@ -169,7 +172,7 @@ class Base_water:
             self.dots.append([delta_x * i, self.y-self.base_height])
         self.dots.append([self.width, self.y])
 
-    def update(self,dt,lower_amount):
+    def update(self,dt):
         if self.n_dots > 0:
             ticks = self.gametime.get_time()
             day = 1000 * 60 * 6
@@ -179,7 +182,7 @@ class Base_water:
             angle_offset = 360 / len(self.dots)
 
             for i in range(1, len(self.dots) - 1):
-                self.dots[i][1] = self.y - (self.base_height + lower_amount + self.base_height * 0.1 * math.sin(math.radians(
+                self.dots[i][1] = self.y - (self.base_height + self.base_height * 0.1 * math.sin(math.radians(
                     10 * deg + angle_offset * i)))
 
     def draw(self, screen):

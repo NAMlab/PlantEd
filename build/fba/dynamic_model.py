@@ -36,10 +36,6 @@ class DynamicModel:
         self.log = log
         self.plant_mass = plant_mass
         self.use_starch = False
-
-        #self.apexes = [] # root apexes
-        # model.objective can be changed by this string, but not compared, workaround: self.objective
-        #self.objective = BIOMASS
         objective = create_objective(self.model)
         self.model.objective = objective
         self.stomata_open = False
@@ -55,7 +51,7 @@ class DynamicModel:
         self.photon_intake = 0                  # 300micromol /m2 s * PLA(gDW * slope)
         self.water_intake = 0
         self.starch_intake = 0                  # actual starch consumption
-        self.starch_intake_max = 1              # upper bound /h
+        self.starch_intake_max = 0.5              # upper bound /h ingame
         self.percentages_sum = 0
 
         # growth rates for each objective
@@ -63,7 +59,7 @@ class DynamicModel:
         self.stem_rate = 0
         self.leaf_rate = 0
         self.starch_rate = 0
-
+        self.percentages = [0,0,0,0]
         self.init_constraints()
         self.calc_growth_rate(0.1,0.1,1,0.1)
 
@@ -81,17 +77,20 @@ class DynamicModel:
         nadhp = 0.00256 /24
 
     def calc_growth_rate(self, leaf_percent, stem_percent, root_percent, starch_percent):
-        if self.percentages_sum != sum([leaf_percent,stem_percent,root_percent,starch_percent]):
-            update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent)
-            self.percentages_sum = sum([leaf_percent, stem_percent, root_percent, starch_percent])
+        new_percentages = [leaf_percent, stem_percent, root_percent, starch_percent]
+        for i in range(0, len(self.percentages)):
+            if self.percentages[i] != new_percentages[i]:
+                update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent)
+                self.percentages =  new_percentages
+                break
         solution = self.model.optimize()
         gamespeed = self.gametime.GAMESPEED
 
         #self.biomass_rate = solution.objective_value / 60 / 60 * 240 * gamespeed  # make it every ingame second
-        self.root_rate = solution.fluxes.get("AraCore_Biomass_tx_root")/ 60 / 60 * 240 * gamespeed
-        self.stem_rate = solution.fluxes.get("AraCore_Biomass_tx_stem")/ 60 / 60 * 240 * gamespeed
-        self.leaf_rate = solution.fluxes.get("AraCore_Biomass_tx_leaf")/ 60 / 60 * 240 * gamespeed
-        self.starch_rate = solution.fluxes.get("Starch_out_tx_stem")/ 60 / 60 * 240 * gamespeed
+        self.root_rate = (solution.fluxes.get("AraCore_Biomass_tx_root")/ 3600) * 240 * gamespeed
+        self.stem_rate = (solution.fluxes.get("AraCore_Biomass_tx_stem")/ 3600) * 240 * gamespeed
+        self.leaf_rate = (solution.fluxes.get("AraCore_Biomass_tx_leaf")/ 3600) * 240 * gamespeed
+        self.starch_rate = (solution.fluxes.get("Starch_out_tx_stem")/ 3600) * 240 * gamespeed
 
         # hourly rates
         self.water_intake = solution.fluxes[WATER]#self.get_flux(WATER)
@@ -112,11 +111,12 @@ class DynamicModel:
         In_Concentration = config.water_concentration_at_temp[int(T+2)]
         Out_Concentration = config.water_concentration_at_temp[int(T)]
         Consumption_Factor = K * (In_Concentration - Out_Concentration*RH)
-
         #print("Facotr: ", Consumption_Factor, " CO2 Intake: ", solution.fluxes[CO2])
         if self.stomata_open:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
+        print(self.root_rate, self.stem_rate, self.leaf_rate, "Starch_prod: ", self.starch_rate, " Starch_intake: ",
+              self.starch_intake, " Water intake: ", self.water_intake)
 
     def open_stomata(self):
         self.stomata_open = True
@@ -127,10 +127,10 @@ class DynamicModel:
         self.set_bounds(CO2, (0,0))
 
     def get_rates(self):
-        return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, self.starch_intake/60/60*240*self.gametime.GAMESPEED)
+        return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, (self.starch_intake/3600)*240*self.gametime.GAMESPEED)
 
     def get_actual_water_drain(self):
-        return self.water_intake/60/60*240
+        return (self.water_intake/3600)*240
 
     def get_pools(self):
         return (self.nitrate_pool, self.water_pool)

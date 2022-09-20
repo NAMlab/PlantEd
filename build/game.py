@@ -268,18 +268,21 @@ class DefaultGameScene(object):
 
                 #print(leaf_percent, stem_percent, root_percent, starch_percent)
                 self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
-                #growth_rate, starch_rate, starch_intake = self.model.get_rates()
-                #nitrate_pool, water_pool = self.model.get_pools()
+
+                leaf_rate, stem_rate, root_rate, starch_rate, starch_intake = self.model.get_rates()
+                nitrate_pool, water_pool = self.model.get_pools()
                 #self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
                 #self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
-                #self.log.append_row(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool,
-                #                    self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
+                self.log.append_row(leaf_rate, stem_rate, root_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool,
+                                    self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
                 self.plant.grow()
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.log.close_file()
-                # Todo, fix naming
-                #scoring.upload_score("self.ui.textbox.text", -1)
+
+                # Todo fix back to menu
                 self.model = None
+
+
 
                 self.manager.go_to(TitleScene(self.manager))
             if e.type == KEYDOWN and e.key == K_r:
@@ -303,7 +306,7 @@ class DefaultGameScene(object):
 
     def update(self, dt):
         # get root grid, water grid
-        self.water_grid.calc_drainage_grid(self.plant.organs[2].get_root_grid())
+        self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
         self.water_grid.actual_drain_rate = self.model.get_actual_water_drain()
         self.water_grid.update(dt)
 

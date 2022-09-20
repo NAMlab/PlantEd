@@ -50,12 +50,6 @@ class Plant:
         self.target_organ = self.organs[2]
         # Fix env constraints
 
-    def get_growth_rate(self):
-        growth_rate = 0.5 if self.get_biomass() < 4 else 0
-        for i in range(0,3):
-            growth_rate += self.organs[i].growth_rate
-        return growth_rate
-
     def check_organ_level(self):
         lvl = 0
         for organ in self.organs:
@@ -87,7 +81,7 @@ class Plant:
 
     # Projected Leaf Area (PLA)
     def get_PLA(self):
-        # 0.03152043208186226
+        # 0.03152043208186226 as a factor to get are from dry mass
         return (self.organs[0].get_mass() * 0.03152043208186226)+self.organs[0].base_mass if len(self.organs[0].leaves) > 0 else 0 #m^2
 
     def grow(self):
@@ -647,6 +641,7 @@ class Starch(Organ):
         super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[50,100,500,1000])
         self.toggle_button = None
         self.model = model
+        self.starch_intake = 0
 
     def grow(self):
         delta = self.growth_rate
@@ -659,7 +654,8 @@ class Starch(Organ):
         self.growth_rate = growth_rate
 
     def drain(self):
-        delta = self.mass - self.model.get_rates()[4] * 0.3
+
+        delta = self.mass - self.starch_intake
         if delta < 0:
             self.mass = 0
             self.toggle_button.deactivate()
