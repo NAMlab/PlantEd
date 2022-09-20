@@ -106,6 +106,9 @@ class DynamicModel:
         hour = day / 24
         hours = (ticks % day) / hour
 
+        print(self.root_rate, self.stem_rate, self.leaf_rate, "Starch_prod: ", self.starch_rate, " Starch_intake: ",
+              self.starch_intake, " Water intake: ", self.water_intake)
+
         RH = config.get_y(hours,config.humidity)
         T = config.get_y(hours,config.summer)
         In_Concentration = config.water_concentration_at_temp[int(T+2)]
@@ -115,8 +118,7 @@ class DynamicModel:
         if self.stomata_open:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
-        print(self.root_rate, self.stem_rate, self.leaf_rate, "Starch_prod: ", self.starch_rate, " Starch_intake: ",
-              self.starch_intake, " Water intake: ", self.water_intake)
+
 
     def open_stomata(self):
         self.stomata_open = True

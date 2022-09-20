@@ -11,7 +11,7 @@ import config
 DRAIN_DEFAULT = 0.1 # *3600/240 to adjust to hourly
 
 # rain should be much more than consumption
-RAIN_RATE = 2
+RAIN_RATE = 1
 
 
 # falling down over time, into base water level -> lowest line of the grid
@@ -20,7 +20,7 @@ class Water_Grid:
         self.pos = pos
         self.grid = np.zeros(grid_size)
         self.raining = 0
-        self.trickle_amount = 0.00005
+        self.trickle_amount = 0.0001
         self.reservoirs = []
         self.base_waters = []
         self.max_water = max_water
@@ -55,7 +55,10 @@ class Water_Grid:
 
     def set_max_drain_rate(self):
         # print(self.drainage_grid.sum(), self.default_drain_rate_cell)
-        self.max_drain_rate = self.root_grid.sum() * self.default_drain_rate_cell
+        drainable_grid = np.multiply(self.root_grid, self.grid)
+        grid_sum_normalized = 0
+        grid_sum_normalized = sum([1 if cell > 0 else 0 for cell in np.nditer(drainable_grid)])
+        self.max_drain_rate = grid_sum_normalized * self.default_drain_rate_cell
 
     def set_root_grid(self, root_grid):
         self.root_grid = root_grid
@@ -65,7 +68,7 @@ class Water_Grid:
             grid_sum = self.root_grid.sum()
             if grid_sum > 0:
                 self.actual_drain_rate_cell = self.actual_drain_rate / grid_sum
-                print("MAX_DEFAULT_RATE: ",self.max_drain_rate, " ACTUAL_MAX_RATE: ", self.actual_drain_rate, " MAX_CELL: ", self.actual_drain_rate_cell)
+                #print("MAX_DEFAULT_RATE: ",self.max_drain_rate, " ACTUAL_MAX_RATE: ", self.actual_drain_rate, " MAX_CELL: ", self.actual_drain_rate_cell)
             for (x, y), value in np.ndenumerate(self.grid):
                 # print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
                 delta = self.actual_drain_rate_cell * self.root_grid[x, y] * self.gametime.GAMESPEED

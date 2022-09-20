@@ -59,11 +59,7 @@ class Plant:
 
     def update_growth_rates(self, growth_rates):
         for i in range(0,3):
-            # Todo remove cheat
-            if self.get_biomass() < 4:
-                self.organs[i].update_growth_rate(growth_rates[i]+0.2)
-            else:
-                self.organs[i].update_growth_rate(growth_rates[i])
+            self.organs[i].update_growth_rate(growth_rates[i])
         self.organ_starch.update_growth_rate(growth_rates[3])
         self.organ_starch.starch_intake = growth_rates[4]
 
@@ -108,7 +104,6 @@ class Plant:
         if self.get_biomass() > self.seedling.max and not self.organs[1].active:
             self.organs[1].activate()
             self.organs[0].activate()
-            self.organs[2].create_new_root(dir=(0,1))
             #if self.get_biomass() > self.seedling.max and not self.organs[0].active:
         for organ in self.organs:
             organ.update(dt)
@@ -417,18 +412,17 @@ class Leaf(Organ):
 
 
 class Root(Organ):
-
     def __init__(self, x, y, name, organ_type, callback, plant, image=None, pivot=None, mass=0, active=False):
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active)
         #self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
-        self.root_tier = 0
         #positions = [(x,y+45)]
         #directions = [(0,1)]
         root_grid = np.zeros(self.plant.water_grid.get_shape())
         water_grid_pos = self.plant.water_grid.pos
 
         self.ls = LSystem(root_grid, water_grid_pos)
+        self.create_new_root(dir=(0, 1))
 
         self.tabroot = False # if not tabroot, its fibroot -> why skill it then?
 
@@ -441,6 +435,12 @@ class Root(Organ):
     def get_outline(self):
         outlines = pygame.mask.from_surface(self.image).outline()
         return outlines
+
+    def check_can_add_root(self):
+        if self.active_threshold > 2*len(self.ls.first_letters):
+            return True
+        else:
+            return False
 
     def update(self, dt):
         self.ls.update(self.mass)

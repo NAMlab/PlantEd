@@ -5,7 +5,7 @@ import numpy as np
 
 
 tier_list_basic = [{"max_length" : 400,
-                   "duration" : 3,
+                   "duration" : 7,
                    "tries" : 5,
                    "max_branches" : 10},
                    {"max_length" : 200,
@@ -21,7 +21,7 @@ tier_list_basic = [{"max_length" : 400,
 
 short_root = [
     {"max_length" : 150,
-     "duration" : 3,
+     "duration" : 4,
      "tries" : 5,
      "max_branches" : 5},
     {"max_length" : 100,
@@ -36,30 +36,30 @@ short_root = [
 
 medium_root = [
     {"max_length" : 600,
-     "duration" : 3,
+     "duration" : 5,
      "tries" : 5,
      "max_branches" : 5},
     {"max_length" : 250,
-     "duration" : 2,
+     "duration" : 3,
      "tries" : 4,
      "max_branches" : 3},
     {"max_length" : 50,
-     "duration" : 1,
+     "duration" : 2,
      "tries" : 1,
      "max_branches" : 0}
 ]
 
 long_root = [
     {"max_length" : 800,
-     "duration" : 3,
+     "duration" : 6,
      "tries" : 6,
      "max_branches" : 3},
     {"max_length" : 450,
-     "duration" : 2,
+     "duration" : 4,
      "tries" : 5,
      "max_branches" : 2},
     {"max_length" : 90,
-     "duration" : 1,
+     "duration" : 2,
      "tries" : 1,
      "max_branches" : 0}
 ]

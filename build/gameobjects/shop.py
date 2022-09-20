@@ -36,7 +36,7 @@ class Shop:
         self.watering_can = Watering_can((0,0), self.model, self.water_grid)
         self.blue_grain = Blue_grain((0,0), self.model)
         self.spraycan = Spraycan((0,0), self.model,3,2)
-        self.root_item = Root_Item(self.plant.organs[2].create_new_root,self.plant)
+        #self.root_item = Root_Item(self.plant.organs[2].create_new_root,self.plant)
         self.buy_button = Button(self.rect[2]-self.margin*2-64,self.rect[3]-self.margin-64,64,64,[self.buy],config.FONT,"BUY", offset=(rect[0],rect[1]))
         self.init_layout()
 
@@ -102,7 +102,7 @@ class Shop:
         self.watering_can.update(dt)
         self.blue_grain.update(dt)
         self.spraycan.update(dt)
-        self.root_item.update(dt)
+        #self.root_item.update(dt)
         self.buy_button.update(dt)
 
         for item in self.shop_items:
@@ -131,7 +131,7 @@ class Shop:
         self.blue_grain.handle_event(e)
         self.spraycan.handle_event(e)
         self.buy_button.handle_event(e)
-        self.root_item.handle_event(e)
+        #self.root_item.handle_event(e)
 
     def draw(self, screen):
         if not self.active:
@@ -157,7 +157,7 @@ class Shop:
         self.watering_can.draw(screen)
         self.blue_grain.draw(screen)
         self.spraycan.draw(screen)
-        self.root_item.draw(screen)
+        #self.root_item.draw(screen)
 
 
 class Shop_Item:

@@ -248,8 +248,14 @@ class DefaultGameScene(object):
                                   post_hover_message=self.ui.post_hover_message,
                                   message="Leaves enable your plant to produce energy.")
 
-        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid, self.plant, post_hover_message=self.ui.post_hover_message, active=False)
-        self.shop.add_shop_item(["watering","blue_grain", "root_item"])
+        add_root_item = Shop_Item(assets.img("root_lateral.png",(64,64)),self.plant.organs[2].create_new_root,
+                                  condition=self.plant.organs[2].check_can_add_root,
+                                  condition_not_met_message="Level up your roots to buy more leaves",
+                                  post_hover_message=self.ui.post_hover_message,
+                                  message="Roots are to improve water and nitrate intake.")
+
+        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item, add_root_item], self.model, self.water_grid, self.plant, post_hover_message=self.ui.post_hover_message, active=False)
+        self.shop.add_shop_item(["watering","blue_grain"])
 
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
@@ -281,9 +287,6 @@ class DefaultGameScene(object):
 
                 # Todo fix back to menu
                 self.model = None
-
-
-
                 self.manager.go_to(TitleScene(self.manager))
             if e.type == KEYDOWN and e.key == K_r:
                 self.water_grid.raining += 0.05
