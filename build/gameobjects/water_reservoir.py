@@ -8,7 +8,7 @@ import config
 
 # normal plant intake 83 (flux)
 # Grid 6*20 = 120 * 0.75 = 80 -> /60/60*240 to convert from hourly to each second -> 5.3 = 120 * 0.05, double to enable more growth
-DRAIN_DEFAULT = 0.1 # *3600/240 to adjust to hourly
+DRAIN_DEFAULT = 0.5 # *3600/240 to adjust to hourly
 
 # rain should be much more than consumption
 RAIN_RATE = 0.2
@@ -57,28 +57,24 @@ class Water_Grid:
 
 
     def set_max_drain_rate(self):
-        # print(self.drainage_grid.sum(), self.default_drain_rate_cell)
-        self.drainable_grid = np.multiply(self.root_grid, self.grid)
+        self.drainable_grid = np.multiply(self.root_grid, self.grid)    # indicates where water can be taken
         #self.grid_sum_normalized = 0
-        self.drainable_grid_sum_normalized = sum([1 if cell > self.actual_drain_rate_cell else 0 for cell in np.nditer(self.drainable_grid)])
-        self.max_drain_rate = self.drainable_grid_sum_normalized * self.default_drain_rate_cell
+        self.drainable_grid_sum = np.sum(self.drainable_grid)#sum([1 if cell >= self.actual_drain_rate_cell else 0 for cell in np.nditer(self.drainable_grid)])
+        self.max_drain_rate = self.drainable_grid_sum #max drain of grid
 
     def set_root_grid(self, root_grid):
         self.root_grid = root_grid
 
     def drain_grid(self, dt):
-        if self.drainable_grid_sum_normalized > 0:
-            self.actual_drain_rate_cell = self.actual_drain_rate / self.drainable_grid_sum_normalized
+        if self.drainable_grid_sum > 0:
+            self.actual_drain_rate_cell = self.actual_drain_rate / sum([1 if cell >= 0 else 0 for cell in np.nditer(self.drainable_grid)])#self.drainable_grid_sum_normalized
+            print(self.actual_drain_rate_cell)
         else:
             return
-            # print("MAX_DEFAULT_RATE: ",self.max_drain_rate, " ACTUAL_MAX_RATE: ", self.actual_drain_rate, " MAX_CELL: ", self.actual_drain_rate_cell)
         for (x, y), value in np.ndenumerate(self.drainable_grid):
             if self.drainable_grid[x, y] > self.actual_drain_rate_cell:
-                print(self.drainable_grid[x, y])
-                # print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
                 delta = self.actual_drain_rate_cell * self.gametime.GAMESPEED * dt
                 if self.grid[x, y] - delta >= 0:
-                    # print(self.actual_drain_rate, self.actual_drain_rate_cell, self.root_grid[x,y])
                     self.grid[x, y] -= delta
                 else:
                     self.grid[x, y] = 0
@@ -121,11 +117,11 @@ class Water_Grid:
                 # print(i, i-1, j, "Current_Cell: ", self.grid[i, j], "Upper_CELL:", self.grid[i -1, j])
 
                 upper_cell = self.grid[i - 1, j]
-                adjusted_trickle = self.trickle_amount * self.gametime.GAMESPEED * random.random() *dt
+                adjusted_trickle = (self.trickle_amount + self.trickle_amount*upper_cell/10) * self.gametime.GAMESPEED * random.random() * dt
 
                 # check if zero in upper cell
                 delta_trickle = self.grid[i - 1, j] - adjusted_trickle
-                if delta_trickle < 0:
+                if delta_trickle <= 0:
                     self.grid[i - 1, j] = 0
                     adjusted_trickle = adjusted_trickle - delta_trickle
                 else:

@@ -46,7 +46,6 @@ class DynamicModel:
         self.nitrate_pool = 0
         self.nitrate_delta_amount = 0
         self.water_pool = 0
-        self.use_water_pool = False
         self.max_water_pool = MAX_WATER_POOL
         self.temp = 20 # degree ceclsius
              # based on paper
@@ -54,6 +53,8 @@ class DynamicModel:
         self.nitrate_intake = 0                 # Michaelis–Menten equation: gDW(root) Vmax ~ 0.00336 mol g DW−1 day−1
         self.photon_intake = 0                  # 300micromol /m2 s * PLA(gDW * slope)
         self.water_intake = 0
+        self.transpiration_factor = 0
+        self.co2_intake = 0
         self.starch_intake = 0                  # actual starch consumption
         self.starch_intake_max = 0.01              # upper bound /h ingame
         self.percentages_sum = 0
@@ -98,39 +99,37 @@ class DynamicModel:
 
         # 1/s
         self.water_intake = solution.fluxes[WATER]
+        self.co2_intake = solution.fluxes[CO2]
         self.nitrate_intake = solution.fluxes[NITRATE]
         self.starch_intake =  solution.fluxes[STARCH_IN]
         self.photon_intake = solution.fluxes[PHOTON]
 
-        # get water vapor from co2 intake
-        K = 291.18
 
-        ticks = self.gametime.get_time()
-        day = 1000 * 60 * 6
-        hour = day / 24
-        hours = (ticks % day) / hour
-
-        RH = config.get_y(hours,config.humidity)
-        T = config.get_y(hours,config.summer)
-        In_Concentration = config.water_concentration_at_temp[int(T+2)]
-        Out_Concentration = config.water_concentration_at_temp[int(T)]
-        Consumption_Factor = K * (In_Concentration - Out_Concentration*RH)
         #print("Facotr: ", Consumption_Factor, " CO2 Intake: ", solution.fluxes[CO2])
         if self.stomata_open:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
-                self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
-
-        if self.water_pool < self.max_water_pool:
-            self.water_intake += MAX_WATER_POOL_CONSUMPTION
+                self.water_intake = self.water_intake + solution.fluxes[CO2]*self.transpiration_factor
 
         print("Root: ", self.root_rate, "Stem: ", self.stem_rate, "Leaf:", self.leaf_rate, "Starch_prod: ",
               self.starch_rate, " Starch_intake: ",
               self.starch_intake, " Water intake: ", self.water_intake, "Nitrate_intake: ", self.nitrate_intake,
-              " Factor: ", Consumption_Factor, " CO2: ", solution.fluxes[CO2])
+              " Factor: ", self.transpiration_factor, " CO2: ", solution.fluxes[CO2])
 
     def open_stomata(self):
         self.stomata_open = True
         self.set_bounds(CO2, (-1000,1000))
+
+    def update_transpiration_factor(self):
+        K = 291.18
+        ticks = self.gametime.get_time()
+        day = 1000 * 60 * 6
+        hour = day / 24
+        hours = (ticks % day) / hour
+        RH = config.get_y(hours, config.humidity)
+        T = config.get_y(hours, config.summer)
+        In_Concentration = config.water_concentration_at_temp[int(T + 2)]
+        Out_Concentration = config.water_concentration_at_temp[int(T)]
+        self.transpiration_factor = K * (In_Concentration - Out_Concentration * RH)
 
     def close_stomata(self):
         self.stomata_open = False
@@ -181,42 +180,42 @@ class DynamicModel:
 
     def update(self, dt, root_mass, PLA, sun_intensity, max_water_drain):
         self.update_bounds(root_mass, PLA*sun_intensity, max_water_drain)
-        self.update_pools(dt)
-        #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
+        self.update_pools(dt, max_water_drain)
+        self.update_transpiration_factor()
 
-    def update_pools(self,dt):
+    def update_pools(self,dt, max_water_drain):
         gamespeed = self.gametime.GAMESPEED
-        #print(self.nitrate_pool, self.nitrate_intake/60/60*gamespeed, self.water_pool)
+
+        if self.water_intake >= max_water_drain:
+            water_pool_rate = self.water_intake-max_water_drain
+            self.water_pool -= water_pool_rate if self.water_pool - water_pool_rate >= 0 else self.water_pool
+        else:
+            if self.water_pool < self.max_water_pool:
+                spill_over = min(10,max_water_drain-self.water_intake)
+                # Todo find a viable solution to increase intake after filling water_pool
+                #self.set_bounds(WATER,(-1000,self.water_intake+spill_over))
+                self.water_pool += spill_over * gamespeed * dt
+
+        # max water drain tells how much is there to take
+        # if last intake was higher, drain differenz from pool
+        # if last intake was lower, drain normally -> if water pool is lower than max, drain more, put diff in pool
+
+        #print(max_water_drain, self.water_intake)
+
+
         self.nitrate_pool -= self.nitrate_intake * dt * gamespeed
-        #if self.nitrate_pool > max_nitrate_pool_low:
-        #    self.nitrate_pool = max_nitrate_pool_low
         if self.nitrate_pool < 0:
             self.nitrate_pool = 0
         # starch gets handled separatly in Organ Starch
         if self.nitrate_delta_amount > 0:
             self.nitrate_pool += 0.1 * gamespeed * dt
             self.nitrate_delta_amount -= 0.1 * gamespeed * dt
-        if self.water_pool < self.max_water_pool and not self.use_water_pool:
-            self.water_pool += MAX_WATER_POOL_CONSUMPTION * dt * gamespeed
-        if self.use_water_pool:
-            #print("USE IT: ", MAX_WATER_POOL_CONSUMPTION * dt * gamespeed)
-            self.water_pool -= MAX_WATER_POOL_CONSUMPTION * dt * gamespeed
-
 
     def update_bounds(self, root_mass, photon_in, max_water_drain):
-        water_upper_bound = max_water_drain
-        self.use_water_pool = False
-        if max_water_drain <= 0 and self.water_intake > 0:
-            if self.water_pool > 0:
-                self.use_water_pool = True
-                water_upper_bound = MAX_WATER_POOL_CONSUMPTION
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water based on grid
         # co2? maybe later in dev
-        #if self.use_starch:
-        #    self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
-
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)))
-        self.set_bounds(WATER, (-1000,water_upper_bound))
+        self.set_bounds(WATER, (-1000,max_water_drain))
         self.set_bounds(PHOTON,(0,photon_in))
