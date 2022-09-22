@@ -272,7 +272,6 @@ class UI:
         water_pool_text = config.FONT.render("Water:", True, (0, 0, 0))
         s.blit(water_pool_text, dest=(topleft[0] + 270, topleft[1] + 6))
         water = config.FONT.render("{:.0f}".format(self.model.water_pool), True, (0, 0, 0))  # title
-        print(self.model.water_pool)
         s.blit(water, dest=(topleft[0] + biomass_text.get_width() + 290, topleft[1] + 6))
 
         # name

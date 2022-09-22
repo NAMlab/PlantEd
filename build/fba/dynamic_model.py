@@ -199,14 +199,14 @@ class DynamicModel:
         if self.water_pool < self.max_water_pool and not self.use_water_pool:
             self.water_pool += MAX_WATER_POOL_CONSUMPTION * dt * gamespeed
         if self.use_water_pool:
-            print("USE IT: ", MAX_WATER_POOL_CONSUMPTION * dt * gamespeed)
+            #print("USE IT: ", MAX_WATER_POOL_CONSUMPTION * dt * gamespeed)
             self.water_pool -= MAX_WATER_POOL_CONSUMPTION * dt * gamespeed
 
 
     def update_bounds(self, root_mass, photon_in, max_water_drain):
         water_upper_bound = max_water_drain
         self.use_water_pool = False
-        if max_water_drain <= 0:
+        if max_water_drain <= 0 and self.water_intake > 0:
             if self.water_pool > 0:
                 self.use_water_pool = True
                 water_upper_bound = MAX_WATER_POOL_CONSUMPTION

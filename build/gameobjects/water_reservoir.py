@@ -59,9 +59,9 @@ class Water_Grid:
     def set_max_drain_rate(self):
         # print(self.drainage_grid.sum(), self.default_drain_rate_cell)
         self.drainable_grid = np.multiply(self.root_grid, self.grid)
-        grid_sum_normalized = 0
-        self.drainable_grid_sum_normalized = sum([1 if cell > 0 else 0 for cell in np.nditer(self.drainable_grid)])
-        self.max_drain_rate = grid_sum_normalized * self.default_drain_rate_cell
+        #self.grid_sum_normalized = 0
+        self.drainable_grid_sum_normalized = sum([1 if cell > self.actual_drain_rate_cell else 0 for cell in np.nditer(self.drainable_grid)])
+        self.max_drain_rate = self.drainable_grid_sum_normalized * self.default_drain_rate_cell
 
     def set_root_grid(self, root_grid):
         self.root_grid = root_grid
@@ -73,7 +73,8 @@ class Water_Grid:
             return
             # print("MAX_DEFAULT_RATE: ",self.max_drain_rate, " ACTUAL_MAX_RATE: ", self.actual_drain_rate, " MAX_CELL: ", self.actual_drain_rate_cell)
         for (x, y), value in np.ndenumerate(self.drainable_grid):
-            if self.drainable_grid[x, y] > 0:
+            if self.drainable_grid[x, y] > self.actual_drain_rate_cell:
+                print(self.drainable_grid[x, y])
                 # print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
                 delta = self.actual_drain_rate_cell * self.gametime.GAMESPEED * dt
                 if self.grid[x, y] - delta >= 0:
