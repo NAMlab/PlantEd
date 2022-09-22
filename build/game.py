@@ -74,26 +74,163 @@ def shake():
 # unittests, dir that contains all tests, one test file for one class, secure class function
 # pipenv for git, enable cloners to see all depencies
 
-pygame.mixer.music.load('../assets/background_music.mp3')
+
 
 
 # seperate high to low level --> less function calls, less clutter
 class DevScene(object):
     def __init__(self):
-        super(DevScene, self).__init__()
-        pass
+        options = config.load_options(config.OPTIONS_PATH)
 
-    def render(self, screen):
-        screen.fill((50, 50, 50))
+        # pygame.mixer.music.load('../assets/background_music.mp3')
+        assets.song('background_music.mp3', options["music"])
 
-    def update(self, dt):
-        pass
+        # pygame.mixer.music.set_volume(options["music"]/10)
+        pygame.mixer.music.play(-1, 0)
+
+        pygame.mouse.set_visible(True)
+        self.camera = Camera(offset_y=0)
+        self.gametime = GameTime.instance()
+        self.log = Log()  # can be turned off
+        self.water_grid = Water_Grid(pos=(0, 900))
+        # self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
+        # self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
+        # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
+        self.model = DynamicModel(self.gametime, self.log)
+        self.plant = Plant((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5), self.model,
+                           self.camera, self.water_grid, growth_boost=16)
+        self.water_grid.add_base_water(
+            Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 400, config.DARK_BLUE, config.LIGHT_BLUE))
+        self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
+        self.ui = UI(1, self.plant, self.model, self.camera)
+
+        '''example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+                                     callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
+        example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+                                     post_hover_message=self.ui.post_hover_message, message="Skill Stem") for i in range(0,2)]
+        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+                                     post_hover_message=self.ui.post_hover_message, message="Skill Root") for i in range(0,2)]
+        example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+                                       post_hover_message=self.ui.post_hover_message, message="Skill Starch") for i in range(0,3)]
+        self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
+'''
+        self.entities = []
+        for i in range(0, 10):
+            bug = Bug((190 * random.randint(0, 10), 900 + random.randint(0, 200)),
+                      pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
+                      [assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)], self.camera)
+            self.entities.append(bug)
+        # self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
+
+        # shop items are to be defined by the level
+        add_leaf_item = Shop_Item(assets.img("leaf_small.png", (64, 64)), self.activate_add_leaf,
+                                  condition=self.plant.organs[0].check_can_add_leaf,
+                                  condition_not_met_message="Level up your stem to buy more leaves",
+                                  post_hover_message=self.ui.post_hover_message,
+                                  message="Leaves enable your plant to produce energy.")
+
+        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid,
+                         self.plant, post_hover_message=self.ui.post_hover_message, active=False)
+
+        self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.png", (64, 64)),
+                                            self.shop.root_item.activate,
+                                            condition=self.plant.organs[2].check_can_add_root,
+                                            condition_not_met_message="Level up your roots to buy more leaves",
+                                            post_hover_message=self.ui.post_hover_message,
+                                            message="Roots are to improve water and nitrate intake."))
+
+        self.shop.add_shop_item(["watering", "blue_grain"])
+
+        # start plant growth timer
+        pygame.time.set_timer(GROWTH, 1000)
+
+    def activate_add_leaf(self):
+        # if there are funds, buy a leave will enable leave @ mouse pos until clicked again
+        self.plant.organs[0].activate_add_leaf()
 
     def handle_events(self, events):
         for e in events:
+            if e.type == GROWTH:
+                leaf_percent = self.plant.organs[0].percentage
+                stem_percent = self.plant.organs[1].percentage
+                root_percent = self.plant.organs[2].percentage
+                starch_percent = self.plant.organ_starch.percentage
+
+                # print(leaf_percent, stem_percent, root_percent, starch_percent)
+                self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
+
+                leaf_rate, stem_rate, root_rate, starch_rate, starch_intake = self.model.get_rates()
+                nitrate_pool = self.model.nitrate_pool
+                water_pool = self.water_grid.water_pool
+                # self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
+                # self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
+                self.log.append_row(leaf_rate, stem_rate, root_rate, starch_rate, self.gametime.get_time(),
+                                    self.gametime.GAMESPEED, water_pool, nitrate_pool,
+                                    self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass,
+                                    self.plant.organ_starch.mass)
+                self.plant.update_growth_rates(self.model.get_rates())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
-                pygame.quit()
-                sys.exit()
+                self.log.close_file()
+                # Todo fix back to menu
+                self.model = None
+                self.manager.go_to(TitleScene(self.manager))
+            if e.type == KEYDOWN and e.key == K_r:
+                self.water_grid.raining += 0.05
+            if e.type == KEYDOWN and e.key == K_s:
+                self.water_grid.raining = 0
+            if e.type == WIN:
+                if self.log:
+                    #self.log.write_log(self.ui.name_label)
+                    self.log.close_file()
+                scoring.upload_score(self.ui.name_label, self.gametime.get_time())
+                self.manager.go_to(CustomScene())
+            self.shop.handle_event(e)
+            self.ui.handle_event(e)
+            self.plant.handle_event(e)
+            # self.environment.handle_event(e)
+            for entity in self.entities:
+                entity.handle_event(e)
+            self.camera.handle_event(e)
+            # self.skill_system.handle_event(e)
+
+    def update(self, dt):
+        # get root grid, water grid
+        self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
+        self.water_grid.actual_drain_rate = self.model.get_actual_water_drain()
+        self.water_grid.update(dt)
+
+        self.camera.update(dt)
+        for entity in self.entities:
+            entity.update(dt)
+        self.environment.update(dt)
+        self.shop.update(dt)
+        self.ui.update(dt)
+
+        # self.skill_system.update(dt)
+        self.plant.update(dt, self.model.get_photon_upper())
+
+        if self.plant.seedling.max < self.plant.get_biomass():
+            self.shop.active = True
+
+        self.model.update(dt,self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),
+                          self.water_grid.max_drain_rate)
+
+    def render(self, screen):
+        screen.fill((0, 0, 0))
+        self.environment.draw_background(temp_surface)
+
+        for entity in self.entities:
+            entity.draw(temp_surface)
+        self.plant.draw(temp_surface)
+
+        self.environment.draw_foreground(temp_surface)
+        self.water_grid.draw(temp_surface)
+
+        screen.blit(temp_surface, (0, self.camera.offset_y))
+
+        self.ui.draw(screen)
+        # self.skill_system.draw(screen)
+        self.shop.draw(screen)
 
 
 class Camera:
@@ -208,7 +345,11 @@ class OptionsScene():
 class DefaultGameScene(object):
     def __init__(self):
         options = config.load_options(config.OPTIONS_PATH)
-        pygame.mixer.music.set_volume(options["music"]/10)
+
+        #pygame.mixer.music.load('../assets/background_music.mp3')
+        assets.song('background_music.mp3', options["music"])
+
+        #pygame.mixer.music.set_volume(options["music"]/10)
         pygame.mixer.music.play(-1, 0)
 
         pygame.mouse.set_visible(True)
@@ -294,7 +435,7 @@ class DefaultGameScene(object):
                 self.water_grid.raining = 0
             if e.type == WIN:
                 if self.log:
-                    self.log.write_log(self.ui.name_label)
+                    #self.log.write_log(self.ui.name_label)
                     self.log.close_file()
                 scoring.upload_score(self.ui.name_label, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
@@ -326,7 +467,7 @@ class DefaultGameScene(object):
         if self.plant.seedling.max < self.plant.get_biomass():
             self.shop.active = True
 
-        self.model.update(self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),self.water_grid.max_drain_rate)
+        self.model.update(dt,self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),self.water_grid.max_drain_rate)
 
 
     def render(self, screen):
@@ -352,12 +493,12 @@ class TitleScene(object):
         self.title = config.MENU_TITLE.render("PlantEd",True,config.WHITE)
         self.center_h = config.SCREEN_HEIGHT/2+100
         self.center_w = config.SCREEN_WIDTH/2
-        self.card_0 = Card((self.center_w-460,self.center_h-100),assets.img("menu/gatersleben.JPG",(512,512)), "Gatersleben",
+        self.card_0 = Card((self.center_w-260,self.center_h-100),assets.img("menu/gatersleben.JPG",(512,512)), "Gatersleben",
                            callback=manager.go_to, callback_var=DefaultGameScene,keywords="Beginner, Medium Temperatures")
-        self.card_1 = Card((self.center_w,self.center_h-100),assets.img("menu/tutorial.JPG",(512,512)), "Tutorial",
-                           callback=manager.go_to, callback_var=DevScene,keywords="Beginner, Easy")
-        self.card_2 = Card((self.center_w+460,self.center_h-100),assets.img("menu/dev.jpg",(512,512)), "Dev ",
-                           callback=manager.go_to, callback_var=OptionsScene,keywords="Intermediate, Hot, Dry")
+        #self.card_1 = Card((self.center_w,self.center_h-100),assets.img("menu/tutorial.JPG",(512,512)), "Tutorial",
+        #                   callback=manager.go_to, callback_var=DevScene,keywords="Beginner, Easy")
+        self.card_2 = Card((self.center_w+260,self.center_h-100),assets.img("menu/dev.jpg",(512,512)), "Dev ",
+                           callback=manager.go_to, callback_var=DevScene,keywords="Test Stuff")
 
 
         self.credit_button = Button(self.center_w-450,930,200,50,[self.go_to_credtis],config.BIGGER_FONT,"CREDTIS",config.LIGHT_GRAY,config.WHITE,border_w=2)
@@ -373,14 +514,14 @@ class TitleScene(object):
         screen.fill(config.LIGHT_GRAY)
         screen.blit(self.title,(self.center_w-self.title.get_width()/2,100))
         self.card_0.draw(screen)
-        self.card_1.draw(screen)
+        #self.card_1.draw(screen)
         self.card_2.draw(screen)
         pygame.draw.line(screen,config.WHITE,(100,900),(1820,900))
         self.button_sprites.draw(screen)
 
     def update(self, dt):
         self.card_0.update(dt)
-        self.card_1.update(dt)
+        #self.card_1.update(dt)
         self.card_2.update(dt)
 
     def quit(self):
@@ -401,7 +542,7 @@ class TitleScene(object):
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.quit()
             self.card_0.handle_event(e)
-            self.card_1.handle_event(e)
+            #self.card_1.handle_event(e)
             self.card_2.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)

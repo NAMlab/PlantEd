@@ -119,18 +119,8 @@ class UI:
             rb.setRadioButtons(speed_options)
             self.button_sprites.add(rb)
         speed_options[1].button_down = True
-
-
-        #assets.img("stomata/stomata_open_{}.png".format(0))
-
-        #self.animations.append(Animation([assets.img("stomata/stomata_open_{}.png".format(i)) for i in range(0, 9)],720,(250,500)))
-        #self.animations.append(Animation([assets.img("bug/bug_purple_{}.png".format(i)) for i in range(0, 5)], 720, (250, 500)))
-        #self.animations.append(Animation([assets.img("stomata/stomata_open_test.png")],720,(250,500)))
         self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
-        #self.init_organ_ui()
-        #self.presets = [{},{},{}]
-
 
     def handle_event(self, e):
         for button in self.button_sprites:
@@ -144,7 +134,6 @@ class UI:
             #self.hover_message = None
             self.hover_timer = 1000
             self.check_mouse_pos()
-
 
     def check_mouse_pos(self):
         x, y = pygame.mouse.get_pos()
@@ -188,7 +177,6 @@ class UI:
         self.starch_slider.set_percentage(preset["starch_slider"])
         if preset["consume_starch"] and not self.plant.organs[2].toggle_button.button_down:
             self.plant.organs[2].toggle_button.activate()
-
 
     def generate_preset(self, id=0):
         active_consumption = False
@@ -265,7 +253,7 @@ class UI:
     def draw_plant_details(self, s):
         # details
         topleft = self.plant_details_topleft
-        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 500, 40), border_radius=3)
+        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 600, 40), border_radius=3)
 
 
         # plant lvl
@@ -280,38 +268,16 @@ class UI:
         biomass = config.FONT.render("{:.2f} g".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
         s.blit(biomass, dest=(topleft[0]+biomass_text.get_width()+130, topleft[1]+6))
 
+        # water_pool_plant
+        water_pool_text = config.FONT.render("Water:", True, (0, 0, 0))
+        s.blit(water_pool_text, dest=(topleft[0] + 270, topleft[1] + 6))
+        water = config.FONT.render("{:.0f}".format(self.model.water_pool), True, (0, 0, 0))  # title
+        print(self.model.water_pool)
+        s.blit(water, dest=(topleft[0] + biomass_text.get_width() + 290, topleft[1] + 6))
 
         # name
-        s.blit(self.name_label, (topleft[0]+300, topleft[1] + 6))
+        s.blit(self.name_label, (topleft[0]+450, topleft[1] + 6))
 
-        # skillpoints greenthumb
-        #s.blit(assets.img("green_thumb.png", (25, 25)),
-        #       (topleft[0]+200, topleft[1] + 7))
-        #skillpoints_text = config.FONT.render("Thumbs:", True, (0, 0, 0))
-        #s.blit(skillpoints_text, dest=(topleft[0] + 190, topleft[1] + 6))
-        '''skillpoints = config.FONT.render("{}".format(self.plant.upgrade_points), True, (0, 0, 0))  # title
-        s.blit(skillpoints, dest=(topleft[0]+265, topleft[1]+6))
-        s.blit(assets.img("green_thumb.png",(20,20)),(topleft[0]+skillpoints.get_width() + 280,topleft[1]+10))'''
-
-
-
-        '''# water
-        water_level_text = config.FONT.render("Water:", True, (0, 0, 0))
-        s.blit(water_level_text, dest=(topleft[0]+310, topleft[1]+6))
-        water_level = config.FONT.render("{:.2f}".format(self.model.water_pool), True, (0, 0, 0))  # title
-        s.blit(water_level, dest=(topleft[0]+water_level_text.get_width()+320, topleft[1]+6))
-
-        # nitrate
-        nitrate_level_text = config.FONT.render("Nitrate:", True, (0, 0, 0))
-        s.blit(nitrate_level_text, dest=(topleft[0]+430, topleft[1]+6))
-        nitrate_level = config.FONT.render("{:.2f}".format(self.model.nitrate_pool), True, (0, 0, 0))  # title
-        s.blit(nitrate_level, dest=(topleft[0]+nitrate_level_text.get_width()+440, topleft[1]+6))
-
-        # starch
-        starch_pool_text = config.FONT.render("Starch:", True, (0,0,0))
-        s.blit(starch_pool_text, dest=(topleft[0]+570, topleft[1]+6))
-        starch_pool = config.FONT.render("{:.2f}/{:.2f}".format(self.plant.organ_starch.mass, self.plant.organ_starch.get_threshold()),True,(0,0,0))
-        s.blit(starch_pool, dest=(topleft[0]+580+starch_pool_text.get_width(),topleft[1]+6))'''
 
     def get_day_time(self):
         ticks = self.gametime.get_time()
@@ -364,9 +330,10 @@ class UI:
         exp = self.plant.target_organ.mass / needed_exp
         width = min(int(exp_width / 1 * exp), exp_width)
         pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1]+158, width, 25), border_radius=0)  # exp
-        text_organ_mass = config.FONT.render("{:.2f} / {threshold}".format(self.plant.target_organ.mass,
-                                                threshold=self.plant.target_organ.get_threshold()),
-                                                True, (0, 0, 0))
+
+        threshold_string = "{:.2f}".format(self.plant.target_organ.get_threshold())
+        mass_string = "{:.2f}".format(self.plant.target_organ.mass)
+        text_organ_mass = config.FONT.render(threshold_string+"/"+mass_string,True, (0, 0, 0))
         s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+158))  # Todo change x, y
 
         # level
@@ -380,9 +347,6 @@ class UI:
             for i in range(0,len(skills)):
                 skills[i].pos = (topleft[0]+138+i*80,topleft[1]+50)
                 s.blit(skills[i].image,(topleft[0]+138+i*80,topleft[1]+50))'''
-
-
-
     def init_organ_ui(self):
         topleft = self.organ_details_topleft
         # below so it does not get in group
@@ -409,31 +373,11 @@ class UI:
             RadioButton(topleft[0] + 330, topleft[1] + 40, 100,100,
                         [self.plant.set_target_organ_starch],
                         config.FONT, image=assets.img("starch.png",(100,100))),
-
         ]
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
-
-        #self.button_sprites.add(
-        #    ToggleButton(topleft[0] + 100, topleft[1] + 385, 210, 40, [], config.FONT, "Photosysnthesis", pressed=True,
-        #                 fixed=True))
-        '''production_buttons = [RadioButton(topleft[0] + 20, topleft[1] + 390, 160, 30,
-                                          [self.activate_biomass_objective], config.FONT,
-                                          "Produce Biomass", border_radius=3),
-                              RadioButton(topleft[0] + 20, topleft[1] + 432, 160,30,
-                                            [self.activate_starch_objective],
-                                            config.FONT, "Produce Starch", border_radius=3)]
-
-        production_buttons[0].setRadioButtons(production_buttons)
-        production_buttons[1].setRadioButtons(production_buttons)
-        production_buttons[0].button_down = True'''
-
-
-        '''#self.plant.organ_starch.toggle_button = produce_biomass_button
-        self.button_sprites.add(production_buttons[0])
-        self.button_sprites.add(production_buttons[1])'''
 
         starch_toggle_button = ToggleButton(topleft[0] + 330, topleft[1] + 360, 100, 30,
                                           [self.toggle_starch_as_resource], config.FONT,
@@ -498,8 +442,8 @@ class UI:
         exp = organ.mass / needed_exp
         width = min(int(exp_width / 1 * exp), exp_width)
         pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1]+120, width, 16), border_radius=3)  # exp
-        text_organ_mass = config.SMALL_FONT.render("{:.2f} / {threshold}".format(organ.mass,
-                                                threshold=organ.get_threshold()),
+        text_organ_mass = config.SMALL_FONT.render("{:.2f} / {:.2f}".format(organ.mass,
+                                                organ.get_threshold()),
                                                 True, (0, 0, 0))
 
         j = 0

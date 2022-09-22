@@ -13,6 +13,9 @@ _sound_library = {}
 _music_library = {}
 
 pygame.init()
+
+
+
 true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
 
@@ -29,8 +32,6 @@ def img(path, size=None):
             return pygame.transform.scale(image, size).convert_alpha()
     return image
 
-
-
 def sfx(path, volume=None):
     path = os.path.join("../assets", path)
     global _sound_library
@@ -45,12 +46,7 @@ def sfx(path, volume=None):
 
 def song(path, volume=None):
     path = os.path.join("../assets", path)
-    global _music_library
-    music = _music_library.get(path)
-    if music == None:
-        canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-        music = pygame.mixer.music.load(canonicalized_path)
-        _music_library[path] = music
+    canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
+    pygame.mixer.music.load(canonicalized_path)
     if volume is not None:
-        music.set_volume(volume)
-    return sound
+        pygame.mixer.music.set_volume(volume)

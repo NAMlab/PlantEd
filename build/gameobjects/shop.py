@@ -21,7 +21,6 @@ class Shop:
         self.shop_label = config.BIG_FONT.render("Shop",True,(0,0,0))
         self.current_cost_label = config.BIG_FONT.render("0",False,(0,0,0))
 
-
         self.rect = rect
         self.shop_items = shop_items
         self.margin = margin
@@ -36,7 +35,7 @@ class Shop:
         self.watering_can = Watering_can((0,0), self.model, self.water_grid)
         self.blue_grain = Blue_grain((0,0), self.model)
         self.spraycan = Spraycan((0,0), self.model,3,2)
-        #self.root_item = Root_Item(self.plant.organs[2].create_new_root,self.plant)
+        self.root_item = Root_Item(self.plant.organs[2].create_new_root,self.plant)
         self.buy_button = Button(self.rect[2]-self.margin*2-64,self.rect[3]-self.margin-64,64,64,[self.buy],config.FONT,"BUY", offset=(rect[0],rect[1]))
         self.init_layout()
 
@@ -72,8 +71,6 @@ class Shop:
                 self.shop_items.append(Shop_Item(assets.img("blue_grain_0.png", (64, 64)), self.blue_grain.activate, post_hover_message=self.post_hover_message, message="Blue grain increases nitrate in the ground."))
             elif keyword == "spraycan":
                 self.shop_items.append(Shop_Item(assets.img("spraycan_icon.png", (64, 64)), self.spraycan.activate, post_hover_message=self.post_hover_message, message="Spray em!"))
-            elif keyword == "root_item":
-                self.shop_items.append(Shop_Item(assets.img("root_deep.png", (64,64)), self.root_item.activate, post_hover_message=self.post_hover_message, message="Buy another main root"))
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.init_layout()
@@ -92,8 +89,6 @@ class Shop:
                     item.callback()
                     item.selected = False
                     self.update_current_cost()
-                    #cost = config.FONT.render("{}".format(self.current_cost), False, (255, 255, 255))
-                    #self.animations.append(LabelAnimation(cost, item.cost, 120, self.cost_label_pos))
                 else:
                     # throw insufficient funds, maybe post hover msg
                     pass
@@ -102,7 +97,7 @@ class Shop:
         self.watering_can.update(dt)
         self.blue_grain.update(dt)
         self.spraycan.update(dt)
-        #self.root_item.update(dt)
+        self.root_item.update(dt)
         self.buy_button.update(dt)
 
         for item in self.shop_items:
@@ -120,9 +115,6 @@ class Shop:
     def handle_event(self, e):
         if not self.active:
             return
-        #x,y = pygame.mouse.get_pos()
-        #if self.rect.collidepoint(x,y):
-            #self.confirm_button.handle_event(e)
         for item in self.shop_items:
             item.handle_event(e)
         if e.type == pygame.MOUSEBUTTONDOWN:
@@ -131,7 +123,7 @@ class Shop:
         self.blue_grain.handle_event(e)
         self.spraycan.handle_event(e)
         self.buy_button.handle_event(e)
-        #self.root_item.handle_event(e)
+        self.root_item.handle_event(e)
 
     def draw(self, screen):
         if not self.active:
@@ -157,7 +149,7 @@ class Shop:
         self.watering_can.draw(screen)
         self.blue_grain.draw(screen)
         self.spraycan.draw(screen)
-        #self.root_item.draw(screen)
+        self.root_item.draw(screen)
 
 
 class Shop_Item:

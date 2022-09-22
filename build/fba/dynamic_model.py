@@ -27,6 +27,9 @@ max_nitrate_pool_low = 10
 max_nitrate_pool_high = 50
 Km = 4
 
+MAX_WATER_POOL = 1000
+MAX_WATER_POOL_CONSUMPTION = 1
+
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
     def __init__(self, gametime, water_grid, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/PlantEd_model.sbml")):
@@ -43,7 +46,8 @@ class DynamicModel:
         self.nitrate_pool = 0
         self.nitrate_delta_amount = 0
         self.water_pool = 0
-        self.max_water_pool = 1000
+        self.use_water_pool = False
+        self.max_water_pool = MAX_WATER_POOL
         self.temp = 20 # degree ceclsius
              # based on paper
         # copies of intake rates to drain form pools
@@ -51,7 +55,7 @@ class DynamicModel:
         self.photon_intake = 0                  # 300micromol /m2 s * PLA(gDW * slope)
         self.water_intake = 0
         self.starch_intake = 0                  # actual starch consumption
-        self.starch_intake_max = 0.5              # upper bound /h ingame
+        self.starch_intake_max = 0.01              # upper bound /h ingame
         self.percentages_sum = 0
 
         # growth rates for each objective
@@ -86,16 +90,16 @@ class DynamicModel:
         solution = self.model.optimize()
         gamespeed = self.gametime.GAMESPEED
 
-        #self.biomass_rate = solution.objective_value / 60 / 60 * 240 * gamespeed  # make it every ingame second
-        self.root_rate = (solution.fluxes.get("AraCore_Biomass_tx_root")/ 3600) * 240 * gamespeed
-        self.stem_rate = (solution.fluxes.get("AraCore_Biomass_tx_stem")/ 3600) * 240 * gamespeed
-        self.leaf_rate = (solution.fluxes.get("AraCore_Biomass_tx_leaf")/ 3600) * 240 * gamespeed
-        self.starch_rate = (solution.fluxes.get("Starch_out_tx_stem")/ 3600) * 240 * gamespeed
+        # calc_rates 1/s
+        self.root_rate = (solution.fluxes.get("AraCore_Biomass_tx_root"))
+        self.stem_rate = (solution.fluxes.get("AraCore_Biomass_tx_stem"))
+        self.leaf_rate = (solution.fluxes.get("AraCore_Biomass_tx_leaf"))
+        self.starch_rate = (solution.fluxes.get("Starch_out_tx_stem"))
 
-        # hourly rates
-        self.water_intake = solution.fluxes[WATER]#self.get_flux(WATER)
-        self.nitrate_intake = solution.fluxes[NITRATE]#self.get_flux(NITRATE)
-        self.starch_intake =  solution.fluxes[STARCH_IN]#self.get_flux(STARCH_IN)
+        # 1/s
+        self.water_intake = solution.fluxes[WATER]
+        self.nitrate_intake = solution.fluxes[NITRATE]
+        self.starch_intake =  solution.fluxes[STARCH_IN]
         self.photon_intake = solution.fluxes[PHOTON]
 
         # get water vapor from co2 intake
@@ -105,9 +109,6 @@ class DynamicModel:
         day = 1000 * 60 * 6
         hour = day / 24
         hours = (ticks % day) / hour
-
-        print(self.root_rate, self.stem_rate, self.leaf_rate, "Starch_prod: ", self.starch_rate, " Starch_intake: ",
-              self.starch_intake, " Water intake: ", self.water_intake)
 
         RH = config.get_y(hours,config.humidity)
         T = config.get_y(hours,config.summer)
@@ -119,6 +120,13 @@ class DynamicModel:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*Consumption_Factor
 
+        if self.water_pool < self.max_water_pool:
+            self.water_intake += MAX_WATER_POOL_CONSUMPTION
+
+        print("Root: ", self.root_rate, "Stem: ", self.stem_rate, "Leaf:", self.leaf_rate, "Starch_prod: ",
+              self.starch_rate, " Starch_intake: ",
+              self.starch_intake, " Water intake: ", self.water_intake, "Nitrate_intake: ", self.nitrate_intake,
+              " Factor: ", Consumption_Factor, " CO2: ", solution.fluxes[CO2])
 
     def open_stomata(self):
         self.stomata_open = True
@@ -129,13 +137,11 @@ class DynamicModel:
         self.set_bounds(CO2, (0,0))
 
     def get_rates(self):
-        return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, (self.starch_intake/3600)*240*self.gametime.GAMESPEED)
+        gamespeed = self.gametime.GAMESPEED
+        return (self.leaf_rate*gamespeed, self.stem_rate*gamespeed, self.root_rate*gamespeed, self.starch_rate*gamespeed, self.starch_intake*gamespeed)
 
     def get_actual_water_drain(self):
-        return (self.water_intake/3600)*240
-
-    def get_pools(self):
-        return (self.nitrate_pool, self.water_pool)
+        return self.water_intake
 
     def get_photon_upper(self):
         return self.model.reactions.get_by_id(PHOTON).bounds[1]
@@ -144,10 +150,6 @@ class DynamicModel:
         return self.nitrate_pool
 
     def increase_nitrate_pool(self, amount):
-        # Todo check if necessary
-        if self.nitrate_pool >= max_nitrate_pool_low:
-            self.nitrate_pool = max_nitrate_pool_low
-            return
         self.nitrate_pool += amount
 
     def get_nitrate_percentage(self):
@@ -177,36 +179,44 @@ class DynamicModel:
         self.use_starch = False
         self.set_bounds(STARCH_IN, (0, 0))
 
-    def update(self, root_mass, PLA, sun_intensity, max_water_drain):
-        self.update_bounds(root_mass, PLA*sun_intensity*50, max_water_drain)
-        self.update_pools()
+    def update(self, dt, root_mass, PLA, sun_intensity, max_water_drain):
+        self.update_bounds(root_mass, PLA*sun_intensity, max_water_drain)
+        self.update_pools(dt)
         #print("biomass_rate: ", self.biomass_rate, "pools: ", self.nitrate_pool, mass, PLA, sun_intensity)
 
-    def update_pools(self):
+    def update_pools(self,dt):
         gamespeed = self.gametime.GAMESPEED
         #print(self.nitrate_pool, self.nitrate_intake/60/60*gamespeed, self.water_pool)
-        self.nitrate_pool -= self.nitrate_intake/60/60*gamespeed
+        self.nitrate_pool -= self.nitrate_intake * dt * gamespeed
         #if self.nitrate_pool > max_nitrate_pool_low:
         #    self.nitrate_pool = max_nitrate_pool_low
         if self.nitrate_pool < 0:
             self.nitrate_pool = 0
         # starch gets handled separatly in Organ Starch
         if self.nitrate_delta_amount > 0:
-            self.nitrate_pool += 0.1 * gamespeed
-            self.nitrate_delta_amount -= 0.1 * gamespeed
+            self.nitrate_pool += 0.1 * gamespeed * dt
+            self.nitrate_delta_amount -= 0.1 * gamespeed * dt
+        if self.water_pool < self.max_water_pool and not self.use_water_pool:
+            self.water_pool += MAX_WATER_POOL_CONSUMPTION * dt * gamespeed
+        if self.use_water_pool:
+            print("USE IT: ", MAX_WATER_POOL_CONSUMPTION * dt * gamespeed)
+            self.water_pool -= MAX_WATER_POOL_CONSUMPTION * dt * gamespeed
+
 
     def update_bounds(self, root_mass, photon_in, max_water_drain):
+        water_upper_bound = max_water_drain
+        self.use_water_pool = False
+        if max_water_drain <= 0:
+            if self.water_pool > 0:
+                self.use_water_pool = True
+                water_upper_bound = MAX_WATER_POOL_CONSUMPTION
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
-        # update water, co2? maybe later in dev
-        if self.use_starch:
-            self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
-            #print(self.starch_intake_max, self.starch_intake)
+        # update water based on grid
+        # co2? maybe later in dev
+        #if self.use_starch:
+        #    self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
 
-        # Todo do it
-        #water_in = self.water_grid.get_water_intake(root_mass, apexes)
-
-
-        self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)*40))
-        self.set_bounds(WATER, (-1000,max_water_drain))
+        self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)))
+        self.set_bounds(WATER, (-1000,water_upper_bound))
         self.set_bounds(PHOTON,(0,photon_in))

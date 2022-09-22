@@ -34,17 +34,18 @@ class Plant:
     ROOTS = 3
     STARCH = 4
 
-    def __init__(self, pos, model, camera, water_grid):
+    def __init__(self, pos, model, camera, water_grid, growth_boost=1):
         self.x = pos[0]
         self.y = pos[1]
         self.upgrade_points = 10
         self.model = model
         self.camera = camera
         self.water_grid = water_grid
+        self.growth_boost = growth_boost
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
-        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=20, active=True, model=self.model)
+        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=8, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
@@ -58,8 +59,12 @@ class Plant:
             pygame.event.post(pygame.event.Event(WIN))
 
     def update_growth_rates(self, growth_rates):
-        for i in range(0,3):
-            self.organs[i].update_growth_rate(growth_rates[i])
+        if self.get_biomass() < self.seedling.max:
+            for i in range(0,3):
+                self.organs[i].update_growth_rate((growth_rates[i]*2)*self.growth_boost)
+        else:
+            for i in range(0,3):
+                self.organs[i].update_growth_rate(growth_rates[i]*self.growth_boost)
         self.organ_starch.update_growth_rate(growth_rates[3])
         self.organ_starch.starch_intake = growth_rates[4]
 
@@ -80,12 +85,11 @@ class Plant:
         # 0.03152043208186226 as a factor to get are from dry mass
         return (self.organs[0].get_mass() * 0.03152043208186226)+self.organs[0].base_mass if len(self.organs[0].leaves) > 0 else 0 #m^2
 
-    def grow(self):
-        self.update_growth_rates(self.model.get_rates())
+    def grow(self, dt):
         for organ in self.organs:
-            organ.grow()
-        self.organ_starch.grow()
-        self.organ_starch.drain()
+            organ.grow(dt)
+        self.organ_starch.grow(dt)
+        self.organ_starch.drain(dt)
 
     def set_target_organ_leaf(self):
         self.target_organ = self.organs[0]
@@ -101,6 +105,7 @@ class Plant:
 
     def update(self, dt, photon_intake):
         # dirty Todo make beter
+        self.grow(dt)
         if self.get_biomass() > self.seedling.max and not self.organs[1].active:
             self.organs[1].activate()
             self.organs[0].activate()
@@ -108,6 +113,8 @@ class Plant:
         for organ in self.organs:
             organ.update(dt)
         self.organs[0].photon_intake = photon_intake
+
+        self.organ_starch.update_starch_max(self.get_biomass()*2+7)
 
 
     def handle_event(self, event):
@@ -172,7 +179,7 @@ class Organ:
         self.percentage = percentage
 
     def update_growth_rate(self, growth_rate):
-        self.growth_rate = self.mass * gram_mol * growth_rate
+        self.growth_rate = gram_mol * growth_rate
 
     def get_rate(self):
         return self.growth_rate
@@ -186,10 +193,10 @@ class Organ:
             rect = pygame.Rect(0,0,0,0)
         return [rect]
 
-    def grow(self):
+    def grow(self, dt):
         if not self.active:
             return
-        self.mass += self.growth_rate
+        self.mass += self.growth_rate*dt
         # if reached a certain mass, gain one exp point, increase threshold
         if self.mass > self.thresholds[self.active_threshold]:
             self.reach_threshold()
@@ -279,9 +286,9 @@ class Leaf(Organ):
             return None
 
     def update_growth_rate(self, growth_rate):
-        self.growth_rate = self.get_mass() * gram_mol * growth_rate
+        self.growth_rate = gram_mol * growth_rate
 
-    def grow(self):
+    def grow(self, dt):
         if self.growth_rate <= 0:
             return
         # get leaf age, if too old -> stop growth, then die later
@@ -291,7 +298,7 @@ class Leaf(Organ):
                 growable_leaves.append(leaf)
             # if max age*2 -> kill leaf
 
-        growth_per_leaf = self.growth_rate/len(growable_leaves) if len(growable_leaves) > 0 else 0
+        growth_per_leaf = (self.growth_rate*dt)/len(growable_leaves) if len(growable_leaves) > 0 else 0
         for leaf in growable_leaves:
             leaf["mass"] += growth_per_leaf
             leaf["age"] += 1 #seconds
@@ -437,7 +444,7 @@ class Root(Organ):
         return outlines
 
     def check_can_add_root(self):
-        if self.active_threshold > 2*len(self.ls.first_letters):
+        if self.active_threshold > len(self.ls.first_letters):
             return True
         else:
             return False
@@ -638,13 +645,13 @@ class Stem(Organ):
 
 class Starch(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active, model):
-        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[50,100,500,1000])
+        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[50])
         self.toggle_button = None
         self.model = model
         self.starch_intake = 0
 
-    def grow(self):
-        delta = self.growth_rate
+    def grow(self,dt):
+        delta = self.growth_rate*dt
         if delta >= self.thresholds[self.active_threshold]:
             self.mass = self.thresholds[self.active_threshold]
         else:
@@ -653,11 +660,15 @@ class Starch(Organ):
     def update_growth_rate(self, growth_rate):
         self.growth_rate = growth_rate
 
-    def drain(self):
+    def update_starch_max(self, max_pool):
+        self.thresholds = [max_pool]
+        if self.mass > max_pool:
+            self.mass = max_pool
 
-        delta = self.mass - self.starch_intake
-        if delta < 0:
+    def drain(self, dt):
+        delta = self.starch_intake*dt
+        if self.mass - delta < 0:
             self.mass = 0
             self.toggle_button.deactivate()
         else:
-            self.mass = delta
+            self.mass -= delta

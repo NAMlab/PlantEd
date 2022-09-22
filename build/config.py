@@ -94,11 +94,9 @@ def get_y(x,dict):
     return temp
 
 def load_options(path):
-    global _OPTIONS
-    if _OPTIONS == None:
-        with open(path) as convert_file:
-            _OPTIONS = json.load(convert_file)
-    return _OPTIONS
+    with open(path) as convert_file:
+        options = json.load(convert_file)
+    return options
 
 def write_options(path, options):
     with open(path, 'w') as convert_file:

@@ -11,16 +11,19 @@ import config
 DRAIN_DEFAULT = 0.1 # *3600/240 to adjust to hourly
 
 # rain should be much more than consumption
-RAIN_RATE = 1
+RAIN_RATE = 0.2
+TRICKLE_AMOUNT = 0.1
 
 
 # falling down over time, into base water level -> lowest line of the grid
 class Water_Grid:
-    def __init__(self, pos=(0,900), grid_size=(6,20), max_water=50000):
+    def __init__(self, pos=(0,900), grid_size=(6,20), max_water=1000):
         self.pos = pos
         self.grid = np.zeros(grid_size)
+        self.drainable_grid = np.zeros(grid_size)
+        self.drainable_grid_sum_normalized = 0
         self.raining = 0
-        self.trickle_amount = 0.0001
+        self.trickle_amount = TRICKLE_AMOUNT
         self.reservoirs = []
         self.base_waters = []
         self.max_water = max_water
@@ -40,11 +43,11 @@ class Water_Grid:
 
     def update(self, dt):
         if self.raining > 0 and self.grid[0,0] < self.max_water:
-            self.grid[0,:] += self.raining * self.gametime.GAMESPEED
+            self.grid[0,:] += self.raining * self.gametime.GAMESPEED * dt
         self.trickle(dt)
 
         self.set_max_drain_rate()
-        self.drain_grid()
+        self.drain_grid(dt)
 
         #print(self.water_pool_delta, self.water_pool)
         for reservoir in self.reservoirs:
@@ -55,28 +58,30 @@ class Water_Grid:
 
     def set_max_drain_rate(self):
         # print(self.drainage_grid.sum(), self.default_drain_rate_cell)
-        drainable_grid = np.multiply(self.root_grid, self.grid)
+        self.drainable_grid = np.multiply(self.root_grid, self.grid)
         grid_sum_normalized = 0
-        grid_sum_normalized = sum([1 if cell > 0 else 0 for cell in np.nditer(drainable_grid)])
+        self.drainable_grid_sum_normalized = sum([1 if cell > 0 else 0 for cell in np.nditer(self.drainable_grid)])
         self.max_drain_rate = grid_sum_normalized * self.default_drain_rate_cell
 
     def set_root_grid(self, root_grid):
         self.root_grid = root_grid
 
-    def drain_grid(self):
-        if self.root_grid is not None:
-            grid_sum = self.root_grid.sum()
-            if grid_sum > 0:
-                self.actual_drain_rate_cell = self.actual_drain_rate / grid_sum
-                #print("MAX_DEFAULT_RATE: ",self.max_drain_rate, " ACTUAL_MAX_RATE: ", self.actual_drain_rate, " MAX_CELL: ", self.actual_drain_rate_cell)
-            for (x, y), value in np.ndenumerate(self.grid):
+    def drain_grid(self, dt):
+        if self.drainable_grid_sum_normalized > 0:
+            self.actual_drain_rate_cell = self.actual_drain_rate / self.drainable_grid_sum_normalized
+        else:
+            return
+            # print("MAX_DEFAULT_RATE: ",self.max_drain_rate, " ACTUAL_MAX_RATE: ", self.actual_drain_rate, " MAX_CELL: ", self.actual_drain_rate_cell)
+        for (x, y), value in np.ndenumerate(self.drainable_grid):
+            if self.drainable_grid[x, y] > 0:
                 # print(self.actual_drain_rate_cell, self.drainage_grid[x, y])
-                delta = self.actual_drain_rate_cell * self.root_grid[x, y] * self.gametime.GAMESPEED
+                delta = self.actual_drain_rate_cell * self.gametime.GAMESPEED * dt
                 if self.grid[x, y] - delta >= 0:
                     # print(self.actual_drain_rate, self.actual_drain_rate_cell, self.root_grid[x,y])
                     self.grid[x, y] -= delta
                 else:
                     self.grid[x, y] = 0
+
 
 
         # negative delta = take, positive give
@@ -86,7 +91,7 @@ class Water_Grid:
 
     def pour(self, rate, dt, pos):
         if not self.grid[0,int(pos[0]/100)] > self.max_water:
-            self.grid[0,int(pos[0]/100)] += rate *self.gametime.GAMESPEED
+            self.grid[0,int(pos[0]/100)] += rate *self.gametime.GAMESPEED * dt
         #print(self.grid[0,int(pos[0]/100)])
 
     def add_reservoir(self, reservoir):
@@ -115,7 +120,7 @@ class Water_Grid:
                 # print(i, i-1, j, "Current_Cell: ", self.grid[i, j], "Upper_CELL:", self.grid[i -1, j])
 
                 upper_cell = self.grid[i - 1, j]
-                adjusted_trickle = self.trickle_amount * self.gametime.GAMESPEED * upper_cell * random.random()
+                adjusted_trickle = self.trickle_amount * self.gametime.GAMESPEED * random.random() *dt
 
                 # check if zero in upper cell
                 delta_trickle = self.grid[i - 1, j] - adjusted_trickle
@@ -138,7 +143,6 @@ class Water_Grid:
         for i in range(0,self.grid.shape[0]-1):
             for j in range(0,self.grid.shape[1]):
                 cell = self.grid[i,j]
-                number = config.FONT.render("{:.2f}".format(cell),True,config.BLACK,config.WHITE)
 
                 if cell > 20:
                     #Todo make better loop, to draw at 0
@@ -151,6 +155,7 @@ class Water_Grid:
                         offset_x = self.offset_grid[0,k, i, j]
                         offset_y = self.offset_grid[1,k, i, j]
                         pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/(self.max_water/5)+5))
+                number = config.FONT.render("{:.2f}".format(cell),True,config.BLACK,config.WHITE)
                 screen.blit(number, (j * 100, 900 + i * 100))
         for reservoir in self.reservoirs:
             reservoir.draw(screen)
