@@ -98,7 +98,7 @@ class DevScene(object):
         # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5), self.model,
-                           self.camera, self.water_grid, growth_boost=16)
+                           self.camera, self.water_grid, growth_boost=1)
         self.water_grid.add_base_water(
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 400, config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)

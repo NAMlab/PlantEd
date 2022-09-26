@@ -45,7 +45,7 @@ class Plant:
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
-        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=8, active=True, model=self.model)
+        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=100000, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
@@ -58,13 +58,10 @@ class Plant:
         if lvl >= 20:
             pygame.event.post(pygame.event.Event(WIN))
 
+    # convert flux/mikromol to gramm
     def update_growth_rates(self, growth_rates):
-        if self.get_biomass() < self.seedling.max:
-            for i in range(0,3):
-                self.organs[i].update_growth_rate((growth_rates[i]*2)*self.growth_boost)
-        else:
-            for i in range(0,3):
-                self.organs[i].update_growth_rate(growth_rates[i]*self.growth_boost)
+        for i in range(0, 3):
+            self.organs[i].update_growth_rate((growth_rates[i]))
         self.organ_starch.update_growth_rate(growth_rates[3])
         self.organ_starch.starch_intake = growth_rates[4]
 
@@ -83,7 +80,7 @@ class Plant:
     # Projected Leaf Area (PLA)
     def get_PLA(self):
         # 0.03152043208186226 as a factor to get are from dry mass
-        return (self.organs[0].get_mass() * 0.03152043208186226)+self.organs[0].base_mass if len(self.organs[0].leaves) > 0 else 0 #m^2
+        return (self.organs[0].get_mass()+self.organs[0].base_mass) * 0.03152043208186226 if len(self.organs[0].leaves) > 0 else 0 #m^2
 
     def grow(self, dt):
         for organ in self.organs:
@@ -114,7 +111,7 @@ class Plant:
             organ.update(dt)
         self.organs[0].photon_intake = photon_intake
 
-        self.organ_starch.update_starch_max(self.get_biomass()*2+7)
+        self.organ_starch.update_starch_max(self.get_biomass()*20+100000)
 
 
     def handle_event(self, event):
@@ -301,7 +298,7 @@ class Leaf(Organ):
         growth_per_leaf = (self.growth_rate*dt)/len(growable_leaves) if len(growable_leaves) > 0 else 0
         for leaf in growable_leaves:
             leaf["mass"] += growth_per_leaf
-            leaf["age"] += 1 #seconds
+            leaf["age"] += 1*dt #seconds
 
         #print(leaf["age"],leaf["lifetime"])
 
@@ -338,7 +335,7 @@ class Leaf(Organ):
                 "base_image_id": image_id,
                 "direction": dir,
                 "age": 0,
-                "lifetime": 60*60*24/240,
+                "lifetime": 60*60*24*10, # 10 days of liefetime to grow
                 "growth_index": self.active_threshold} # to get relative size, depending on current threshold - init threshold
         self.update_leaf_image(leaf, init=True)
         self.particle_systems.append(ParticleSystem(20, spawn_box=Rect(leaf["x"], leaf["y"], 0, 0),

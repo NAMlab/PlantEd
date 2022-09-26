@@ -113,6 +113,8 @@ class UI:
         speed_options = [RadioButton(140, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.play], config.FONT,
                                      image=assets.img("normal_speed.png")),
                          RadioButton(180, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.faster], config.FONT,
+                                     image=assets.img("fast_speed.png")),
+                         RadioButton(220, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.fastest], config.FONT,
                                      image=assets.img("fast_speed.png"))
                          ]
         for rb in speed_options:
@@ -253,7 +255,7 @@ class UI:
     def draw_plant_details(self, s):
         # details
         topleft = self.plant_details_topleft
-        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 600, 40), border_radius=3)
+        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 700, 40), border_radius=3)
 
 
         # plant lvl
@@ -271,16 +273,16 @@ class UI:
         # water_pool_plant
         water_pool_text = config.FONT.render("Water:", True, (0, 0, 0))
         s.blit(water_pool_text, dest=(topleft[0] + 270, topleft[1] + 6))
-        water = config.FONT.render("{:.0f}".format(self.model.water_pool), True, (0, 0, 0))  # title
+        water = config.FONT.render("{:.0f} mmol".format(self.model.water_pool/1000), True, (0, 0, 0))  # title
         s.blit(water, dest=(topleft[0] + biomass_text.get_width() + 290, topleft[1] + 6))
 
         # name
-        s.blit(self.name_label, (topleft[0]+450, topleft[1] + 6))
+        s.blit(self.name_label, (topleft[0]+500, topleft[1] + 6))
 
 
     def get_day_time(self):
         ticks = self.gametime.get_time()
-        day = 1000*60*6
+        day = 1000*60*60*24
         hour = day/24
         min = hour/60
         days = int(ticks/day)
@@ -422,7 +424,7 @@ class UI:
         radioButtons[2].button_down = True
         # weird to have extra method for one element
 
-    def draw_organ_detail_temp(self, s, organ, pos, label, show_level=True):
+    def draw_organ_detail_temp(self, s, organ, pos, label, show_level=True, factor=1):
         skills = organ.skills
         topleft = pos
         pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 100, 30), border_radius=3)
@@ -441,8 +443,8 @@ class UI:
         exp = organ.mass / needed_exp
         width = min(int(exp_width / 1 * exp), exp_width)
         pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1]+120, width, 16), border_radius=3)  # exp
-        text_organ_mass = config.SMALL_FONT.render("{:.2f} / {:.2f}".format(organ.mass,
-                                                organ.get_threshold()),
+        text_organ_mass = config.SMALL_FONT.render("{:.2f} / {:.2f}".format(organ.mass/factor,
+                                                organ.get_threshold()/factor),
                                                 True, (0, 0, 0))
 
         j = 0
@@ -463,7 +465,7 @@ class UI:
         self.draw_organ_detail_temp(s,self.plant.organs[1],(topleft[0]+110,topleft[1]),self.label_stem)
         self.draw_organ_detail_temp(s,self.plant.organs[2],(topleft[0]+220,topleft[1]),self.label_root)
 
-        self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),self.label_starch, False)
+        self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),self.label_starch, False, factor=1000)
 
         #self.draw_organ_detail_temp(s,3,(topleft[0]+330,topleft[1]),"Starch")
         #pygame.draw.line(s,config.WHITE_TRANSPARENT,(topleft[0]+260,topleft[1]+40),(topleft[0]+260,topleft[1]+300),width=2)

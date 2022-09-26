@@ -22,13 +22,18 @@ PHOTON = "Photon_tx_leaf"
 CO2 = "CO2_tx_leaf"
 
 # mol
-Vmax = 0.8
-max_nitrate_pool_low = 10
-max_nitrate_pool_high = 50
-Km = 4
+Vmax = 3360/3600 # mikroMol/gDW/s
+Km = 4000 #mikromol
+max_nitrate_pool_low = 12000 #mikromol
+max_nitrate_pool_high = 100000 #mikromol
 
-MAX_WATER_POOL = 10000
-MAX_WATER_POOL_CONSUMPTION = 1
+# Todo change to 0.1
+MAX_STARCH_INTAKE = 1
+
+MAX_WATER_POOL = 1000000
+MAX_WATER_POOL_CONSUMPTION = 10
+
+FLUX_TO_GRAMM = 0.002
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
@@ -57,7 +62,7 @@ class DynamicModel:
         self.transpiration_factor = 0
         self.co2_intake = 0
         self.starch_intake = 0                  # actual starch consumption
-        self.starch_intake_max = 0.01              # upper bound /h ingame
+        self.starch_intake_max = MAX_STARCH_INTAKE           # upper bound
         self.percentages_sum = 0
 
         # growth rates for each objective
@@ -71,7 +76,7 @@ class DynamicModel:
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
-        self.nitrate_pool = max_nitrate_pool_low
+        self.nitrate_pool = max_nitrate_pool_high
         self.water_pool = self.max_water_pool
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.1)))
         self.set_bounds(PHOTON, (0, 0))
@@ -92,7 +97,7 @@ class DynamicModel:
         solution = self.model.optimize()
         gamespeed = self.gametime.GAMESPEED
 
-        # calc_rates 1/s
+        # calc_rates 1flux/s
         self.root_rate = (solution.fluxes.get("AraCore_Biomass_tx_root"))
         self.stem_rate = (solution.fluxes.get("AraCore_Biomass_tx_stem"))
         self.leaf_rate = (solution.fluxes.get("AraCore_Biomass_tx_leaf"))
@@ -110,7 +115,7 @@ class DynamicModel:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*self.transpiration_factor
 
-        print("Root_prod: ", self.root_rate,
+        print("Leaf_Prod: ",  self.leaf_rate, "Stem_Prod:", self.stem_rate, "Root_prod: ", self.root_rate,
             "Starch_prod: ", self.starch_rate, " Starch_intake: ", self.starch_intake,
               " Water intake: ", self.water_intake, " Water_pool: ", self.water_pool, "Water_pool_consumption: ", self.water_intake_pool
         , "Nitrate_intake: ", self.nitrate_intake,
@@ -123,7 +128,7 @@ class DynamicModel:
     def update_transpiration_factor(self):
         K = 291.18
         ticks = self.gametime.get_time()
-        day = 1000 * 60 * 6
+        day = 1000 * 60 * 60 * 24
         hour = day / 24
         hours = (ticks % day) / hour
         RH = config.get_y(hours, config.humidity)
@@ -138,7 +143,7 @@ class DynamicModel:
 
     def get_rates(self):
         gamespeed = self.gametime.GAMESPEED
-        return (self.leaf_rate*gamespeed, self.stem_rate*gamespeed, self.root_rate*gamespeed, self.starch_rate*gamespeed, self.starch_intake*gamespeed)
+        return (self.leaf_rate*gamespeed*FLUX_TO_GRAMM, self.stem_rate*gamespeed*FLUX_TO_GRAMM, self.root_rate*gamespeed*FLUX_TO_GRAMM, self.starch_rate*gamespeed, self.starch_intake*gamespeed)
 
     def get_actual_water_drain(self):
         return self.water_intake + self.water_intake_pool
@@ -153,14 +158,14 @@ class DynamicModel:
         self.nitrate_pool += amount
 
     def get_nitrate_percentage(self):
-        return self.nitrate_pool/max_nitrate_pool_low
+        return self.nitrate_pool/max_nitrate_pool_high
 
     def get_nitrate_intake(self, mass):
         # Michaelis-Menten Kinetics
         # v = Vmax*S/Km+S, v=intake speed, Vmax=max Intake, Km=Where S that v=Vmax/2, S=Substrate Concentration
         # Literature: Vmax ~ 0.00336 mol g DW−1 day−1, KM = 0.4 mmol,  S = 50 mmol and 1.2 mmol (high, low)
-        # day --> sec (240 real sec = 1 ingame sec)
-        return max(((Vmax*self.nitrate_pool)/(Km+self.nitrate_pool))*mass/24,0) #hour
+        # day --> sec
+        return max(((Vmax*self.nitrate_pool)/(Km+self.nitrate_pool))*mass,0) #second
 
     def set_bounds(self, reaction, bounds):
         self.model.reactions.get_by_id(reaction).bounds = bounds
@@ -210,14 +215,17 @@ class DynamicModel:
                     self.water_intake_pool = MAX_WATER_POOL_CONSUMPTION
         self.water_pool -= self.water_intake_pool * dt * gamespeed
 
+        if self.water_pool > MAX_WATER_POOL:
+            self.water_pool = MAX_WATER_POOL
+
 
         self.nitrate_pool -= self.nitrate_intake * dt * gamespeed
         if self.nitrate_pool < 0:
             self.nitrate_pool = 0
-        # starch gets handled separatly in Organ Starch
+        # slowly add nitrate after buying
         if self.nitrate_delta_amount > 0:
-            self.nitrate_pool += 0.1 * gamespeed * dt
-            self.nitrate_delta_amount -= 0.1 * gamespeed * dt
+            self.nitrate_pool += 1 * gamespeed * dt
+            self.nitrate_delta_amount -= 1 * gamespeed * dt
 
     def update_bounds(self, root_mass, photon_in, max_water_drain):
         # update photon intake based on sun_intensity
@@ -240,4 +248,5 @@ class DynamicModel:
                     intake = MAX_WATER_POOL_CONSUMPTION
 
         self.set_bounds(WATER, (-1000,intake))
+        photon_in = photon_in * 300 # 300 mikromol/m2/s
         self.set_bounds(PHOTON,(0,photon_in))

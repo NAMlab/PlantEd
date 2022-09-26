@@ -212,7 +212,7 @@ class Environment:
 
     def get_day_time(self):
         ticks = self.gametime.get_time()
-        day = 1000*60*6
+        day = 1000*60*60*24
         hour = day/24
         min = hour/60
         days = int(ticks/day)
@@ -221,11 +221,11 @@ class Environment:
         return days, hours, minutes
 
     def get_sun_intensity(self):
-        return -(np.sin(np.pi/2-np.pi/5+((self.gametime.get_time()/(1000 * 60 * 6)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
+        return -(np.sin(np.pi/2-np.pi/5+((self.gametime.get_time()/(1000 * 60 * 60 * 24)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
 
     def get_day_time_t(self):
 
-        return ((((self.gametime.get_time()/1000/60/6)+0.5-0.333)%1)*2-1)
+        return ((((self.gametime.get_time()/(1000*60*60*24))+0.5-0.333)%1)*2-1)
 
     def add_animation(self, images, duration, pos, speed=1):
         self.sprites.add(OneShotAnimation(images, duration, pos, speed))

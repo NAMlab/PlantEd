@@ -46,7 +46,7 @@ class GameTime:
     def __init__(self):
         self.starttime = pygame.time.get_ticks()
         self.currenttime = self.starttime
-        self.GAMESPEED = 1
+        self.GAMESPEED = 240
         self.timediff = 0  # used to add sped up or slowed time to the current time
         self.deltatime = self.starttime  # tmp time for states
         self.change_speed(1)
@@ -64,10 +64,13 @@ class GameTime:
         self.GAMESPEED = speed
 
     def play(self):
-        self.set_speed(1)
+        self.set_speed(240)
 
     def faster(self):
-        self.set_speed(10)
+        self.set_speed(2400)
+
+    def fastest(self):
+        self.set_speed(4800)
 
     def get_time(self):
         return pygame.time.get_ticks() - self.starttime + self.timediff + (

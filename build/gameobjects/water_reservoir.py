@@ -8,16 +8,16 @@ import config
 
 # normal plant intake 83 (flux)
 # Grid 6*20 = 120 * 0.75 = 80 -> /60/60*240 to convert from hourly to each second -> 5.3 = 120 * 0.05, double to enable more growth
-DRAIN_DEFAULT = 0.5 # *3600/240 to adjust to hourly
+DRAIN_DEFAULT = 0.005 # *3600/240 to adjust to hourly
 
 # rain should be much more than consumption
-RAIN_RATE = 0.01
-TRICKLE_AMOUNT = 0.1
+RAIN_RATE = 5
+TRICKLE_AMOUNT = 0.05
 
 
 # falling down over time, into base water level -> lowest line of the grid
 class Water_Grid:
-    def __init__(self, pos=(0,900), grid_size=(6,20), max_water=1000):
+    def __init__(self, pos=(0,900), grid_size=(6,20), max_water=1000000):
         self.pos = pos
         self.grid = np.zeros(grid_size)
         self.drainable_grid = np.zeros(grid_size)
@@ -129,7 +129,7 @@ class Water_Grid:
 
                 upper_cell = self.grid[i - 1, j]
                 if upper_cell > 0:
-                    adjusted_trickle = (self.trickle_amount + self.trickle_amount*upper_cell/10) * self.gametime.GAMESPEED * random.random() * dt
+                    adjusted_trickle = (self.trickle_amount + self.trickle_amount*upper_cell/1000) * self.gametime.GAMESPEED * random.random() * dt
                     # check if zero in upper cell
                     delta_trickle = self.grid[i - 1, j] - adjusted_trickle
                     if delta_trickle <= 0:
@@ -191,7 +191,7 @@ class Base_water:
     def update(self,dt):
         if self.n_dots > 0:
             ticks = self.gametime.get_time()
-            day = 1000 * 60 * 6
+            day = 1000 * 60 * 60 * 24
             hour = day / 24
             hours = (ticks % day) / hour
             deg = hours / 24 * 360
@@ -216,7 +216,7 @@ class Water_Reservoir:
 
     def update(self, dt):
         ticks = self.gametime.get_time()
-        day = 1000 * 60 * 6
+        day = 1000 * 60 * 60 * 24
         hour = day / 24
         hours = (ticks % day) / hour
         deg = hours / 24 * 360

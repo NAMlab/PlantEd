@@ -170,7 +170,7 @@ tooltipps = [ToolTip(820, 150, 0, 0,
 
 # EVENTS
 # change to seed and chances --> endless
-day = 1000*60*6
+day = 1000*60*60*24
 e = [{"type": CLOUD,
       "start_time": 1000 * 60},
     {"type": RAIN,
