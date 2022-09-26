@@ -27,7 +27,7 @@ max_nitrate_pool_low = 10
 max_nitrate_pool_high = 50
 Km = 4
 
-MAX_WATER_POOL = 1000
+MAX_WATER_POOL = 10000
 MAX_WATER_POOL_CONSUMPTION = 1
 
 # interface and state holder of model --> dynamic wow
@@ -46,6 +46,7 @@ class DynamicModel:
         self.nitrate_pool = 0
         self.nitrate_delta_amount = 0
         self.water_pool = 0
+        self.water_intake_pool = 0
         self.max_water_pool = MAX_WATER_POOL
         self.temp = 20 # degree ceclsius
              # based on paper
@@ -105,14 +106,14 @@ class DynamicModel:
         self.photon_intake = solution.fluxes[PHOTON]
 
 
-        #print("Facotr: ", Consumption_Factor, " CO2 Intake: ", solution.fluxes[CO2])
         if self.stomata_open:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*self.transpiration_factor
 
-        print("Root: ", self.root_rate, "Stem: ", self.stem_rate, "Leaf:", self.leaf_rate, "Starch_prod: ",
-              self.starch_rate, " Starch_intake: ",
-              self.starch_intake, " Water intake: ", self.water_intake, "Nitrate_intake: ", self.nitrate_intake,
+        print("Root_prod: ", self.root_rate,
+            "Starch_prod: ", self.starch_rate, " Starch_intake: ", self.starch_intake,
+              " Water intake: ", self.water_intake, " Water_pool: ", self.water_pool, "Water_pool_consumption: ", self.water_intake_pool
+        , "Nitrate_intake: ", self.nitrate_intake,
               " Factor: ", self.transpiration_factor, " CO2: ", solution.fluxes[CO2])
 
     def open_stomata(self):
@@ -140,7 +141,7 @@ class DynamicModel:
         return (self.leaf_rate*gamespeed, self.stem_rate*gamespeed, self.root_rate*gamespeed, self.starch_rate*gamespeed, self.starch_intake*gamespeed)
 
     def get_actual_water_drain(self):
-        return self.water_intake
+        return self.water_intake + self.water_intake_pool
 
     def get_photon_upper(self):
         return self.model.reactions.get_by_id(PHOTON).bounds[1]
@@ -185,22 +186,29 @@ class DynamicModel:
 
     def update_pools(self,dt, max_water_drain):
         gamespeed = self.gametime.GAMESPEED
+        #self.water_intake_pool = 0  # reset to not drain for no reason
 
-        if self.water_intake >= max_water_drain:
-            water_pool_rate = self.water_intake-max_water_drain
-            self.water_pool -= water_pool_rate if self.water_pool - water_pool_rate >= 0 else self.water_pool
-        else:
-            if self.water_pool < self.max_water_pool:
-                spill_over = min(10,max_water_drain-self.water_intake)
-                # Todo find a viable solution to increase intake after filling water_pool
-                #self.set_bounds(WATER,(-1000,self.water_intake+spill_over))
-                self.water_pool += spill_over * gamespeed * dt
+        # Todo make work
+        # if all is zero but pool not and photosynthesis, set bounds back to max
 
         # max water drain tells how much is there to take
         # if last intake was higher, drain differenz from pool
         # if last intake was lower, drain normally -> if water pool is lower than max, drain more, put diff in pool
 
         #print(max_water_drain, self.water_intake)
+
+        # take more water in, if possible and pool not full
+
+        if self.water_pool < MAX_WATER_POOL:
+            if self.water_intake < max_water_drain:
+                self.water_intake_pool = 0
+                # excess has to be negative to get added to pool
+                excess =  self.water_intake - max_water_drain
+                if excess < MAX_WATER_POOL_CONSUMPTION:
+                    self.water_intake_pool = excess
+                else:
+                    self.water_intake_pool = MAX_WATER_POOL_CONSUMPTION
+        self.water_pool -= self.water_intake_pool * dt * gamespeed
 
 
         self.nitrate_pool -= self.nitrate_intake * dt * gamespeed
@@ -217,5 +225,19 @@ class DynamicModel:
         # update water based on grid
         # co2? maybe later in dev
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)))
-        self.set_bounds(WATER, (-1000,max_water_drain))
+
+        # take from pool, if no enough
+        #print(max_water_drain, MAX_WATER_POOL_CONSUMPTION-max_water_drain)
+        # not enough water in soil - take from pool
+        intake = max_water_drain
+        self.water_intake_pool = 0
+        if photon_in > 0:
+            if max_water_drain < MAX_WATER_POOL_CONSUMPTION:
+                if self.water_pool > 0:
+                    shortage = MAX_WATER_POOL_CONSUMPTION - max_water_drain
+                    # take diff from pool
+                    self.water_intake_pool = shortage
+                    intake = MAX_WATER_POOL_CONSUMPTION
+
+        self.set_bounds(WATER, (-1000,intake))
         self.set_bounds(PHOTON,(0,photon_in))

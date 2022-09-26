@@ -11,7 +11,7 @@ import config
 DRAIN_DEFAULT = 0.5 # *3600/240 to adjust to hourly
 
 # rain should be much more than consumption
-RAIN_RATE = 0.2
+RAIN_RATE = 0.01
 TRICKLE_AMOUNT = 0.1
 
 
@@ -68,16 +68,27 @@ class Water_Grid:
     def drain_grid(self, dt):
         if self.drainable_grid_sum > 0:
             self.actual_drain_rate_cell = self.actual_drain_rate / sum([1 if cell >= 0 else 0 for cell in np.nditer(self.drainable_grid)])#self.drainable_grid_sum_normalized
-            print(self.actual_drain_rate_cell)
         else:
             return
-        for (x, y), value in np.ndenumerate(self.drainable_grid):
-            if self.drainable_grid[x, y] > self.actual_drain_rate_cell:
-                delta = self.actual_drain_rate_cell * self.gametime.GAMESPEED * dt
-                if self.grid[x, y] - delta >= 0:
-                    self.grid[x, y] -= delta
-                else:
-                    self.grid[x, y] = 0
+        tries = 10
+        drain_amount = self.actual_drain_rate
+        while(drain_amount > 0):
+            # ensure its not looping forever
+            tries -= 1
+            if tries <= 0:
+                break
+            for (x, y), value in np.ndenumerate(self.drainable_grid):
+                if self.drainable_grid[x, y] > 0:
+                    delta = self.actual_drain_rate_cell * self.gametime.GAMESPEED * dt
+                    # subtract fom drain amount
+                    drain_amount -= delta
+                    if self.grid[x, y] - delta >= 0:
+                        self.grid[x, y] -= delta
+                    else:
+                        # if there is not enough to drain, add it back to amount
+                        drain_amount += (delta - self.grid[x, y])
+                        self.grid[x, y] = 0
+
 
 
 
@@ -117,16 +128,16 @@ class Water_Grid:
                 # print(i, i-1, j, "Current_Cell: ", self.grid[i, j], "Upper_CELL:", self.grid[i -1, j])
 
                 upper_cell = self.grid[i - 1, j]
-                adjusted_trickle = (self.trickle_amount + self.trickle_amount*upper_cell/10) * self.gametime.GAMESPEED * random.random() * dt
-
-                # check if zero in upper cell
-                delta_trickle = self.grid[i - 1, j] - adjusted_trickle
-                if delta_trickle <= 0:
-                    self.grid[i - 1, j] = 0
-                    adjusted_trickle = adjusted_trickle - delta_trickle
-                else:
-                    self.grid[i - 1, j] -= adjusted_trickle
-                self.grid[i, j] += adjusted_trickle
+                if upper_cell > 0:
+                    adjusted_trickle = (self.trickle_amount + self.trickle_amount*upper_cell/10) * self.gametime.GAMESPEED * random.random() * dt
+                    # check if zero in upper cell
+                    delta_trickle = self.grid[i - 1, j] - adjusted_trickle
+                    if delta_trickle <= 0:
+                        self.grid[i - 1, j] = 0
+                        adjusted_trickle = adjusted_trickle - delta_trickle
+                    else:
+                        self.grid[i - 1, j] -= adjusted_trickle
+                    self.grid[i, j] += adjusted_trickle
         # Todo maybe shitty to just delete it
         #self.grid[-1,:] = 0
 
