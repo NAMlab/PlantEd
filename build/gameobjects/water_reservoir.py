@@ -11,8 +11,8 @@ import config
 DRAIN_DEFAULT = 0.005 # *3600/240 to adjust to hourly
 
 # rain should be much more than consumption
-RAIN_RATE = 5
-TRICKLE_AMOUNT = 0.05
+RAIN_RATE = 8
+TRICKLE_AMOUNT = 0.04
 
 
 # falling down over time, into base water level -> lowest line of the grid
@@ -162,7 +162,7 @@ class Water_Grid:
                     for k in range(0,n_drops):
                         offset_x = self.offset_grid[0,k, i, j]
                         offset_y = self.offset_grid[1,k, i, j]
-                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),int(cell/(self.max_water/5)+5))
+                        pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),5)
                 number = config.FONT.render("{:.2f}".format(cell),True,config.BLACK,config.WHITE)
                 screen.blit(number, (j * 100, 900 + i * 100))
         for reservoir in self.reservoirs:

@@ -3,18 +3,20 @@ from data import assets
 from utils.particle import ParticleSystem
 from pygame import Rect
 import config
+from utils.gametime import GameTime
 from pygame.locals import *
 from fba import dynamic_model
 
 
 class Watering_can:
-    def __init__(self, pos, model=None, water_grid=None, amount=None, rate=500, cost=1, active=False, callback=None): # take from config
+    def __init__(self, pos, model=None, water_grid=None, amount=None, rate=1000, cost=1, active=False, callback=None): # take from config
+        self.gametime = GameTime.instance()
         self.pos = (pos[0]-20,pos[1]-120)
         self.model = model
         self.water_grid = water_grid
         self.image = assets.img("watering_can.png",(214,147))
-        self.amount = amount
-        self.default_amount = rate*60*3 #add to config
+        self.default_amount = rate*240*3 #default gamespeed 3s
+        self.amount = amount if amount else self.default_amount
         self.rate = rate
         self.cost = cost
         self.active = active
@@ -26,7 +28,6 @@ class Watering_can:
                                                   spread=[20, 20], active=False)
 
     def activate(self, amount=None):
-        self.amount = self.default_amount if amount is None else amount
         self.pos = pygame.mouse.get_pos()
         self.active = True
         pygame.mouse.set_visible(False)
@@ -54,7 +55,7 @@ class Watering_can:
                 self.amount = 0
                 self.deactivate()
             else:
-                self.amount -= self.rate
+                self.amount -= self.rate *self.gametime.GAMESPEED * dt
 
     def handle_event(self, e):
         if not self.active:
