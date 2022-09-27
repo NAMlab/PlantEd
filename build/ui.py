@@ -98,9 +98,9 @@ class UI:
         self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
 
-
-
-        self.tool_tip_manager = ToolTipManager(config.tooltipps, callback=self.plant.get_biomass)
+        tipps = config.load_tooltipps("tooltipps.json")
+        tooltipps = [ToolTip(tip["x"],tip["y"],tip["lines"],headfont=tip["headfont"],mass=tip["mass"],center=tip["center"]) for tip in tipps]
+        self.tool_tip_manager = ToolTipManager(tooltipps, callback=self.plant.get_biomass)
         self.button_sprites.add(ToggleButton(240, config.SCREEN_HEIGHT - 50, 64, 32,
                                              [self.tool_tip_manager.toggle_activate], config.FONT,
                                              text="HINT", pressed=True))
@@ -130,6 +130,9 @@ class UI:
             button.handle_event(e)
         for slider in self.sliders:
             slider.handle_event(e)
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_x:
+            #print(self.tool_tip_manager.tipps_to_dict())
+            config.write_tooltipps("tooltipps.json",self.tool_tip_manager.tipps_to_dict())
         for tips in self.tool_tip_manager.tool_tips:
             tips.handle_event(e)
         if e.type == pygame.MOUSEMOTION:

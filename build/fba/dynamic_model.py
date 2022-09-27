@@ -115,11 +115,11 @@ class DynamicModel:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*self.transpiration_factor
 
-        print("Leaf_Prod: ",  self.leaf_rate, "Stem_Prod:", self.stem_rate, "Root_prod: ", self.root_rate,
+        '''print("Leaf_Prod: ",  self.leaf_rate, "Stem_Prod:", self.stem_rate, "Root_prod: ", self.root_rate,
             "Starch_prod: ", self.starch_rate, " Starch_intake: ", self.starch_intake,
               " Water intake: ", self.water_intake, " Water_pool: ", self.water_pool, "Water_pool_consumption: ", self.water_intake_pool
         , "Nitrate_intake: ", self.nitrate_intake,
-              " Factor: ", self.transpiration_factor, " CO2: ", solution.fluxes[CO2])
+              " Factor: ", self.transpiration_factor, " CO2: ", solution.fluxes[CO2])'''
 
     def open_stomata(self):
         self.stomata_open = True

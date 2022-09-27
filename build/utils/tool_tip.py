@@ -1,4 +1,5 @@
 import pygame
+import config
 from utils.button import Button
 
 
@@ -33,20 +34,26 @@ class ToolTipManager:
             #    if tip.mass < biomass and not tip.done:
             #        tip.activate()
 
+    def tipps_to_dict(self):
+        return [tip.to_dict() for tip in self.tool_tips]
+
 
 class ToolTip:
-    def __init__(self, x, y, w, h, lines, font, headfont=None, mass=-1, color=(245, 245, 245, 255), active=False, point=None):
+    def __init__(self, x, y, lines, font=None, headfont=False, mass=-1, color=(245, 245, 245, 255), active=False, point=None, center=False):
         self.x = x
         self.y = y
-        self.w = w
-        self.h = h
+        self.center = center
         self.mass = mass
         self.color = color
         self.active = active
         self.done = False
-        self.font = font
+        if font is None:
+            self.font = config.FONT
+        else:
+            self.font = font
         self.headfont = headfont
         # maybe ugly, but smart to prevent ugly boxes, thus not ugly
+        self.lines = lines
         self.text, self.w, self.h = self.make_text(lines)
         self.triangle = []
         self.set_triangle(point) if point else None
@@ -56,8 +63,17 @@ class ToolTip:
     def update(self):
         pass
 
+    def to_dict(self):
+        return {"x":self.x,"y":self.y,"lines":self.lines,"font":None, "headfont":self.headfont, "mass":self.mass,"center":self.center}
+
     def handle_event(self, e):
         if self.active:
+            if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
+                x,y = pygame.mouse.get_pos()
+                self.x,self.y=x,y
+                self.button.rect = pygame.Rect(self.x,self.y+self.h -50,self.button.rect[2],self.button.rect[3])
+                #self.button.x,self.button.y = self.x, self.y + (self.h - 50)
+
             self.button.handle_event(e)
 
     def make_text(self, lines):
@@ -65,15 +81,18 @@ class ToolTip:
         min_h = 0
         min_w = 0
         for i in range (0,len(lines)):
-            if i == 0 and self.headfont:
-                single_line = self.headfont.render(lines[i], True, (0, 0, 0))
+            if i == 0 and self.headfont == True:
+                headfont = config.BIGGER_FONT
+                single_line = headfont.render(lines[i], True, (0, 0, 0))
             else:
                 single_line = self.font.render(lines[i], True, (0, 0, 0))
             min_w = max(min_w,single_line.get_width())
             min_h = min_h + single_line.get_height()*1.1
             text.append(single_line)
-        w = max(min_w, self.w)+10
-        h = max(min_h, self.w)
+        w = min_w+10
+        h = min_h
+        if self.center:
+            self.x -= w/2
         return text, w, h + 75
 
     def deactivate(self):

@@ -8,7 +8,6 @@ import os
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
 # settings: HARD, INTERMEDIATE, EASY, Graphics - not yet
-
 #pygame.init()
 
 # ugly, no config -> see enums
@@ -19,7 +18,6 @@ WIND = 3
 HAWK = 4
 
 current_dir = os.path.abspath(os.getcwd())
-
 OPTIONS_PATH = "options.json"
 
 #OPTIONS_PATH = OPTIONS_PATH.replace('/', os.sep).replace('\\', os.sep)
@@ -133,37 +131,15 @@ def apply_volume(options):
 # TOOLTIPPS
 # ui setup --> move to ui_setup.py
 # build complete ui in a separate class (watering can, tooltips, slider, ..)
-tooltipps = [ToolTip(820, 150, 0, 0,
-                     ["Welcome to PlantEd!", "> This is the first demo <", "Grow your seedling", "into a big plant.", " To WIN the game", "Reach plant level 20"],
-                     FONT, TITLE_FONT, mass=0),
-             ToolTip(340, 615, 0, 0, ["Your plant starts as a seed.", "Use your starch deposit", "to grow the roots"],
-                     FONT,
-                     mass=0, point=(-45, -20)),
-             ToolTip(350, 920, 0, 0, ["Time can be controlled", "in 2 different speeds.", "You can also hide Tooltipps"],
-                     FONT,
-                     mass=0),
-             ToolTip(370, 110, 0, 0,
-                     ["These are your main 3 organs.", "Once your roots are big enough",
-                      "your are able to grow a stem!", "Try to grow it to 4 gramms"], FONT, mass=0, point=(-40, 0)),
-             ToolTip(450, 700, 0, 0,
-                     ["Your sprout started stem and leaf development.", "Grow its mass further to increase nutrient intake.",],
-                     FONT, mass=3, point=(50, 120)),
-             ToolTip(830, 150, 0, 0, ["Seedling Stage", "Stem and leaf development", "are now available.", "Decide wich organs to grow.", "Larger roots will lead", "to faster nitrate and water intake.", "Larger leaves result in more", "light reaching the plant.", "A bigger Stem will provide", "more spots to grow leaves."],
-                     FONT, TITLE_FONT, mass=5),
-             ToolTip(350, 60, 0, 0,
-                     ["For every level up", "you will get one Green Thumb", "to buy upgrades."],
-                     FONT,
-                     mass=5, point=(-50, 0)),
-             ToolTip(310, 490, 0, 0, ["The green and white dots indicate", "what you plant is producing."],
-                     FONT, mass=6,
-                     point=(-50, 20)),
-             ToolTip(1090, 70, 0, 0,
-                     ["Name your plant", "by clicking on the box.", "It saves automatically so", "don't be nasty please."],
-                     FONT,
-                     mass=7, point=(-50, -20)),
-             ToolTip(900, 300, 0, 0, ["50 gramms!"], FONT, mass=50),
-             ToolTip(900, 300, 0, 0, ["100 gramms!"], FONT, mass=100)]
 
+def load_tooltipps(path):
+    with open(path) as convert_file:
+        tooltipps = json.load(convert_file)
+    return tooltipps
+
+def write_tooltipps(path, tooltipps):
+    with open(path, 'w') as convert_file:
+        convert_file.write(json.dumps(tooltipps))
 # PARTICLE SYSTEMS
 
 # BUTTONS

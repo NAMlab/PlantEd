@@ -1,0 +1,151 @@
+[
+  {
+    "x": 802,
+    "y": 149,
+    "lines": [
+      "Welcome to PlantEd!",
+      "> This is PlantEd <",
+      "Grow your seedling",
+      "into a big plant.",
+      " To win the game",
+      "reach level 20"
+    ],
+    "font": null,
+    "headfont": true,
+    "mass": 0,
+    "center": true
+  },
+  {
+    "x": 508,
+    "y": 140,
+    "lines": [
+      "Your plant starts as a seed.",
+      "Use your starch deposit",
+      "to grow the roots"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 0,
+    "center": false
+  },
+  {
+    "x": 87,
+    "y": 848,
+    "lines": [
+      "Time can be controlled",
+      "in 2 different speeds.",
+      "You can also hide Tooltipps"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 0,
+    "center": false
+  },
+  {
+    "x": 80,
+    "y": 251,
+    "lines": [
+      "These are your main 3 organs.",
+      "Once your roots are big enough",
+      "your are able to grow a stem!",
+      "Try to grow it to 4 gramms"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 0,
+    "center": false
+  },
+  {
+    "x": 414,
+    "y": 723,
+    "lines": [
+      "Your sprout started stem and leaf development.",
+      "Grow its mass further to increase nutrient intake."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 3,
+    "center": false
+  },
+  {
+    "x": 804,
+    "y": 152,
+    "lines": [
+      "Seedling Stage",
+      "Stem and leaf development",
+      "are now available.",
+      "Decide wich organs to grow.",
+      "Larger roots will lead",
+      "to faster nitrate and water intake.",
+      "Larger leaves result in more",
+      "light reaching the plant.",
+      "A bigger Stem will provide",
+      "more spots to grow leaves."
+    ],
+    "font": null,
+    "headfont": true,
+    "mass": 5,
+    "center": false
+  },
+  {
+    "x": 1339,
+    "y": 120,
+    "lines": [
+      "For every level up",
+      "you will get one Green Thumb",
+      "to buy upgrades."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 5,
+    "center": false
+  },
+  {
+    "x": 1091,
+    "y": 635,
+    "lines": [
+      "The green and white dots indicate",
+      "what you plant is producing."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 6,
+    "center": false
+  },
+  {
+    "x": 571,
+    "y": 55,
+    "lines": [
+      "Name your plant",
+      "by clicking on the box.",
+      "It saves automatically so",
+      "don't be nasty please."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 7,
+    "center": false
+  },
+  {
+    "x": 900,
+    "y": 300,
+    "lines": [
+      "50 gramms!"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 50,
+    "center": false
+  },
+  {
+    "x": 900,
+    "y": 300,
+    "lines": [
+      "100 gramms!"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 100,
+    "center": false
+  }
+]
