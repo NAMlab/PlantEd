@@ -16,6 +16,9 @@ class ToolTipManager:
     def toggle_activate(self):
         self.active = not self.active
 
+    def deactivate_tooltipps(self):
+        self.active = False
+
     def draw(self, screen):
         if self.active:
             for tip in self.tool_tips:

@@ -27,13 +27,13 @@ Km = 4000 #mikromol
 max_nitrate_pool_low = 12000 #mikromol
 max_nitrate_pool_high = 100000 #mikromol
 
-# Todo change to 0.1
+# Todo change to 0.1 maybe
 MAX_STARCH_INTAKE = 0.3
 
 MAX_WATER_POOL = 1000000
-MAX_WATER_POOL_CONSUMPTION = 10
+MAX_WATER_POOL_CONSUMPTION = 1
 
-FLUX_TO_GRAMM = 0.002
+FLUX_TO_GRAMM = 0.002299662183
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
@@ -184,7 +184,8 @@ class DynamicModel:
         self.use_starch = False
         self.set_bounds(STARCH_IN, (0, 0))
 
-    def update(self, dt, root_mass, PLA, sun_intensity, max_water_drain):
+    def update(self, dt, root_mass, PLA, sun_intensity, max_water_drain, plant_mass):
+        self.max_water_pool = MAX_WATER_POOL + (plant_mass*10000)
         self.update_bounds(root_mass, PLA*sun_intensity, max_water_drain)
         self.update_pools(dt, max_water_drain)
         self.update_transpiration_factor()
@@ -204,7 +205,7 @@ class DynamicModel:
 
         # take more water in, if possible and pool not full
 
-        if self.water_pool < MAX_WATER_POOL:
+        if self.water_pool < self.max_water_pool:
             if self.water_intake < max_water_drain:
                 self.water_intake_pool = 0
                 # excess has to be negative to get added to pool
@@ -215,8 +216,8 @@ class DynamicModel:
                     self.water_intake_pool = MAX_WATER_POOL_CONSUMPTION
         self.water_pool -= self.water_intake_pool * dt * gamespeed
 
-        if self.water_pool > MAX_WATER_POOL:
-            self.water_pool = MAX_WATER_POOL
+        if self.water_pool > self.max_water_pool:
+            self.water_pool = self.max_water_pool
 
 
         self.nitrate_pool -= self.nitrate_intake * dt * gamespeed

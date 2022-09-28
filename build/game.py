@@ -213,7 +213,7 @@ class DevScene(object):
             self.shop.active = True
 
         self.model.update(dt,self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),
-                          self.water_grid.max_drain_rate)
+                          self.water_grid.max_drain_rate, self.plant.get_biomass())
 
     def render(self, screen):
         screen.fill((0, 0, 0))

@@ -1,7 +1,7 @@
 import pygame
 from gameobjects.plant import Plant
 from utils.gametime import GameTime
-from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup, Arrow_Button
+from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup, Arrow_Button, Button_Once
 from utils.tool_tip import ToolTip, ToolTipManager
 from utils.particle import ParticleSystem, PointParticleSystem, StillParticles, Inwards_Particle_System
 from utils.animation import Animation
@@ -48,6 +48,10 @@ class UI:
         self.hover_message = None
         self.hover_timer = 60
         self.camera = camera
+
+        self.danger_timer = 1
+
+        self.danger_box = self.init_danger_box()
 
         #performance boost:
         self.label_leaf = config.FONT.render("Leaf", True, (0, 0, 0))  # title
@@ -114,15 +118,23 @@ class UI:
                                      image=assets.img("normal_speed.png")),
                          RadioButton(180, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.faster], config.FONT,
                                      image=assets.img("fast_speed.png")),
-                         RadioButton(220, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.fastest], config.FONT,
-                                     image=assets.img("fast_speed.png"))
                          ]
         for rb in speed_options:
             rb.setRadioButtons(speed_options)
             self.button_sprites.add(rb)
-        speed_options[1].button_down = True
+        speed_options[0].button_down = True
+
+        self.skip_intro = Button_Once(config.SCREEN_WIDTH/2-70,100,140,50,[self.skip_intro_ui],config.FONT,"skip intro")
+        self.button_sprites.add(self.skip_intro)
+
         self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
+
+    def skip_intro_ui(self):
+        self.tool_tip_manager.deactivate_tooltipps()
+        if not self.plant.organ_starch.toggle_button.button_down:
+            self.plant.organ_starch.toggle_button.activate()
+        self.gametime.fastest()
 
     def handle_event(self, e):
         for button in self.button_sprites:
@@ -161,6 +173,15 @@ class UI:
 
 
     def update(self, dt):
+        if self.plant.get_biomass() >= 4:
+            self.button_sprites.remove(self.skip_intro)
+            self.gametime.play()
+        if self.plant.danger_mode:
+            self.danger_timer -= dt
+            if self.danger_timer <= 0:
+                self.danger_timer = 1
+        else:
+            self.danger_timer = 1
         for slider in self.sliders:
             slider.update()
         for system in self.particle_systems:
@@ -181,7 +202,7 @@ class UI:
         self.root_slider.set_percentage(preset["root_slider"])
         self.starch_slider.set_percentage(preset["starch_slider"])
         if preset["consume_starch"] and not self.plant.organs[2].toggle_button.button_down:
-            self.plant.organs[2].toggle_button.activate()
+            self.plant.organ_starch.toggle_button.activate()
 
     def generate_preset(self, id=0):
         active_consumption = False
@@ -212,6 +233,12 @@ class UI:
                 x = x - self.hover_message.get_width()
             pygame.draw.rect(screen,config.WHITE,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
             screen.blit(self.hover_message,(x+10,y+3))
+
+        # draw dange mode
+        if self.danger_timer < 0.5:
+            pygame.draw.rect(screen,config.RED,(0,0,config.SCREEN_WIDTH,config.SCREEN_HEIGHT),8)
+        if self.plant.danger_mode:
+            screen.blit(self.danger_box,(config.SCREEN_WIDTH/2-self.danger_box.get_width()/2,200))
 
     def post_hover_message(self, message=None, timer=None):
         if message is None:
@@ -297,8 +324,18 @@ class UI:
         days, hours, minutes = self.get_day_time()
         output_string = "Day {0} {1:02}:{2:02}".format(days, int(hours), int(minutes))
         clock_text = config.FONT.render(output_string, True, config.BLACK)
-        pygame.draw.rect(s, config.WHITE, Rect(config.SCREEN_WIDTH / 2 - 90, 10, 180, 40), border_radius=3)
+        pygame.draw.rect(s, config.WHITE, Rect(config.SCREEN_WIDTH / 2 - 140, 10, 280, 40), border_radius=3)
         s.blit(clock_text, (config.SCREEN_WIDTH/2-clock_text.get_width()/2,16))
+
+
+        RH = config.get_y(hours, config.humidity)
+        T = config.get_y(hours, config.summer)
+
+        RH_label = config.FONT.render("{:.0f} %".format(RH*100), True, config.BLACK)
+        T_label = config.FONT.render("{:.0f} °C".format(T), True, config.BLACK)
+
+        s.blit(RH_label, ((config.SCREEN_WIDTH / 2-110) - RH_label.get_width()/2, 16))
+        s.blit(T_label, ((config.SCREEN_WIDTH / 2+110) - T_label.get_width()/2, 16))
 
     def draw_organ_details(self, s):
         topleft = self.organ_details_topleft
@@ -346,11 +383,26 @@ class UI:
         level = config.FONT.render("{:.0f}".format(self.plant.target_organ.level), True, (0, 0, 0))
         s.blit(level, (topleft[0]+20 - level.get_width() / 2, topleft[1]+60 - level.get_height() / 2))
 
-        '''#skills
-        if skills:
-            for i in range(0,len(skills)):
-                skills[i].pos = (topleft[0]+138+i*80,topleft[1]+50)
-                s.blit(skills[i].image,(topleft[0]+138+i*80,topleft[1]+50))'''
+    def init_danger_box(self):
+        danger_label_0 = config.BIGGER_FONT.render("ENERGY WARNING", True, config.BLACK)
+        danger_label_1 = config.BIG_FONT.render("Your plant is not producing energy.", True, config.BLACK)
+        danger_label_2 = config.BIG_FONT.render("Enable starch consumption.", True, config.BLACK)
+        danger_label_3 = config.BIG_FONT.render("Or buy leaves then open stomata", True, config.BLACK)
+        danger_label_4 = config.BIG_FONT.render("to perform photosynthesis.", True, config.BLACK)
+        danger_label_5 = config.BIG_FONT.render("Plant is eating itself.", True, config.BLACK)
+
+        danger_box = pygame.Surface((450, 250), pygame.SRCALPHA)
+        danger_box.fill(config.LIGHT_RED)
+        pygame.draw.rect(danger_box, config.RED,
+                         (0, 0, danger_box.get_width(), danger_box.get_height()), 4)
+        danger_box.blit(danger_label_0, (danger_box.get_width() / 2 - danger_label_0.get_width() / 2, 10))
+        danger_box.blit(danger_label_1, (danger_box.get_width() / 2 - danger_label_1.get_width() / 2, 80))
+        danger_box.blit(danger_label_2, (danger_box.get_width() / 2 - danger_label_2.get_width() / 2, 110))
+        danger_box.blit(danger_label_3, (danger_box.get_width() / 2 - danger_label_3.get_width() / 2, 140))
+        danger_box.blit(danger_label_4, (danger_box.get_width() / 2 - danger_label_4.get_width() / 2, 170))
+        danger_box.blit(danger_label_5, (danger_box.get_width() / 2 - danger_label_5.get_width() / 2, 200))
+        return danger_box
+
     def init_organ_ui(self):
         topleft = self.organ_details_topleft
         # below so it does not get in group

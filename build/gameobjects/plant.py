@@ -10,6 +10,7 @@ from pygame import Rect
 from utils.LSystem import LSystem, Letter
 from pygame.locals import *
 import numpy as np
+from utils.gametime import GameTime
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -42,6 +43,8 @@ class Plant:
         self.camera = camera
         self.water_grid = water_grid
         self.growth_boost = growth_boost
+        self.danger_mode = False
+        self.gametime = GameTime.instance()
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
@@ -60,6 +63,12 @@ class Plant:
 
     # convert flux/mikromol to gramm
     def update_growth_rates(self, growth_rates):
+        sum_rates = sum(growth_rates)
+        print(sum_rates)
+        if self.get_biomass() > 4 and sum_rates <= 0:
+            self.danger_mode = True
+        else:
+            self.danger_mode = False
         for i in range(0, 3):
             self.organs[i].update_growth_rate((growth_rates[i]))
         self.organ_starch.update_growth_rate(growth_rates[3])
@@ -103,6 +112,9 @@ class Plant:
     def update(self, dt, photon_intake):
         # dirty Todo make beter
         self.grow(dt)
+        if self.danger_mode:
+            for organ in self.organs:
+                organ.drain(0.00001,self.gametime.GAMESPEED, dt)
         if self.get_biomass() > self.seedling.max and not self.organs[1].active:
             self.organs[1].activate()
             self.organs[0].activate()
@@ -111,7 +123,7 @@ class Plant:
             organ.update(dt)
         self.organs[0].photon_intake = photon_intake
 
-        self.organ_starch.update_starch_max(self.get_biomass()*20+100000)
+        self.organ_starch.update_starch_max(self.get_biomass()*1000+100000)
 
 
     def handle_event(self, event):
@@ -189,6 +201,10 @@ class Organ:
         else:
             rect = pygame.Rect(0,0,0,0)
         return [rect]
+
+    def drain(self, rate, gamespeed, dt):
+        if self.mass > 1:
+            self.mass -= (rate + rate*0.01*self.mass) * dt * gamespeed
 
     def grow(self, dt):
         if not self.active:

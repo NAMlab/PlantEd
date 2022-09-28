@@ -99,7 +99,7 @@ class Water_Grid:
 
     def pour(self, rate, dt, pos):
         if not self.grid[0,int(pos[0]/100)] > self.max_water:
-            self.grid[0,int(pos[0]/100)] += rate *self.gametime.GAMESPEED * dt
+            self.grid[0,int(pos[0]/100)] += rate * dt
         #print(self.grid[0,int(pos[0]/100)])
 
     def add_reservoir(self, reservoir):
@@ -163,8 +163,8 @@ class Water_Grid:
                         offset_x = self.offset_grid[0,k, i, j]
                         offset_y = self.offset_grid[1,k, i, j]
                         pygame.draw.circle(screen,(10,10+offset_y,255-offset_x),(self.pos[0]+j*100+offset_x,self.pos[1]+i*100+offset_y),5)
-                number = config.FONT.render("{:.2f}".format(cell),True,config.BLACK,config.WHITE)
-                screen.blit(number, (j * 100, 900 + i * 100))
+                #number = config.FONT.render("{:.2f}".format(cell),True,config.BLACK,config.WHITE)
+                #screen.blit(number, (j * 100, 900 + i * 100))
         for reservoir in self.reservoirs:
             reservoir.draw(screen)
 

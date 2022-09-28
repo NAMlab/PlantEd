@@ -70,7 +70,7 @@ class GameTime:
         self.set_speed(2400)
 
     def fastest(self):
-        self.set_speed(4800)
+        self.set_speed(9600*4)
 
     def get_time(self):
         return pygame.time.get_ticks() - self.starttime + self.timediff + (

@@ -1,7 +1,7 @@
 [
   {
-    "x": 807,
-    "y": 150,
+    "x": 810,
+    "y": 151,
     "lines": [
       "Welcome to PlantEd!",
       "> This is PlantEd <",
@@ -13,11 +13,11 @@
     "font": null,
     "headfont": true,
     "mass": 0,
-    "center": true
+    "center": false
   },
   {
-    "x": 508,
-    "y": 140,
+    "x": 451,
+    "y": 462,
     "lines": [
       "Your plant starts as a seed.",
       "To grow it, enable starch consumption."
@@ -25,6 +25,39 @@
     "font": null,
     "headfont": false,
     "mass": 0,
+    "center": false
+  },
+  {
+    "x": 454,
+    "y": 58,
+    "lines": [
+      "Starch and Water are stored in your plant.",
+      "Storages increase during growth.",
+      "You can refill your starch deposit while there is sun.",
+      "Water will be filled automatically, if possible."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 1,
+    "center": false
+  },
+  {
+    "x": 785,
+    "y": 145,
+    "lines": [
+      "The upper bars show",
+      "plant Level: at 20 you win",
+      "plant mass: combined organ biomass",
+      "water stored: in your plant",
+      "your name: change it in options",
+      "In the center you can see",
+      "relative humidity",
+      "days played and daytime",
+      "temperature"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 1,
     "center": false
   },
   {
@@ -37,7 +70,7 @@
     ],
     "font": null,
     "headfont": false,
-    "mass": 0,
+    "mass": 1,
     "center": false
   },
   {
@@ -50,7 +83,7 @@
     ],
     "font": null,
     "headfont": false,
-    "mass": 0,
+    "mass": 2,
     "center": false
   },
   {
@@ -83,6 +116,22 @@
     "font": null,
     "headfont": true,
     "mass": 5,
+    "center": false
+  },
+  {
+    "x": 10,
+    "y": 498,
+    "lines": [
+      "To perform photosynthesis",
+      "open the plants stomata",
+      "Be careful, hot and dry days",
+      "will result in a big water loss.",
+      "Close the stomata to survive",
+      "if your storage depletes"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 4,
     "center": false
   },
   {

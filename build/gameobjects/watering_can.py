@@ -9,13 +9,13 @@ from fba import dynamic_model
 
 
 class Watering_can:
-    def __init__(self, pos, model=None, water_grid=None, amount=None, rate=1000, cost=1, active=False, callback=None): # take from config
+    def __init__(self, pos, model=None, water_grid=None, amount=None, rate=3000000, cost=1, active=False, callback=None): # take from config
         self.gametime = GameTime.instance()
         self.pos = (pos[0]-20,pos[1]-120)
         self.model = model
         self.water_grid = water_grid
         self.image = assets.img("watering_can.png",(214,147))
-        self.default_amount = rate*240*3 #default gamespeed 3s
+        self.default_amount = rate*3 #default gamespeed 3s
         self.amount = amount if amount else self.default_amount
         self.rate = rate
         self.cost = cost
@@ -30,6 +30,7 @@ class Watering_can:
     def activate(self, amount=None):
         self.pos = pygame.mouse.get_pos()
         self.active = True
+        self.amount = self.default_amount if not amount else amount
         pygame.mouse.set_visible(False)
         self.can_particle_system.spawn_box = self.rect
         self.can_particle_system.activate()
@@ -55,7 +56,7 @@ class Watering_can:
                 self.amount = 0
                 self.deactivate()
             else:
-                self.amount -= self.rate *self.gametime.GAMESPEED * dt
+                self.amount -= self.rate * dt
 
     def handle_event(self, e):
         if not self.active:
