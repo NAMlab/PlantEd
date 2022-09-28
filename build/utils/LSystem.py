@@ -176,6 +176,8 @@ class LSystem:
         #calc root pos in water grid
         if letter.id == 300:
             pos = letter.get_pos()
+            if pos[1] > 1260:
+                letter.id = 99
             # todo fix ugly hard coded numbers
             x = min(19,max(0,int((pos[0]-self.water_grid_pos[0])/100)))
             y = min(5,max(0,int((pos[1]-self.water_grid_pos[1])/100)))
@@ -208,7 +210,6 @@ class LSystem:
                 root_class = 1
             else:
                 root_class = 2
-        print(root_class)
         self.positions.append(pos)
         self.first_letters.append(self.create_root(dir, mass,root_class=root_class))
 
@@ -254,11 +255,12 @@ class LSystem:
             letter.print()
 
     def handle_event(self, e):
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_p:
+        pass
+        '''if e.type == pygame.KEYDOWN and e.key == pygame.K_p:
             print(self.root_grid)
         if e.type == pygame.KEYDOWN and e.key == pygame.K_l:
             self.print()
-
+'''
     def unit_vector(self, vector):
         return vector / np.linalg.norm(vector)
 

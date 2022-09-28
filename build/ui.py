@@ -38,7 +38,7 @@ preset = {"leaf_slider" : 0,
 
 class UI:
     def __init__(self, scale, plant, model, camera, production_topleft=(10,100), plant_details_topleft=(10,10),
-                 organ_details_topleft=(10,430)):
+                 organ_details_topleft=(10,430), dev_mode=False):
         self.name_label = config.FONT.render(config.load_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
         #print(config.OPTIONS_PATH)#config.BIGGER_FONT.render(config.get_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
         #print(config.load_options("options.json"))
@@ -48,6 +48,7 @@ class UI:
         self.hover_message = None
         self.hover_timer = 60
         self.camera = camera
+        self.dev_mode = dev_mode
 
         self.danger_timer = 1
 
@@ -105,7 +106,7 @@ class UI:
         tipps = config.load_tooltipps("tooltipps.json")
         tooltipps = [ToolTip(tip["x"],tip["y"],tip["lines"],headfont=tip["headfont"],mass=tip["mass"],center=tip["center"]) for tip in tipps]
         self.tool_tip_manager = ToolTipManager(tooltipps, callback=self.plant.get_biomass)
-        self.button_sprites.add(ToggleButton(240, config.SCREEN_HEIGHT - 50, 64, 32,
+        self.button_sprites.add(ToggleButton(260, config.SCREEN_HEIGHT - 50, 64, 32,
                                              [self.tool_tip_manager.toggle_activate], config.FONT,
                                              text="HINT", pressed=True))
 
@@ -119,12 +120,15 @@ class UI:
                          RadioButton(180, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.faster], config.FONT,
                                      image=assets.img("fast_speed.png")),
                          ]
+        if self.dev_mode:
+            speed_options.append(RadioButton(220, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.fastest], config.FONT,
+                                     image=assets.img("fast_speed.png")))
         for rb in speed_options:
             rb.setRadioButtons(speed_options)
             self.button_sprites.add(rb)
         speed_options[0].button_down = True
 
-        self.skip_intro = Button_Once(config.SCREEN_WIDTH/2-70,100,140,50,[self.skip_intro_ui],config.FONT,"skip intro")
+        self.skip_intro = Button_Once(330, config.SCREEN_HEIGHT - 50,140,32,[self.skip_intro_ui],config.FONT,"SKIP INTRO",border_w=3)
         self.button_sprites.add(self.skip_intro)
 
         self.presets = [preset for i in range(0, 3)]
@@ -142,9 +146,6 @@ class UI:
             button.handle_event(e)
         for slider in self.sliders:
             slider.handle_event(e)
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_x:
-            #print(self.tool_tip_manager.tipps_to_dict())
-            config.write_tooltipps("tooltipps.json",self.tool_tip_manager.tipps_to_dict())
         for tips in self.tool_tip_manager.tool_tips:
             tips.handle_event(e)
         if e.type == pygame.MOUSEMOTION:
@@ -174,8 +175,10 @@ class UI:
 
     def update(self, dt):
         if self.plant.get_biomass() >= 4:
-            self.button_sprites.remove(self.skip_intro)
-            self.gametime.play()
+            if self.skip_intro is not None:
+                self.button_sprites.remove(self.skip_intro)
+                self.gametime.play()
+                self.skip_intro = None
         if self.plant.danger_mode:
             self.danger_timer -= dt
             if self.danger_timer <= 0:

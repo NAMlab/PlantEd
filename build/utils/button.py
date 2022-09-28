@@ -151,7 +151,6 @@ class Button_Once(pygame.sprite.Sprite):
                 self.hover_message.blit(self.hover_message_image,(hover_message.get_width()+10, 8))
 
     def handle_event(self, event):
-        print(self.active, self.visible)
         if not self.active:
             return
         if event.type == pygame.MOUSEBUTTONDOWN:

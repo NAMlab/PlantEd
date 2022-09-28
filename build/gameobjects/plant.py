@@ -35,10 +35,10 @@ class Plant:
     ROOTS = 3
     STARCH = 4
 
-    def __init__(self, pos, model, camera, water_grid, growth_boost=1):
+    def __init__(self, pos, model, camera, water_grid, growth_boost=1, upgrade_points=0):
         self.x = pos[0]
         self.y = pos[1]
-        self.upgrade_points = 10
+        self.upgrade_points = upgrade_points
         self.model = model
         self.camera = camera
         self.water_grid = water_grid
@@ -64,7 +64,6 @@ class Plant:
     # convert flux/mikromol to gramm
     def update_growth_rates(self, growth_rates):
         sum_rates = sum(growth_rates)
-        print(sum_rates)
         if self.get_biomass() > 4 and sum_rates <= 0:
             self.danger_mode = True
         else:
@@ -282,10 +281,6 @@ class Leaf(Organ):
     def activate_add_leaf(self):
         self.can_add_leaf = True
 
-    def check_can_add_leaf(self):
-        if len(self.leaves) <= self.active_threshold:
-            return True
-
     def remove_leaf(self, leaf=None):
         if not leaf:
             leaf = self.get_random_leave()
@@ -377,7 +372,7 @@ class Leaf(Organ):
             offset_y = self.leaves[i]["offset_y"]
             self.particle_systems[i].spawn_box = (int(self.leaves[i]["x"]-offset_x+size[0]/2),
                                                   int(self.leaves[i]["y"]-offset_y+size[1]/2), 0, 0)
-            if self.photon_intake > 0:
+            if self.photon_intake > 0 and self.plant.model.stomata_open == True:
                 adapted_pi = self.photon_intake/50*3 + 5
                 self.particle_systems[i].lifetime=adapted_pi
                 self.particle_systems[i].activate()
@@ -548,10 +543,12 @@ class Stem(Organ):
         self.thorns.append({"position": pos,
                             "image" : image})
 
+    def check_can_add_leaf(self):
+        if len(self.leaf.leaves) <= self.active_threshold:
+            return True
+
     def handle_event(self, event):
         self.curve.handle_event(event)
-        if event.type == KEYDOWN and event.key == pygame.K_o:
-            self.curve.update_tip(point=self.sunpos)
         if event.type == pygame.MOUSEMOTION:
             if self.leaf.can_add_leaf:
                 x,y = pygame.mouse.get_pos()

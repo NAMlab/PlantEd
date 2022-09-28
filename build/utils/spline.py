@@ -294,7 +294,7 @@ class Beziere:
             if i > half:
                 tapering = self.width / half
             pygame.draw.line(screen, config.WHITE, self.points_to_draw[i - 1], self.points_to_draw[i],
-                                 width=int(self.width - tapering * i))
+                                 width=int(self.width+2-(i-half)*tapering))
         self.draw(screen)
 
     def draw(self, screen):

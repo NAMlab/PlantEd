@@ -71,12 +71,6 @@ class ToolTip:
 
     def handle_event(self, e):
         if self.active:
-            if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-                x,y = pygame.mouse.get_pos()
-                self.x,self.y=x,y
-                self.button.rect = pygame.Rect(self.x,self.y+self.h -50,self.button.rect[2],self.button.rect[3])
-                #self.button.x,self.button.y = self.x, self.y + (self.h - 50)
-
             self.button.handle_event(e)
 
     def make_text(self, lines):

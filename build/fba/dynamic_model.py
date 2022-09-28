@@ -225,8 +225,8 @@ class DynamicModel:
             self.nitrate_pool = 0
         # slowly add nitrate after buying
         if self.nitrate_delta_amount > 0:
-            self.nitrate_pool += 1 * gamespeed * dt
-            self.nitrate_delta_amount -= 1 * gamespeed * dt
+            self.nitrate_pool += max_nitrate_pool_high/10 * gamespeed * dt
+            self.nitrate_delta_amount -= max_nitrate_pool_high/10 * gamespeed * dt
 
     def update_bounds(self, root_mass, photon_in, max_water_drain):
         # update photon intake based on sun_intensity

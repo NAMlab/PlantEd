@@ -98,11 +98,11 @@ class DevScene(object):
         # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5), self.model,
-                           self.camera, self.water_grid, growth_boost=1)
+                           self.camera, self.water_grid, growth_boost=1, upgrade_points=100)
         self.water_grid.add_base_water(
-            Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 400, config.DARK_BLUE, config.LIGHT_BLUE))
+            Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
-        self.ui = UI(1, self.plant, self.model, self.camera)
+        self.ui = UI(1, self.plant, self.model, self.camera, dev_mode=True)
 
         '''example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
@@ -124,7 +124,7 @@ class DevScene(object):
 
         # shop items are to be defined by the level
         add_leaf_item = Shop_Item(assets.img("leaf_small.png", (64, 64)), self.activate_add_leaf,
-                                  condition=self.plant.organs[0].check_can_add_leaf,
+                                  condition=self.plant.organs[1].check_can_add_leaf,
                                   condition_not_met_message="Level up your stem to buy more leaves",
                                   post_hover_message=self.ui.post_hover_message,
                                   message="Leaves enable your plant to produce energy.")
@@ -172,8 +172,9 @@ class DevScene(object):
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.log.close_file()
                 # Todo fix back to menu
-                self.model = None
-                self.manager.go_to(TitleScene(self.manager))
+                pygame.quit()
+                sys.exit()
+                #self.manager.go_to(TitleScene(self.manager))
             if e.type == KEYDOWN and e.key == K_r:
                 self.water_grid.raining += 0.05
             if e.type == KEYDOWN and e.key == K_s:
@@ -346,23 +347,25 @@ class DefaultGameScene(object):
     def __init__(self):
         options = config.load_options(config.OPTIONS_PATH)
 
-        #pygame.mixer.music.load('../assets/background_music.mp3')
+        # pygame.mixer.music.load('../assets/background_music.mp3')
         assets.song('background_music.mp3', options["music"])
 
-        #pygame.mixer.music.set_volume(options["music"]/10)
+        # pygame.mixer.music.set_volume(options["music"]/10)
         pygame.mixer.music.play(-1, 0)
 
         pygame.mouse.set_visible(True)
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
-        self.log = Log()                        # can be turned off
-        self.water_grid = Water_Grid(pos=(0,900))
-        #self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
-        #self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
-        #self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
+        self.log = Log()  # can be turned off
+        self.water_grid = Water_Grid(pos=(0, 900))
+        # self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
+        # self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
+        # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
         self.model = DynamicModel(self.gametime, self.log)
-        self.plant = Plant((config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT/5), self.model, self.camera, self.water_grid)
-        self.water_grid.add_base_water(Base_water(10,100,config.SCREEN_WIDTH,config.SCREEN_HEIGHT+400,config.DARK_BLUE, config.LIGHT_BLUE))
+        self.plant = Plant((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5), self.model,
+                           self.camera, self.water_grid, growth_boost=1)
+        self.water_grid.add_base_water(
+            Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
         self.ui = UI(1, self.plant, self.model, self.camera)
 
@@ -377,26 +380,31 @@ class DefaultGameScene(object):
         self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
 '''
         self.entities = []
-        for i in range(0,10):
-            bug = Bug((190*random.randint(0,10),900+random.randint(0,200)),pygame.Rect(0,900,config.SCREEN_WIDTH,240),[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)], self.camera)
+        for i in range(0, 10):
+            bug = Bug((190 * random.randint(0, 10), 900 + random.randint(0, 200)),
+                      pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
+                      [assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)], self.camera)
             self.entities.append(bug)
-        #self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
+        # self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
-        #shop items are to be defined by the level
-        add_leaf_item = Shop_Item(assets.img("leaf_small.png",(64,64)),self.activate_add_leaf,
+        # shop items are to be defined by the level
+        add_leaf_item = Shop_Item(assets.img("leaf_small.png", (64, 64)), self.activate_add_leaf,
                                   condition=self.plant.organs[0].check_can_add_leaf,
                                   condition_not_met_message="Level up your stem to buy more leaves",
                                   post_hover_message=self.ui.post_hover_message,
                                   message="Leaves enable your plant to produce energy.")
 
-        add_root_item = Shop_Item(assets.img("root_lateral.png",(64,64)),self.plant.organs[2].create_new_root,
-                                  condition=self.plant.organs[2].check_can_add_root,
-                                  condition_not_met_message="Level up your roots to buy more leaves",
-                                  post_hover_message=self.ui.post_hover_message,
-                                  message="Roots are to improve water and nitrate intake.")
+        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid,
+                         self.plant, post_hover_message=self.ui.post_hover_message, active=False)
 
-        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item, add_root_item], self.model, self.water_grid, self.plant, post_hover_message=self.ui.post_hover_message, active=False)
-        self.shop.add_shop_item(["watering","blue_grain"])
+        self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.png", (64, 64)),
+                                              self.shop.root_item.activate,
+                                              condition=self.plant.organs[2].check_can_add_root,
+                                              condition_not_met_message="Level up your roots to buy more leaves",
+                                              post_hover_message=self.ui.post_hover_message,
+                                              message="Roots are to improve water and nitrate intake."))
+
+        self.shop.add_shop_item(["watering", "blue_grain"])
 
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
@@ -413,40 +421,43 @@ class DefaultGameScene(object):
                 root_percent = self.plant.organs[2].percentage
                 starch_percent = self.plant.organ_starch.percentage
 
-                #print(leaf_percent, stem_percent, root_percent, starch_percent)
+                # print(leaf_percent, stem_percent, root_percent, starch_percent)
                 self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
 
                 leaf_rate, stem_rate, root_rate, starch_rate, starch_intake = self.model.get_rates()
-                nitrate_pool, water_pool = self.model.get_pools()
-                #self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
-                #self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
-                self.log.append_row(leaf_rate, stem_rate, root_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool,
-                                    self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
-                self.plant.grow()
+                nitrate_pool = self.model.nitrate_pool
+                water_pool = self.water_grid.water_pool
+                # self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
+                # self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
+                self.log.append_row(leaf_rate, stem_rate, root_rate, starch_rate, self.gametime.get_time(),
+                                    self.gametime.GAMESPEED, water_pool, nitrate_pool,
+                                    self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass,
+                                    self.plant.organ_starch.mass)
+                self.plant.update_growth_rates(self.model.get_rates())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.log.close_file()
-
                 # Todo fix back to menu
-                self.model = None
-                self.manager.go_to(TitleScene(self.manager))
+                pygame.quit()
+                sys.exit()
+                #self.manager.go_to(TitleScene(self.manager))
             if e.type == KEYDOWN and e.key == K_r:
                 self.water_grid.raining += 0.05
             if e.type == KEYDOWN and e.key == K_s:
                 self.water_grid.raining = 0
             if e.type == WIN:
                 if self.log:
-                    #self.log.write_log(self.ui.name_label)
+                    # self.log.write_log(self.ui.name_label)
                     self.log.close_file()
                 scoring.upload_score(self.ui.name_label, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             self.shop.handle_event(e)
             self.ui.handle_event(e)
             self.plant.handle_event(e)
-            #self.environment.handle_event(e)
+            # self.environment.handle_event(e)
             for entity in self.entities:
                 entity.handle_event(e)
             self.camera.handle_event(e)
-            #self.skill_system.handle_event(e)
+            # self.skill_system.handle_event(e)
 
     def update(self, dt):
         # get root grid, water grid
@@ -461,17 +472,18 @@ class DefaultGameScene(object):
         self.shop.update(dt)
         self.ui.update(dt)
 
-        #self.skill_system.update(dt)
+        # self.skill_system.update(dt)
         self.plant.update(dt, self.model.get_photon_upper())
 
         if self.plant.seedling.max < self.plant.get_biomass():
             self.shop.active = True
 
-        self.model.update(dt,self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),self.water_grid.max_drain_rate)
-
+        self.model.update(dt, self.plant.organs[2].mass, self.plant.get_PLA(),
+                          max(self.environment.get_sun_intensity(), 0),
+                          self.water_grid.max_drain_rate, self.plant.get_biomass())
 
     def render(self, screen):
-        screen.fill((0,0,0))
+        screen.fill((0, 0, 0))
         self.environment.draw_background(temp_surface)
 
         for entity in self.entities:
@@ -481,10 +493,10 @@ class DefaultGameScene(object):
         self.environment.draw_foreground(temp_surface)
         self.water_grid.draw(temp_surface)
 
-        screen.blit(temp_surface,(0,self.camera.offset_y))
+        screen.blit(temp_surface, (0, self.camera.offset_y))
 
         self.ui.draw(screen)
-        #self.skill_system.draw(screen)
+        # self.skill_system.draw(screen)
         self.shop.draw(screen)
 
 class TitleScene(object):
@@ -579,7 +591,9 @@ class CustomScene(object):
             self.datetimes.append(datetime_added)
 
     def return_to_menu(self):
-        self.manager.go_to(TitleScene(self.manager))
+        pygame.quit()
+        sys.exit()
+        #self.manager.go_to(TitleScene(self.manager))
 
     def get_day_time(self, ticks):
         day = 1000*60*6
