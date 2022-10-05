@@ -80,6 +80,7 @@ class DynamicModel:
         self.water_pool = self.max_water_pool
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.1)))
         self.set_bounds(PHOTON, (0, 0))
+        self.set_bounds(CO2, (-1000,0))
         self.set_bounds(STARCH_OUT, (0, 1000))
         self.set_bounds(STARCH_IN, (0, 0))
 
@@ -139,7 +140,7 @@ class DynamicModel:
 
     def close_stomata(self):
         self.stomata_open = False
-        self.set_bounds(CO2, (0,0))
+        self.set_bounds(CO2, (-1000,0))
 
     def get_rates(self):
         gamespeed = self.gametime.GAMESPEED
@@ -225,8 +226,8 @@ class DynamicModel:
             self.nitrate_pool = 0
         # slowly add nitrate after buying
         if self.nitrate_delta_amount > 0:
-            self.nitrate_pool += max_nitrate_pool_high/10 * gamespeed * dt
-            self.nitrate_delta_amount -= max_nitrate_pool_high/10 * gamespeed * dt
+            self.nitrate_pool += max_nitrate_pool_high/2 * dt
+            self.nitrate_delta_amount -= max_nitrate_pool_high/2 * dt
 
     def update_bounds(self, root_mass, photon_in, max_water_drain):
         # update photon intake based on sun_intensity

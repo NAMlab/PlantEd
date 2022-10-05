@@ -14,3 +14,4 @@ def get_scores():
 
 # https://biotools-online.com/planted-highscore/logs/1.csv
 # http://biotools-online.com/planted-highscore/highscores.json
+# clear scores: http://biotools-online.com/planted-highscore/clearscores.php

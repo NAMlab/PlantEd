@@ -175,15 +175,11 @@ class DevScene(object):
                 pygame.quit()
                 sys.exit()
                 #self.manager.go_to(TitleScene(self.manager))
-            if e.type == KEYDOWN and e.key == K_r:
-                self.water_grid.raining += 0.05
-            if e.type == KEYDOWN and e.key == K_s:
-                self.water_grid.raining = 0
             if e.type == WIN:
                 if self.log:
                     #self.log.write_log(self.ui.name_label)
                     self.log.close_file()
-                scoring.upload_score(self.ui.name_label, self.gametime.get_time())
+                scoring.upload_score(self.ui.name, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             self.shop.handle_event(e)
             self.ui.handle_event(e)
@@ -389,7 +385,7 @@ class DefaultGameScene(object):
 
         # shop items are to be defined by the level
         add_leaf_item = Shop_Item(assets.img("leaf_small.png", (64, 64)), self.activate_add_leaf,
-                                  condition=self.plant.organs[0].check_can_add_leaf,
+                                  condition=self.plant.organs[1].check_can_add_leaf,
                                   condition_not_met_message="Level up your stem to buy more leaves",
                                   post_hover_message=self.ui.post_hover_message,
                                   message="Leaves enable your plant to produce energy.")
@@ -440,15 +436,11 @@ class DefaultGameScene(object):
                 pygame.quit()
                 sys.exit()
                 #self.manager.go_to(TitleScene(self.manager))
-            if e.type == KEYDOWN and e.key == K_r:
-                self.water_grid.raining += 0.05
-            if e.type == KEYDOWN and e.key == K_s:
-                self.water_grid.raining = 0
             if e.type == WIN:
                 if self.log:
                     # self.log.write_log(self.ui.name_label)
                     self.log.close_file()
-                scoring.upload_score(self.ui.name_label, self.gametime.get_time())
+                scoring.upload_score(self.ui.name, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             self.shop.handle_event(e)
             self.ui.handle_event(e)
@@ -596,7 +588,7 @@ class CustomScene(object):
         #self.manager.go_to(TitleScene(self.manager))
 
     def get_day_time(self, ticks):
-        day = 1000*60*6
+        day = 1000*60*60*24
         hour = day/24
         min = hour/60
         second = min/60

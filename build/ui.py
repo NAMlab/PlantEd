@@ -39,7 +39,8 @@ preset = {"leaf_slider" : 0,
 class UI:
     def __init__(self, scale, plant, model, camera, production_topleft=(10,100), plant_details_topleft=(10,10),
                  organ_details_topleft=(10,430), dev_mode=False):
-        self.name_label = config.FONT.render(config.load_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
+        self.name = config.load_options(config.OPTIONS_PATH)["name"]
+        self.name_label = config.FONT.render(self.name,True,config.BLACK)
         #print(config.OPTIONS_PATH)#config.BIGGER_FONT.render(config.get_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
         #print(config.load_options("options.json"))
         self.plant = plant
@@ -404,6 +405,7 @@ class UI:
         danger_box.blit(danger_label_3, (danger_box.get_width() / 2 - danger_label_3.get_width() / 2, 140))
         danger_box.blit(danger_label_4, (danger_box.get_width() / 2 - danger_label_4.get_width() / 2, 170))
         danger_box.blit(danger_label_5, (danger_box.get_width() / 2 - danger_label_5.get_width() / 2, 200))
+
         return danger_box
 
     def init_organ_ui(self):
