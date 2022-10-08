@@ -350,6 +350,10 @@ class DefaultGameScene(object):
         pygame.mixer.music.play(-1, 0)
 
         pygame.mouse.set_visible(True)
+        self.pause = False
+        self.pause_label = config.MENU_TITLE.render("Game Paused", True, config.WHITE)
+        self.pause_button_resume = Button(700,560,200,50,[self.resume],config.BIG_FONT,"RESUME",border_w=2)
+        self.pause_button_exit = Button(1020,560,200,50,[self.quit],config.BIG_FONT,"QUIT GAME",border_w=2)
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
         self.log = Log()  # can be turned off
@@ -409,8 +413,27 @@ class DefaultGameScene(object):
         # if there are funds, buy a leave will enable leave @ mouse pos until clicked again
         self.plant.organs[0].activate_add_leaf()
 
+    def quit(self):
+        self.log.close_file()
+        pygame.quit()
+        sys.exit()
+
+    def resume(self):
+        self.pause = False
+        self.gametime.unpause()
+
+    def toggle_pause(self):
+        self.pause = not self.pause
+        if self.pause:
+            self.gametime.pause()
+        else:
+            self.gametime.unpause()
+
     def handle_events(self, events):
         for e in events:
+            if self.pause:
+                self.pause_button_resume.handle_event(e)
+                self.pause_button_exit.handle_event(e)
             if e.type == GROWTH:
                 leaf_percent = self.plant.organs[0].percentage
                 stem_percent = self.plant.organs[1].percentage
@@ -436,6 +459,8 @@ class DefaultGameScene(object):
                 pygame.quit()
                 sys.exit()
                 #self.manager.go_to(TitleScene(self.manager))
+            if e.type == KEYDOWN and e.key == K_k:
+                self.toggle_pause()
             if e.type == WIN:
                 if self.log:
                     # self.log.write_log(self.ui.name_label)
@@ -476,6 +501,12 @@ class DefaultGameScene(object):
 
     def render(self, screen):
         screen.fill((0, 0, 0))
+        if self.pause:
+            screen.blit(self.pause_label,(960-self.pause_label.get_width()/2,300))
+            self.pause_button_resume.draw(screen)
+            self.pause_button_exit.draw(screen)
+            return
+
         self.environment.draw_background(temp_surface)
 
         for entity in self.entities:
@@ -697,6 +728,8 @@ def main():
     #camera = Camera()
     manager = SceneMananger()
 
+    pause = False
+    pause_label = config.BIGGER_FONT.render("PAUSE", True, (255, 255, 255))
 
     while running:
         dt = timer.tick(60)/1000.0
@@ -711,8 +744,7 @@ def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
-        #camera.render(screen)
-        screen.blit(fps_text, (800, 30))
+        # camera.render(screen)
         pygame.display.update()
 
 if __name__ == "__main__":

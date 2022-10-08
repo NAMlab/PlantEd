@@ -51,25 +51,28 @@ class GameTime:
         self.deltatime = self.starttime  # tmp time for states
         self.set_speed(self.GAMESPEED)
 
-    def change_speed(self, factor=2):
-        ticks = pygame.time.get_ticks()
-        self.timediff += (ticks - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
-        self.deltatime = ticks  # set up
-        self.GAMESPEED *= factor
-
     def set_speed(self, speed):
         ticks = pygame.time.get_ticks()
         self.timediff += (ticks - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
         self.deltatime = ticks  # set up
         self.GAMESPEED = speed
 
+    def pause(self):
+        self.set_speed(-1)
+
+    def unpause(self):
+        self.set_speed(1)
+
     def play(self):
         self.set_speed(240)
 
     def faster(self):
-        self.set_speed(2400)
+        self.set_speed(1200)
 
     def fastest(self):
+        self.set_speed(2400)
+
+    def forward(self):
         self.set_speed(9600*4)
 
     def get_time(self):

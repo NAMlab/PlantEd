@@ -84,9 +84,9 @@ class UI:
                            apply_gravity=False,
                            speed=[0, 4], spread=[2, -2], active=False)'''
 
-        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+355, self.production_topleft[1]+70, 50, 50), lifetime=10, color=config.WHITE,
+        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+530, self.production_topleft[1]+80, 0, 20), lifetime=10, color=config.WHITE,
                                               apply_gravity=False,
-                                              speed=[0, 0], spread=[10, 10], active=False)
+                                              speed=[-30, 0], spread=[0, 0], active=False)
 
         self.open_stomata_particle_in = Inwards_Particle_System(20, spawn_box=Rect(self.production_topleft[0] + 10,
                                                                        self.production_topleft[1] + 80, 100, 50),
@@ -116,14 +116,14 @@ class UI:
         self.button_sprites.add(Arrow_Button(config.SCREEN_WIDTH/2-100,config.SCREEN_HEIGHT-60,200,40,[self.camera.move_down],2,border_w=3))
 
         # init speed control
-        speed_options = [RadioButton(140, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.play], config.FONT,
+        speed_options = [RadioButton(120, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.play], config.FONT,
                                      image=assets.img("normal_speed.png")),
-                         RadioButton(180, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.faster], config.FONT,
+                         RadioButton(160, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.faster], config.FONT,
                                      image=assets.img("fast_speed.png")),
+                         RadioButton(200, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.fastest], config.FONT,
+                                     image=assets.img("fastest_speed.png")),
                          ]
-        if self.dev_mode:
-            speed_options.append(RadioButton(220, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.fastest], config.FONT,
-                                     image=assets.img("fast_speed.png")))
+
         for rb in speed_options:
             rb.setRadioButtons(speed_options)
             self.button_sprites.add(rb)
@@ -139,7 +139,7 @@ class UI:
         self.tool_tip_manager.deactivate_tooltipps()
         if not self.plant.organ_starch.toggle_button.button_down:
             self.plant.organ_starch.toggle_button.activate()
-        self.gametime.fastest()
+        self.gametime.forward()
 
     def handle_event(self, e):
         for button in self.button_sprites:
@@ -152,27 +152,6 @@ class UI:
         if e.type == pygame.MOUSEMOTION:
             #self.hover_message = None
             self.hover_timer = 1000
-            self.check_mouse_pos()
-
-    def check_mouse_pos(self):
-        x, y = pygame.mouse.get_pos()
-        if 10 < x < 760 and 10 < y < 50:
-            message = None
-            if 10 < x < 90:
-                message = "Level is a combination of all three organ levels."
-            if 90 < x < 260:
-                message = "Plant Mass, measured as dry weight in gramm."
-            if 275 < x < 335:
-                message = "Green Thumbs are used to buy items in the shop."
-            '''if 320 < x < 440:
-                message = "Water availability in the environment."
-            if 440 < x < 580:
-                message = "Nitrate availability in the environment."
-            if 580 < x < 760:
-                message = "Starch that your plant has stored."'''
-            if message is not None:
-                self.post_hover_message(message)
-
 
     def update(self, dt):
         if self.plant.get_biomass() >= 4:
@@ -231,6 +210,7 @@ class UI:
         for system in self.particle_systems:
             system.draw(screen)
         self.tool_tip_manager.draw(screen)
+        self.tool_tip_manager.draw(screen)
         if self.hover_message is not None and self.hover_timer <= 0:
             x,y = pygame.mouse.get_pos()
             if self.hover_message.get_width() > config.SCREEN_WIDTH-x:
@@ -242,7 +222,7 @@ class UI:
         if self.danger_timer < 0.5:
             pygame.draw.rect(screen,config.RED,(0,0,config.SCREEN_WIDTH,config.SCREEN_HEIGHT),8)
         if self.plant.danger_mode:
-            screen.blit(self.danger_box,(config.SCREEN_WIDTH/2-self.danger_box.get_width()/2,200))
+            screen.blit(self.danger_box,(1350,750))
 
     def post_hover_message(self, message=None, timer=None):
         if message is None:
@@ -341,52 +321,6 @@ class UI:
         s.blit(RH_label, ((config.SCREEN_WIDTH / 2-110) - RH_label.get_width()/2, 16))
         s.blit(T_label, ((config.SCREEN_WIDTH / 2+110) - T_label.get_width()/2, 16))
 
-    def draw_organ_details(self, s):
-        topleft = self.organ_details_topleft
-
-        # organ details
-        if self.plant.target_organ.type == self.plant.LEAF:
-            image = assets.img("leaf_small.png", (128, 128))
-            topleft = (topleft[0],topleft[1])
-            # self.button_sprites.add(self.button)
-        elif self.plant.target_organ.type == self.plant.STEM:
-            image = assets.img("stem_small.png", (128, 128))
-            topleft = (topleft[0]+80, topleft[1])
-        elif self.plant.target_organ.type == self.plant.ROOTS:
-            image = assets.img("roots_small.png", (128, 128))
-            topleft = (topleft[0]+160, topleft[1])
-        elif self.plant.target_organ.type == self.plant.STARCH:
-            image = assets.img("starch.png", (128, 128))
-            topleft = (topleft[0]+260, topleft[1])
-
-        # draw plant image + exp + lvl + rate + mass
-
-        # headbox
-        width = 128
-        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], width, 30), border_radius=3)
-        leave_title = config.FONT.render("Organ:{}".format(self.plant.target_organ.type), True, (0, 0, 0))  # title
-        s.blit(leave_title, dest=(topleft[0]+width / 2 - leave_title.get_width() / 2, topleft[1]))
-
-        s.blit(image, (topleft[0], topleft[1]+40))
-
-        exp_width = 128
-        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1]+158, exp_width, 25), border_radius=0)
-        needed_exp = self.plant.target_organ.get_threshold()
-        exp = self.plant.target_organ.mass / needed_exp
-        width = min(int(exp_width / 1 * exp), exp_width)
-        pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1]+158, width, 25), border_radius=0)  # exp
-
-        threshold_string = "{:.2f}".format(self.plant.target_organ.get_threshold())
-        mass_string = "{:.2f}".format(self.plant.target_organ.mass)
-        text_organ_mass = config.FONT.render(threshold_string+"/"+mass_string,True, (0, 0, 0))
-        s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+158))  # Todo change x, y
-
-        # level
-        pygame.draw.circle(s, config.WHITE_TRANSPARENT, (topleft[0]+20,topleft[1]+60), 20)
-        pygame.draw.circle(s, config.WHITE, (topleft[0]+20,topleft[1]+60), 20, width=3)
-        level = config.FONT.render("{:.0f}".format(self.plant.target_organ.level), True, (0, 0, 0))
-        s.blit(level, (topleft[0]+20 - level.get_width() / 2, topleft[1]+60 - level.get_height() / 2))
-
     def init_danger_box(self):
         danger_label_0 = config.BIGGER_FONT.render("ENERGY WARNING", True, config.BLACK)
         danger_label_1 = config.BIG_FONT.render("Your plant is not producing energy.", True, config.BLACK)
@@ -408,15 +342,6 @@ class UI:
 
         return danger_box
 
-    def init_organ_ui(self):
-        topleft = self.organ_details_topleft
-        # below so it does not get in group
-        '''self.starch_consumption_slider = Slider((topleft[0], topleft[1], 15, 182), config.FONT, (50, 20),
-                                                organ=self.plant.organ_starch, plant=self.plant, percent=30,
-                                                visible=True)
-        self.sliders.append(self.starch_consumption_slider)
-        self.starch_consumption_slider.x = topleft[0] + 138
-        self.starch_consumption_slider.y = topleft[1]'''
 
     def init_production_ui(self):
         topleft = self.production_topleft
@@ -431,21 +356,23 @@ class UI:
             RadioButton(topleft[0]+220, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_root],
                         config.FONT, image=assets.img("root_deep.png",(100,100))),
-            RadioButton(topleft[0] + 330, topleft[1] + 40, 100,100,
-                        [self.plant.set_target_organ_starch],
-                        config.FONT, image=assets.img("starch.png",(100,100))),
         ]
+
+        '''RadioButton(topleft[0] + 540, topleft[1] + 0, 100, 100,
+                        [self.plant.set_target_organ_starch],
+                        config.FONT, image=assets.img("starch.png", (100, 100))),'''
+
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
 
-        starch_toggle_button = ToggleButton(topleft[0] + 330, topleft[1] + 360, 100, 30,
+        starch_toggle_button = ToggleButton(topleft[0] + 330, topleft[1] + 110, 200, 30,
                                           [self.toggle_starch_as_resource], config.FONT,
-                                          "Consume", vertical=False)
-        stomata_toggle_button = ToggleButton(topleft[0] + 0, topleft[1] + 360, 100, 30,
+                                          "Consume Starch", vertical=False)
+        stomata_toggle_button = ToggleButton(topleft[0] + 0, topleft[1] + 360, 200, 30,
                                             [self.toggle_stomata], config.FONT,
-                                            "Stomata", vertical=False)
+                                            "Open Stomata", vertical=False)
         self.button_sprites.add(starch_toggle_button, stomata_toggle_button)
         self.plant.organ_starch.toggle_button = starch_toggle_button
 
@@ -525,11 +452,27 @@ class UI:
         self.draw_organ_detail_temp(s,self.plant.organs[1],(topleft[0]+110,topleft[1]),self.label_stem)
         self.draw_organ_detail_temp(s,self.plant.organs[2],(topleft[0]+220,topleft[1]),self.label_root)
 
-        self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),self.label_starch, False, factor=1000)
 
-        #self.draw_organ_detail_temp(s,3,(topleft[0]+330,topleft[1]),"Starch")
-        #pygame.draw.line(s,config.WHITE_TRANSPARENT,(topleft[0]+260,topleft[1]+40),(topleft[0]+260,topleft[1]+300),width=2)
-        # rest of production consists of sliders and buttons
+
+        #self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),self.label_starch, False, factor=1000)
+        topleft = (topleft[0]+330,topleft[1])
+        organ = self.plant.organ_starch
+        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 200, 30), border_radius=3)
+        s.blit(self.label_starch, dest=(topleft[0] + 50 - self.label_starch.get_width() / 2, topleft[1]))
+
+
+        exp_width = 200
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1] + 40, exp_width, 30), border_radius=3)
+        needed_exp = organ.get_threshold()
+        exp = organ.mass / needed_exp
+        factor = 1000
+        width = min(int(exp_width / 1 * exp), exp_width)
+        pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1] + 40, width, 30), border_radius=3)  # exp
+        text_organ_mass = config.BIG_FONT.render("{:.2f} / {:.2f}".format(organ.mass / factor,
+                                                                            organ.get_threshold() / factor),
+                                                   True, (0, 0, 0))
+        s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+40))  # Todo change x, y
+
 
     '''def draw_starch_details(self, s):
         topleft = self.organ_details_topleft
