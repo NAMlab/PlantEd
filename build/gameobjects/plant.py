@@ -17,11 +17,11 @@ gram_mol = 0.5124299411
 WIN = pygame.USEREVENT+1
 #pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
 pivot_pos = [(286,113),(76,171),(254,78),(19,195),(271,114),(47,114)]
-leaves = [(assets.img("leaves/{index}.png".format(index=i)), pivot_pos[i]) for i in range(0, 6)]
+leaves = [(assets.img("leaves/{index}.PNG".format(index=i)), pivot_pos[i]) for i in range(0, 6)]
 #stem = (assets.img("stem.png"), (15, 1063))
 #roots = (assets.img("roots.png"), (387, 36))
 
-beans = [assets.img("bean_growth/{}.png".format(index),(150,150)) for index in range(0, 6)]
+beans = [assets.img("bean_growth/{}.PNG".format(index),(150,150)) for index in range(0, 6)]
 #beans = []
 #for bean in beans_big:
 #    beans.append(pygame.transform.scale(bean, (int(bean.get_width()/4), int(bean.get_height()/4))))

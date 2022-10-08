@@ -117,11 +117,11 @@ class UI:
 
         # init speed control
         speed_options = [RadioButton(120, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.play], config.FONT,
-                                     image=assets.img("normal_speed.png")),
+                                     image=assets.img("normal_speed.PNG")),
                          RadioButton(160, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.faster], config.FONT,
-                                     image=assets.img("fast_speed.png")),
+                                     image=assets.img("fast_speed.PNG")),
                          RadioButton(200, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.fastest], config.FONT,
-                                     image=assets.img("fastest_speed.png")),
+                                     image=assets.img("fastest_speed.PNG")),
                          ]
 
         for rb in speed_options:
@@ -349,18 +349,18 @@ class UI:
         radioButtons = [
             RadioButton(topleft[0], topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_leaf],
-                        config.FONT, image=assets.img("leaf_small.png",(100,100))),
+                        config.FONT, image=assets.img("leaf_small.PNG",(100,100))),
             RadioButton(topleft[0]+110, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_stem],
-                        config.FONT, image=assets.img("stem_small.png",(100,100))),
+                        config.FONT, image=assets.img("stem_small.PNG",(100,100))),
             RadioButton(topleft[0]+220, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_root],
-                        config.FONT, image=assets.img("root_deep.png",(100,100))),
+                        config.FONT, image=assets.img("root_deep.PNG",(100,100))),
         ]
 
         '''RadioButton(topleft[0] + 540, topleft[1] + 0, 100, 100,
                         [self.plant.set_target_organ_starch],
-                        config.FONT, image=assets.img("starch.png", (100, 100))),'''
+                        config.FONT, image=assets.img("starch.PNG", (100, 100))),'''
 
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)

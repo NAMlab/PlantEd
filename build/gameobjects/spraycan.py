@@ -11,7 +11,7 @@ class Spraycan:
     def __init__(self, pos, model, amount, cost=1): # take from config
         self.pos = pos
         self.model = model
-        self.image = assets.img("spraycan.png")
+        self.image = assets.img("spraycan.PNG")
         self.default_amount = amount
         self.amount = amount
         self.max_amount = amount
@@ -29,7 +29,7 @@ class Spraycan:
         self.can_particle_system.spawn_box = Rect(self.pos[0], self.pos[1], 0, 0)
 
     def deactivate(self):
-        self.image = assets.img("spraycan.png")
+        self.image = assets.img("spraycan.PNG")
         self.amount = 0
         self.active = False
         pygame.mixer.Sound.stop(assets.sfx('water_can.mp3'))
@@ -46,12 +46,12 @@ class Spraycan:
         if not self.active:
             return
         if e.type == MOUSEBUTTONDOWN:
-            self.image = assets.img("spraycan_active.png")
+            self.image = assets.img("spraycan_active.PNG")
             self.can_particle_system.activate()
             pygame.mixer.Sound.play(assets.sfx('spraycan.mp3', 0.3))
         if e.type == MOUSEBUTTONUP:
             self.amount -= 1
-            self.image = assets.img("spraycan.png")
+            self.image = assets.img("spraycan.PNG")
         if e.type == MOUSEMOTION:
             x, y = pygame.mouse.get_pos()
             self.pos = (x,y)

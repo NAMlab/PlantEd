@@ -109,6 +109,7 @@ class DevScene(object):
         example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      post_hover_message=self.ui.post_hover_message, message="Skill Stem") for i in range(0,2)]
         example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
+        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      post_hover_message=self.ui.post_hover_message, message="Skill Root") for i in range(0,2)]
         example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                        post_hover_message=self.ui.post_hover_message, message="Skill Starch") for i in range(0,3)]
@@ -118,12 +119,12 @@ class DevScene(object):
         for i in range(0, 10):
             bug = Bug((190 * random.randint(0, 10), 900 + random.randint(0, 200)),
                       pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
-                      [assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)], self.camera)
+                      [assets.img("bug_purple/bug_purple_{}.PNG".format(i)) for i in range(0, 5)], self.camera)
             self.entities.append(bug)
         # self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
         # shop items are to be defined by the level
-        add_leaf_item = Shop_Item(assets.img("leaf_small.png", (64, 64)), self.activate_add_leaf,
+        add_leaf_item = Shop_Item(assets.img("leaf_small.PNG", (64, 64)), self.activate_add_leaf,
                                   condition=self.plant.organs[1].check_can_add_leaf,
                                   condition_not_met_message="Level up your stem to buy more leaves",
                                   post_hover_message=self.ui.post_hover_message,
@@ -132,7 +133,7 @@ class DevScene(object):
         self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid,
                          self.plant, post_hover_message=self.ui.post_hover_message, active=False)
 
-        self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.png", (64, 64)),
+        self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.PNG", (64, 64)),
                                             self.shop.root_item.activate,
                                             condition=self.plant.organs[2].check_can_add_root,
                                             condition_not_met_message="Level up your roots to buy more leaves",
@@ -305,7 +306,7 @@ class OptionsScene():
         self.label_surface.blit(self.upload_score_label, (center_w+150-self.upload_score_label.get_width()/2,400))
         self.label_surface.blit(self.name_label, (center_w + 300 - self.name_label.get_width() / 2, 500))
 
-        self.label_surface.blit(assets.img("plant_growth_pod/plant_growth_10.png"),(1300,400))
+        self.label_surface.blit(assets.img("plant_growth_pod/plant_growth_10.PNG"),(1300,400))
 
     def update(self, dt):
         self.textbox.update(dt)

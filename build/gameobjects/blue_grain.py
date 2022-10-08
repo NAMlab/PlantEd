@@ -8,7 +8,7 @@ from pygame.locals import *
 
 class Blue_grain:
     def __init__(self, pos, model, amount=50000):
-        self.image = assets.img("blue_grain_bag.png",(128,128))
+        self.image = assets.img("blue_grain_bag.PNG",(128,128))
         self.pos = pos
         self.model = model
         self.amount = amount

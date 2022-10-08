@@ -29,7 +29,7 @@ class Shop:
         self.water_grid = water_grid
         self.plant = plant
         self.active = active
-        self.green_thumbs_icon = assets.img("green_thumb.png",(26,26))
+        self.green_thumbs_icon = assets.img("green_thumb.PNG",(26,26))
         self.current_cost = 0
         self.animations = []
         self.watering_can = Watering_can((0,0), self.model, self.water_grid)
@@ -66,11 +66,11 @@ class Shop:
     def add_shop_item(self, keywords):
         for keyword in keywords:
             if keyword == "watering":
-                self.shop_items.append(Shop_Item(assets.img("watering_can_tilted.png", (64, 64)), self.watering_can.activate,post_hover_message=self.post_hover_message, message="Buy a watering can to increase availability."))
+                self.shop_items.append(Shop_Item(assets.img("watering_can_tilted.PNG", (64, 64)), self.watering_can.activate,post_hover_message=self.post_hover_message, message="Buy a watering can to increase availability."))
             elif keyword == "blue_grain":
-                self.shop_items.append(Shop_Item(assets.img("blue_grain_0.png", (64, 64)), self.blue_grain.activate, post_hover_message=self.post_hover_message, message="Blue grain increases nitrate in the ground."))
+                self.shop_items.append(Shop_Item(assets.img("blue_grain_0.PNG", (64, 64)), self.blue_grain.activate, post_hover_message=self.post_hover_message, message="Blue grain increases nitrate in the ground."))
             elif keyword == "spraycan":
-                self.shop_items.append(Shop_Item(assets.img("spraycan_icon.png", (64, 64)), self.spraycan.activate, post_hover_message=self.post_hover_message, message="Spray em!"))
+                self.shop_items.append(Shop_Item(assets.img("spraycan_icon.PNG", (64, 64)), self.spraycan.activate, post_hover_message=self.post_hover_message, message="Spray em!"))
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.init_layout()
@@ -135,7 +135,7 @@ class Shop:
         self.s.blit(self.shop_label,(10,5))
         green_thumbs_label = config.BIG_FONT.render("{}".format(self.plant.upgrade_points),True,config.BLACK)
         self.s.blit(green_thumbs_label,(self.rect[2]-90-green_thumbs_label.get_width(),5))
-        self.s.blit(assets.img("green_thumb.png",(26,26)),(self.rect[2]-80,6))
+        self.s.blit(assets.img("green_thumb.PNG",(26,26)),(self.rect[2]-80,6))
         for item in self.shop_items:
             item.draw(self.s)
         self.buy_button.draw(self.s)
