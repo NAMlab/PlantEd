@@ -261,6 +261,7 @@ class Leaf(Organ):
         self.images = images
         self.photon_intake = 0
         self.base_mass = 1
+        self.target_leaf = 0
         self.can_add_leaf = False
         self.particle_system = (
             ParticleSystem(20, spawn_box=Rect(500, 500, 50, 20), lifetime=8, color=config.YELLOW,
@@ -277,6 +278,17 @@ class Leaf(Organ):
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     self.callback()
+        if self.type == self.plant.target_organ.type:
+            if event.type == pygame.MOUSEMOTION:
+                mouse_pos = pygame.mouse.get_pos()
+                rects = self.get_rect()
+                for i in range(len(rects)):
+                    if rects[i].collidepoint(mouse_pos):
+                        self.target_leaf = i
+                        print(i)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_i:
+                self.leaves.pop(self.target_leaf)
+
 
     def activate_add_leaf(self):
         self.can_add_leaf = True
@@ -412,6 +424,20 @@ class Leaf(Organ):
                 pygame.draw.lines(s, (255,255,255),True,outlines[i],2)
                 #pygame.draw.rect(screen, (255, 255, 255), (rects[i][0],rects[i][1],rects[i][2],rects[i][3]), 2)
                 screen.blit(s, (self.leaves[i]["x"]-self.leaves[i]["offset_x"], self.leaves[i]["y"]-self.leaves[i]["offset_y"]))
+
+                #leave_details:
+                mass_label = config.FONT.render("Mass: {0:.2f}".format(self.leaves[i]["mass"]),True,config.WHITE)
+                age_label = config.FONT.render("Age: {0:.2f}".format(self.leaves[i]["age"]),True,config.WHITE)
+                lifetime_label = config.FONT.render("Lifetime: {0:.2f}".format(self.leaves[i]["lifetime"]/(24*60*60)),True,config.WHITE)
+
+                x = self.leaves[i]["x"]-self.leaves[i]["offset_x"]+self.leaves[i]["image"].get_width()
+                y = self.leaves[i]["y"]-self.leaves[i]["offset_y"]
+                pygame.draw.rect(screen,config.WHITE,(x,y,lifetime_label.get_width(),120),3,3)
+                screen.blit(mass_label,(x,y))
+                screen.blit(age_label,(x,y+30))
+                screen.blit(lifetime_label,(x,y+60))
+
+                #print(self.leaves[i]["age"],self.leaves[i]["mass"],self.leaves[i]["lifetime"],self.leaves[i]["direction"])
 
         for system in self.particle_systems:
             system.draw(screen)

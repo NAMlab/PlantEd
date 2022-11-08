@@ -1,7 +1,7 @@
 import pygame
 from gameobjects.plant import Plant
 from utils.gametime import GameTime
-from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup, Arrow_Button, Button_Once
+from utils.button import DoubleRadioButton,RadioButton, ToggleButton, Button, Slider, SliderGroup, Arrow_Button, Button_Once, ButtonArray
 from utils.tool_tip import ToolTip, ToolTipManager
 from utils.particle import ParticleSystem, PointParticleSystem, StillParticles, Inwards_Particle_System
 from utils.animation import Animation
@@ -50,6 +50,8 @@ class UI:
         self.hover_timer = 60
         self.camera = camera
         self.dev_mode = dev_mode
+
+        self.stomata_hours = [False for i in range(24)]
 
         self.danger_timer = 1
 
@@ -132,8 +134,11 @@ class UI:
         self.skip_intro = Button_Once(330, config.SCREEN_HEIGHT - 50,140,32,[self.skip_intro_ui],config.FONT,"SKIP INTRO",border_w=3)
         self.button_sprites.add(self.skip_intro)
 
+        self.button_array = ButtonArray((10,750,30,30),24,5, self.set_stomata_automation)
+
         self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
+        self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
         self.tool_tip_manager.deactivate_tooltipps()
@@ -142,6 +147,7 @@ class UI:
         self.gametime.forward()
 
     def handle_event(self, e):
+        self.button_array.handle_event(e)
         for button in self.button_sprites:
             # all button_sprites handle their events
             button.handle_event(e)
@@ -174,6 +180,7 @@ class UI:
             element.update(dt)
         for animation in self.animations:
             animation.update()
+        self.update_stomata_automation()
 
         # maybe put it to event and make userevent
         self.hover_timer -= 1/dt
@@ -200,6 +207,8 @@ class UI:
         return preset
 
     def draw(self, screen):
+        screen.blit(self.gradient,(0,0))
+        self.button_array.draw(screen)
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
         self.draw_ui(screen)
@@ -233,15 +242,38 @@ class UI:
                 self.hover_timer=timer
             self.hover_message = config.FONT.render("{}".format(message),True,config.BLACK)
 
+    def set_stomata_automation(self, hours):
+        self.stomata_hours = hours
+
+    def update_stomata_automation(self):
+        ticks = self.gametime.get_time()
+        day = 1000 * 60 * 60 * 24
+        hour = 1000 * 60 * 60
+        hours = ((ticks % day) / hour)
+        self.button_array.update(hours)
+        hours = (int) (hours)
+        open = self.stomata_hours[hours]
+        if open and self.model.stomata_open is False:
+            self.open_stomata()
+        if not open and self.model.stomata_open is True:
+            self.close_stomata()
+
+
+    def open_stomata(self):
+        self.model.open_stomata()
+        self.open_stomata_particle_in.activate()
+        self.open_stomata_particle_out.activate()
+
+    def close_stomata(self):
+        self.model.close_stomata()
+        self.open_stomata_particle_in.deactivate()
+        self.open_stomata_particle_out.deactivate()
+
     def toggle_stomata(self):
         if self.model.stomata_open == True:
-            self.model.close_stomata()
-            self.open_stomata_particle_in.deactivate()
-            self.open_stomata_particle_out.deactivate()
+            self.close_stomata()
         else:
-            self.model.open_stomata()
-            self.open_stomata_particle_in.activate()
-            self.open_stomata_particle_out.activate()
+            self.open_stomata()
 
     def toggle_starch_as_resource(self):
         #self.starch_particle.particles.clear()
@@ -320,6 +352,27 @@ class UI:
 
         s.blit(RH_label, ((config.SCREEN_WIDTH / 2-110) - RH_label.get_width()/2, 16))
         s.blit(T_label, ((config.SCREEN_WIDTH / 2+110) - T_label.get_width()/2, 16))
+
+    def init_gradient(self):
+        width = 30
+        colors = [(238, 250, 110),
+                  (241, 232, 83),
+                  (245, 214, 57),
+                  (248, 194, 28),
+                  (251, 174, 0),
+                  (254, 153, 0),
+                  (255, 129, 0),
+                  (255, 103, 0),
+                  (255, 72, 0),
+                  (255, 12, 12)]
+        gradient = pygame.Surface((width, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        height = config.SCREEN_HEIGHT/10
+        for i in range(len(colors)):
+            pygame.draw.rect(gradient,colors[i],(0,config.SCREEN_HEIGHT-((i+1)*height),width,height))
+
+        return gradient
+
+
 
     def init_danger_box(self):
         danger_label_0 = config.BIGGER_FONT.render("ENERGY WARNING", True, config.BLACK)

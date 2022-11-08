@@ -455,12 +455,6 @@ class DefaultGameScene(object):
                                     self.plant.organ_starch.mass)
                 self.plant.update_growth_rates(self.model.get_rates())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
-                self.log.close_file()
-                # Todo fix back to menu
-                pygame.quit()
-                sys.exit()
-                #self.manager.go_to(TitleScene(self.manager))
-            if e.type == KEYDOWN and e.key == K_k:
                 self.toggle_pause()
             if e.type == WIN:
                 if self.log:

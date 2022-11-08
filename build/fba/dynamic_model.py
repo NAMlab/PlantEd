@@ -177,6 +177,9 @@ class DynamicModel:
     def increase_nitrate(self, amount):
         self.nitrate_delta_amount = amount
 
+    def set_stomata_automation(self, hours):
+        self.stomata_hours = hours
+
     def activate_starch_resource(self):
         self.use_starch = True
         self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
@@ -190,6 +193,7 @@ class DynamicModel:
         self.update_bounds(root_mass, PLA*sun_intensity, max_water_drain)
         self.update_pools(dt, max_water_drain)
         self.update_transpiration_factor()
+
 
     def update_pools(self,dt, max_water_drain):
         gamespeed = self.gametime.GAMESPEED

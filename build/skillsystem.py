@@ -91,7 +91,7 @@ class Skill_System:
 
         self.buy_button = Button(self.rect[2]-self.margin-64,
                                  self.rect[3]-30,64,64,[self.buy],config.FONT,"Buy", offset=self.pos)
-        self.green_thumbs_icon = assets.img("green_thumb.png", (26, 26))
+        self.green_thumbs_icon = assets.img("green_thumb.PNG", (26, 26))
         self.init_layout()
         self.set_target(0)
 

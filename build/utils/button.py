@@ -370,6 +370,9 @@ class ToggleButton(pygame.sprite.Sprite):
         for callback in self.callback:
             callback()
 
+    def draw(self, screen):
+        screen.blit(self.image,(self.rect[0],self.rect[1]))
+
 # image size has to be = w,h
 class RadioButton(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
@@ -778,4 +781,35 @@ class Textbox:
         elif self.hover:
             pygame.draw.line(screen, self.higlight_color, (self.rect[0],self.rect[1]+self.rect[3]),(self.rect[0]+self.rect[2],self.rect[1]+self.rect[3]), width=3)
 
+class ButtonArray():
+    def __init__(self, rect, amount, margin, callback):
+        self.toggle_buttons = []
+        self.callback = callback
+        self.hours = 0
+        self.rect = pygame.Rect(rect[0],rect[1],(rect[2]+margin)*amount,rect[3])
+        for i in range(0,amount):
+            self.toggle_buttons.append(ToggleButton(rect[0]+i*(rect[2]+margin),rect[1],rect[2],rect[3],[],font=config.BIG_FONT,text="{}".format(i)))
 
+            #self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
+            #image=None, border_w=None, pressed=False, fixed=False, vertical=False, cross=False):
+
+    def update(self, hours):
+        self.hours = hours
+
+    def handle_event(self, e):
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(pygame.mouse.get_pos()):
+                for button in self.toggle_buttons:
+                    button.handle_event(e)
+                self.callback(self.get_bool_list())
+
+    def get_bool_list(self):
+        return [True if button.button_down else False for button in self.toggle_buttons]
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, config.WHITE, (self.rect[2]/24*self.hours,self.rect[1]+32,20,3),border_radius=2)
+        pygame.draw.rect(screen, config.WHITE, (self.rect[0],self.rect[1]-50,600,40))
+        stomata_automation_label = config.BIG_FONT.render("Stomata Automation: select hours to open/close",True,config.BLACK)
+        screen.blit(stomata_automation_label,(self.rect[0]+5,self.rect[1]-45))
+        for button in self.toggle_buttons:
+            button.draw(screen)

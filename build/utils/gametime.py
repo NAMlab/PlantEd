@@ -61,7 +61,7 @@ class GameTime:
         self.set_speed(-1)
 
     def unpause(self):
-        self.set_speed(1)
+        self.set_speed(240)
 
     def play(self):
         self.set_speed(240)
