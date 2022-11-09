@@ -1,4 +1,4 @@
-import cobra.test
+#import cobra.test
 import random
 import pygame
 from data import assets

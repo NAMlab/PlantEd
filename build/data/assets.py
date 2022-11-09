@@ -1,6 +1,6 @@
 import os
 import pygame
-import ctypes
+import screeninfo
 import numpy as np
 import math
 # assets is supposed to allow access to images, sounds
@@ -14,9 +14,7 @@ _music_library = {}
 
 pygame.init()
 
-
-
-true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
+true_res = (screeninfo.get_monitors()[0].width, screeninfo.get_monitors()[0].height)
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
 
 def img(path, size=None):

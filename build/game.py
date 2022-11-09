@@ -1,4 +1,4 @@
-import ctypes
+import screeninfo
 import pygame
 from pygame.locals import *
 import numpy as np
@@ -37,8 +37,7 @@ currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 pygame.init()
-ctypes.windll.user32.SetProcessDPIAware()
-true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
+true_res = (screeninfo.get_monitors()[0].width, screeninfo.get_monitors()[0].height)
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
 #pygame.display.toggle_fullscreen()
 #print(pygame.display.list_modes(depth=0, flags=pygame.FULLSCREEN, display=0))
