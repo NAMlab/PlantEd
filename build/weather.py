@@ -39,7 +39,7 @@ class Environment:
         self.model = model
         self.water_grid = water_grid
         self.gametime = gametime
-        self.background = assets.img("soil.png").convert_alpha()
+        self.background = assets.img("soil.PNG").convert_alpha()
         #self.background_moist = pygame.transform.scale(assets.img("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
         self.h = SCREEN_HEIGHT
         self.sun_pos_spline = Beziere([(-100,800),(960,-200),(2020,800)],res=10000).points_to_draw
@@ -63,9 +63,9 @@ class Environment:
         # init drop sprites
         #drops = [pygame.transform.scale(assets.img("rain/raindrop{}.png".format(i)), (16, 16)) for i in range(0, 3)]
         #splash = [pygame.transform.scale(assets.img("rain/raindrop_splash{}.png".format(i)), (16, 16)) for i in range(0, 4)]
-        self.sun = assets.img("sun/sun.png", (256, 256))
-        self.cloud = assets.img("clouds/cloud_0.png",(402,230))
-        self.cloud_dark = assets.img("clouds/cloud_dark_0.png",(402,230))
+        self.sun = assets.img("sun/sun.PNG", (256, 256))
+        self.cloud = assets.img("clouds/cloud_0.PNG",(402,230))
+        self.cloud_dark = assets.img("clouds/cloud_dark_0.PNG",(402,230))
         '''self.rain = ParticleSystem(50, spawn_box=Rect(SCREEN_WIDTH / 2-150, 100, 300, 30),
                                     boundary_box=Rect(SCREEN_WIDTH/2-150,0,300,SCREEN_HEIGHT-250),
                                     color=(0,0,100), apply_gravity=True, speed=[0, 180],
@@ -79,7 +79,7 @@ class Environment:
 
         self.nitrate = StillParticles(10, spawn_box=Rect(0,950,1920,300),
                                     boundary_box=Rect(0,950,1920,300),
-                                    color=(0,0,0), images=[assets.img("nitrogen.png",(20,20))], speed=[0, 0], callback=self.model.get_nitrate_percentage,
+                                    color=(0,0,0), images=[assets.img("nitrogen.PNG",(20,20))], speed=[0, 0], callback=self.model.get_nitrate_percentage,
                                     active=True, size=4, factor=100, once=True)
         self.weather_events = config.e
 

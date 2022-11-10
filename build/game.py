@@ -1,50 +1,36 @@
-import ctypes
 import pygame
 from pygame.locals import *
-import numpy as np
-from itertools import repeat
-import analysis.scoring
 from data import assets
-import math
 from analysis.logger import Log
 from gameobjects.plant import Plant
-from utils.button import Button, RadioButton, Slider, SliderGroup, ToggleButton, Textbox
-from utils.particle import ParticleSystem, PointParticleSystem
-from utils.animation import OneShotAnimation, Animation
+from utils.button import Button, Slider, ToggleButton, Textbox
 import os, sys
-from utils.tool_tip import ToolTipManager
 from weather import Environment
-from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
-from gameobjects.eagle import Eagle, QuickTimeEvent
+from fba.dynamic_model import DynamicModel
 import config
 from utils.gametime import GameTime
 from datetime import datetime
-from utils.spline import Beziere
-from gameobjects.watering_can import Watering_can
-from gameobjects.blue_grain import Blue_grain
 from gameobjects.shop import Shop, Shop_Item
 from gameobjects.bug import Bug
 from ui import UI
 from camera import Camera
 import random
-from skillsystem import Skill_System, Skill
-from utils.LSystem import LSystem, Letter
 from analysis import scoring
-from gameobjects.water_reservoir import Water_Reservoir, Water_Grid, Base_water
+from gameobjects.water_reservoir import Water_Grid, Base_water
 from gameobjects.level_card import Card
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 pygame.init()
-ctypes.windll.user32.SetProcessDPIAware()
-true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
+#ctypes.windll.user32.SetProcessDPIAware()
+true_res = (1920,1080)#(ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
 #pygame.display.toggle_fullscreen()
 #print(pygame.display.list_modes(depth=0, flags=pygame.FULLSCREEN, display=0))
 #screen = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
 #screen_high = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.DOUBLEBUF)
-tmp_screen = pygame.display.set_mode(true_res, pygame.SRCALPHA)
+tmp_screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN  | pygame.SRCALPHA)
 temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 #screen_high = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.SRCALPHA)
 GROWTH = 24
@@ -339,7 +325,6 @@ class OptionsScene():
         self.textbox.draw(screen)
 
 
-
 class DefaultGameScene(object):
     def __init__(self):
         options = config.load_options(config.OPTIONS_PATH)
@@ -389,7 +374,7 @@ class DefaultGameScene(object):
         # self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
         # shop items are to be defined by the level
-        add_leaf_item = Shop_Item(assets.img("leaf_small.png", (64, 64)), self.activate_add_leaf,
+        add_leaf_item = Shop_Item(assets.img("leaf_small.PNG", (64, 64)), self.activate_add_leaf,
                                   condition=self.plant.organs[1].check_can_add_leaf,
                                   condition_not_met_message="Level up your stem to buy more leaves",
                                   post_hover_message=self.ui.post_hover_message,
@@ -398,7 +383,7 @@ class DefaultGameScene(object):
         self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid,
                          self.plant, post_hover_message=self.ui.post_hover_message, active=False)
 
-        self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.png", (64, 64)),
+        self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.PNG", (64, 64)),
                                               self.shop.root_item.activate,
                                               condition=self.plant.organs[2].check_can_add_root,
                                               condition_not_met_message="Level up your roots to buy more leaves",
@@ -523,12 +508,12 @@ class TitleScene(object):
         self.title = config.MENU_TITLE.render("PlantEd",True,config.WHITE)
         self.center_h = config.SCREEN_HEIGHT/2+100
         self.center_w = config.SCREEN_WIDTH/2
-        self.card_0 = Card((self.center_w-260,self.center_h-100),assets.img("menu/gatersleben.JPG",(512,512)), "Gatersleben",
+        self.card_0 = Card((self.center_w,self.center_h-100),assets.img("menu/gatersleben.JPG",(512,512)), "Gatersleben",
                            callback=manager.go_to, callback_var=DefaultGameScene,keywords="Beginner, Medium Temperatures")
         #self.card_1 = Card((self.center_w,self.center_h-100),assets.img("menu/tutorial.JPG",(512,512)), "Tutorial",
         #                   callback=manager.go_to, callback_var=DevScene,keywords="Beginner, Easy")
-        self.card_2 = Card((self.center_w+260,self.center_h-100),assets.img("menu/dev.jpg",(512,512)), "Dev ",
-                           callback=manager.go_to, callback_var=DevScene,keywords="Test Stuff")
+        #self.card_2 = Card((self.center_w+260,self.center_h-100),assets.img("menu/dev.jpg",(512,512)), "Dev ",
+        #                   callback=manager.go_to, callback_var=DevScene,keywords="Test Stuff")
 
 
         self.credit_button = Button(self.center_w-450,930,200,50,[self.go_to_credtis],config.BIGGER_FONT,"CREDTIS",config.LIGHT_GRAY,config.WHITE,border_w=2)
@@ -545,14 +530,14 @@ class TitleScene(object):
         screen.blit(self.title,(self.center_w-self.title.get_width()/2,100))
         self.card_0.draw(screen)
         #self.card_1.draw(screen)
-        self.card_2.draw(screen)
+        #self.card_2.draw(screen)
         pygame.draw.line(screen,config.WHITE,(100,900),(1820,900))
         self.button_sprites.draw(screen)
 
     def update(self, dt):
         self.card_0.update(dt)
         #self.card_1.update(dt)
-        self.card_2.update(dt)
+        #self.card_2.update(dt)
 
     def quit(self):
         pygame.quit()
@@ -573,7 +558,7 @@ class TitleScene(object):
                 self.quit()
             self.card_0.handle_event(e)
             #self.card_1.handle_event(e)
-            self.card_2.handle_event(e)
+            #self.card_2.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
             #self.watering_can.handle_event(e)
@@ -668,12 +653,11 @@ class Credits():
     def init_labels(self):
         self.label_surface.fill(config.LIGHT_GRAY)
         self.made_by_label = config.MENU_TITLE.render("MADE BY",True,config.WHITE)
-        self.daniel = config.MENU_SUBTITLE.render("Daniel",True,config.WHITE)
-        self.jj = config.MENU_SUBTITLE.render("JJ",True,config.WHITE)
-        self.pouneh = config.MENU_SUBTITLE.render("Pouneh",True,config.WHITE)
-        self.mona = config.MENU_SUBTITLE.render("Mona",True,config.WHITE)
-        self.nadine = config.MENU_SUBTITLE.render("Nadine",True,config.WHITE)
-        self.stefano = config.MENU_SUBTITLE.render("Stefano",True,config.WHITE)
+        self.daniel = config.MENU_SUBTITLE.render("Daniel Koch",True,config.WHITE)
+        self.jj = config.MENU_SUBTITLE.render("Jedrzej J. Szymanski",True,config.WHITE)
+        self.nadine = config.MENU_SUBTITLE.render("Nadine Töpfer",True,config.WHITE)
+        self.mona = config.MENU_SUBTITLE.render("Stefano A. Cruz",True,config.WHITE)
+        self.pouneh = config.MENU_SUBTITLE.render("Pouneh Pouramini",True,config.WHITE)
 
         pygame.draw.line(self.label_surface, config.WHITE, (100, 300), (1820, 300))
 
@@ -683,7 +667,6 @@ class Credits():
         self.label_surface.blit(self.pouneh,(self.center_w-self.pouneh.get_width()/2,560))
         self.label_surface.blit(self.mona,(self.center_w-self.mona.get_width()/2,640))
         self.label_surface.blit(self.nadine,(self.center_w-self.nadine.get_width()/2,720))
-        self.label_surface.blit(self.stefano,(self.center_w-self.stefano.get_width()/2,780))
 
     def update(self, dt):
         pass
