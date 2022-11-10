@@ -425,7 +425,7 @@ class Leaf(Organ):
                 #pygame.draw.rect(screen, (255, 255, 255), (rects[i][0],rects[i][1],rects[i][2],rects[i][3]), 2)
                 screen.blit(s, (self.leaves[i]["x"]-self.leaves[i]["offset_x"], self.leaves[i]["y"]-self.leaves[i]["offset_y"]))
 
-                #leave_details:
+                '''#leave_details:
                 mass_label = config.FONT.render("Mass: {0:.2f}".format(self.leaves[i]["mass"]),True,config.WHITE)
                 age_label = config.FONT.render("Age: {0:.2f}".format(self.leaves[i]["age"]),True,config.WHITE)
                 lifetime_label = config.FONT.render("Lifetime: {0:.2f}".format(self.leaves[i]["lifetime"]/(24*60*60)),True,config.WHITE)
@@ -435,7 +435,7 @@ class Leaf(Organ):
                 pygame.draw.rect(screen,config.WHITE,(x,y,lifetime_label.get_width(),120),3,3)
                 screen.blit(mass_label,(x,y))
                 screen.blit(age_label,(x,y+30))
-                screen.blit(lifetime_label,(x,y+60))
+                screen.blit(lifetime_label,(x,y+60))'''
 
                 #print(self.leaves[i]["age"],self.leaves[i]["mass"],self.leaves[i]["lifetime"],self.leaves[i]["direction"])
 

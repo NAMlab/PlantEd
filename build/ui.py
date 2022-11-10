@@ -51,7 +51,7 @@ class UI:
         self.camera = camera
         self.dev_mode = dev_mode
 
-        self.stomata_hours = [False for i in range(24)]
+        #self.stomata_hours = [False for i in range(24)]
 
         self.danger_timer = 1
 
@@ -134,11 +134,11 @@ class UI:
         self.skip_intro = Button_Once(330, config.SCREEN_HEIGHT - 50,140,32,[self.skip_intro_ui],config.FONT,"SKIP INTRO",border_w=3)
         self.button_sprites.add(self.skip_intro)
 
-        self.button_array = ButtonArray((10,750,30,30),24,5, self.set_stomata_automation)
+        #self.button_array = ButtonArray((10,750,30,30),24,5, self.set_stomata_automation)
 
         self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
-        self.gradient = self.init_gradient()
+        #self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
         self.tool_tip_manager.deactivate_tooltipps()
@@ -147,7 +147,7 @@ class UI:
         self.gametime.forward()
 
     def handle_event(self, e):
-        self.button_array.handle_event(e)
+        #self.button_array.handle_event(e)
         for button in self.button_sprites:
             # all button_sprites handle their events
             button.handle_event(e)
@@ -180,7 +180,7 @@ class UI:
             element.update(dt)
         for animation in self.animations:
             animation.update()
-        self.update_stomata_automation()
+        #self.update_stomata_automation()
 
         # maybe put it to event and make userevent
         self.hover_timer -= 1/dt
@@ -207,8 +207,8 @@ class UI:
         return preset
 
     def draw(self, screen):
-        screen.blit(self.gradient,(0,0))
-        self.button_array.draw(screen)
+        #screen.blit(self.gradient,(0,0))
+        #self.button_array.draw(screen)
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
         self.draw_ui(screen)
@@ -250,7 +250,7 @@ class UI:
         day = 1000 * 60 * 60 * 24
         hour = 1000 * 60 * 60
         hours = ((ticks % day) / hour)
-        self.button_array.update(hours)
+        #self.button_array.update(hours)
         hours = (int) (hours)
         open = self.stomata_hours[hours]
         if open and self.model.stomata_open is False:
