@@ -8,15 +8,12 @@ from utils.animation import Animation
 import config
 import math
 from pygame import rect, Rect
-from gameobjects.watering_can import Watering_can
-import random
-from skillsystem import Skill_System, Skill
+from utils.hover_message import Hover_Message
 
 # constants in dynamic model, beter in config? dont think so
 from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
 from data import assets
 
-HOVER_MESSAGE = pygame.USEREVENT+2
 
 '''
 UI: set up all UI elements, update them, link them to functions
@@ -46,12 +43,12 @@ class UI:
         self.plant = plant
         self.model = model
         self.gametime = GameTime.instance()
-        self.hover_message = None
-        self.hover_timer = 60
+
+        self.hover = Hover_Message(config.FONT,30,5)
         self.camera = camera
         self.dev_mode = dev_mode
 
-        #self.stomata_hours = [False for i in range(24)]
+        self.stomata_hours = [False for i in range(12)]
 
         self.danger_timer = 1
 
@@ -78,13 +75,6 @@ class UI:
 
         #put somewhere
         topleft = self.organ_details_topleft
-        '''self.biomass_particle = ParticleSystem(20, spawn_box=Rect(200, 495, 25, 25), lifetime=8, color=config.GREEN,
-                           apply_gravity=False,
-                           speed=[0, -4], spread=[2, -2], active=True)
-
-        self.starch_particle = ParticleSystem(20, spawn_box=Rect(200, 535, 25, 25), lifetime=8, color=config.WHITE,
-                           apply_gravity=False,
-                           speed=[0, 4], spread=[2, -2], active=False)'''
 
         self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+530, self.production_topleft[1]+80, 0, 20), lifetime=10, color=config.WHITE,
                                               apply_gravity=False,
@@ -100,8 +90,6 @@ class UI:
                                                         apply_gravity=False,
                                                         speed=[0, -4], spread=[5, 5], active=False)
 
-        #self.particle_systems.append(self.biomass_particle)
-        #self.particle_systems.append(self.starch_particle)
         self.particle_systems.append(self.drain_starch_particle)
         self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
@@ -134,11 +122,11 @@ class UI:
         self.skip_intro = Button_Once(330, config.SCREEN_HEIGHT - 50,140,32,[self.skip_intro_ui],config.FONT,"SKIP INTRO",border_w=3)
         self.button_sprites.add(self.skip_intro)
 
-        #self.button_array = ButtonArray((10,750,30,30),24,5, self.set_stomata_automation)
+        self.button_array = ButtonArray((10,750,30,30),12, 2,5, self.set_stomata_automation, self.hover.set_message)
 
         self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
-        #self.gradient = self.init_gradient()
+        self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
         self.tool_tip_manager.deactivate_tooltipps()
@@ -147,7 +135,9 @@ class UI:
         self.gametime.forward()
 
     def handle_event(self, e):
-        #self.button_array.handle_event(e)
+        self.hover.handle_event(e)
+        self.button_array.handle_event(e)
+
         for button in self.button_sprites:
             # all button_sprites handle their events
             button.handle_event(e)
@@ -155,11 +145,9 @@ class UI:
             slider.handle_event(e)
         for tips in self.tool_tip_manager.tool_tips:
             tips.handle_event(e)
-        if e.type == pygame.MOUSEMOTION:
-            #self.hover_message = None
-            self.hover_timer = 1000
 
     def update(self, dt):
+        self.hover.update(dt)
         if self.plant.get_biomass() >= 4:
             if self.skip_intro is not None:
                 self.button_sprites.remove(self.skip_intro)
@@ -180,10 +168,7 @@ class UI:
             element.update(dt)
         for animation in self.animations:
             animation.update()
-        #self.update_stomata_automation()
-
-        # maybe put it to event and make userevent
-        self.hover_timer -= 1/dt
+        self.update_stomata_automation()
 
     def apply_preset(self, id=0):
         preset = self.presets[id]
@@ -207,8 +192,8 @@ class UI:
         return preset
 
     def draw(self, screen):
-        #screen.blit(self.gradient,(0,0))
-        #self.button_array.draw(screen)
+        screen.blit(self.gradient,(0,0))
+        self.button_array.draw(screen)
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
         self.draw_ui(screen)
@@ -220,27 +205,13 @@ class UI:
             system.draw(screen)
         self.tool_tip_manager.draw(screen)
         self.tool_tip_manager.draw(screen)
-        if self.hover_message is not None and self.hover_timer <= 0:
-            x,y = pygame.mouse.get_pos()
-            if self.hover_message.get_width() > config.SCREEN_WIDTH-x:
-                x = x - self.hover_message.get_width()
-            pygame.draw.rect(screen,config.WHITE,(x,y,self.hover_message.get_width()+20,self.hover_message.get_height()+6),border_radius=3)
-            screen.blit(self.hover_message,(x+10,y+3))
 
-        # draw dange mode
+        # draw danger mode
         if self.danger_timer < 0.5:
             pygame.draw.rect(screen,config.RED,(0,0,config.SCREEN_WIDTH,config.SCREEN_HEIGHT),8)
         if self.plant.danger_mode:
             screen.blit(self.danger_box,(1350,750))
-
-    def post_hover_message(self, message=None, timer=None):
-        if message is None:
-            #deactivate hover message
-            self.hover_message = None
-        else:
-            if timer is not None:
-                self.hover_timer=timer
-            self.hover_message = config.FONT.render("{}".format(message),True,config.BLACK)
+        self.hover.draw(screen)
 
     def set_stomata_automation(self, hours):
         self.stomata_hours = hours
@@ -250,13 +221,15 @@ class UI:
         day = 1000 * 60 * 60 * 24
         hour = 1000 * 60 * 60
         hours = ((ticks % day) / hour)
-        #self.button_array.update(hours)
-        hours = (int) (hours)
+        self.button_array.update(hours)
+        hours = (int) (hours/2)
         open = self.stomata_hours[hours]
         if open and self.model.stomata_open is False:
             self.open_stomata()
+            self.button_array.go_green()
         if not open and self.model.stomata_open is True:
             self.close_stomata()
+            self.button_array.go_red()
 
 
     def open_stomata(self):
@@ -276,19 +249,15 @@ class UI:
             self.open_stomata()
 
     def toggle_starch_as_resource(self):
-        #self.starch_particle.particles.clear()
         if self.model.use_starch:
-            #self.starch_particle.active = False
             self.drain_starch_particle.deactivate()
             self.model.deactivate_starch_resource()
         else:
-            #self.starch_particle.active = True
             self.drain_starch_particle.activate()
             self.model.activate_starch_resource()
 
     def draw_ui(self, screen):
         # new surface to get alpha
-        #self.s.fill((0,0,0))
         self.s.fill((0,0,0,0))
         self.draw_plant_details(self.s)
         self.draw_clock(self.s)

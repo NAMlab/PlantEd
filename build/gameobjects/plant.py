@@ -1,7 +1,7 @@
 import random
 import pygame
 from data import assets
-from utils.spline import Beziere
+from utils.spline import Beziere, Cubic
 import config
 import math
 from utils.particle import ParticleSystem, Particle
@@ -541,6 +541,10 @@ class Stem(Organ):
         self.highlight = None
         self.flower = False
         self.sunpos = (0,0)
+
+        self.new_curve = Cubic([[800,900],[700,750],[850,550],[750,400]])
+        self.branches = [Cubic([[700,750],[600,650],[650,600]])]
+
         self.sunflower = assets.img("sunflower.PNG",(128,128))
         self.sunflower_pos = (0,0)
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active, base_mass=1)
@@ -560,20 +564,13 @@ class Stem(Organ):
         self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*50,tip[1]+(-1*random.randint(40,60))))
         self.curve.width += 1
 
-    def add_thorn(self, pos, dir):
-        if dir > 0:
-            image = thorn_r
-        else:
-            image = thorn_l
-        self.thorns.append({"position": pos,
-                            "image" : image})
-
     def check_can_add_leaf(self):
         if len(self.leaf.leaves) <= self.active_threshold:
             return True
 
     def handle_event(self, event):
         self.curve.handle_event(event)
+        self.new_curve.handle_event(event)
         if event.type == pygame.MOUSEMOTION:
             if self.leaf.can_add_leaf:
                 x,y = pygame.mouse.get_pos()
@@ -634,6 +631,11 @@ class Stem(Organ):
             self.curve.draw_highlighted(screen)
         else:
             self.curve.draw(screen)
+
+        self.new_curve.draw(screen)
+        for branch in self.branches:
+            branch.draw(screen)
+
         if self.highlight:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             mouse_y = mouse_y-self.plant.camera.offset_y

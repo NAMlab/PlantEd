@@ -184,9 +184,6 @@ class Shop_Item:
                     self.post_hover_message(self.message)
                 if not self.selected:
                     self.hover = True
-            else:
-                if self.post_hover_message is not None and self.hover==True:
-                    self.post_hover_message(None)
                 self.hover = False
 
         if e.type == pygame.MOUSEBUTTONDOWN:

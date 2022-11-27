@@ -782,13 +782,18 @@ class Textbox:
             pygame.draw.line(screen, self.higlight_color, (self.rect[0],self.rect[1]+self.rect[3]),(self.rect[0]+self.rect[2],self.rect[1]+self.rect[3]), width=3)
 
 class ButtonArray():
-    def __init__(self, rect, amount, margin, callback):
+    def __init__(self, rect, amount, resolution, margin, callback, set_hover_message):
         self.toggle_buttons = []
         self.callback = callback
+        self.set_hover_message = set_hover_message
         self.hours = 0
-        self.rect = pygame.Rect(rect[0],rect[1],(rect[2]+margin)*amount,rect[3])
+        self.color = config.RED
+        self.label = config.BIG_FONT.render("Stomata:",True,config.BLACK)
+        self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
+
+        self.rect = pygame.Rect(rect[0],rect[1],(rect[2]+margin)*amount-margin,rect[3]+60)
         for i in range(0,amount):
-            self.toggle_buttons.append(ToggleButton(rect[0]+i*(rect[2]+margin),rect[1],rect[2],rect[3],[],font=config.BIG_FONT,text="{}".format(i)))
+            self.toggle_buttons.append(ToggleButton(rect[0]+i*(rect[2]+margin),rect[1]+50,rect[2],rect[3],[],font=config.FONT,text="{}".format(i*resolution)))
 
             #self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
             #image=None, border_w=None, pressed=False, fixed=False, vertical=False, cross=False):
@@ -802,14 +807,36 @@ class ButtonArray():
                 for button in self.toggle_buttons:
                     button.handle_event(e)
                 self.callback(self.get_bool_list())
+        if e.type == pygame.MOUSEMOTION:
+            pos = pygame.mouse.get_pos()
+            if self.rect.collidepoint(pos):
+                for button in self.toggle_buttons:
+                    button.handle_event(e)
+                self.set_hover_message(self.hover_message)
+
+
 
     def get_bool_list(self):
         return [True if button.button_down else False for button in self.toggle_buttons]
 
+    def go_green(self):
+        self.color = config.GREEN
+
+    def go_red(self):
+        self.color = config.RED
+
+    def get_rect(self):
+        self.rect
+
     def draw(self, screen):
-        pygame.draw.rect(screen, config.WHITE, (self.rect[2]/24*self.hours,self.rect[1]+32,20,3),border_radius=2)
-        pygame.draw.rect(screen, config.WHITE, (self.rect[0],self.rect[1]-50,600,40))
-        stomata_automation_label = config.BIG_FONT.render("Stomata Automation: select hours to open/close",True,config.BLACK)
-        screen.blit(stomata_automation_label,(self.rect[0]+5,self.rect[1]-45))
+        pygame.draw.rect(screen, self.color, self.rect)
+        pygame.draw.rect(screen, self.color, (self.rect[2]/24*self.hours,self.rect[1]+32+50,20,3),border_radius=2)
+        pygame.draw.rect(screen, config.WHITE, (self.rect[0],self.rect[1],415,40))
+        if self.color == config.GREEN:
+            open_closed = config.BIG_FONT.render("Open", True, self.color)
+        else:
+            open_closed = config.BIG_FONT.render("Closed", True, self.color)
+        screen.blit(self.label,(self.rect[0]+5,self.rect[1]+5))
+        screen.blit(open_closed,(self.rect[0]+120,self.rect[1]+5))
         for button in self.toggle_buttons:
             button.draw(screen)

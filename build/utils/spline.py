@@ -1,4 +1,6 @@
 from typing import List, Tuple
+
+from scipy.interpolate import CubicSpline
 from scipy.special import comb
 from scipy.spatial.distance import pdist
 import pygame
@@ -20,6 +22,44 @@ SCREEN_HEIGHT = 1080
 # Rules for fibroot
 # rule 1: B -> AB
 # rule 2: A -> A+A
+
+'''class Cubic_Set:
+    def __init__(self, cubics, ):'''
+
+class Cubic:
+    def __init__(self, points, color=config.GREEN, res=10, width=10):
+        self.points = points
+        self.color = color
+        self.res = res
+        self.width = width
+
+        self.curve = self.get_curve()
+        print(self.curve)
+
+    def get_curve(self):
+        points = np.array(self.points)
+        y = np.flip(points[:,0])
+        x = np.flip(points[:,1])
+        print(x[0], x[-1])
+        # use bc_type = 'natural' adds the constraints as we described above
+        f = CubicSpline(x, y, bc_type='natural')
+        x_new = np.linspace(x[0], x[-1], self.res+len(points)*2)
+        y_new = f(x_new)
+        return list(zip(y_new,x_new))
+
+    def update(self):
+        pass
+
+    def handle_event(self,e):
+        if e.type == KEYDOWN and e.key == K_SPACE:
+            self.points.append(pygame.mouse.get_pos())
+            self.curve = self.get_curve()
+
+    def draw(self, screen):
+        for point in self.points:
+            pygame.draw.circle(screen, config.RED, point,15)
+        pygame.draw.lines(screen, self.color, False, self.curve,self.width)
+
 
 class Beziere:
     def __init__(self, list_of_points: List[Tuple[float, float]], color=config.GREEN, res=100, width=10):

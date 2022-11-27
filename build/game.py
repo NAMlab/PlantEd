@@ -113,17 +113,17 @@ class DevScene(object):
         add_leaf_item = Shop_Item(assets.img("leaf_small.PNG", (64, 64)), self.activate_add_leaf,
                                   condition=self.plant.organs[1].check_can_add_leaf,
                                   condition_not_met_message="Level up your stem to buy more leaves",
-                                  post_hover_message=self.ui.post_hover_message,
+                                  post_hover_message=self.ui.hover.set_message,
                                   message="Leaves enable your plant to produce energy.")
 
         self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid,
-                         self.plant, post_hover_message=self.ui.post_hover_message, active=False)
+                         self.plant, post_hover_message=self.ui.hover.set_message, active=False)
 
         self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.PNG", (64, 64)),
                                             self.shop.root_item.activate,
                                             condition=self.plant.organs[2].check_can_add_root,
                                             condition_not_met_message="Level up your roots to buy more leaves",
-                                            post_hover_message=self.ui.post_hover_message,
+                                            post_hover_message=self.ui.hover.set_message,
                                             message="Roots are to improve water and nitrate intake."))
 
         self.shop.add_shop_item(["watering", "blue_grain"])
@@ -377,17 +377,17 @@ class DefaultGameScene(object):
         add_leaf_item = Shop_Item(assets.img("leaf_small.PNG", (64, 64)), self.activate_add_leaf,
                                   condition=self.plant.organs[1].check_can_add_leaf,
                                   condition_not_met_message="Level up your stem to buy more leaves",
-                                  post_hover_message=self.ui.post_hover_message,
+                                  post_hover_message=self.ui.hover.set_message,
                                   message="Leaves enable your plant to produce energy.")
 
         self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid,
-                         self.plant, post_hover_message=self.ui.post_hover_message, active=False)
+                         self.plant, post_hover_message=self.ui.hover.set_message, active=False)
 
         self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.PNG", (64, 64)),
                                               self.shop.root_item.activate,
                                               condition=self.plant.organs[2].check_can_add_root,
                                               condition_not_met_message="Level up your roots to buy more leaves",
-                                              post_hover_message=self.ui.post_hover_message,
+                                              post_hover_message=self.ui.hover.set_message,
                                               message="Roots are to improve water and nitrate intake."))
 
         self.shop.add_shop_item(["watering", "blue_grain"])
@@ -447,8 +447,9 @@ class DefaultGameScene(object):
                     self.log.close_file()
                 scoring.upload_score(self.ui.name, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
-            self.shop.handle_event(e)
             self.ui.handle_event(e)
+            self.shop.handle_event(e)
+
             self.plant.handle_event(e)
             # self.environment.handle_event(e)
             for entity in self.entities:
