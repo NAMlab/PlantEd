@@ -1,4 +1,3 @@
-import cobra.test
 import random
 import pygame
 from data import assets
@@ -399,7 +398,7 @@ class Leaf(Organ):
     def draw(self, screen):
         if self.can_add_leaf:
             x,y = pygame.mouse.get_pos()
-            screen.blit(assets.img("leaf_small.png",(128,128)), (x,y-self.plant.camera.offset_y))
+            screen.blit(assets.img("leaf_small.PNG",(128,128)), (x,y-self.plant.camera.offset_y))
 
         for leaf in self.leaves:
             screen.blit(leaf["image"], (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))
@@ -516,7 +515,7 @@ class Stem(Organ):
         self.highlight = None
         self.flower = False
         self.sunpos = (0,0)
-        self.sunflower = assets.img("sunflower.png",(128,128))
+        self.sunflower = assets.img("sunflower.PNG",(128,128))
         self.sunflower_pos = (0,0)
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active, base_mass=1)
         self.curve = Beziere([(self.x-5, self.y+40), (self.x-5, self.y), (self.x - 15, self.y - 50), (self.x+13, self.y - 150), (self.x+3, self.y - 190)])

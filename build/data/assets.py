@@ -1,6 +1,6 @@
 import os
 import pygame
-import ctypes
+#import ctypes
 import numpy as np
 import math
 # assets is supposed to allow access to images, sounds
@@ -16,7 +16,7 @@ pygame.init()
 
 
 
-true_res = (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
+true_res = (1920,1080)#(ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 screen = pygame.display.set_mode(true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16)
 
 def img(path, size=None):
@@ -24,8 +24,8 @@ def img(path, size=None):
     global _image_library
     image = _image_library.get(path)
     if image == None:
-        canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-        image = pygame.image.load(canonicalized_path).convert_alpha()
+        #canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
+        image = pygame.image.load(path).convert_alpha()
         _image_library[path] = image
     if size is not None:
         if not (image.get_width() == size[0] and image.get_height() == size[1]):
@@ -37,8 +37,8 @@ def sfx(path, volume=None):
     global _sound_library
     sound = _sound_library.get(path)
     if sound == None:
-        canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-        sound = pygame.mixer.Sound(canonicalized_path)
+        #canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
+        sound = pygame.mixer.Sound(path)
         _sound_library[path] = sound
     if volume is not None:
         sound.set_volume(volume)
@@ -46,7 +46,7 @@ def sfx(path, volume=None):
 
 def song(path, volume=None):
     path = os.path.join("../assets", path)
-    canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-    pygame.mixer.music.load(canonicalized_path)
+    #canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
+    pygame.mixer.music.load(path)
     if volume is not None:
         pygame.mixer.music.set_volume(volume)
