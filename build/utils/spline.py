@@ -1,64 +1,205 @@
+import random
 from typing import List, Tuple
-
 from scipy.interpolate import CubicSpline
 from scipy.special import comb
-from scipy.spatial.distance import pdist
 import pygame
 import math
 from pygame.locals import *
 import config
 import numpy as np
 
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+class Cubic_Tree:
+    def __init__(self, stem, branches):
+        self.stem = stem
+        self.branches = branches
 
+    def grow_main(self):
+        self.stem.grow()
 
-# basic L-System
-# draw first line along direction (20 pix) - A
-# draw end of line - B
-# turn right +
-# turn left -
+    def add_branch(self, point, mouse_pos):
+        # left
+        if mouse_pos[0] - point[0] < 0:
+            points = [point, [point[0] - 50, point[1] - 20], [point[0] - 100, point[1] - 100]]
+        else:
+            points = [point, [point[0] + 50, point[1] - 20], [point[0] + 100, point[1] - 100]]
+        self.branches.append(Cubic(points))
 
-# Rules for fibroot
-# rule 1: B -> AB
-# rule 2: A -> A+A
+    def handle_event(self,e):
+        self.stem.handle_event(e)
+        for branch in self.branches:
+            branch.handle_event(e)
 
-'''class Cubic_Set:
-    def __init__(self, cubics, ):'''
+    def update(self,dt):
+        self.stem.update(dt)
+        for branch in self.branches:
+            branch.update(dt)
+
+    def find_closest(self, pos):
+        closest_point = [1000,1000]
+        min_dist = 1000
+        shortest_point_id = 0
+        point, dist, point_id = self.stem.find_closest(pos)
+        if dist < min_dist:
+            min_dist = dist
+            closest_point = point
+            shortest_point_id = point_id
+        for branch in self.branches:
+            point, dist, point_id = branch.find_closest(pos)
+            if dist < min_dist:
+                min_dist = dist
+                closest_point = point
+                shortest_point_id = point_id
+        return closest_point, shortest_point_id
+
+    def draw(self, screen):
+        self.stem.draw(screen)
+        for branch in self.branches:
+            branch.draw(screen)
+
+    def draw_highlight(self, screen):
+        self.stem.draw_highlight(screen)
+        for branch in self.branches:
+            branch.draw_highlight(screen)
+
 
 class Cubic:
     def __init__(self, points, color=config.GREEN, res=10, width=10):
         self.points = points
+        self.offsets = self.points.copy()
+        #self.free_points = self.points # points, that can be built on
         self.color = color
         self.res = res
         self.width = width
 
+        self.move_offset = True
+        self.drag = False
+        self.id = 0
+
         self.curve = self.get_curve()
-        print(self.curve)
+        self.new_curve = []
+        self.interpolated = []
+        self.growth_percentage = 1
+        #print(self.curve)
 
     def get_curve(self):
         points = np.array(self.points)
         y = np.flip(points[:,0])
         x = np.flip(points[:,1])
-        print(x[0], x[-1])
         # use bc_type = 'natural' adds the constraints as we described above
         f = CubicSpline(x, y, bc_type='natural')
-        x_new = np.linspace(x[0], x[-1], self.res+len(points)*2)
+        x_new = np.linspace(x[0], x[-1], self.res+len(points)*10)
         y_new = f(x_new)
         return list(zip(y_new,x_new))
 
-    def update(self):
-        pass
+    def grow(self, point=None):
+        if not point:
+            point = [self.points[-1][0]+random.randint(0, 80)-40, self.points[-1][1]-50]
+        self.points.append(point)
+        #self.free_points.append(point)
+        self.new_curve = self.get_curve()
+        self.growth_percentage = 0
 
-    def handle_event(self,e):
-        if e.type == KEYDOWN and e.key == K_SPACE:
-            self.points.append(pygame.mouse.get_pos())
+    def enable_offset(self):
+        self.move_offset = True
+
+    def diable_offset(self):
+        self.move_offset = False
+
+    def update(self, dt):
+        if self.growth_percentage < 1:
+            self.interpolated = []
+            for i in range(len(self.curve)):
+                x = (self.new_curve[i+1][0] - self.curve[i][0]) * self.growth_percentage + self.curve[i][0]
+                y = (self.new_curve[i+1][1] - self.curve[i][1]) * self.growth_percentage + self.curve[i][1]
+                self.interpolated.append((x,y))
+                self.growth_percentage += dt/100
+            self.interpolated.append(self.curve[-1])
+        else:
+            self.growth_percentage = 1
             self.curve = self.get_curve()
+            self.new_curve = []
+
+    def handle_event(self, e):
+        if self.move_offset:
+            pos = pygame.mouse.get_pos()
+            point, min_dist, id = self.find_closest(pos)
+            if min_dist <= 15:
+                if e.type == pygame.MOUSEBUTTONDOWN:
+                    self.id = id
+                    self.drag = True
+        if e.type == pygame.MOUSEMOTION and self.drag:
+            pos = pygame.mouse.get_pos()
+            point, min_dist, self.id = self.find_closest(pos)
+            if self.check_offset_bounds(id, pos):
+                self.points[id] = pos
+                self.curve = self.get_curve()
+        if e.type == pygame.MOUSEBUTTONUP and self.drag:
+            self.drag = False
+
+    def check_offset_bounds(self, id, pos):
+        y_upper = self.get_upper(id)
+        y_lower = self.get_lower(id)
+        if y_upper:
+            if pos[1] < y_upper[1]:
+                return False
+        if y_lower:
+            if pos[1] > y_lower[1]:
+                return False
+        else:
+            return False
+
+        x_dist = self.points[id][0] - self.offsets[id][0] + pos[0]-self.points[id][0]
+        y_dist = self.points[id][1] - self.offsets[id][1] + pos[1]-self.points[id][1]
+
+        dist = math.sqrt(x_dist*x_dist + y_dist*y_dist)
+        if dist > 70:
+            return False
+        return True
+
+    def get_upper(self, id):
+        if id+1 >= len(self.points):
+            return None
+        else:
+            return self.points[id+1]
+
+    def get_lower(self, id):
+        if id <= 0:
+            return None
+        else:
+            return self.points[id-1]
 
     def draw(self, screen):
+        if self.drag:
+            pygame.draw.circle(screen, config.WHITE,self.offsets[self.id],80,2)
+        if self.growth_percentage < 1:
+            points = self.interpolated
+        else:
+            points = self.curve
+        if self.move_offset:
+            for point in self.points:
+                pygame.draw.circle(screen, config.GREEN, point, 15)
+        pygame.draw.lines(screen, self.color, False, points,self.width)
+
+    def draw_highlights(self, screen):
         for point in self.points:
-            pygame.draw.circle(screen, config.RED, point,15)
-        pygame.draw.lines(screen, self.color, False, self.curve,self.width)
+            pygame.draw.circle(screen, config.WHITE, point,10)
+
+    def get_free_points(self):
+        return self.free_points
+
+    def find_closest(self, pos):
+        min_dist = 10000
+        point = self.points[0]
+        id = 0
+        for i in range(0,len(self.points)):
+            dist_x = pos[0] - self.points[i][0]
+            dist_y = pos[1] - self.points[i][1]
+            dist = math.sqrt(dist_x*dist_x+dist_y*dist_y)
+            if dist < min_dist:
+                id = i
+                min_dist = dist
+                point = self.points[i]
+        return point, min_dist, id
 
 
 class Beziere:

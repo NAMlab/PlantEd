@@ -1,7 +1,7 @@
 import random
 import pygame
 from data import assets
-from utils.spline import Beziere, Cubic
+from utils.spline import Beziere, Cubic, Cubic_Tree
 import config
 import math
 from utils.particle import ParticleSystem, Particle
@@ -134,8 +134,10 @@ class Plant:
         if self.get_biomass() < self.seedling.max:
             self.organs[2].draw(screen)
             return
-        for organ in self.organs:
-            organ.draw(screen)
+
+        self.organs[2].draw(screen)
+        self.organs[1].draw(screen)
+        self.organs[0].draw(screen)
 
     def draw_seedling(self, screen):
         self.seedling.draw(screen, self.get_biomass())
@@ -336,7 +338,7 @@ class Leaf(Organ):
         return sum([leaf["mass"] for leaf in self.leaves])+self.base_mass # basemass for seedling leaves
 
     def append_leaf(self, highlight):
-        time = pygame.time.get_ticks()
+        print("append")
         pos = (highlight[0], highlight[1])
         dir = highlight[0] - pygame.mouse.get_pos()[0]
         if dir > 0:
@@ -349,7 +351,7 @@ class Leaf(Organ):
             offset = pivot_pos[image_id]
         leaf = {"x": pos[0],
                 "y": pos[1],
-                "t": highlight[2],
+                "t": 0,
                 "image": image[0],
                 "offset_x": offset[0],
                 "offset_y": offset[1],
@@ -542,27 +544,32 @@ class Stem(Organ):
         self.flower = False
         self.sunpos = (0,0)
 
-        self.new_curve = Cubic([[800,900],[700,750],[850,550],[750,400]])
-        self.branches = [Cubic([[700,750],[600,650],[650,600]])]
+        self.curve = Cubic_Tree(Cubic([[800,900],[700,750],[850,550],[750,400]]),[Cubic([[700,750],[600,650],[650,600]])])
+
+        self.dist_to_stem = 1000
+        self.can_add_branch = False
+        #self.add_branch(Cubic([[700,750],[880,710],[900,610]]))
 
         self.sunflower = assets.img("sunflower.PNG",(128,128))
         self.sunflower_pos = (0,0)
         super().__init__(x, y, name, organ_type, callback, plant, image, pivot, mass=mass, active=active, base_mass=1)
-        self.curve = Beziere([(self.x-5, self.y+40), (self.x-5, self.y), (self.x - 15, self.y - 50), (self.x+13, self.y - 150), (self.x+3, self.y - 190)])
+        #self.curve = Beziere([(self.x-5, self.y+40), (self.x-5, self.y), (self.x - 15, self.y - 50), (self.x+13, self.y - 150), (self.x+3, self.y - 190)],res=20)
+        #self.new_curve = Beziere([(self.x - 15, self.y - 50), (self.x+30, self.y - 150), (self.x+30, self.y - 190)],width=5, res=15)
 
     def update(self, dt):
         self.curve.update(dt)
-        self.update_leaf_positions()
-        self.update_sunflower_position()
+        #self.new_curve.update(dt)
+        #self.update_leaf_positions()
+        #self.update_sunflower_position()
 
     def reach_threshold(self):
         super().reach_threshold()
-        tip = self.curve.get_point(1)
+        #tip = self.curve.get_point(1)
         if self.active_threshold > 3 and self.flower == False:
             self.flower = True
-            self.update_sunflower_position()
-        self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*50,tip[1]+(-1*random.randint(40,60))))
-        self.curve.width += 1
+            #self.update_sunflower_position()
+        #self.curve.grow_point((tip[0]+(random.randint(0,2)-1)*50,tip[1]+(-1*random.randint(40,60))))
+        #self.curve.width += 1
 
     def check_can_add_leaf(self):
         if len(self.leaf.leaves) <= self.active_threshold:
@@ -570,24 +577,24 @@ class Stem(Organ):
 
     def handle_event(self, event):
         self.curve.handle_event(event)
-        self.new_curve.handle_event(event)
+        #self.new_curve.handle_event(event)
         if event.type == pygame.MOUSEMOTION:
-            if self.leaf.can_add_leaf:
-                x,y = pygame.mouse.get_pos()
+            if self.can_add_branch or self.leaf.can_add_leaf:
+                x, y = pygame.mouse.get_pos()
                 y -= self.plant.camera.offset_y
-                t = self.curve.find_closest((x,y))
-                point = self.curve.get_point(t)
-                self.highlight = (point[0],point[1],t)
+                point, point_id = self.curve.find_closest((x,y))
+                self.highlight = point
             else:
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
-            width = self.width+25 if self.leaf.can_add_leaf else self.width + 5
-            for rect in self.curve.get_rects(width, self.plant.camera.offset_y):
-                if rect.collidepoint(pygame.mouse.get_pos()):
-                    if self.highlight:
-                        self.leaf.append_leaf(self.highlight)
-                        return
-                    self.callback()
+            if self.can_add_branch and self.dist_to_stem < 50:
+                self.add_branch(pygame.mouse.get_pos(), self.highlight)
+                self.can_add_branch = False
+            if self.leaf.can_add_leaf and self.dist_to_stem < 50:
+                if self.highlight:
+                    self.leaf.append_leaf(self.highlight)
+        if event.type == KEYDOWN and event.key == K_SPACE:
+            self.curve.grow_main()
 
     def update_image_size(self, factor=3, base=5):
         # there is no image, just beziere
@@ -597,14 +604,13 @@ class Stem(Organ):
             #for leaf in self.leaf.leaves:
                 #self.reassign_leaf_x(leaf)
 
-    def update_sunflower_position(self):
+    def add_branch(self, point, mouse_pos):
+        self.curve.add_branch(mouse_pos, point)
+
+    '''def update_sunflower_position(self):
         if self.flower:
             pos = self.curve.get_point(1)
-            self.sunflower_pos = (pos[0]-32,pos[1]-32)
-
-    def update_leaf_positions(self):
-        for leaf in self.leaf.leaves:
-            leaf["x"],leaf["y"] = self.curve.get_point(leaf["t"])
+            self.sunflower_pos = (pos[0]-32,pos[1]-32)'''
 
     def get_local_pos(self, pos):
         return (int(pos[0]-(self.x-self.pivot[0])),int(pos[1]-(self.y-self.pivot[1])))
@@ -612,35 +618,24 @@ class Stem(Organ):
     def get_global_x(self, x):
         return int(x+self.x)
 
-    def reassign_leaf_x(self, leaf):
-        global_pos = (leaf["x"], leaf["y"])
-        dir = leaf["direction"]
-        rect = self.get_rect()
-        rects = self.curve.get_rects()
-        init_x = 0
-        if dir > 0:
-            init_x = rect[2]-1
-        local_pos = self.get_local_pos(global_pos)
-        x, dir = self.get_image_mask_x((init_x, local_pos[1]), self.image)
-        if x:
-            leaf["x"] = self.get_global_x(x)-self.pivot[0]
-
-
     def draw(self, screen):
         if self.plant.target_organ.type == self.type:
+            #self.new_curve.draw_highlights(screen)
+            #for branch in self.branches:
+            #    branch.draw_highlights(screen)
             self.curve.draw_highlighted(screen)
         else:
             self.curve.draw(screen)
 
-        self.new_curve.draw(screen)
-        for branch in self.branches:
-            branch.draw(screen)
+        #self.new_curve.draw(screen)
+        #for branch in self.branches:
+        #    branch.draw(screen)
 
         if self.highlight:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             mouse_y = mouse_y-self.plant.camera.offset_y
-            dist_to_stem = math.sqrt((mouse_x - self.highlight[0])**2 + (mouse_y - self.highlight[1])**2)
-            color = config.GRAY if dist_to_stem > 20 else config.WHITE
+            self.dist_to_stem = math.sqrt((mouse_x - self.highlight[0])**2 + (mouse_y - self.highlight[1])**2)
+            color = config.GRAY if self.dist_to_stem  > 50 else config.WHITE
             pygame.draw.line(screen, color, (self.highlight[0],self.highlight[1]),(mouse_x,mouse_y))
             pygame.draw.circle(screen, color, (int(self.highlight[0]), int(self.highlight[1])), 10)
         if self.flower:
