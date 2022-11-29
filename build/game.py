@@ -498,10 +498,9 @@ class DefaultGameScene(object):
         self.water_grid.draw(temp_surface)
 
         screen.blit(temp_surface, (0, self.camera.offset_y))
-
+        self.shop.draw(screen)
         self.ui.draw(screen)
         # self.skill_system.draw(screen)
-        self.shop.draw(screen)
 
 class TitleScene(object):
     def __init__(self, manager=None):

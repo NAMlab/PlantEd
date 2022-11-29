@@ -7,66 +7,77 @@ import math
 from pygame.locals import *
 import config
 import numpy as np
+from utils.gametime import GameTime
 
 class Cubic_Tree:
-    def __init__(self, stem, branches):
-        self.stem = stem
+    def __init__(self, branches):
         self.branches = branches
+        self.branches[0].main = True
 
     def grow_main(self):
-        self.stem.grow()
+        self.branches[0].grow()
 
-    def add_branch(self, point, mouse_pos):
+    def grow_all(self):
+        for branch in self.branches:
+            branch.grow()
+
+    def add_branch(self, highlight, mouse_pos):
+        point = highlight[0]
         # left
         if mouse_pos[0] - point[0] < 0:
             points = [point, [point[0] - 50, point[1] - 20], [point[0] - 100, point[1] - 100]]
         else:
             points = [point, [point[0] + 50, point[1] - 20], [point[0] + 100, point[1] - 100]]
+        self.branches[0].free_spots[highlight[2]] = False
         self.branches.append(Cubic(points))
 
     def handle_event(self,e):
-        self.stem.handle_event(e)
         for branch in self.branches:
             branch.handle_event(e)
 
     def update(self,dt):
-        self.stem.update(dt)
         for branch in self.branches:
             branch.update(dt)
 
-    def find_closest(self, pos):
+    def find_closest(self, pos, free_spots_only=False):
         closest_point = [1000,1000]
         min_dist = 1000
         shortest_point_id = 0
-        point, dist, point_id = self.stem.find_closest(pos)
-        if dist < min_dist:
-            min_dist = dist
-            closest_point = point
-            shortest_point_id = point_id
-        for branch in self.branches:
-            point, dist, point_id = branch.find_closest(pos)
+        branch_id = 0
+        for i in range(len(self.branches)):
+            point, dist, point_id = self.branches[i].find_closest(pos, free_spots_only)
             if dist < min_dist:
                 min_dist = dist
                 closest_point = point
                 shortest_point_id = point_id
-        return closest_point, shortest_point_id
+                branch_id = i
+        return closest_point, branch_id, shortest_point_id  # point, branch_id, point_id
 
     def draw(self, screen):
-        self.stem.draw(screen)
-        for branch in self.branches:
-            branch.draw(screen)
+        #self.branches[0].draw(screen, tapering=True)
+        for i in range(0,len(self.branches)):
+            self.branches[i].draw(screen, tapering=True)
 
-    def draw_highlight(self, screen):
-        self.stem.draw_highlight(screen)
+    def draw_highlighted(self, screen):
+        #self.branches[0].draw_highlight(screen, tapering=True)
+        for i in range(0, len(self.branches)):
+            self.branches[i].draw_highlight(screen, tapering=True)
+
+    def toggle_move(self):
         for branch in self.branches:
-            branch.draw_highlight(screen)
+            branch.move_offset = not branch.move_offset
 
 
 class Cubic:
-    def __init__(self, points, color=config.GREEN, res=10, width=10):
+    def __init__(self, points, color=config.GREEN, res=10, width=15):
         self.points = points
         self.offsets = self.points.copy()
+        self.main = False
+        self.gametime = GameTime.instance()
+        self.timer = 0
         #self.free_points = self.points # points, that can be built on
+        self.free_spots = [True for i in range(len(points))]
+        self.free_spots[0] = False
         self.color = color
         self.res = res
         self.width = width
@@ -75,6 +86,7 @@ class Cubic:
         self.drag = False
         self.id = 0
 
+        self.selected = False
         self.curve = self.get_curve()
         self.new_curve = []
         self.interpolated = []
@@ -95,7 +107,8 @@ class Cubic:
         if not point:
             point = [self.points[-1][0]+random.randint(0, 80)-40, self.points[-1][1]-50]
         self.points.append(point)
-        #self.free_points.append(point)
+        self.offsets = self.points.copy()
+        self.free_spots.append(True)
         self.new_curve = self.get_curve()
         self.growth_percentage = 0
 
@@ -125,16 +138,29 @@ class Cubic:
             point, min_dist, id = self.find_closest(pos)
             if min_dist <= 15:
                 if e.type == pygame.MOUSEBUTTONDOWN:
+                    if not self.selected:
+                        self.timer = self.gametime.get_time()
+                        self.selected = True
                     self.id = id
                     self.drag = True
         if e.type == pygame.MOUSEMOTION and self.drag:
             pos = pygame.mouse.get_pos()
             point, min_dist, self.id = self.find_closest(pos)
-            if self.check_offset_bounds(id, pos):
-                self.points[id] = pos
+            if self.check_offset_bounds(self.id, pos):
+                self.points[self.id] = pos
                 self.curve = self.get_curve()
+            if min_dist > 15:
+                self.selected = False
         if e.type == pygame.MOUSEBUTTONUP and self.drag:
             self.drag = False
+            deltatime = self.gametime.get_time() - self.timer
+            if deltatime >24000:
+                self.selected = False
+            if self.selected:
+                pass
+                # Todo callback for shop selection
+        if e.type == KEYDOWN and e.key == K_SPACE:
+            print(self.points)
 
     def check_offset_bounds(self, id, pos):
         y_upper = self.get_upper(id)
@@ -146,7 +172,8 @@ class Cubic:
             if pos[1] > y_lower[1]:
                 return False
         else:
-            return False
+            if self.main:
+                return False
 
         x_dist = self.points[id][0] - self.offsets[id][0] + pos[0]-self.points[id][0]
         y_dist = self.points[id][1] - self.offsets[id][1] + pos[1]-self.points[id][1]
@@ -168,7 +195,7 @@ class Cubic:
         else:
             return self.points[id-1]
 
-    def draw(self, screen):
+    def draw(self, screen, tapering=False):
         if self.drag:
             pygame.draw.circle(screen, config.WHITE,self.offsets[self.id],80,2)
         if self.growth_percentage < 1:
@@ -177,17 +204,29 @@ class Cubic:
             points = self.curve
         if self.move_offset:
             for point in self.points:
-                pygame.draw.circle(screen, config.GREEN, point, 15)
+                pygame.draw.circle(screen, config.WHITE, point, 15, 2)
+        if tapering:
+            self.draw_tapering(screen, points)
+        else:
+            self.draw_straight(screen, points)
+
+    def draw_tapering(self, screen, points):
+        length = np.shape(points)[0]
+        half = length/2
+        for i in range(1,length):
+            tapering = 0
+            if i < half:
+                tapering = self.width / half
+            pygame.draw.line(screen, self.color, (points[i-1][0]+0, points[i-1][1]),points[i],width=int(self.width-(half-i)*tapering))
+            pygame.draw.line(screen, self.color, (points[i-1][0]+1, points[i-1][1]),points[i],width=int(self.width-(half-i)*tapering))
+
+    def draw_straight(self, screen, points):
         pygame.draw.lines(screen, self.color, False, points,self.width)
 
     def draw_highlights(self, screen):
-        for point in self.points:
-            pygame.draw.circle(screen, config.WHITE, point,10)
+        pass
 
-    def get_free_points(self):
-        return self.free_points
-
-    def find_closest(self, pos):
+    def find_closest(self, pos, free_spots_only=False, without_top=False):
         min_dist = 10000
         point = self.points[0]
         id = 0
@@ -196,6 +235,10 @@ class Cubic:
             dist_y = pos[1] - self.points[i][1]
             dist = math.sqrt(dist_x*dist_x+dist_y*dist_y)
             if dist < min_dist:
+                if free_spots_only and not self.free_spots[i]:
+                    continue
+                if without_top and i == len(self.points)-1:
+                    continue
                 id = i
                 min_dist = dist
                 point = self.points[i]

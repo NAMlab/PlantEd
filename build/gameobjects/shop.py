@@ -83,7 +83,7 @@ class Shop:
                         if not item.condition():
                             # condition not met
                             if item.condition_not_met_message is not None:
-                                item.post_hover_message(item.condition_not_met_message,0)
+                                item.post_hover_message(item.condition_not_met_message)
                             return
                     self.plant.upgrade_points -= item.cost
                     item.callback()
