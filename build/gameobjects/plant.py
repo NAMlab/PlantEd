@@ -542,7 +542,7 @@ class Stem(Organ):
         self.highlight = None
         self.flower = False
         self.sunpos = (0,0)
-        self.curve = Cubic_Tree([Cubic([[950,900],[935,820],[970,750]])])
+        self.curve = Cubic_Tree([Cubic([[955,900],[960,820],[940,750]])])
 
         self.dist_to_stem = 1000
         self.can_add_branch = True
@@ -577,18 +577,22 @@ class Stem(Organ):
 
     def check_can_add_leaf(self):
         return True
-        '''if len(self.leaf.leaves) <= self.active_threshold:
-            return True
-'''
+
     def handle_event(self, event):
         self.curve.handle_event(event)
         #self.new_curve.handle_event(event)
         if event.type == pygame.MOUSEMOTION:
-            if self.can_add_branch or self.leaf.can_add_leaf:
+            if self.leaf.can_add_leaf:
                 x, y = pygame.mouse.get_pos()
                 y -= self.plant.camera.offset_y
-                point, branch_id, point_id = self.curve.find_closest((x,y),True)
+                point, branch_id, point_id = self.curve.find_closest((x, y), True)
                 self.highlight = (point, branch_id, point_id)
+            elif self.can_add_branch:
+                x, y = pygame.mouse.get_pos()
+                y -= self.plant.camera.offset_y
+                point, branch_id, point_id = self.curve.find_closest((x, y), True, True)
+                self.highlight = (point, branch_id, point_id)
+
             else:
                 self.highlight = None
         if event.type == pygame.MOUSEBUTTONUP:
@@ -651,6 +655,8 @@ class Stem(Organ):
             pygame.draw.circle(screen, color, (int(self.highlight[0][0]), int(self.highlight[0][1])), 10)
         if self.flower:
             screen.blit(self.sunflower,self.sunflower_pos)
+
+        pygame.draw.circle(screen, config.GREEN, (self.x-5, self.y+40),10)
 
     def get_rect(self):
         if self.image:

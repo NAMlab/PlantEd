@@ -39,13 +39,13 @@ class Cubic_Tree:
         for branch in self.branches:
             branch.update(dt)
 
-    def find_closest(self, pos, free_spots_only=False):
+    def find_closest(self, pos, free_spots_only=False, without_top=False):
         closest_point = [1000,1000]
         min_dist = 1000
         shortest_point_id = 0
         branch_id = 0
         for i in range(len(self.branches)):
-            point, dist, point_id = self.branches[i].find_closest(pos, free_spots_only)
+            point, dist, point_id = self.branches[i].find_closest(pos, free_spots_only, without_top)
             if dist < min_dist:
                 min_dist = dist
                 closest_point = point

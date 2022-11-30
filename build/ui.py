@@ -126,7 +126,7 @@ class UI:
 
         self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
-        self.gradient = self.init_gradient()
+        #self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
         self.tool_tip_manager.deactivate_tooltipps()
@@ -192,7 +192,7 @@ class UI:
         return preset
 
     def draw(self, screen):
-        screen.blit(self.gradient,(0,0))
+        #screen.blit(self.gradient,(0,0))
         self.button_array.draw(screen)
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
