@@ -286,7 +286,6 @@ class Leaf(Organ):
                 for i in range(len(rects)):
                     if rects[i].collidepoint(mouse_pos):
                         self.target_leaf = i
-                        print(i)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_i:
                 self.leaves.pop(self.target_leaf)
 
@@ -323,8 +322,6 @@ class Leaf(Organ):
         for leaf in growable_leaves:
             leaf["mass"] += growth_per_leaf
             leaf["age"] += 1*dt #seconds
-
-        #print(leaf["age"],leaf["lifetime"])
 
         # age 0
         # max_age 1000
@@ -437,7 +434,6 @@ class Leaf(Organ):
                 screen.blit(age_label,(x,y+30))
                 screen.blit(lifetime_label,(x,y+60))'''
 
-                #print(self.leaves[i]["age"],self.leaves[i]["mass"],self.leaves[i]["lifetime"],self.leaves[i]["direction"])
 
         for system in self.particle_systems:
             system.draw(screen)
@@ -678,7 +674,6 @@ class Stem(Organ):
             # left
             dir = -1
             for i in range(rect[0], rect[2]-1, 1):
-                #print(i, pos[1], ' image: ', image.get_rect(), image.get_at((i, pos[1])))
                 if (image.get_at((i, pos[1]))[3] != 0):
                     x = i
                     break
@@ -686,7 +681,6 @@ class Stem(Organ):
             # right
             dir = 1
             for i in range(rect[2]-1, rect[0], -1):
-                #print(i, pos[1], ' image: ', image.get_rect(), image.get_at((i, pos[1])))
                 if (image.get_at((i, pos[1]))[3] != 0):
                     x = i
                     break

@@ -11,9 +11,10 @@ Functions that create Constraints are:
 """
 from contextlib import suppress
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from cobra.core import Metabolite, Model, Reaction, Solution
+from cobra.core.dictlist import DictList
 from cobra.exceptions import OptimizationError
 from optlang.interface import Constraint, Objective
 from sympy import Add
@@ -23,6 +24,42 @@ FILE = (
     .resolve()
     .parent.joinpath("outputs", "non_negative_metabolites.txt")
 )
+
+METABOLITES: List[str] = [
+    "WATER_c",
+    "NITRATE_c",
+    "Pi_c",
+    "SULFATE_c",
+    # organic acids
+    "CIT_c",
+    "FUM_c",
+    "MAL_c",
+    "FRU_c",
+    "SUCROSE_c",
+    # ions,
+    "CAII_c",
+    "MGII_c",
+    "KI_c",
+    # Amino acids
+    "L_ALPHA_ALANINE_c",
+    "ARG_c",
+    "ASN_c",
+    "L_ASPARTATE_c",
+    "GLN_c",
+    "GLT_c",
+    "GLY_c",
+    "HIS_c",
+    "ILE_c",
+    "LEU_c",
+    "LYS_c",
+    "MET_c",
+    "PHE_c",
+    "SER_c",
+    "THR_c",
+    "TRP_c",
+    "TYR_c",
+    "VAL_c",
+]
 
 
 def new_biomass(_model: Model, reaction: str) -> Model:
@@ -70,63 +107,94 @@ def new_biomass(_model: Model, reaction: str) -> Model:
 def autotroph(model: Model, **kwargs) -> Solution:
     """
     Returns the solution for an autotroph environment of given model. It
-    returns None if the optimization fails.
+    raises an OptimizationError if the optimization fails
     """
-    # TODO: check if copy is needed
-    _model = model
+
+    if model.reactions.has_id("Photon_tx"):
+        defaults: Dict[str, Tuple[float, float]] = {
+            i: model.reactions.get_by_id(i).bounds
+            for i in ("Photon_tx", "GLC_tx", "Sucrose_tx", "Starch_in_tx")
+        }
+    else:
+        defaults = {
+            i: model.reactions.get_by_id(i).bounds
+            for i in (
+                "Photon_tx_leaf",
+                "GLC_tx_root",
+                "Sucrose_tx_root",
+                "Starch_in_tx_root",
+            )
+        }
+
+    for identifier in defaults.keys():
+        up: int = 0
+
+        if identifier[0] == "P":
+            up = 200
+
+        model.reactions.get_by_id(identifier).bounds = (0, up)
 
     try:
-        _model.reactions.get_by_id("Photon_tx").bounds = (0, 200)
+        sol: Solution = model.optimize(raise_error=True, **kwargs)
 
-    except KeyError:
-        _model.reactions.get_by_id("Photon_tx_leaf").bounds = (0, 200)
+        for identifier, bounds in defaults.items():
+            model.reactions.get_by_id(identifier).bounds = bounds
 
-    try:
-        _model.exchanges.get_by_id("GLC_tx").bounds = (0, 0)
-        _model.exchanges.get_by_id("Sucrose_tx").bounds = (0, 0)
-        _model.exchanges.get_by_id("Starch_in_tx").bounds = (0, 0)
+        return sol
 
-    except KeyError:
-        _model.exchanges.get_by_id("GLC_tx_root").bounds = (0, 0)
-        _model.exchanges.get_by_id("Sucrose_tx_root").bounds = (0, 0)
-        _model.exchanges.get_by_id("Starch_in_tx_root").bounds = (0, 0)
+    except OptimizationError as e:
 
-    try:
-        return _model.optimize(raise_error=True, **kwargs)
+        for identifier, bounds in defaults.items():
+            model.reactions.get_by_id(identifier).bounds = bounds
 
-    except OptimizationError:
-        return None
+        raise e
 
 
 def heterotroph(model: Model, **kwargs) -> Solution:
     """
-    Returns the solution for a heterotroph environment of given model. It
-    returns None if the optimization fails.
+    Returns the solution for an autotroph environment of given model. It
+    raises an OptimizationError if the optimization fails
     """
 
-    _model = model
+    if model.reactions.has_id("Photon_tx"):
+        defaults: Dict[str, Tuple[float, float]] = {
+            i: model.reactions.get_by_id(i).bounds
+            for i in ("Photon_tx", "GLC_tx", "Sucrose_tx", "Starch_in_tx")
+        }
+    else:
+        defaults = {
+            i: model.reactions.get_by_id(i).bounds
+            for i in (
+                "Photon_tx_leaf",
+                "GLC_tx_root",
+                "Sucrose_tx_root",
+                "Starch_in_tx_root",
+            )
+        }
+
+    for identifier in defaults.keys():
+        up: int = 0
+
+        # Starch
+        if identifier[1] == "t":
+            up = 1000
+
+        model.reactions.get_by_id(identifier).bounds = (0, up)
 
     try:
-        _model.reactions.get_by_id("Photon_tx").bounds = (0, 0)
+        sol: Solution = model.optimize(raise_error=True, **kwargs)
 
-    except KeyError:
-        _model.reactions.get_by_id("Photon_tx_leaf").bounds = (0, 0)
+        for identifier, bounds in defaults.items():
+            model.reactions.get_by_id(identifier).bounds = bounds
 
-    try:
-        _model.exchanges.get_by_id("GLC_tx").bounds = (0, 0)
-        _model.exchanges.get_by_id("Sucrose_tx").bounds = (0, 0)
-        _model.exchanges.get_by_id("Starch_in_tx").bounds = (0, 1000)
+        return sol
 
-    except KeyError:
-        _model.exchanges.get_by_id("GLC_tx_root").bounds = (0, 0)
-        _model.exchanges.get_by_id("Sucrose_tx_root").bounds = (0, 0)
-        _model.exchanges.get_by_id("Starch_in_tx_root").bounds = (0, 1000)
+    except OptimizationError as e:
 
-    try:
-        return _model.optimize(raise_error=True, **kwargs)
+        for identifier, bounds in defaults.items():
+            model.reactions.get_by_id(identifier).bounds = bounds
 
-    except OptimizationError:
-        return None
+        raise e
 
 
 def update_ngam(model: Model, reaction: str) -> None:
@@ -190,14 +258,12 @@ def get_ndaph_atp(model: Model, nadph: str, atpase: str) -> Constraint:
 
 
 def update_stoichiometry(
-    model: Model, identifier: str, left: float = 1.0, right: float = 1.0
+    reaction: Reaction, left: float = 1.0, right: float = 1.0
 ):
     """
     Updates given reactions with given left and right coefficients. Both
     coefficients must be positive.
     """
-
-    reaction: Reaction = model.reactions.get_by_id(identifier)
 
     metabolites: Dict[Metabolite, float] = reaction.metabolites
 
@@ -212,14 +278,13 @@ def update_stoichiometry(
         metabolites[metabolite] = coef
 
     reaction.add_metabolites(metabolites, combine=False)
-    assert reaction.reversibility
 
 
-def _normalize_reaction(
-    model: Model, transfers: List[str], left: float = 1.0, right: float = 1.0
+def _normalize_reactions(
+    transfers: DictList, left: float = 1.0, right: float = 1.0
 ):
     """
-    This functions modifies each reaction in the transfers list taking the
+    This function modifies each reaction in the transfers list taking the
     size of the organs into consideration.
     """
 
@@ -230,33 +295,32 @@ def _normalize_reaction(
     LEFT = right
     RIGHT = left
 
-    assert (
-        LEFT * left == RIGHT * right
-    ), "Both sides of the equation are not equal"
-
+    reaction: Reaction
     for reaction in transfers:
 
-        assert model.reactions.get_by_id(
-            reaction
-        ), f"{reaction} does not exist"
-
-        update_stoichiometry(model, reaction, LEFT, RIGHT)
+        update_stoichiometry(reaction, LEFT, RIGHT)
 
 
-def normalize(model: Model, root: float, stem: float, leaf: float):
+def normalize(
+    model: Model, root: float, stem: float, leaf: float, seed: float
+):
     """
     Main function to normalize PlantED model. The non-model argument are
     the values that represents the size of the organ.
     """
 
-    root_stem: List[str] = [i.id for i in model.reactions.query("root_stem_*")]
-    stem_leaf: List[str] = [i.id for i in model.reactions.query("stem_leaf_*")]
+    root_stem: DictList = model.reactions.query(r"\[root\|stem\]")
+    stem_leaf: DictList = model.reactions.query(r"\[stem\|leaf\]")
+    leaf_seed: DictList = model.reactions.query(r"\[leaf\|seed\]")
+    # FIXME: seed
 
     assert len(root_stem) != 0, "No transfers from root to stem found!"
     assert len(stem_leaf) != 0, "No transfers from stem to leaf found!"
+    assert len(leaf_seed) != 0, "No transfers from leaf to seed found!"
 
-    _normalize_reaction(model, root_stem, root, stem)
-    _normalize_reaction(model, stem_leaf, stem, leaf)
+    _normalize_reactions(root_stem, root, stem)
+    _normalize_reactions(stem_leaf, stem, leaf)
+    _normalize_reactions(leaf_seed, leaf, seed)
 
 
 def create_objective(model: Model, direction: str = "max") -> Objective:
@@ -267,9 +331,10 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
     of the different biomass reactions.
     """
 
-    root: Reaction = model.reactions.get_by_id("AraCore_Biomass_tx_root")
-    stem: Reaction = model.reactions.get_by_id("AraCore_Biomass_tx_stem")
-    leaf: Reaction = model.reactions.get_by_id("AraCore_Biomass_tx_leaf")
+    root: Reaction = model.reactions.get_by_id("Biomass_tx_root")
+    stem: Reaction = model.reactions.get_by_id("Biomass_tx_stem")
+    leaf: Reaction = model.reactions.get_by_id("Biomass_tx_leaf")
+    seed: Reaction = model.reactions.get_by_id("Biomass_tx_seed")
     starch: Reaction = model.reactions.get_by_id("Starch_out_tx_stem")
 
     # It is important to add all expression because we might get an
@@ -277,6 +342,7 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
     objective = model.problem.Objective(
         expression=Add(leaf.flux_expression)
         + Add(root.flux_expression)
+        + Add(seed.flux_expression)
         + Add(stem.flux_expression)
         + Add(starch.flux_expression),
         direction=direction,
@@ -300,26 +366,41 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
         name="stem_leaf",
     )
 
-    # By default it should be 25%
+    leaf_seed: Constraint = model.problem.Constraint(
+        Add(leaf.flux_expression) - Add(seed.flux_expression),
+        lb=0,
+        ub=0,
+        name="leaf_seed",
+    )
+
+    # By default it should be 20% each
     biomass_organ: Constraint = model.problem.Constraint(
         1
         * (
             Add(root.flux_expression)
             + Add(stem.flux_expression)
             + Add(leaf.flux_expression)
+            + Add(seed.flux_expression)
         )
-        - 3 * Add(starch.flux_expression),
+        - 4 * Add(starch.flux_expression),
         lb=0,
         ub=0,
         name="biomass_organ",
     )
 
-    model.add_cons_vars([root_stem, stem_leaf, biomass_organ])
+    model.add_cons_vars([root_stem, stem_leaf, leaf_seed, biomass_organ])
 
     return objective
 
 
-def update_objective(model: Model, root=1.0, stem=1.0, leaf=1.0, starch=1.0):
+def update_objective(
+    model: Model,
+    root: float,
+    stem: float,
+    leaf: float,
+    starch: float,
+    seed: float,
+):
     """
     Updates the corresponding constraints for the multi objective in the model
     with given rate of the objective.
@@ -338,11 +419,12 @@ def update_objective(model: Model, root=1.0, stem=1.0, leaf=1.0, starch=1.0):
             "Please be sure to use the 'create_objective' funcion."
         )
 
-    ORGANS = root + stem + leaf
+    ORGANS = root + stem + leaf + seed
 
-    root_rxn: Reaction = model.reactions.get_by_id("AraCore_Biomass_tx_root")
-    stem_rxn: Reaction = model.reactions.get_by_id("AraCore_Biomass_tx_stem")
-    leaf_rxn: Reaction = model.reactions.get_by_id("AraCore_Biomass_tx_leaf")
+    root_rxn: Reaction = model.reactions.get_by_id("Biomass_tx_root")
+    stem_rxn: Reaction = model.reactions.get_by_id("Biomass_tx_stem")
+    leaf_rxn: Reaction = model.reactions.get_by_id("Biomass_tx_leaf")
+    seed_rxn: Reaction = model.reactions.get_by_id("Biomass_tx_seed")
     starch_rxn: Reaction = model.reactions.get_by_id("Starch_out_tx_stem")
 
     # FIXME: temporarily solution
@@ -350,21 +432,22 @@ def update_objective(model: Model, root=1.0, stem=1.0, leaf=1.0, starch=1.0):
         (root_rxn, root),
         (stem_rxn, stem),
         (leaf_rxn, leaf),
+        (seed_rxn, seed),
         (starch_rxn, starch),
     ]:
 
         if factor == 0:
             reaction.bounds = (0, 0)
         else:
-            # TODO: check if this makes sense
-            reaction.bounds = (-1000, 1000)
+            reaction.bounds = (0, 1000)
 
     # FIXME: expression attribute cannot be modified
     root_stem: Constraint = model.constraints["root_stem"]
     stem_leaf: Constraint = model.constraints["stem_leaf"]
+    leaf_seed: Constraint = model.constraints["leaf_seed"]
     biomass_organ: Constraint = model.constraints["biomass_organ"]
 
-    model.remove_cons_vars([root_stem, stem_leaf, biomass_organ])
+    model.remove_cons_vars([root_stem, stem_leaf, biomass_organ, leaf_seed])
 
     root_stem = model.problem.Constraint(
         stem * Add(root_rxn.flux_expression)
@@ -382,12 +465,21 @@ def update_objective(model: Model, root=1.0, stem=1.0, leaf=1.0, starch=1.0):
         name="stem_leaf",
     )
 
+    leaf_seed = model.problem.Constraint(
+        seed * Add(leaf_rxn.flux_expression)
+        - leaf * Add(seed_rxn.flux_expression),
+        lb=0,
+        ub=0,
+        name="leaf_seed",
+    )
+
     biomass_organ = model.problem.Constraint(
         starch
         * (
             Add(root_rxn.flux_expression)
             + Add(stem_rxn.flux_expression)
             + Add(leaf_rxn.flux_expression)
+            + Add(seed_rxn.flux_expression)
         )
         - ORGANS * Add(starch_rxn.flux_expression),
         lb=0,
@@ -395,4 +487,4 @@ def update_objective(model: Model, root=1.0, stem=1.0, leaf=1.0, starch=1.0):
         name="biomass_organ",
     )
 
-    model.add_cons_vars([root_stem, stem_leaf, biomass_organ])
+    model.add_cons_vars([root_stem, stem_leaf, leaf_seed, biomass_organ])

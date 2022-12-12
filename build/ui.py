@@ -11,7 +11,6 @@ from pygame import rect, Rect
 from utils.hover_message import Hover_Message
 
 # constants in dynamic model, beter in config? dont think so
-from fba.dynamic_model import DynamicModel, BIOMASS, STARCH_OUT
 from data import assets
 
 
@@ -38,8 +37,6 @@ class UI:
                  organ_details_topleft=(10,430), dev_mode=False):
         self.name = config.load_options(config.OPTIONS_PATH)["name"]
         self.name_label = config.FONT.render(self.name,True,config.BLACK)
-        #print(config.OPTIONS_PATH)#config.BIGGER_FONT.render(config.get_options(config.OPTIONS_PATH)["name"],True,config.BLACK)
-        #print(config.load_options("options.json"))
         self.plant = plant
         self.model = model
         self.gametime = GameTime.instance()

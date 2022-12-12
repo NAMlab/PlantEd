@@ -2,19 +2,19 @@ import cobra
 import config
 import os
 from fba.helpers import (
-    autotroph,
-    heterotroph,
     update_objective,
     create_objective,
-    normalize,
-    get_ndaph_atp
+    normalize
 )
 
-
 # states for objective
-BIOMASS = "AraCore_Biomass_tx_leaf"
-STARCH_OUT = "Starch_out_tx_leaf"
-STARCH_IN = "Starch_in_tx_root"
+BIOMASS_ROOT = "Biomass_tx_root"
+BIOMASS_STEM = "Biomass_tx_stem"
+BIOMASS_LEAF = "Biomass_tx_leaf"
+BIOMASS_SEED = "Biomass_tx_seed"
+BIOMASS = "Biomass_tx_leaf"
+STARCH_OUT = "Starch_out_tx_stem"
+STARCH_IN = "Starch_in_tx_stem"
 
 # intake reaction names
 NITRATE = "Nitrate_tx_root"
@@ -29,7 +29,7 @@ max_nitrate_pool_low = 12000 #mikromol
 max_nitrate_pool_high = 100000 #mikromol
 
 # Todo change to 0.1 maybe
-MAX_STARCH_INTAKE = 0.3
+MAX_STARCH_INTAKE = 0.9
 
 MAX_WATER_POOL = 1000000
 MAX_WATER_POOL_CONSUMPTION = 1
@@ -93,17 +93,16 @@ class DynamicModel:
         new_percentages = [leaf_percent, stem_percent, root_percent, starch_percent]
         for i in range(0, len(self.percentages)):
             if self.percentages[i] != new_percentages[i]:
-                update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent)
+                update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent,0)
                 self.percentages =  new_percentages
                 break
         solution = self.model.optimize()
-        gamespeed = self.gametime.GAMESPEED
 
         # calc_rates 1flux/s
-        self.root_rate = (solution.fluxes.get("AraCore_Biomass_tx_root"))
-        self.stem_rate = (solution.fluxes.get("AraCore_Biomass_tx_stem"))
-        self.leaf_rate = (solution.fluxes.get("AraCore_Biomass_tx_leaf"))
-        self.starch_rate = (solution.fluxes.get("Starch_out_tx_stem"))
+        self.root_rate = (solution.fluxes.get(BIOMASS_ROOT))
+        self.stem_rate = (solution.fluxes.get(BIOMASS_STEM))
+        self.leaf_rate = (solution.fluxes.get(BIOMASS_LEAF))
+        self.starch_rate = (solution.fluxes.get(STARCH_OUT))
 
         # 1/s
         self.water_intake = solution.fluxes[WATER]
@@ -112,16 +111,9 @@ class DynamicModel:
         self.starch_intake =  solution.fluxes[STARCH_IN]
         self.photon_intake = solution.fluxes[PHOTON]
 
-
         if self.stomata_open:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*self.transpiration_factor
-
-        '''print("Leaf_Prod: ",  self.leaf_rate, "Stem_Prod:", self.stem_rate, "Root_prod: ", self.root_rate,
-            "Starch_prod: ", self.starch_rate, " Starch_intake: ", self.starch_intake,
-              " Water intake: ", self.water_intake, " Water_pool: ", self.water_pool, "Water_pool_consumption: ", self.water_intake_pool
-        , "Nitrate_intake: ", self.nitrate_intake,
-              " Factor: ", self.transpiration_factor, " CO2: ", solution.fluxes[CO2])'''
 
     def open_stomata(self):
         self.stomata_open = True
@@ -190,7 +182,7 @@ class DynamicModel:
         self.set_bounds(STARCH_IN, (0, 0))
 
     def update(self, dt, leaf_mass, stem_mass, root_mass, PLA, sun_intensity, max_water_drain, plant_mass):
-        normalize(self.model, root_mass, stem_mass, leaf_mass)
+        normalize(self.model, root_mass, stem_mass, leaf_mass, 1)
         self.max_water_pool = MAX_WATER_POOL + (plant_mass*10000)
         self.update_bounds(root_mass, PLA*sun_intensity, max_water_drain)
         self.update_pools(dt, max_water_drain)
@@ -207,8 +199,6 @@ class DynamicModel:
         # max water drain tells how much is there to take
         # if last intake was higher, drain differenz from pool
         # if last intake was lower, drain normally -> if water pool is lower than max, drain more, put diff in pool
-
-        #print(max_water_drain, self.water_intake)
 
         # take more water in, if possible and pool not full
 
@@ -243,7 +233,6 @@ class DynamicModel:
         self.set_bounds(NITRATE,(0,self.get_nitrate_intake(root_mass)))
 
         # take from pool, if no enough
-        #print(max_water_drain, MAX_WATER_POOL_CONSUMPTION-max_water_drain)
         # not enough water in soil - take from pool
         intake = max_water_drain
         self.water_intake_pool = 0
