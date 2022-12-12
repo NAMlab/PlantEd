@@ -105,6 +105,58 @@ class Environment:
         #y = (self.sun_pos_night[1] + (self.sun_pos_noon[1] - self.sun_pos_night[1]) * sun_intensity)
         #self.sun_pos = (x, y)
 
+    def calc_shadowmap(self, leaves, sun_dir=(0.5, 1), resolution=10):
+        width = config.SCREEN_WIDTH
+        height = config.SCREEN_HEIGHT
+
+        res_width = int(width/resolution)
+        res_height = int(height/resolution)
+
+        map = np.zeros((res_width, res_height))
+
+
+        sun_dir_x = sun_dir[0]
+        sun_dir_y = sun_dir[1]
+
+        # calc below shadows
+        #print(sun_dir_x)
+        for leaf in leaves:
+            bottom_left = (leaf['x']-leaf['offset_x'],leaf['y']-leaf['offset_y']+leaf['image'].get_height())
+            bottom_right = (bottom_left[0] + leaf['image'].get_width(),bottom_left[1])
+            # check x below
+            for i in range(map.shape[0]):
+                for j in range(map.shape[1]):
+
+                    # delta_x for angle
+                    delta_x = (j*resolution - bottom_left[1])*sun_dir_x
+
+                    if i*resolution > bottom_left[0]+delta_x and i*resolution < bottom_right[0]+delta_x and j*resolution > bottom_left[1]:
+                        #print(bottom_right, bottom_left, i * resolution, j * resolution)
+                        map[i,j] += 1
+            # cast rays, mark each cell of subset below rect: x: min x + dir_x * delta_y, max x+width + dir_x * delta_y ->  divide by resolution
+
+        # 00000000
+        # 01110000
+        # 01210000
+        # 01210011
+        # 01210011
+
+
+        # the higher the number, the thicker the shadow -> less photon
+
+
+        #for (x, y), value in np.ndenumerate(map):
+        #    print(x, y)
+
+        return map
+        # sun_direction
+        # leaves
+        # 2d shadow array, resolution
+        # thickness --> light reduction
+
+
+
+
     def draw_background(self, screen):
         #if self.draw:
         #    self.draw = False

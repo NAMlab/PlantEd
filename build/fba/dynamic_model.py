@@ -6,6 +6,7 @@ from fba.helpers import (
     heterotroph,
     update_objective,
     create_objective,
+    normalize,
     get_ndaph_atp
 )
 
@@ -188,7 +189,8 @@ class DynamicModel:
         self.use_starch = False
         self.set_bounds(STARCH_IN, (0, 0))
 
-    def update(self, dt, root_mass, PLA, sun_intensity, max_water_drain, plant_mass):
+    def update(self, dt, leaf_mass, stem_mass, root_mass, PLA, sun_intensity, max_water_drain, plant_mass):
+        normalize(self.model, root_mass, stem_mass, leaf_mass)
         self.max_water_pool = MAX_WATER_POOL + (plant_mass*10000)
         self.update_bounds(root_mass, PLA*sun_intensity, max_water_drain)
         self.update_pools(dt, max_water_drain)

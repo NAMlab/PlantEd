@@ -18,6 +18,7 @@ import random
 from analysis import scoring
 from gameobjects.water_reservoir import Water_Grid, Base_water
 from gameobjects.level_card import Card
+import numpy as np
 
 currentdir = os.path.abspath('..')
 parentdir = os.path.dirname(currentdir)
@@ -196,7 +197,7 @@ class DevScene(object):
         if self.plant.seedling.max < self.plant.get_biomass():
             self.shop.active = True
 
-        self.model.update(dt,self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),
+        self.model.update(dt,self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.get_PLA(), max(self.environment.get_sun_intensity(), 0),
                           self.water_grid.max_drain_rate, self.plant.get_biomass())
 
     def render(self, screen):
@@ -353,6 +354,7 @@ class DefaultGameScene(object):
         self.water_grid.add_base_water(
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
+        self.shadow_map = None
         self.ui = UI(1, self.plant, self.model, self.camera)
 
         '''example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
@@ -456,8 +458,23 @@ class DefaultGameScene(object):
                 entity.handle_event(e)
             self.camera.handle_event(e)
             # self.skill_system.handle_event(e)
+            if e.type == KEYDOWN and e.key == K_l:
+                if self.shadow_map is None:
+                    self.shadow_map = self.environment.calc_shadowmap(self.plant.organs[0].leaves)
+                else:
+                    self.shadow_map = None
 
     def update(self, dt):
+        ticks = self.gametime.get_time()
+        day = 1000 * 60 * 60 * 24
+        hour = day / 24
+        hours = (ticks % day) / hour
+        if 8 < hours < 20:
+            #print(hours)
+            self.shadow_map = self.environment.calc_shadowmap(self.plant.organs[0].leaves, sun_dir=(((-(20/12)*hours)+23.33),1))
+            #print((-(20/12)*hours)+23.33)
+        else:
+            self.shadow_map = None
         # get root grid, water grid
         self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
         self.water_grid.actual_drain_rate = self.model.get_actual_water_drain()
@@ -476,7 +493,7 @@ class DefaultGameScene(object):
         if self.plant.seedling.max < self.plant.get_biomass():
             self.shop.active = True
 
-        self.model.update(dt, self.plant.organs[2].mass, self.plant.get_PLA(),
+        self.model.update(dt, self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.get_PLA(),
                           max(self.environment.get_sun_intensity(), 0),
                           self.water_grid.max_drain_rate, self.plant.get_biomass())
 
@@ -500,6 +517,20 @@ class DefaultGameScene(object):
         screen.blit(temp_surface, (0, self.camera.offset_y))
         self.shop.draw(screen)
         self.ui.draw(screen)
+
+        if self.shadow_map is not None:
+            for (x, y), value in np.ndenumerate(self.shadow_map):
+                if self.shadow_map[x,y] > 0:
+                    if self.shadow_map[x,y] > 1:
+                        if self.shadow_map[x,y] > 2:
+                            pygame.draw.circle(screen, config.RED, (x*10, y*10), 3)
+                        else:
+                            pygame.draw.circle(screen, config.ORANGE, (x*10, y*10), 3)
+                    else:
+                        pygame.draw.circle(screen, config.YELLOW, (x*10, y*10), 3)
+                else:
+                    pygame.draw.circle(screen, config.GREEN, (x * 10, y * 10), 3)
+
         # self.skill_system.draw(screen)
 
 class TitleScene(object):

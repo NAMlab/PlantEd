@@ -47,7 +47,7 @@ class Plant:
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
-        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=100000, active=True, model=self.model)
+        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=1000000, active=True, model=self.model)
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root]
         self.target_organ = self.organs[2]
@@ -121,7 +121,7 @@ class Plant:
             organ.update(dt)
         self.organs[0].photon_intake = photon_intake
 
-        self.organ_starch.update_starch_max(self.get_biomass()*1000+100000)
+        self.organ_starch.update_starch_max(self.get_biomass()*1000+1000000)
 
 
     def handle_event(self, event):
@@ -384,7 +384,7 @@ class Leaf(Organ):
             offset_y = self.leaves[i]["offset_y"]
             self.particle_systems[i].spawn_box = (int(self.leaves[i]["x"]-offset_x+size[0]/2),
                                                   int(self.leaves[i]["y"]-offset_y+size[1]/2), 0, 0)
-            if self.photon_intake > 0 and self.plant.model.stomata_open == True:
+            if self.photon_intake > 0 and self.plant.model.stomata_open:
                 adapted_pi = self.photon_intake/50*3 + 5
                 self.particle_systems[i].lifetime=adapted_pi
                 self.particle_systems[i].activate()
@@ -545,7 +545,7 @@ class Stem(Organ):
         self.curve = Cubic_Tree([Cubic([[955,900],[960,820],[940,750]])])
 
         self.dist_to_stem = 1000
-        self.can_add_branch = True
+        self.can_add_branch = False
         #self.add_branch(Cubic([[700,750],[880,710],[900,610]]))
 
         self.sunflower = assets.img("sunflower.PNG",(128,128))
@@ -694,7 +694,7 @@ class Stem(Organ):
 
 class Starch(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active, model):
-        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[50])
+        super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[500])
         self.toggle_button = None
         self.model = model
         self.starch_intake = 0

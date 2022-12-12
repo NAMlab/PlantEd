@@ -48,7 +48,7 @@ class UI:
         self.camera = camera
         self.dev_mode = dev_mode
 
-        self.stomata_hours = [False for i in range(12)]
+        self.stomata_hours = [True for i in range(12)]
 
         self.danger_timer = 1
 

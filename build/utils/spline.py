@@ -61,7 +61,7 @@ class Cubic_Tree:
     def draw_highlighted(self, screen):
         #self.branches[0].draw_highlight(screen, tapering=True)
         for i in range(0, len(self.branches)):
-            self.branches[i].draw_highlight(screen, tapering=True)
+            self.branches[i].draw_highlights(screen, tapering=True)
 
     def toggle_move(self):
         for branch in self.branches:
@@ -369,7 +369,7 @@ class Beziere:
             x = math.sin(dist)*(target_x-self.list_of_points[-2][0])
             y = math.cos(dist)*(target_y-self.list_of_points[-2][1])
 
-            self.list_of_points[-1] = point
+            #self.list_of_points[-1] = point
             self.get_current_points_to_draw()
 
     def find_closest(self, pos):
@@ -424,7 +424,7 @@ class Beziere:
 
 
             #for i in range(0,len(self.list_of_points)):
-            height_multiplicator = 1 - self.list_of_points[i][1] / SCREEN_HEIGHT  # used as mass
+            height_multiplicator = 1 - self.list_of_points[i][1] / config.SCREEN_HEIGHT  # used as mass
             # calculate a to get v over dt to get x,y
             a_x = sum_forces_x / height_multiplicator
             a_y = sum_forces_y / height_multiplicator
