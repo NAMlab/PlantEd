@@ -14,9 +14,98 @@ holds green thumbs, checks if buyable
 shopitems have action and button and cost
 '''
 
+class FloatingShop:
+    def __init__(self, pos=(0,0)):
+        self.pos = pos
+        self.shop_items = []
+        self.margin = 10
+        self.rect = pygame.Rect((0, 0, len(self.shop_items) * (64+self.margin), 64+self.margin))
+        self.active = False
+        self.s = pygame.Surface((self.margin+3*(self.margin+64), 64+self.margin*2), pygame.SRCALPHA)
+
+
+    def activate(self, pos):
+        for i in range(len(self.shop_items)):
+            self.shop_items[i].set_pos((self.margin+i*(64+self.margin),self.margin))
+        self.active = True
+        self.pos = pos
+        self.rect = pygame.Rect((0, 0, len(self.shop_items) * 80, 64+self.margin*2))
+
+
+    def deactivate(self):
+        self.active = False
+
+    def add_item(self, shop_item):
+        self.shop_items.append(shop_item)
+        self.shop_items[-1].shop_items = self.shop_items
+        self.shop_items[-1].floating_shop = self
+        self.rect = pygame.Rect((0, 0, len(self.shop_items)*80, 80))
+
+    def get_rect(self):
+        return pygame.Rect(self.pos[0],self.pos[1],self.rect[2],self.rect[3])
+
+    def handle_event(self, e):
+        if self.active:
+            mouse_pos = pygame.mouse.get_pos()
+            for item in self.shop_items:
+                item.handle_event(e, (mouse_pos[0]+self.pos[0],mouse_pos[1]+self.pos[1]))
+            if e.type == pygame.MOUSEMOTION:
+                if not self.get_rect().collidepoint(mouse_pos):
+                    self.active = False
+
+    def draw(self, screen):
+        if self.active:
+            pygame.draw.rect(self.s, config.WHITE_TRANSPARENT,self.rect,border_radius=3)
+            pygame.draw.rect(self.s, config.WHITE,self.rect,width=2, border_radius=3)
+            for item in self.shop_items:
+                item.draw(self.s)
+            screen.blit(self.s,self.pos)
+
+
+class FloatingShopItem:
+    def __init__(self, pos, callback, image, cost, plant):
+        self.pos = pos
+        self.rect = pygame.Rect(pos[0], pos[1], image.get_width(), image.get_height())
+        self.callback = callback
+        self.image = image
+        self.cost = cost
+        self.plant = plant
+        self.shop_items = []
+        self.floating_shop = None
+        self.hover = False
+
+    def set_pos(self, pos):
+        self.pos = pos
+        self.rect = pygame.Rect(pos[0], pos[1], self.image.get_width(), self.image.get_height())
+
+    def update(self, dt):
+        pass
+
+    def handle_event(self, e, mouse_pos):
+        if self.cost <= self.plant.upgrade_points:
+            if e.type == pygame.MOUSEMOTION:
+                if self.rect.collidepoint(mouse_pos):
+                    self.hover = True
+                else:
+                    self.hover = False
+            if e.type == pygame.MOUSEBUTTONDOWN:
+                if self.rect.collidepoint(mouse_pos):
+                    self.plant.upgrade_points -= self.cost
+                    self.callback()
+                    self.hover = False
+                    self.floating_shop.deactivate()
+
+    def draw(self, screen):
+        if self.cost <= self.plant.upgrade_points:
+            screen.blit(self.image, (self.rect[0],self.rect[1]))
+            if self.hover:
+                pygame.draw.rect(screen, config.WHITE, self.rect, width=2)
+
+
+
 class Shop:
     def __init__(self, rect, shop_items, model, water_grid, plant, cols=2, margin=10, post_hover_message=None, active=True):
-        #performance imrpove test
+        #performance improve test
         self.s = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA)
         self.shop_label = config.BIG_FONT.render("Shop",True,(0,0,0))
         self.current_cost_label = config.BIG_FONT.render("0",False,(0,0,0))
@@ -154,7 +243,8 @@ class Shop:
 
 class Shop_Item:
     def __init__(self, image, callback, cost=1, info_text=None, rect=(0,0,0,0), selected_color=(255,255,255),
-                 hover_color = (128,128,128,128), border_width=3, condition=None, condition_not_met_message=None, post_hover_message=None, message=None, offset=(0,0)):
+                 hover_color = (128,128,128,128), border_width=3, condition=None, condition_not_met_message=None,
+                 post_hover_message=None, message=None, offset=(0,0)):
         self.image = image
         self.callback = callback
         self.cost = cost

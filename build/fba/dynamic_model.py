@@ -38,11 +38,10 @@ FLUX_TO_GRAMM = 0.002299662183
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, gametime, water_grid, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/PlantEd_model.sbml")):
+    def __init__(self, gametime, water_grid=None, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/PlantEd_model.sbml")):
         self.model = model
         self.gametime = gametime
         self.water_grid = water_grid
-        self.log = log
         self.plant_mass = plant_mass
         self.use_starch = False
         objective = create_objective(self.model)

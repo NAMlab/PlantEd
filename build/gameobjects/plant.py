@@ -539,7 +539,9 @@ class Stem(Organ):
         self.flower = False
         self.sunpos = (0,0)
         self.curve = Cubic_Tree([Cubic([[955,900],[960,820],[940,750]])])
-
+        self.gametime = GameTime.instance()
+        self.timer = 0
+        self.floating_shop = None
         self.dist_to_stem = 1000
         self.can_add_branch = False
         #self.add_branch(Cubic([[700,750],[880,710],[900,610]]))
@@ -561,6 +563,9 @@ class Stem(Organ):
             leaf["x"] = pos[0]
             leaf["y"] = pos[1]
 
+    def activate_add_branch(self):
+        self.can_add_branch = True
+
     def reach_threshold(self):
         super().reach_threshold()
         self.curve.grow_all()
@@ -578,28 +583,42 @@ class Stem(Organ):
         self.curve.handle_event(event)
         #self.new_curve.handle_event(event)
         if event.type == pygame.MOUSEMOTION:
+            x, y = pygame.mouse.get_pos()
+            y -= self.plant.camera.offset_y
+            point, branch_id, point_id = self.curve.find_closest((x, y), True)
             if self.leaf.can_add_leaf:
+                self.highlight = (point, branch_id, point_id)
+            elif self.can_add_branch:
+                self.highlight = (point, branch_id, point_id)
+            else:
+                self.highlight = None
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if not self.can_add_branch or self.leaf.can_add_leaf:
                 x, y = pygame.mouse.get_pos()
                 y -= self.plant.camera.offset_y
                 point, branch_id, point_id = self.curve.find_closest((x, y), True)
-                self.highlight = (point, branch_id, point_id)
-            elif self.can_add_branch:
-                x, y = pygame.mouse.get_pos()
-                y -= self.plant.camera.offset_y
-                point, branch_id, point_id = self.curve.find_closest((x, y), True, True)
-                self.highlight = (point, branch_id, point_id)
+                dist_to_stem = math.sqrt((x - point[0])**2 + (y - point[1])**2)
+                if dist_to_stem < 20:
+                    self.timer = self.gametime.get_time()
 
-            else:
-                self.highlight = None
+
         if event.type == pygame.MOUSEBUTTONUP:
             if self.can_add_branch and self.dist_to_stem < 50:
-                self.add_branch(pygame.mouse.get_pos(), self.highlight)
-                self.curve.branches[self.highlight[1]].free_spots[self.highlight[2]] = False
-                self.can_add_branch = False
-            if self.leaf.can_add_leaf and self.dist_to_stem < 50:
+                if self.highlight:
+                    self.add_branch(pygame.mouse.get_pos(), self.highlight)
+                    self.curve.branches[self.highlight[1]].free_spots[self.highlight[2]] = False
+                    self.can_add_branch = False
+            elif self.leaf.can_add_leaf and self.dist_to_stem < 50:
                 if self.highlight:
                     self.leaf.append_leaf(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[self.highlight[2]] = False
+            else:
+                if self.gametime.get_time() - self.timer < 1000*240:
+                    print("timed", self.gametime.get_time()-self.timer, self.floating_shop)
+                    if self.floating_shop is not None:
+                        self.floating_shop.activate(pygame.mouse.get_pos())
+
         if event.type == KEYDOWN and event.key == K_SPACE:
             self.curve.grow_all()
         if event.type == KEYDOWN and event.key == K_b:

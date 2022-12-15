@@ -10,7 +10,7 @@ from fba.dynamic_model import DynamicModel
 import config
 from utils.gametime import GameTime
 from datetime import datetime
-from gameobjects.shop import Shop, Shop_Item
+from gameobjects.shop import Shop, Shop_Item, FloatingShopItem, FloatingShop
 from gameobjects.bug import Bug
 from ui import UI
 from camera import Camera
@@ -178,7 +178,6 @@ class DefaultGameScene(object):
 
         # pygame.mixer.music.set_volume(options["music"]/10)
         pygame.mixer.music.play(-1, 0)
-
         pygame.mouse.set_visible(True)
         self.pause = False
         self.pause_label = config.MENU_TITLE.render("Game Paused", True, config.WHITE)
@@ -237,6 +236,17 @@ class DefaultGameScene(object):
 
         self.shop.add_shop_item(["watering", "blue_grain"])
 
+        self.floating_shop = FloatingShop((0,0))
+        add_leaf_item_floating = FloatingShopItem((0,0),self.activate_add_leaf,assets.img("leaf_small.PNG",(64,64)),
+                                                  1,self.plant)
+        add_branch_item_floating = FloatingShopItem((0, 0), self.plant.organs[1].activate_add_branch,
+                                                  assets.img("leaf_small.PNG", (64, 64)),
+                                                  1, self.plant)
+
+        self.floating_shop.add_item(add_leaf_item_floating)
+        self.floating_shop.add_item(add_branch_item_floating)
+        self.plant.organs[1].floating_shop = self.floating_shop
+
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 
@@ -246,6 +256,7 @@ class DefaultGameScene(object):
 
     def quit(self):
         self.log.close_file()
+        self.log.close_model_file()
         pygame.quit()
         sys.exit()
 
@@ -286,14 +297,54 @@ class DefaultGameScene(object):
                 self.plant.update_growth_rates(self.model.get_rates())
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
+            if e.type == KEYDOWN and e.key == K_o:
+                self.floating_shop.activate((500,500))
+            if e.type == KEYDOWN and e.key == K_p:
+                NITRATE = "Nitrate_tx_root"
+                WATER = "H2O_tx_root"
+                PHOTON = "Photon_tx_leaf"
+                STARCH_IN = "Starch_in_tx_stem"
+
+                water_in = self.model.get_bounds(WATER)[1]
+                nitrate_in = self.model.get_bounds(NITRATE)[1]
+                starch_in = self.model.get_bounds(STARCH_IN)[1]
+                photon_in = self.model.get_bounds(PHOTON)[1]
+
+                leaf_mass = self.plant.organs[0].mass
+                stem_mass = self.plant.organs[1].mass
+                root_mass = self.plant.organs[2].mass
+                seed_mass = 0
+
+                water_pool = self.model.water_pool
+                starch_pool = self.plant.organ_starch.mass
+                nitrate_pool = self.model.nitrate_pool
+
+                leaf_rate = self.model.leaf_rate
+                stem_rate = self.model.stem_rate
+                root_rate = self.model.root_rate
+                seed_rate = 0
+
+                ticks = self.gametime.get_time()
+                day = 1000 * 60 * 60 * 24
+                hour = day / 24
+                min = hour / 60
+                days = int(ticks / day)
+                hours = int((ticks % day) / hour)
+                minutes = int((ticks % hour) / min)
+
+                self.log.append_model_row(days, hours, minutes, water_in, nitrate_in, starch_in, photon_in, leaf_mass, stem_mass, root_mass,
+                                          seed_mass, water_pool, starch_pool, nitrate_pool, leaf_rate, stem_rate,
+                                          root_rate, seed_rate)
             if e.type == WIN:
                 if self.log:
                     # self.log.write_log(self.ui.name_label)
                     self.log.close_file()
+                    self.log.close_model_file()
                 scoring.upload_score(self.ui.name, self.gametime.get_time())
                 self.manager.go_to(CustomScene())
             self.ui.handle_event(e)
             self.shop.handle_event(e)
+            self.floating_shop.handle_event(e)
 
             self.plant.handle_event(e)
             # self.environment.handle_event(e)
@@ -350,10 +401,12 @@ class DefaultGameScene(object):
 
         self.environment.draw_foreground(temp_surface)
         self.water_grid.draw(temp_surface)
+        self.floating_shop.draw(temp_surface)
+        self.shop.draw(temp_surface)
 
+        self.ui.draw(temp_surface)
         screen.blit(temp_surface, (0, self.camera.offset_y))
-        self.shop.draw(screen)
-        self.ui.draw(screen)
+
 
         '''if self.shadow_map is not None:
             for (x, y), value in np.ndenumerate(self.shadow_map):
