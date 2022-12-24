@@ -242,10 +242,16 @@ class DefaultGameScene(object):
         add_branch_item_floating = FloatingShopItem((0, 0), self.plant.organs[1].activate_add_branch,
                                                   assets.img("leaf_small.PNG", (64, 64)),
                                                   1, self.plant)
+        add_flower_item_floating = FloatingShopItem((0, 0), self.plant.organs[3].activate_add_flower,
+                                                    assets.img("leaf_small.PNG", (64, 64)),
+                                                    1, self.plant)
 
         self.floating_shop.add_item(add_leaf_item_floating)
         self.floating_shop.add_item(add_branch_item_floating)
+        self.floating_shop.add_item(add_flower_item_floating)
+        self.plant.organs[0].floating_shop = self.floating_shop
         self.plant.organs[1].floating_shop = self.floating_shop
+        self.plant.organs[2].floating_shop = self.floating_shop
 
         # start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)

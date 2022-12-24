@@ -48,7 +48,7 @@ class FloatingShop:
         if self.active:
             mouse_pos = pygame.mouse.get_pos()
             for item in self.shop_items:
-                item.handle_event(e, (mouse_pos[0]+self.pos[0],mouse_pos[1]+self.pos[1]))
+                item.handle_event(e, self.pos)
             if e.type == pygame.MOUSEMOTION:
                 if not self.get_rect().collidepoint(mouse_pos):
                     self.active = False
@@ -81,15 +81,16 @@ class FloatingShopItem:
     def update(self, dt):
         pass
 
-    def handle_event(self, e, mouse_pos):
+    def handle_event(self, e, shop_pos):
         if self.cost <= self.plant.upgrade_points:
+            mouse_pos = pygame.mouse.get_pos()
             if e.type == pygame.MOUSEMOTION:
-                if self.rect.collidepoint(mouse_pos):
+                if self.rect.collidepoint((mouse_pos[0]-shop_pos[0], mouse_pos[1]-shop_pos[1])):
                     self.hover = True
                 else:
                     self.hover = False
             if e.type == pygame.MOUSEBUTTONDOWN:
-                if self.rect.collidepoint(mouse_pos):
+                if self.rect.collidepoint((mouse_pos[0]-shop_pos[0], mouse_pos[1]-shop_pos[1])):
                     self.plant.upgrade_points -= self.cost
                     self.callback()
                     self.hover = False
