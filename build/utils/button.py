@@ -638,6 +638,8 @@ class Slider():
             self.organ.percentage = self.get_percentage()
 
     def sub_percentage(self, percent):
+        if self.get_percentage() < 0:
+            return 0
         delta = self.get_percentage() - percent
         if delta < 0:
             self.set_percentage(0)
@@ -695,6 +697,146 @@ class SliderGroup:
 
     def slider_sum(self):
         return sum([slider.get_percentage() for slider in self.sliders])
+
+    def change_percentage(self, slider):
+        # @slider: slider that changed
+        while self.max_sum < self.slider_sum()-0.1 or self.max_sum > self.slider_sum()+1:
+            # special case, if max is smaller than 100%
+            if slider.get_percentage() > self.max_sum:
+                slider.set_percentage(self.max_sum)
+            # slider that called and zero sliders aren't able to reduce --> available_sliders
+            available_sliders = (len(self.sliders) - len(self.sliders_zero)) - 1
+            delta = (self.slider_sum() - self.max_sum) / (available_sliders)
+            for s in self.sliders:
+                if s == slider or s in self.sliders_zero:
+                    pass
+                else:
+                    # extra: extra = s.get_percentage() - delta
+                    extra = s.sub_percentage(delta)
+                    if extra > 0:
+                        self.sliders_zero.append(s)
+
+class NegativeSlider():
+    def __init__(self, rect, font, slider_size, organ=None, plant=None, color=None, slider_color=None, callback=None, percent=0, active=True, visible=True):
+        super().__init__()
+        self.color = color if color else (255, 255, 255, 128)
+        self.slider_color = slider_color if slider_color else (self.color[0], self.color[1], self.color[2])
+        self.drag = False
+        self.font = font
+        self.visible = visible
+        self.active = active
+        self.organ = organ
+        self.callback = callback
+        self.plant = plant
+        self.x, self.y, self.w, self.h = rect
+        self.slider_y = 100
+        self.slider_w = slider_size[0] if slider_size else self.w
+        self.slider_h = slider_size[1] if slider_size else self.w
+        self.rect = rect
+        self.set_percentage(percent)
+
+
+    def update(self):
+
+        if self.plant is not None:
+            if self.plant.get_biomass() > self.plant.seedling.max:
+                self.active = True
+        '''if self.organ is not None:
+            if self.organ.active:
+                self.active = True
+        #whats that?
+        if not self.active:
+            return'''
+
+
+    def get_percentage(self):
+        line_height = self.h - self.slider_h
+        slider_length = self.slider_y
+        percent = slider_length/line_height*100
+        return (50-percent)*2
+
+    def get_slider_rect_global(self):
+        return pygame.Rect(self.x, self.y+self.slider_y, self.slider_w, self.slider_h)
+
+    def get_slider_rect_local(self):
+        return pygame.Rect(0, self.slider_y, self.slider_w, self.slider_h)
+
+    def set_percentage(self, percent):
+        line_height = self.h - self.slider_h
+        slider_length = (100-percent)*line_height/100
+        self.slider_y = slider_length
+        if self.organ:
+            self.organ.set_percentage(self.get_percentage())
+
+    def sub_percentage(self, percent):
+        delta = self.get_percentage() - percent
+        if delta < 0:
+            self.set_percentage(0)
+            return delta
+        else:
+            self.set_percentage(delta)
+            return 0
+
+    def draw(self, screen):
+        if not self.visible:
+            return
+        slider_color = self.slider_color if self.active else (150,150,150,128)
+        w = self.w if self.w >= self.slider_w else self.slider_w
+        border = pygame.Surface((w, self.h), pygame.SRCALPHA)
+        # line
+        pygame.draw.rect(border, self.color, (w / 2 - self.w / 2, self.slider_h/2, self.w, self.h-self.slider_h))
+
+        # show zero
+        pygame.draw.line(border, config.GRAY, (0, self.h/2), (self.slider_w, self.h/2), width=2)
+
+        # draw slider
+        pygame.draw.rect(border, slider_color, self.get_slider_rect_local())
+        msg = self.font.render("{:02.0f}".format(abs(self.get_percentage())), 1, (0, 0, 0))
+        border.blit(msg, msg.get_rect(center=self.get_slider_rect_local().center))
+        screen.blit(border, (self.x, self.y))
+
+    def handle_event(self, event):
+        if not self.active:
+            return
+        rect = self.get_slider_rect_global()
+        hover = rect.collidepoint(pygame.mouse.get_pos())
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if hover and event.button == 1:
+                #print(event.type, "Hopefully a slider move", hover, self.drag)
+                self.drag = True
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1 and self.drag:
+                self.drag = False
+                if self.organ is not None:
+                    self.organ.set_percentage(self.get_percentage())
+                if self.callback:
+                    self.callback(self)
+        if event.type == pygame.MOUSEMOTION:
+            if self.drag:
+                # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
+                self.slider_y = clamp(pygame.mouse.get_pos()[1], self.y, self.y - self.slider_h + self.h) - self.y
+                #print("Get: ", self.get_percentage())
+
+
+class SliderGroup:
+    def __init__(self, sliders, max_sum):
+        self.sliders = sliders
+        self.sliders_zero = []
+        self.max_sum = max_sum
+
+        for slider in self.sliders:
+            slider.callback= self.change_percentage
+            # slider.set_percentage(self.max_sum/len(self.sliders))
+
+    def slider_sum(self):
+        sum = 0
+        for slider in self.sliders:
+            percent = slider.get_percentage()
+            percent = 0 if percent < 0 else percent
+            sum += percent
+        return sum
+        #return sum([slider.get_percentage() for slider in self.sliders])
 
     def change_percentage(self, slider):
         # @slider: slider that changed
@@ -829,9 +971,9 @@ class ButtonArray():
         self.rect
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect)
-        pygame.draw.rect(screen, self.color, (self.rect[2]/24*self.hours,self.rect[1]+32+50,20,3),border_radius=2)
-        pygame.draw.rect(screen, config.WHITE, (self.rect[0],self.rect[1],415,40))
+        #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, self.rect)
+        pygame.draw.rect(screen, self.color, (self.rect[2]/24*self.hours+self.rect[0]-7,self.rect[1]+32+50,15,5),border_radius=2)
+        pygame.draw.rect(screen, config.WHITE, (self.rect[0],self.rect[1],415,40),border_radius=3)
         if self.color == config.GREEN:
             open_closed = config.BIG_FONT.render("Open", True, self.color)
         else:

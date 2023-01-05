@@ -287,6 +287,8 @@ class DefaultGameScene(object):
                 stem_percent = self.plant.organs[1].percentage
                 root_percent = self.plant.organs[2].percentage
                 starch_percent = self.plant.organ_starch.percentage
+                if starch_percent < 0:
+                    starch_percent = 0
 
                 # print(leaf_percent, stem_percent, root_percent, starch_percent)
                 self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)

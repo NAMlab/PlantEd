@@ -627,7 +627,7 @@ class Stem(Organ):
                     self.flower.append_flower(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[self.highlight[2]] = False
             else:
-                if self.gametime.get_time() - self.timer < 1000*240:
+                if self.gametime.get_time() - self.timer < 1000*120:
                     if self.floating_shop is not None:
                         self.floating_shop.activate(pygame.mouse.get_pos())
 
@@ -736,6 +736,13 @@ class Starch(Organ):
         self.thresholds = [max_pool]
         if self.mass > max_pool:
             self.mass = max_pool
+
+    def set_percentage(self, percentage):
+        self.percentage = percentage
+        if percentage < 0:
+            self.model.activate_starch_resource(abs(percentage))
+        else:
+            self.model.deactivate_starch_resource()
 
     def drain(self, dt):
         delta = self.starch_intake*dt

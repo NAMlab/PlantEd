@@ -172,9 +172,9 @@ class DynamicModel:
     def set_stomata_automation(self, hours):
         self.stomata_hours = hours
 
-    def activate_starch_resource(self):
+    def activate_starch_resource(self, percentage=1):
         self.use_starch = True
-        self.set_bounds(STARCH_IN, (0, self.starch_intake_max))
+        self.set_bounds(STARCH_IN, (0, self.starch_intake_max*(percentage/100)))
 
     def deactivate_starch_resource(self):
         self.use_starch = False
