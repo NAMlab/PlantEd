@@ -1,10 +1,17 @@
+import asyncio
+import threading
+
 import pygame
+import websockets
 from pygame.locals import *
+
+from client.client import Client
 from data import assets
 from analysis.logger import Log
 from gameobjects.bee import Bee
 from gameobjects.plant import Plant
 from gameobjects.snail import Snail
+from server.server import Server
 from utils.button import Button, Slider, ToggleButton, Textbox
 import os, sys
 from weather import Environment
@@ -49,6 +56,11 @@ plant_pos = (SCREEN_WIDTH - SCREEN_WIDTH/4, SCREEN_HEIGHT - SCREEN_HEIGHT/5)
 GREEN = (19, 155, 23)
 BLUE = (75, 75, 200)
 SKY_BLUE = (169, 247, 252)
+
+plant = None
+
+import logging
+logging.basicConfig(filename='log.log', encoding='utf-8', level=logging.DEBUG)
 
 def shake():
     s = -1  # looks unnecessary but maybe cool, int((random.randint(0,1)-0.5)*2)
@@ -171,10 +183,11 @@ class OptionsScene():
         self.button_sprites.draw(screen)
         self.textbox.draw(screen)
 
-
 class DefaultGameScene(object):
     def __init__(self):
         options = config.load_options(config.OPTIONS_PATH)
+
+        global plant
 
         # pygame.mixer.music.load('../assets/background_music.mp3')
         assets.song('background_music.mp3', options["music"])
@@ -196,6 +209,23 @@ class DefaultGameScene(object):
         self.model = DynamicModel(self.gametime, self.log)
         self.plant = Plant((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5), self.model,
                            self.camera, self.water_grid, growth_boost=1)
+        plant = self.plant
+
+        logging.info("Starting Server and client")
+        self.server = Server()
+        logging.info("Server started 1")
+        self.server_thread = threading.Thread(
+            target=self.server.start,
+            daemon=True,
+            args=(plant, )
+        )
+        logging.info("Server started  2")
+        self.server_thread.start()
+        logging.info("Server started  3")
+        self.client = Client()
+
+        logging.info("Client started")
+
         self.water_grid.add_base_water(
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
@@ -320,6 +350,8 @@ class DefaultGameScene(object):
                 self.pause_button_resume.handle_event(e)
                 self.pause_button_exit.handle_event(e)
             if e.type == GROWTH:
+                logging.info ( self.client.growth())
+
                 leaf_percent = self.plant.organs[0].percentage
                 stem_percent = self.plant.organs[1].percentage
                 root_percent = self.plant.organs[2].percentage
@@ -685,6 +717,7 @@ class SceneMananger(object):
 def main():
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
+    pygame.display.set_mode((0, 0), pygame.RESIZABLE)
     pygame.display.set_caption("PlantEd_0.1")
     timer = pygame.time.Clock()
     running = True
