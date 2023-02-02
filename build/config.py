@@ -17,6 +17,13 @@ CLOUD = 2
 WIND = 3
 HAWK = 4
 
+SPRING = 10
+SUMMER = 20
+FALL = 30
+WINTER = 40
+
+MAX_DAYS = 27
+
 current_dir = os.path.abspath(os.getcwd())
 OPTIONS_PATH = "options.json"
 
@@ -63,9 +70,20 @@ PLANTNAME = 'GenEric'
 _OPTIONS = None
 
 # WEATHER
+
+spring = {"Min_T" : 5,
+          "Max_T" : 20,
+          "shift" : 10,
+          "skew" : 3.2}
+
 # shift should be -20.8 according to Nadines paper. But this seems easier to grasp for the player as it is wamrest 1 to 6 pm
 summer = {"Min_T" : 15,
           "Max_T" : 30,
+          "shift" : 10,
+          "skew" : 3.2}
+
+fall = {"Min_T" : 1,
+          "Max_T" : 18,
           "shift" : 10,
           "skew" : 3.2}
 
@@ -88,11 +106,19 @@ water_concentration_at_temp = [0.269,0.288,0.309,0.33,0.353,0.378,0.403,0.431,0.
 def get_y(x,dict):
     M = (dict["Min_T"] + dict["Max_T"]) / 2  # mean
     A = (dict["Max_T"] - dict["Min_T"]) / 2  # amplitude
-    F = (2 * math.pi) / 24  # based on a 25 hour cycle
+    F = (2 * math.pi) / 24  # based on a 24 hour cycle
     P = dict["shift"]# shift
     d = dict["skew"]# skewness
     temp = M + A * math.sin(F*((x-P)+d*(math.sin(F*(x-P))/2)))
     #print(temp)
+
+
+    mean_temperature = (dict["Min_T"] + dict["Max_T"]) / 2
+    amplitude = (dict["Max_T"] - dict["Min_T"]) / 2
+    F = (2 * math.pi) / 24
+    shift = dict["shift"]
+    skew = dict["skew"]
+    temp = mean_temperature + amplitude * math.sin(F * ((x - shift) + skew * (math.sin(F * (x - shift)) / 2)))
     return temp
 
 def load_options(path):

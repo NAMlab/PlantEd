@@ -72,7 +72,7 @@ class DynamicModel:
         self.starch_rate = 0
         self.percentages = [0,0,0,0]
         self.init_constraints()
-        self.calc_growth_rate(0.1,0.1,1,0.1)
+        self.calc_growth_rate(0.1,0.1,1,0.1,0)
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
@@ -88,12 +88,12 @@ class DynamicModel:
         atp = 0.00727 /24
         nadhp = 0.00256 /24
 
-    def calc_growth_rate(self, leaf_percent, stem_percent, root_percent, starch_percent):
-        new_percentages = [leaf_percent, stem_percent, root_percent, starch_percent]
+    def calc_growth_rate(self, leaf_percent, stem_percent, root_percent, starch_percent, flower_percent):
+        new_percentages = [leaf_percent, stem_percent, root_percent, starch_percent, flower_percent]
         for i in range(0, len(self.percentages)):
             if self.percentages[i] != new_percentages[i]:
-                update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent,0)
-                self.percentages =  new_percentages
+                update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent, flower_percent)
+                self.percentages = new_percentages
                 break
         solution = self.model.optimize()
 
@@ -102,6 +102,7 @@ class DynamicModel:
         self.stem_rate = (solution.fluxes.get(BIOMASS_STEM))
         self.leaf_rate = (solution.fluxes.get(BIOMASS_LEAF))
         self.starch_rate = (solution.fluxes.get(STARCH_OUT))
+        self.seed_rate = (solution.fluxes.get(BIOMASS_SEED))
 
         # 1/s
         self.water_intake = solution.fluxes[WATER]
@@ -114,18 +115,19 @@ class DynamicModel:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*self.transpiration_factor
 
+
     def open_stomata(self):
         self.stomata_open = True
         self.set_bounds(CO2, (-1000,1000))
 
-    def update_transpiration_factor(self):
+    def update_transpiration_factor(self, RH, T):
         K = 291.18
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
         hour = day / 24
         hours = (ticks % day) / hour
-        RH = config.get_y(hours, config.humidity)
-        T = config.get_y(hours, config.summer)
+        #RH = config.get_y(hours, config.humidity)
+        #T = config.get_y(hours, config.summer)
         In_Concentration = config.water_concentration_at_temp[int(T + 2)]
         Out_Concentration = config.water_concentration_at_temp[int(T)]
         self.transpiration_factor = K * (In_Concentration - Out_Concentration * RH)
@@ -136,7 +138,14 @@ class DynamicModel:
 
     def get_rates(self):
         gamespeed = self.gametime.GAMESPEED
-        return (self.leaf_rate*gamespeed*FLUX_TO_GRAMM, self.stem_rate*gamespeed*FLUX_TO_GRAMM, self.root_rate*gamespeed*FLUX_TO_GRAMM, self.starch_rate*gamespeed, self.starch_intake*gamespeed)
+        return (self.leaf_rate*gamespeed*FLUX_TO_GRAMM, self.stem_rate*gamespeed*FLUX_TO_GRAMM, self.root_rate*gamespeed*FLUX_TO_GRAMM, self.starch_rate*gamespeed, self.starch_intake*gamespeed, self.seed_rate*gamespeed)
+
+    def get_absolute_rates(self):
+        forced_ATP = (
+                0.0049 * self.model.reactions.get_by_id("Photon_tx_leaf").upper_bound
+                + 2.7851
+        )
+        return (self.leaf_rate, self.stem_rate, self.root_rate, self.seed_rate, self.stem_rate, self.starch_intake, forced_ATP)
 
     def get_actual_water_drain(self):
         return self.water_intake + self.water_intake_pool
@@ -180,12 +189,12 @@ class DynamicModel:
         self.use_starch = False
         self.set_bounds(STARCH_IN, (0, 0))
 
-    def update(self, dt, leaf_mass, stem_mass, root_mass, PLA, sun_intensity, max_water_drain, plant_mass):
+    def update(self, dt, leaf_mass, stem_mass, root_mass, PLA, sun_intensity, max_water_drain, plant_mass, RH, T):
         normalize(self.model, root_mass, stem_mass, leaf_mass, 1)
         self.max_water_pool = MAX_WATER_POOL + (plant_mass*10000)
         self.update_bounds(root_mass, PLA*sun_intensity, max_water_drain)
         self.update_pools(dt, max_water_drain)
-        self.update_transpiration_factor()
+        self.update_transpiration_factor(RH, T)
 
 
     def update_pools(self,dt, max_water_drain):
@@ -244,5 +253,5 @@ class DynamicModel:
                     intake = MAX_WATER_POOL_CONSUMPTION
 
         self.set_bounds(WATER, (-1000,intake))
-        photon_in = photon_in * 300 # 300 mikromol/m2/s
+        photon_in = photon_in * 300 #mikromol/m2/s
         self.set_bounds(PHOTON,(0,photon_in))

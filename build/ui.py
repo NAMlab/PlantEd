@@ -34,12 +34,13 @@ preset = {"leaf_slider" : 0,
           "consume_starch" : False}
 
 class UI:
-    def __init__(self, scale, plant, model, camera, production_topleft=(10,100), plant_details_topleft=(10,10),
+    def __init__(self, scale, plant, model, environment, camera, production_topleft=(10,100), plant_details_topleft=(10,10),
                  organ_details_topleft=(10,430), dev_mode=False):
         self.name = config.load_options(config.OPTIONS_PATH)["name"]
         self.name_label = config.FONT.render(self.name,True,config.BLACK)
         self.plant = plant
         self.model = model
+        self.environment = environment
         self.gametime = GameTime.instance()
 
         self.hover = Hover_Message(config.FONT,30,5)
@@ -198,6 +199,7 @@ class UI:
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
         self.draw_ui(screen)
+        #self.draw_energy_meter(screen)
         for element in self.floating_elements:
             element.draw(screen)
         for animation in self.animations:
@@ -268,6 +270,50 @@ class UI:
         # name plant, make textbox
         screen.blit(self.s, (0, 0))
 
+    def draw_energy_meter(self, screen):
+        rates = self.model.get_rates()
+        sum_rates = sum(rates)-rates[4]-rates[3]
+        width = 500
+
+        # leaf_rate, self.stem_rate, root_rate, starch_rate, starch_intake, seed_rate)
+
+        starch = rates
+
+        #  self.starch_rate*gamespeed, self.starch_intake*gamespeed, self.seed_rate*gamespeed)
+
+
+        pygame.draw.rect(screen, config.WHITE, (700,100,rates[0]/sum_rates*width, 50),border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700,100,width, 50),3,border_radius=3)
+        leaf_rate_label = config.BIG_FONT.render("LEAF {}".format(rates[0]), True, config.BLACK)
+        screen.blit(leaf_rate_label, (750, 110))
+
+        pygame.draw.rect(screen, config.WHITE, (700,150,rates[1]/sum_rates*width, 50),border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700,150,width, 50),3,border_radius=3)
+        stem_rate_label = config.BIG_FONT.render("STEM {}".format(rates[1]), True, config.BLACK)
+        screen.blit(stem_rate_label, (750, 160))
+
+        pygame.draw.rect(screen, config.WHITE, (700,200,rates[2]/sum_rates*width, 50),border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700,200,width, 50),3,border_radius=3)
+        root_rate_label = config.BIG_FONT.render("ROOT {}".format(rates[2]), True, config.BLACK)
+        screen.blit(root_rate_label, (750, 210))
+
+        pygame.draw.rect(screen, config.WHITE, (700,250,rates[5]/sum_rates*width, 50),border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700,250,width, 50),3,border_radius=3)
+        seed_rate_label = config.BIG_FONT.render("SEED{}".format(rates[5]), True, config.BLACK)
+        screen.blit(seed_rate_label, (750, 260))
+
+        pygame.draw.rect(screen, config.WHITE, (700, 350, width, 50), border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700, 350, width, 50), 3, border_radius=3)
+        starch_rate_label = config.BIG_FONT.render("STARCH PRODUCTION {}".format(rates[3]), True, config.BLACK)
+        screen.blit(starch_rate_label, (750, 360))
+
+        pygame.draw.rect(screen, config.WHITE, (700, 400, width, 50), border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700, 400, width, 50), 3, border_radius=3)
+        starch_intake_rate_label = config.BIG_FONT.render("STARCH CONSUMPTION {}".format(rates[4]), True, config.BLACK)
+        screen.blit(starch_intake_rate_label, (750, 410))
+
+
+
     def draw_plant_details(self, s):
         # details
         topleft = self.plant_details_topleft
@@ -308,8 +354,8 @@ class UI:
         s.blit(clock_text, (config.SCREEN_WIDTH/2-clock_text.get_width()/2,16))
 
 
-        RH = config.get_y(hours, config.humidity)
-        T = config.get_y(hours, config.summer)
+        RH =  self.environment.get_r_humidity()
+        T = self.environment.get_temperature()
 
         RH_label = config.FONT.render("{:.0f} %".format(RH*100), True, config.BLACK)
         T_label = config.FONT.render("{:.0f} °C".format(T), True, config.BLACK)
@@ -359,6 +405,12 @@ class UI:
 
         return danger_box
 
+    def init_flowering_ui(self):
+        topleft = self.production_topleft
+        self.flower_slider = Slider((topleft[0] + 25, topleft[1] + 300, 15, 200), config.FONT, (50, 20),
+                                  organ=self.plant.organs[3],
+                                  plant=self.plant, percent=0, active=True)
+        self.sliders.append(self.flower_slider)
 
     def init_production_ui(self):
         topleft = self.production_topleft
@@ -404,6 +456,7 @@ class UI:
         self.starch_slider = NegativeSlider((topleft[0]+25+330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                     organ=self.plant.organ_starch,
                                     plant=self.plant, callback=self.plant.organs[2].set_percentage, percent=0, active=False)
+
 
         self.sliders.append(self.leaf_slider)
         self.sliders.append(self.stem_slider)

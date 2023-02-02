@@ -1,7 +1,6 @@
 import pygame
 from utils.button import Button
 import config
-from utils.animation import LabelAnimation
 from gameobjects.watering_can import Watering_can
 from gameobjects.blue_grain import Blue_grain
 from gameobjects.spraycan import Spraycan
@@ -147,11 +146,14 @@ class Shop:
                 if len(self.shop_items) > i*columns+j:
                     self.shop_items[i*columns+j].rect = pygame.Rect(x,y+50, img_width, img_width)
                     self.shop_items[i * columns + j].offset = (self.rect[0],self.rect[1])
+        #self.buy_button.x = self.rect[2] - self.margin * 2 - 64
+        #self.buy_button.y = self.rect[3] - self.margin - 64
 
     def add_shop_item(self, shop_item):
         self.shop_items.append(shop_item)
         for item in self.shop_items:
             item.shop_items = self.shop_items
+        self.init_layout()
 
     def add_shop_item(self, keywords):
         for keyword in keywords:
@@ -160,7 +162,7 @@ class Shop:
             elif keyword == "blue_grain":
                 self.shop_items.append(Shop_Item(assets.img("blue_grain_0.PNG", (64, 64)), self.blue_grain.activate, post_hover_message=self.post_hover_message, message="Blue grain increases nitrate in the ground."))
             elif keyword == "spraycan":
-                self.shop_items.append(Shop_Item(assets.img("spraycan_icon.PNG", (64, 64)), self.spraycan.activate, post_hover_message=self.post_hover_message, message="Spray em!"))
+                self.shop_items.append(Shop_Item(assets.img("spraycan.PNG", (64, 64)), self.spraycan.activate, post_hover_message=self.post_hover_message, message="Spray em!"))
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.init_layout()
@@ -175,6 +177,7 @@ class Shop:
                             if item.condition_not_met_message is not None:
                                 item.post_hover_message(item.condition_not_met_message)
                             return
+                    print("bought")
                     self.plant.upgrade_points -= item.cost
                     item.callback()
                     item.selected = False
@@ -270,12 +273,12 @@ class Shop_Item:
     def handle_event(self, e):
         if e.type == pygame.MOUSEMOTION:
             pos = (e.pos[0] - self.offset[0], e.pos[1] - self.offset[1])
+            self.hover=False
             if self.rect.collidepoint(pos):
                 if self.post_hover_message is not None:
                     self.post_hover_message(self.message)
                 if not self.selected:
                     self.hover = True
-                self.hover = False
 
         if e.type == pygame.MOUSEBUTTONDOWN:
             pos = (e.pos[0] - self.offset[0], e.pos[1] - self.offset[1])

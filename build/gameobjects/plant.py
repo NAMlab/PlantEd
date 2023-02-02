@@ -17,7 +17,8 @@ WIN = pygame.USEREVENT+1
 #pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
 pivot_pos = [(286,113),(76,171),(254,78),(19,195),(271,114),(47,114)]
 leaves = [(assets.img("leaves/{index}.PNG".format(index=i)), pivot_pos[i]) for i in range(0, 6)]
-flowers = [assets.img("flowers/flower.PNG",(64,64))]
+flowers = [(assets.img("sunflowers/{index}.PNG".format(index=i),(64,64))) for i in range(0, 3)]
+#flowers = [assets.img("flowers/flower.PNG",(64,64))]
 #stem = (assets.img("stem.png"), (15, 1063))
 #roots = (assets.img("roots.png"), (387, 36))
 
@@ -47,7 +48,7 @@ class Plant:
         self.danger_mode = False
         self.gametime = GameTime.instance()
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
-        organ_flower = Flower(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_flower, self, flowers, mass=0.8, active=False)
+        organ_flower = Flower(self.x, self.y, "Roots", self.FLOWER, self.set_target_organ_flower, self, flowers, mass=0.8, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, flower = organ_flower, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=1000000, active=True, model=self.model)
@@ -60,8 +61,7 @@ class Plant:
         lvl = 0
         for organ in self.organs:
             lvl += organ.level
-        if lvl >= 20:
-            pygame.event.post(pygame.event.Event(WIN))
+
 
     # convert flux/mikromol to gramm
     def update_growth_rates(self, growth_rates):
@@ -74,6 +74,7 @@ class Plant:
             self.organs[i].update_growth_rate((growth_rates[i]))
         self.organ_starch.update_growth_rate(growth_rates[3])
         self.organ_starch.starch_intake = growth_rates[4]
+        self.organs[3].update_growth_rate(growth_rates[5])
 
     def get_biomass(self):
         biomass = 0
@@ -602,8 +603,14 @@ class Stem(Organ):
                 self.highlight = None
 
         if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = pygame.mouse.get_pos()
+            rects = self.get_rect()
+            if rects is not None:
+                for rect in self.get_rect():
+                    if rect.collidepoint((x,y)):
+                        self.callback()
             if not self.can_add_branch or self.leaf.can_add_leaf:
-                x, y = pygame.mouse.get_pos()
+
                 y -= self.plant.camera.offset_y
                 point, branch_id, point_id = self.curve.find_closest((x, y), True)
                 dist_to_stem = math.sqrt((x - point[0])**2 + (y - point[1])**2)
@@ -621,9 +628,7 @@ class Stem(Organ):
                     self.leaf.append_leaf(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[self.highlight[2]] = False
             elif self.flower.can_add_flower and self.dist_to_stem < 50:
-                print("flower")
                 if self.highlight:
-                    print("highlight")
                     self.flower.append_flower(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[self.highlight[2]] = False
             else:
@@ -665,7 +670,7 @@ class Stem(Organ):
             #self.new_curve.draw_highlights(screen)
             #for branch in self.branches:
             #    branch.draw_highlights(screen)
-            self.curve.draw_highlighted(screen)
+            self.curve.draw(screen, True)
         else:
             self.curve.draw(screen)
 
@@ -684,13 +689,7 @@ class Stem(Organ):
         pygame.draw.circle(screen, config.GREEN, (self.x-5, self.y+40),10)
 
     def get_rect(self):
-        if self.image:
-            x = (self.x - self.pivot[0] if self.pivot else self.x) -15
-            y = self.y - self.pivot[1] if self.pivot else self.y
-            rect = pygame.Rect(x, y+self.plant.camera.offset_y, self.image.get_width()+30, self.image.get_height())
-        else:
-            rect = pygame.Rect(0,0,0,0)
-        return [rect]
+        return self.curve.get_rects()
 
     # buffer is useful for a bigger hitbox, with same img borders
     def get_image_mask_x(self, pos, image):
@@ -748,7 +747,7 @@ class Starch(Organ):
         delta = self.starch_intake*dt
         if self.mass - delta < 0:
             self.mass = 0
-            self.toggle_button.deactivate()
+            # Todo deactivate start cons
         else:
             self.mass -= delta
 
@@ -757,12 +756,14 @@ class Starch(Organ):
 class Flower(Organ):
     def __init__(self, x, y, name, organ_type, callback, plant, images, mass, active):
         self.flowers = []
-        super().__init__(x, y, name, organ_type, plant=plant, mass=mass, active=active, thresholds=[1,2,3,4,5,6,7,8,9,10,20,30,40])
+        super().__init__(x, y, name, organ_type, plant=plant, mass=mass, active=active, thresholds=[1,2,3,10])
         self.callback = callback
         self.images = images
         self.base_mass = 1
         self.target_flower = 0
         self.can_add_flower = False
+        self.pollinated = False
+        self.flowering = False
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -776,11 +777,18 @@ class Flower(Organ):
                 for i in range(len(rects)):
                     if rects[i].collidepoint(mouse_pos):
                         self.target_flower = i
-        if event.type == KEYDOWN and event.key == K_l:
-            self.can_add_flower = True
 
     def activate_add_flower(self):
+        if self.flowering:
+            self.can_add_flower = True
         self.can_add_flower = True
+
+    def start_flowering(self):
+        if self.pollinated:
+            self.flowering = True
+
+    def pollinate(self):
+        self.pollinated = True
 
     def get_random_flower(self):
         if len(leaves) > 0:
@@ -793,19 +801,20 @@ class Flower(Organ):
         self.growth_rate = gram_mol * growth_rate
 
     def grow(self, dt):
-        if self.growth_rate <= 0:
+        if self.growth_rate <= 0 or not self.flowering:
             return
         # get leaf age, if too old -> stop growth, then die later
         growable_flowers = []
         for flower in self.flowers:
-            if flower["lifetime"]>flower["age"]:
+            id = int(flower["mass"]/flower["maximum_mass"]*(len(self.images)-1))
+            flower["image"] = self.images[id]
+            if flower["mass"] < flower["maximum_mass"]:
                 growable_flowers.append(flower)
             # if max age*2 -> kill leaf
 
         growth_per_flower = (self.growth_rate*dt)/len(growable_flowers) if len(growable_flowers) > 0 else 0
         for flower in growable_flowers:
             flower["mass"] += growth_per_flower
-            flower["age"] += 1*dt #seconds
 
         # age 0
         # max_age 1000
@@ -816,7 +825,16 @@ class Flower(Organ):
             self.reach_threshold()
 
     def get_mass(self):
-        return sum([leaf["mass"] for leaf in self.flowers])+self.base_mass # basemass for seedling leaves
+        return sum([leaf["mass"] for leaf in self.flowers])+self.base_mass  # basemass for seedling leaves
+
+    def get_flowering_flowers(self):
+        flowering_flowers = []
+        if not self.flowering:
+            return flowering_flowers
+        for flower in self.flowers:
+            if flower["mass"] < flower["maximum_mass"] and flower["flowering"]:
+                flowering_flowers.append(flower)
+        return flowering_flowers
 
     def append_flower(self, highlight):
         pos = highlight[0]
@@ -829,7 +847,8 @@ class Flower(Organ):
                 "offset_y": offset[1],
                 "image": image,
                 "mass": 0.0001,
-                "age": 0,
+                "flowering": True,
+                "maximum_mass": self.thresholds[-1],
                 "lifetime": 60*60*24*10, # 10 days of liefetime to grow
                 "growth_index": self.active_threshold} # to get relative size, depending on current threshold - init threshold
         self.update_flower_image(flower, init=True)
@@ -839,10 +858,6 @@ class Flower(Organ):
     def get_rect(self):
         return [flower["image"].get_rect(topleft=(flower["x"]-flower["offset_x"], flower["y"]-flower["offset_y"]+self.plant.camera.offset_y)) for flower in self.flowers]
 
-    # depending on the mean height of all leaves, 0 .. 1000, -> TODO: mass to PLA better
-    def get_mean_leaf_height(self):
-        return sum(self.y - leaf["y"] for leaf in self.flowers)/len(self.flowers) if len(self.flowers) > 0 else 0
-
     def update(self, dt):
         pass
 
@@ -851,18 +866,12 @@ class Flower(Organ):
             self.update_flower_image(flower, factor, base)
 
     def update_flower_image(self, flower, factor=7, base=80, init=False):
-        base_image = assets.img("flowers/flower.PNG")
-        ratio = base_image.get_height() / base_image.get_width()
-        threshold = self.active_threshold - flower["growth_index"] #if not init else 0
-        new_width = (threshold * factor) + base
-        new_height = int(new_width * ratio)
-        new_width = int(new_width)
-        flower["image"] = pygame.transform.scale(base_image, (new_width, new_height))
+        pass
 
     def draw(self, screen):
         if self.can_add_flower:
             x,y = pygame.mouse.get_pos()
-            screen.blit(assets.img("flowers/flower.PNG",(128,128)), (x,y-self.plant.camera.offset_y))
+            screen.blit(assets.img("sunflowers/2.PNG",(128,128)), (x,y-self.plant.camera.offset_y))
 
         for flower in self.flowers:
             screen.blit(flower["image"], (flower["x"]-flower["offset_x"], flower["y"]-flower["offset_y"]))
@@ -872,10 +881,23 @@ class Flower(Organ):
             outlines = self.get_outlines()
             for i in range(0,len(self.flowers)):
                 s = pygame.Surface((64, 64),pygame.SRCALPHA)
-                pygame.draw.lines(s, (255,255,255),True,outlines[i],2)
+                color = config.WHITE
+                if self.flowers[i]["mass"] >= self.flowers[i]["maximum_mass"]:
+                    color = config.GREEN
+                pygame.draw.lines(s, color,True,outlines[i],3)
                 #pygame.draw.rect(screen, (255, 255, 255), (rects[i][0],rects[i][1],rects[i][2],rects[i][3]), 2)
                 screen.blit(s, (self.flowers[i]["x"]-flower["offset_x"], self.flowers[i]["y"]-flower["offset_y"]))
 
+        # progress bar
+        if self.flowering:
+            for flower in self.flowers:
+                if flower["mass"] < flower["maximum_mass"]:
+                    width = flower["image"].get_width()
+                    percentage = flower["mass"]/flower["maximum_mass"]
+                    pygame.draw.rect(screen, config.WHITE, (flower["x"]-flower["offset_x"],flower["y"]-width/4-10-flower["offset_y"],width*percentage,width/4),border_radius=3)
+                    pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (flower["x"]-flower["offset_x"],flower["y"]-width/4-10-flower["offset_y"],width,width/4),2,3)
+                    percentage_label = config.SMALL_FONT.render("{:.0f}".format(percentage*100),True,config.BLACK)
+                    screen.blit(percentage_label, (flower["x"]-flower["offset_x"]+width/2-percentage_label.get_width()/2,flower["y"]-width/4-10-flower["offset_y"]))
 
     def get_outlines(self):
         outlines = []

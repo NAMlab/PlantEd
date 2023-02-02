@@ -2,7 +2,9 @@ import pygame
 from pygame.locals import *
 from data import assets
 from analysis.logger import Log
+from gameobjects.bee import Bee
 from gameobjects.plant import Plant
+from gameobjects.snail import Snail
 from utils.button import Button, Slider, ToggleButton, Textbox
 import os, sys
 from weather import Environment
@@ -10,6 +12,7 @@ from fba.dynamic_model import DynamicModel
 import config
 from utils.gametime import GameTime
 from datetime import datetime
+from gameobjects.tree import Tree
 from gameobjects.shop import Shop, Shop_Item, FloatingShopItem, FloatingShop
 from gameobjects.bug import Bug
 from ui import UI
@@ -197,7 +200,7 @@ class DefaultGameScene(object):
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
         self.shadow_map = None
-        self.ui = UI(1, self.plant, self.model, self.camera)
+        self.ui = UI(1, self.plant, self.model, self.environment, self.camera)
 
         '''example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
@@ -210,11 +213,33 @@ class DefaultGameScene(object):
         self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
 '''
         self.entities = []
+        self.special_bee = Bee((190 * random.randint(0, 10), random.randint(0, 800)),
+                      pygame.Rect(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT-200),
+                      [assets.img("bee/{}.PNG".format(i),(64,64)) for i in range(6)], self.camera, self.plant.organs[3].pollinate)
+        self.entities.append(self.special_bee)
+        for i in range(0, 5):
+            bee = Bee((190 * random.randint(0, 10), random.randint(0, 800)),
+                      pygame.Rect(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT-200),
+                      [assets.img("bee/{}.PNG".format(i),(64,64)) for i in range(6)], self.camera, self.plant.organs[3].pollinate)
+            self.entities.append(bee)
+
         for i in range(0, 10):
             bug = Bug((190 * random.randint(0, 10), 900 + random.randint(0, 200)),
                       pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
-                      [assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 5)], self.camera)
+                      [assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 3)], self.camera)
             self.entities.append(bug)
+
+        self.tree = Tree((1100,20),[(assets.img("tree/{index}.PNG".format(index=i),(1024,1024))) for i in range(0, 4)], self.environment)
+        #self.tree = Tree((1100,20),[assets.img("tree/1.PNG", (1024,1024))], self.environment)
+        #self.tree = Tree((1100,20),[assets.img("tree/2.PNG", (1024,1024))], self.environment)
+        #self.tree = Tree((1100,20),[assets.img("tree/3.PNG", (1024,1024))], self.environment)
+        self.entities.append(self.tree)
+
+        for i in range(0, 3):
+            snail = Snail((190 * random.randint(0, 10), 870 + random.randint(0, 10)),
+                      pygame.Rect(0, 870, config.SCREEN_WIDTH, 240),
+                      [assets.img("snail/{}.png".format(i)) for i in range(0, 3)], [assets.img("snail/{}.png".format(i)) for i in range(3, 6)], self.camera)
+            self.entities.append(snail)
         # self.ui.floating_elements.append(FloatingElement((500,500),Rect(400,400,200,200),image=assets.img("stomata/stomata_open.png")))
 
         # shop items are to be defined by the level
@@ -224,17 +249,29 @@ class DefaultGameScene(object):
                                   post_hover_message=self.ui.hover.set_message,
                                   message="Leaves enable your plant to produce energy.")
 
-        self.shop = Shop(Rect(1700, 120, 200, 290), [add_leaf_item], self.model, self.water_grid,
+        self.shop = Shop(Rect(1700, 120, 200, 450), [add_leaf_item], self.model, self.water_grid,
                          self.plant, post_hover_message=self.ui.hover.set_message, active=False)
 
         self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.PNG", (64, 64)),
                                               self.shop.root_item.activate,
                                               condition=self.plant.organs[2].check_can_add_root,
-                                              condition_not_met_message="Level up your roots to buy more leaves",
+                                              condition_not_met_message="Level up any organ to get more green thumbs",
                                               post_hover_message=self.ui.hover.set_message,
-                                              message="Roots are to improve water and nitrate intake."))
+                                              message="Roots are grown to improve water and nitrate intake."))
 
-        self.shop.add_shop_item(["watering", "blue_grain"])
+        self.shop.shop_items.append(Shop_Item(assets.img("root_lateral.PNG", (64, 64)),
+                                              self.plant.organs[1].activate_add_branch,
+                                              condition_not_met_message="Level up any organ to get more green thumbs",
+                                              post_hover_message=self.ui.hover.set_message,
+                                              message="Branches will provide more spots for leaves or flowers."))
+
+        self.shop.shop_items.append(Shop_Item(assets.img("sunflowers/1.PNG", (64, 64)),
+                                              self.plant.organs[3].activate_add_flower,
+                                              condition_not_met_message="Level up any organ to get more green thumbs",
+                                              post_hover_message=self.ui.hover.set_message,
+                                              message="Flowers will enable you to start seed production."))
+
+        self.shop.add_shop_item(["watering", "blue_grain","spraycan"])
 
         self.floating_shop = FloatingShop((0,0))
         add_leaf_item_floating = FloatingShopItem((0,0),self.activate_add_leaf,assets.img("leaf_small.PNG",(64,64)),
@@ -290,10 +327,17 @@ class DefaultGameScene(object):
                 if starch_percent < 0:
                     starch_percent = 0
 
-                # print(leaf_percent, stem_percent, root_percent, starch_percent)
-                self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent)
+                flowering_flowers = self.plant.organs[3].get_flowering_flowers()
+                flower_percent = 0
+                # Todo fix percentages
+                for flower in flowering_flowers:
+                    flower_percent = 100
+                    root_percent = 0
 
-                leaf_rate, stem_rate, root_rate, starch_rate, starch_intake = self.model.get_rates()
+                # print(leaf_percent, stem_percent, root_percent, starch_percent)
+                self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent, flower_percent)
+
+                leaf_rate, stem_rate, root_rate, starch_rate, starch_intake, seed_rate = self.model.get_rates()
                 nitrate_pool = self.model.nitrate_pool
                 water_pool = self.water_grid.water_pool
                 # self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
@@ -307,6 +351,15 @@ class DefaultGameScene(object):
                 self.toggle_pause()
             if e.type == KEYDOWN and e.key == K_o:
                 self.floating_shop.activate((500,500))
+            if e.type == KEYDOWN and e.key == K_k:
+                #self.ui.init_flowering_ui()
+                self.plant.organs[3].start_flowering()
+            if e.type == KEYDOWN and e.key == K_h:
+                #self.ui.init_flowering_ui()
+                flower_pos = (self.plant.organs[3].flowers[0]["x"]+self.plant.organs[3].flowers[0]["offset_x"]/2,self.plant.organs[3].flowers[0]["y"]+self.plant.organs[3].flowers[0]["offset_y"]/2-20)
+                self.special_bee.target_flower(flower_pos)
+                self.special_bee.speed = 10
+                print(self.special_bee.dir)
             if e.type == KEYDOWN and e.key == K_p:
                 NITRATE = "Nitrate_tx_root"
                 WATER = "H2O_tx_root"
@@ -360,6 +413,9 @@ class DefaultGameScene(object):
                 entity.handle_event(e)
             self.camera.handle_event(e)
 
+    def check_game_end(self, days):
+        if days > config.MAX_DAYS:
+            pygame.event.post(pygame.event.Event(WIN))
     def update(self, dt):
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
@@ -391,7 +447,7 @@ class DefaultGameScene(object):
 
         self.model.update(dt, self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.get_PLA(),
                           max(self.environment.get_sun_intensity(), 0),
-                          self.water_grid.max_drain_rate, self.plant.get_biomass())
+                          self.water_grid.max_drain_rate, self.plant.get_biomass(), self.environment.get_r_humidity() , self.environment.get_temperature())
 
     def render(self, screen):
         screen.fill((0, 0, 0))

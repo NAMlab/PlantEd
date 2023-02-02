@@ -53,15 +53,18 @@ class Cubic_Tree:
                 branch_id = i
         return closest_point, branch_id, shortest_point_id  # point, branch_id, point_id
 
-    def draw(self, screen):
+    def draw(self, screen, highlighted=False):
         #self.branches[0].draw(screen, tapering=True)
         for i in range(0,len(self.branches)):
-            self.branches[i].draw(screen, tapering=True)
+            self.branches[i].draw(screen, highlighted)
 
-    def draw_highlighted(self, screen):
-        #self.branches[0].draw_highlight(screen, tapering=True)
-        for i in range(0, len(self.branches)):
-            self.branches[i].draw_highlights(screen, tapering=True)
+    def get_rects(self):
+        rects = []
+        for branch in self.branches:
+            branch_rects = branch.get_rects()
+            for rect in branch_rects:
+                rects.append(rect)
+        return rects
 
     def toggle_move(self):
         for branch in self.branches:
@@ -111,6 +114,12 @@ class Cubic:
         self.free_spots.append(True)
         self.new_curve = self.get_curve()
         self.growth_percentage = 0
+
+    def get_rects(self):
+        rects = []
+        for point in self.curve:
+            rects.append(pygame.Rect(point[0]-10,point[1]-10,20,20))
+        return rects
 
     def enable_offset(self):
         self.move_offset = True
@@ -195,7 +204,7 @@ class Cubic:
         else:
             return self.points[id-1]
 
-    def draw(self, screen, tapering=False):
+    def draw(self, screen, highlighted):
         if self.drag:
             pygame.draw.circle(screen, config.WHITE,self.offsets[self.id],80,2)
         if self.growth_percentage < 1:
@@ -205,26 +214,20 @@ class Cubic:
         if self.move_offset:
             for point in self.points:
                 pygame.draw.circle(screen, config.WHITE, point, 15, 2)
-        if tapering:
-            self.draw_tapering(screen, points)
-        else:
-            self.draw_straight(screen, points)
+        self.draw_tapering(screen, points, highlighted)
 
-    def draw_tapering(self, screen, points):
+    def draw_tapering(self, screen, points, highlighted):
         length = np.shape(points)[0]
         half = length/2
         for i in range(1,length):
             tapering = 0
             if i < half:
                 tapering = self.width / half
+            if highlighted:
+                pygame.draw.line(screen, config.WHITE, (points[i - 1][0] + 1, points[i - 1][1]), points[i],
+                                 width=int(self.width+4 - (half - i) * tapering))
             pygame.draw.line(screen, self.color, (points[i-1][0]+0, points[i-1][1]),points[i],width=int(self.width-(half-i)*tapering))
             pygame.draw.line(screen, self.color, (points[i-1][0]+1, points[i-1][1]),points[i],width=int(self.width-(half-i)*tapering))
-
-    def draw_straight(self, screen, points):
-        pygame.draw.lines(screen, self.color, False, points,self.width)
-
-    def draw_highlights(self, screen):
-        pass
 
     def find_closest(self, pos, free_spots_only=False, without_top=False):
         min_dist = 10000

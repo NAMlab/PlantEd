@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
 from utils.particle import ParticleSystem, StillParticles
-from utils.animation import OneShotAnimation, Animation
+from utils.animation import Animation
 import numpy as np
 import random
 import config
@@ -37,6 +37,7 @@ class Environment:
         self.s = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         self.w = SCREEN_WIDTH
         self.model = model
+        self.season = config.spring
         self.water_grid = water_grid
         self.gametime = gametime
         self.background = assets.img("soil.PNG").convert_alpha()
@@ -55,7 +56,7 @@ class Environment:
         self.activate_hawk = activate_hawk
         self.sprites = pygame.sprite.Group()
         rain_images = [assets.img("gif_rain/frame_{index}_delay-0.05s.png".format(index=i)) for i in range(0,21)]
-        self.animations = [Animation(rain_images,120,(480,0),running=False)]
+        self.animations = [Animation(rain_images,10,(480,0),running=False)]
         self.weather_events = []
         self.state = SUN # mask for weather 0sun,1rain,2cloud
         self.star_pos_size = [((random.randint(0,SCREEN_WIDTH), random.randint(0,SCREEN_HEIGHT/2)), random.randint(0,10)) for i in range(0,50)]
@@ -87,7 +88,7 @@ class Environment:
     def update(self, dt):
         #self.sun_pos_spline.update(dt)
         for animation in self.animations:
-            animation.update()
+            animation.update(dt)
         self.handle_weather_events()
         #self.rain.update(dt)
         self.nitrate.update(dt)
@@ -100,10 +101,37 @@ class Environment:
         if day_time > 0 and day_time < 1:
             self.sunpos = self.sun_pos_spline[(int(day_time * 10000) - 1)]
             self.plant.organs[1].sunpos = self.sunpos
+
+        days, hours, minutes = self.get_day_time()
+
+
+        # spring
+        if days < config.MAX_DAYS/6:
+            self.season = config.spring
+
+        # summer
+        elif days < config.MAX_DAYS/3*2:
+            self.season = config.summer
+
+        # fall
+        elif days < config.MAX_DAYS:
+            self.season = config.fall
+
+        else:
+            self.season = config.winter
+
         #sun_intensity = self.get_sun_intensity()
         #x = (self.sun_pos_night[0] + (self.sun_pos_noon[0] - self.sun_pos_night[0]) * sun_intensity)
         #y = (self.sun_pos_night[1] + (self.sun_pos_noon[1] - self.sun_pos_night[1]) * sun_intensity)
         #self.sun_pos = (x, y)
+
+    def get_r_humidity(self):
+        days, hours, minutes = self.get_day_time()
+        return config.get_y(hours, config.humidity)
+
+    def get_temperature(self):
+        days, hours, minutes = self.get_day_time()
+        return config.get_y(hours, self.season)
 
     def calc_shadowmap(self, leaves, sun_dir=(0.5, 1), resolution=10):
         width = config.SCREEN_WIDTH
@@ -276,9 +304,5 @@ class Environment:
         return -(np.sin(np.pi/2-np.pi/5+((self.gametime.get_time()/(1000 * 60 * 60 * 24)) * np.pi*2)))  # get time since start, convert to 0..1, 6 min interval
 
     def get_day_time_t(self):
-
         return ((((self.gametime.get_time()/(1000*60*60*24))+0.5-0.333)%1)*2-1)
-
-    def add_animation(self, images, duration, pos, speed=1):
-        self.sprites.add(OneShotAnimation(images, duration, pos, speed))
 

@@ -13,7 +13,7 @@ class Bug():
         self.images = images
         self.camera = camera
         self.image = image if image else self.images[0]
-        self.animation = Animation(self.images, 720)
+        self.animation = Animation(self.images, 1)
         self.speed = speed
         self.rect = self.image.get_rect()
         self.dir = (0,0)
@@ -28,7 +28,7 @@ class Bug():
                 self.pause_timer = 360
             self.move(dt)
             if self.animation:
-                self.animation.update()
+                self.animation.update(dt)
 
     def handle_event(self, e):
         if e.type == pygame.MOUSEBUTTONDOWN:
