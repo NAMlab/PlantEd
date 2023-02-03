@@ -1,4 +1,6 @@
 import pygame
+
+from client.growth_rates import GrowthRates
 from gameobjects.plant import Plant
 from utils.gametime import GameTime
 from utils.button import DoubleRadioButton, RadioButton, ToggleButton, Button, Slider, SliderGroup, Arrow_Button, \
@@ -34,12 +36,24 @@ preset = {"leaf_slider" : 0,
           "consume_starch" : False}
 
 class UI:
-    def __init__(self, scale, plant, model, environment, camera, production_topleft=(10,100), plant_details_topleft=(10,10),
-                 organ_details_topleft=(10,430), dev_mode=False):
+    def __init__(self,
+                 scale,
+                 plant,
+                 model,
+                 growth_rates: GrowthRates,
+                 environment,
+                 camera,
+                 production_topleft=(10,100),
+                 plant_details_topleft=(10,10),
+                 organ_details_topleft=(10,430),
+                 dev_mode=False):
+
+
         self.name = config.load_options(config.OPTIONS_PATH)["name"]
         self.name_label = config.FONT.render(self.name,True,config.BLACK)
         self.plant = plant
         self.model = model
+        self.growth_rates: GrowthRates = growth_rates
         self.environment = environment
         self.gametime = GameTime.instance()
 
@@ -271,8 +285,9 @@ class UI:
         screen.blit(self.s, (0, 0))
 
     def draw_energy_meter(self, screen):
-        rates = self.model.get_rates()
-        sum_rates = sum(rates)-rates[4]-rates[3]
+        rates = self.growth_rates
+        sum_rates = sum(rates)-rates.starch_intake-rates.starch_rate
+
         width = 500
 
         # leaf_rate, self.stem_rate, root_rate, starch_rate, starch_intake, seed_rate)

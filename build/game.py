@@ -6,6 +6,8 @@ import websockets
 from pygame.locals import *
 
 from client.client import Client
+from client.growth_percentage import GrowthPercent
+from client.growth_rates import GrowthRates
 from data import assets
 from analysis.logger import Log
 from gameobjects.bee import Bee
@@ -60,7 +62,7 @@ SKY_BLUE = (169, 247, 252)
 plant = None
 
 import logging
-logging.basicConfig(filename='log.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='log.log', filemode='w', encoding='utf-8', level=logging.DEBUG)
 
 def shake():
     s = -1  # looks unnecessary but maybe cool, int((random.randint(0,1)-0.5)*2)
@@ -210,6 +212,7 @@ class DefaultGameScene(object):
         self.plant = Plant((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5), self.model,
                            self.camera, self.water_grid, growth_boost=1)
         plant = self.plant
+        model = self.model
 
         logging.info("Starting Server and client")
         self.server = Server()
@@ -217,7 +220,7 @@ class DefaultGameScene(object):
         self.server_thread = threading.Thread(
             target=self.server.start,
             daemon=True,
-            args=(plant, )
+            args=(plant, model, )
         )
         logging.info("Server started  2")
         self.server_thread.start()
@@ -230,7 +233,15 @@ class DefaultGameScene(object):
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
         self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
         self.shadow_map = None
-        self.ui = UI(1, self.plant, self.model, self.environment, self.camera)
+
+        growth_rates = GrowthRates(0, 0, 0, 0, 0, 0)
+        self.ui = UI(scale=1,
+                     plant=self.plant,
+                     model=self.model,
+                     environment=self.environment,
+                     camera=self.camera,
+                     growth_rates=growth_rates,
+                     )
 
         '''example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
                                      callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
@@ -352,9 +363,6 @@ class DefaultGameScene(object):
             if e.type == GROWTH:
                 logging.info ( self.client.growth())
 
-                leaf_percent = self.plant.organs[0].percentage
-                stem_percent = self.plant.organs[1].percentage
-                root_percent = self.plant.organs[2].percentage
                 starch_percent = self.plant.organ_starch.percentage
                 if starch_percent < 0:
                     starch_percent = 0
@@ -367,18 +375,38 @@ class DefaultGameScene(object):
                     root_percent = 0
 
                 # print(leaf_percent, stem_percent, root_percent, starch_percent)
-                self.model.calc_growth_rate(leaf_percent, stem_percent, root_percent, starch_percent, flower_percent)
 
-                leaf_rate, stem_rate, root_rate, starch_rate, starch_intake, seed_rate = self.model.get_rates()
+                growth_percent = GrowthPercent(
+                    leaf= self.plant.organs[0].percentage,
+                    stem= self.plant.organs[1].percentage,
+                    root= self.plant.organs[2].percentage,
+                    starch= self.plant.organ_starch.percentage,
+                    flower= self.plant.organs[3].percentage,
+                )
+
+                growth_rates = self.client.growth_rate(data= growth_percent)
+                self.ui.growth_rates = growth_rates
+
+
                 nitrate_pool = self.model.nitrate_pool
                 water_pool = self.water_grid.water_pool
                 # self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
                 # self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
-                self.log.append_row(leaf_rate, stem_rate, root_rate, starch_rate, self.gametime.get_time(),
-                                    self.gametime.GAMESPEED, water_pool, nitrate_pool,
-                                    self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass,
+                self.log.append_row(growth_rates.leaf_rate,
+                                    growth_rates.stem_rate,
+                                    growth_rates.root_rate,
+                                    growth_rates.starch_rate,
+                                    self.gametime.get_time(),
+                                    self.gametime.GAMESPEED,
+                                    water_pool,
+                                    nitrate_pool,
+                                    self.plant.organs[0].mass,
+                                    self.plant.organs[1].mass,
+                                    self.plant.organs[2].mass,
                                     self.plant.organ_starch.mass)
-                self.plant.update_growth_rates(self.model.get_rates())
+                self.plant.update_growth_rates(growth_rates)
+
+
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
             if e.type == KEYDOWN and e.key == K_o:

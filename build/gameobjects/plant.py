@@ -1,5 +1,7 @@
 import random
 import pygame
+
+from client.growth_rates import GrowthRates
 from data import assets
 from utils.spline import Beziere, Cubic, Cubic_Tree
 import config
@@ -64,17 +66,20 @@ class Plant:
 
 
     # convert flux/mikromol to gramm
-    def update_growth_rates(self, growth_rates):
+    def update_growth_rates(self, growth_rates:GrowthRates):
         sum_rates = sum(growth_rates)
         if self.get_biomass() > 4 and sum_rates <= 0:
             self.danger_mode = True
         else:
             self.danger_mode = False
-        for i in range(0, 3):
-            self.organs[i].update_growth_rate((growth_rates[i]))
-        self.organ_starch.update_growth_rate(growth_rates[3])
-        self.organ_starch.starch_intake = growth_rates[4]
-        self.organs[3].update_growth_rate(growth_rates[5])
+
+        self.organs[0].update_growth_rate(growth_rates.leaf_rate)
+        self.organs[1].update_growth_rate(growth_rates.stem_rate)
+        self.organs[2].update_growth_rate(growth_rates.root_rate)
+
+        self.organ_starch.update_growth_rate(growth_rates.starch_rate)
+        self.organ_starch.starch_intake = growth_rates.starch_intake
+        self.organs[3].update_growth_rate(growth_rates.seed_rate)
 
     def get_biomass(self):
         biomass = 0

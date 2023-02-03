@@ -1,6 +1,10 @@
+import logging
+
 import cobra
 import config
 import os
+
+from client.growth_rates import GrowthRates
 from fba.helpers import (
     update_objective,
     create_objective,
@@ -70,7 +74,7 @@ class DynamicModel:
         self.stem_rate = 0
         self.leaf_rate = 0
         self.starch_rate = 0
-        self.percentages = [0,0,0,0]
+        self.percentages = [0,0,0,0] # ToDo Wird mit 4 int init aber bei update 5 zugewiesen s. Zeile 95
         self.init_constraints()
         self.calc_growth_rate(0.1,0.1,1,0.1,0)
 
@@ -92,8 +96,9 @@ class DynamicModel:
         new_percentages = [leaf_percent, stem_percent, root_percent, starch_percent, flower_percent]
         for i in range(0, len(self.percentages)):
             if self.percentages[i] != new_percentages[i]:
+                logging.info("Updating the model objectives.")
                 update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent, flower_percent)
-                self.percentages = new_percentages
+                self.percentages = new_percentages # ToDo Wird mit 4 int init aber bei update 5 zugewiesen s. Zeile 73
                 break
         solution = self.model.optimize()
 
@@ -136,9 +141,29 @@ class DynamicModel:
         self.stomata_open = False
         self.set_bounds(CO2, (-1000,0))
 
-    def get_rates(self):
+    def get_rates(self) -> GrowthRates:
         gamespeed = self.gametime.GAMESPEED
-        return (self.leaf_rate*gamespeed*FLUX_TO_GRAMM, self.stem_rate*gamespeed*FLUX_TO_GRAMM, self.root_rate*gamespeed*FLUX_TO_GRAMM, self.starch_rate*gamespeed, self.starch_intake*gamespeed, self.seed_rate*gamespeed)
+
+        leaf = self.leaf_rate*gamespeed*FLUX_TO_GRAMM
+        stem = self.stem_rate*gamespeed*FLUX_TO_GRAMM
+        root = self.root_rate*gamespeed*FLUX_TO_GRAMM
+        starch = self.starch_rate*gamespeed
+        starch_intake = self.starch_intake*gamespeed
+        seed = self.seed_rate*gamespeed
+
+        logging.info("Returning following growth rates:\n"
+                     f"leaf: {leaf}, stem {stem}, root {root}, starch: {starch}, starch_intake {starch_intake}, seed {seed}")
+
+        growth_rates = GrowthRates(
+            leaf_rate= leaf,
+            stem_rate= stem,
+            root_rate= root,
+            starch_rate= starch,
+            starch_intake= starch_intake,
+            seed_rate= seed,
+
+        )
+        return growth_rates
 
     def get_absolute_rates(self):
         forced_ATP = (
