@@ -239,7 +239,7 @@ class Environment:
         #for animation in self.animations:
         #    s.blit(animation.image, animation.pos)
         screen.blit(self.s, (0, 0))
-        screen.blit(self.background, (0,-140))
+
 
         #if self.model.water_pool > 0:
         #    pygame.draw.circle(s, (50, 40, 20, min(int(self.model.water_pool / self.model.max_water_pool * 32), 255)),
@@ -255,6 +255,7 @@ class Environment:
     def draw_foreground(self, screen):
         #self.draw_clock(screen)
         #self.rain.draw(screen)
+        screen.blit(self.background, (0, -140))
         self.nitrate.draw(screen)
         self.sprites.draw(screen)
         for animation in self.animations:

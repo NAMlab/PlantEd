@@ -229,11 +229,11 @@ class DefaultGameScene(object):
                       [assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 3)], self.camera)
             self.entities.append(bug)
 
-        self.tree = Tree((1100,20),[(assets.img("tree/{index}.PNG".format(index=i),(1024,1024))) for i in range(0, 4)], self.environment)
+        self.tree = Tree((1300,100),[(assets.img("tree/{index}.PNG".format(index=i),(800,800))) for i in range(0, 4)], self.environment)
         #self.tree = Tree((1100,20),[assets.img("tree/1.PNG", (1024,1024))], self.environment)
         #self.tree = Tree((1100,20),[assets.img("tree/2.PNG", (1024,1024))], self.environment)
         #self.tree = Tree((1100,20),[assets.img("tree/3.PNG", (1024,1024))], self.environment)
-        self.entities.append(self.tree)
+        #self.entities.append(self.tree)
 
         for i in range(0, 3):
             snail = Snail((190 * random.randint(0, 10), 870 + random.randint(0, 10)),
@@ -406,6 +406,7 @@ class DefaultGameScene(object):
             self.ui.handle_event(e)
             self.shop.handle_event(e)
             self.floating_shop.handle_event(e)
+            self.tree.handle_event(e)
 
             self.plant.handle_event(e)
             # self.environment.handle_event(e)
@@ -445,6 +446,8 @@ class DefaultGameScene(object):
         if self.plant.seedling.max < self.plant.get_biomass():
             self.shop.active = True
 
+        self.tree.update(dt)
+
         self.model.update(dt, self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.get_PLA(),
                           max(self.environment.get_sun_intensity(), 0),
                           self.water_grid.max_drain_rate, self.plant.get_biomass(), self.environment.get_r_humidity() , self.environment.get_temperature())
@@ -458,12 +461,14 @@ class DefaultGameScene(object):
             return
 
         self.environment.draw_background(temp_surface)
+        self.tree.draw(temp_surface)
+
+
+        self.environment.draw_foreground(temp_surface)
 
         for entity in self.entities:
             entity.draw(temp_surface)
         self.plant.draw(temp_surface)
-
-        self.environment.draw_foreground(temp_surface)
         self.water_grid.draw(temp_surface)
         self.floating_shop.draw(temp_surface)
         self.shop.draw(temp_surface)
