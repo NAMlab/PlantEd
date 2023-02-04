@@ -40,6 +40,9 @@ MAX_WATER_POOL_CONSUMPTION = 1
 
 FLUX_TO_GRAMM = 0.002299662183
 
+logger = logging.getLogger(__name__)
+
+
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
     def __init__(self, gametime, water_grid=None, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/PlantEd_model.sbml")):
@@ -122,8 +125,12 @@ class DynamicModel:
 
 
     def open_stomata(self):
+        logger.info("Opening stomata")
         self.stomata_open = True
-        self.set_bounds(CO2, (-1000,1000))
+
+        bounds = (-1000,1000)
+        self.set_bounds(CO2, bounds)
+        logger.debug(f"CO2 bounds set to {bounds}")
 
     def update_transpiration_factor(self, RH, T):
         K = 291.18
@@ -138,8 +145,12 @@ class DynamicModel:
         self.transpiration_factor = K * (In_Concentration - Out_Concentration * RH)
 
     def close_stomata(self):
+        logger.info("Closing stomata")
         self.stomata_open = False
-        self.set_bounds(CO2, (-1000,0))
+
+        bounds = (-1000,0)
+        self.set_bounds(CO2, bounds)
+        logger.debug(f"CO2 bounds set to {bounds}")
 
     def get_rates(self) -> GrowthRates:
         gamespeed = self.gametime.GAMESPEED
@@ -207,12 +218,25 @@ class DynamicModel:
         self.stomata_hours = hours
 
     def activate_starch_resource(self, percentage=1):
+        logger.info("Activating starch resource")
+
         self.use_starch = True
-        self.set_bounds(STARCH_IN, (0, self.starch_intake_max*(percentage/100)))
+
+        bounds = (0, self.starch_intake_max*(percentage/100))
+        self.set_bounds(STARCH_IN, bounds)
+
+        logger.debug(f"Set use_starch to {self.use_starch} "
+                     f"and STARCH_IN to {bounds}")
+
 
     def deactivate_starch_resource(self):
+        logger.info("Deactivating starch resource")
+
         self.use_starch = False
-        self.set_bounds(STARCH_IN, (0, 0))
+        bounds = (0, 0)
+        self.set_bounds(STARCH_IN, bounds)
+        logger.debug(f"Set use_starch to {self.use_starch} "
+                     f"and STARCH_IN to {bounds}")
 
     def update(self, dt, leaf_mass, stem_mass, root_mass, PLA, sun_intensity, max_water_drain, plant_mass, RH, T):
         normalize(self.model, root_mass, stem_mass, leaf_mass, 1)

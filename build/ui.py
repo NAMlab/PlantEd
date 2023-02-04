@@ -1,5 +1,6 @@
 import pygame
 
+from client.client import Client
 from client.growth_rates import GrowthRates
 from gameobjects.plant import Plant
 from utils.gametime import GameTime
@@ -39,7 +40,7 @@ class UI:
     def __init__(self,
                  scale,
                  plant,
-                 model,
+                 client:Client,
                  growth_rates: GrowthRates,
                  environment,
                  camera,
@@ -48,11 +49,10 @@ class UI:
                  organ_details_topleft=(10,430),
                  dev_mode=False):
 
-
         self.name = config.load_options(config.OPTIONS_PATH)["name"]
         self.name_label = config.FONT.render(self.name,True,config.BLACK)
         self.plant = plant
-        self.model = model
+        self.client = client
         self.growth_rates: GrowthRates = growth_rates
         self.environment = environment
         self.gametime = GameTime.instance()
@@ -241,37 +241,43 @@ class UI:
         self.button_array.update(hours)
         hours = (int) (hours/2)
         open = self.stomata_hours[hours]
-        if open and self.model.stomata_open is False:
+        if open and self.plant.stromata_open is False:
             self.open_stomata()
             self.button_array.go_green()
-        if not open and self.model.stomata_open is True:
+        if not open and self.plant.stromata_open is True:
             self.close_stomata()
             self.button_array.go_red()
 
 
     def open_stomata(self):
-        self.model.open_stomata()
+        self.client.open_stomata()
+        self.plant.stomata_open = True
         self.open_stomata_particle_in.activate()
         self.open_stomata_particle_out.activate()
 
     def close_stomata(self):
-        self.model.close_stomata()
+        self.client.close_stomata()
+        self.plant.stomata_open = False
         self.open_stomata_particle_in.deactivate()
         self.open_stomata_particle_out.deactivate()
 
     def toggle_stomata(self):
-        if self.model.stomata_open == True:
+        if self.plant.stomata_open:
             self.close_stomata()
         else:
             self.open_stomata()
 
     def toggle_starch_as_resource(self):
-        if self.model.use_starch:
+        if self.plant.use_starch:
             self.drain_starch_particle.deactivate()
-            self.model.deactivate_starch_resource()
+            self.plant.use_starch = False
+
+            self.client.deactivate_starch_resource()
         else:
             self.drain_starch_particle.activate()
-            self.model.activate_starch_resource()
+            self.plant.use_starch = True
+
+            self.client.activate_starch_resource()
 
     def draw_ui(self, screen):
         # new surface to get alpha
@@ -548,12 +554,15 @@ class UI:
         s.blit(self.label_water, dest=(topleft[0] + 70 - self.label_water.get_width() / 2, topleft[1]))
 
         width = 140
-        water_percentage = self.model.water_pool/self.model.max_water_pool
+
+        water = self.client.get_water_pool()
+
+        water_percentage = water.water_pool/water.max_water_pool
         pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1] + 40, width, 30),
                          border_radius=3)
         pygame.draw.rect(s, config.BLUE, (topleft[0], topleft[1] + 40, int(width*water_percentage),30),
                          border_radius=3)  # exp
-        text_water_pool = config.FONT.render("{:.0f} MMol".format(self.model.water_pool/1000), True, (0, 0, 0))
+        text_water_pool = config.FONT.render("{:.0f} MMol".format(water.water_pool/1000), True, (0, 0, 0))
         s.blit(text_water_pool, dest=(topleft[0]+width/2-text_water_pool.get_width()/2, topleft[1]+45))  # Todo change x, y
 
 

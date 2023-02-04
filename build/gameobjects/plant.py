@@ -44,6 +44,8 @@ class Plant:
         self.y = pos[1]
         self.upgrade_points = upgrade_points
         self.model = model
+        self.stromata_open = True,
+        self.use_starch = True
         self.camera = camera
         self.water_grid = water_grid
         self.growth_boost = growth_boost

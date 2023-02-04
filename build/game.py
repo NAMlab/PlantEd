@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import threading
 
@@ -62,7 +63,7 @@ SKY_BLUE = (169, 247, 252)
 plant = None
 
 import logging
-logging.basicConfig(filename='log.log', filemode='w', encoding='utf-8', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def shake():
     s = -1  # looks unnecessary but maybe cool, int((random.randint(0,1)-0.5)*2)
@@ -214,20 +215,20 @@ class DefaultGameScene(object):
         plant = self.plant
         model = self.model
 
-        logging.info("Starting Server and client")
+        logger.info("Starting Server and client")
         self.server = Server()
-        logging.info("Server started 1")
+        logger.info("Server started 1")
         self.server_thread = threading.Thread(
             target=self.server.start,
             daemon=True,
             args=(plant, model, )
         )
-        logging.info("Server started  2")
+        logger.info("Server started  2")
         self.server_thread.start()
-        logging.info("Server started  3")
+        logger.info("Server started  3")
         self.client = Client()
 
-        logging.info("Client started")
+        logger.info("Client started")
 
         self.water_grid.add_base_water(
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
@@ -237,7 +238,7 @@ class DefaultGameScene(object):
         growth_rates = GrowthRates(0, 0, 0, 0, 0, 0)
         self.ui = UI(scale=1,
                      plant=self.plant,
-                     model=self.model,
+                     client=self.client,
                      environment=self.environment,
                      camera=self.camera,
                      growth_rates=growth_rates,
@@ -361,7 +362,7 @@ class DefaultGameScene(object):
                 self.pause_button_resume.handle_event(e)
                 self.pause_button_exit.handle_event(e)
             if e.type == GROWTH:
-                logging.info ( self.client.growth())
+                logger.info ( self.client.growth())
 
                 starch_percent = self.plant.organ_starch.percentage
                 if starch_percent < 0:
@@ -771,5 +772,19 @@ def main():
         # camera.render(screen)
         pygame.display.update()
 
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--loglevel", type=str, default="WARNING", metavar='',
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        help="Set the detail of the log events (default: %(default)s)")
+
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        level=args.loglevel,
+        format='%(asctime)s %(name)s %(levelname)s:%(message)s',
+        datefmt='%H:%M:%S',
+    )
+
     main()
