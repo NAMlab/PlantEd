@@ -1,9 +1,10 @@
 import logging
+from pathlib import Path
 
 import cobra
-import config
 import os
 
+from client.growth_percentage import GrowthPercent
 from client.growth_rates import GrowthRates
 from fba.helpers import (
     update_objective,
@@ -40,13 +41,24 @@ MAX_WATER_POOL_CONSUMPTION = 1
 
 FLUX_TO_GRAMM = 0.002299662183
 
+water_concentration_at_temp = [0.269,0.288,0.309,0.33,0.353,0.378,0.403,0.431,0.459,0.49,0.522,0.556,0.592,
+                               0.63,0.67,0.713,0.757,0.804,0.854,0.906,0.961,1.018,1.079,1.143,
+                               1.21,1.28,1.354,1.432,1.513,1.598,1.687,1.781,1.879,1.981,2.089,2.201,2.318,2.441,2.569,2.703]
+
 logger = logging.getLogger(__name__)
+
+script_dir = Path( __file__ ).parent.absolute()
 
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
-    def __init__(self, gametime, water_grid=None, log=None, plant_mass=None, model=cobra.io.read_sbml_model("fba/PlantEd_model.sbml")):
-        self.model = model
+    def __init__(self,
+                 gametime,
+                 water_grid=None,
+                 log=None,
+                 plant_mass=None,
+                 model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml")):
+        self.model = model.copy()
         self.gametime = gametime
         self.water_grid = water_grid
         self.plant_mass = plant_mass
@@ -77,7 +89,7 @@ class DynamicModel:
         self.stem_rate = 0
         self.leaf_rate = 0
         self.starch_rate = 0
-        self.percentages = [0,0,0,0] # ToDo Wird mit 4 int init aber bei update 5 zugewiesen s. Zeile 95
+        self.percentages = GrowthPercent(0,0,0,0,0)
         self.init_constraints()
         self.calc_growth_rate(0.1,0.1,1,0.1,0)
 
@@ -96,13 +108,20 @@ class DynamicModel:
         nadhp = 0.00256 /24
 
     def calc_growth_rate(self, leaf_percent, stem_percent, root_percent, starch_percent, flower_percent):
-        new_percentages = [leaf_percent, stem_percent, root_percent, starch_percent, flower_percent]
-        for i in range(0, len(self.percentages)):
-            if self.percentages[i] != new_percentages[i]:
-                logging.info("Updating the model objectives.")
-                update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent, flower_percent)
-                self.percentages = new_percentages # ToDo Wird mit 4 int init aber bei update 5 zugewiesen s. Zeile 73
-                break
+
+        new_percentages: GrowthPercent = GrowthPercent(
+            leaf = leaf_percent,
+            stem = stem_percent,
+            root = root_percent,
+            starch = starch_percent,
+            flower = flower_percent,
+        )
+
+        if new_percentages != self.percentages:
+            logger.info("Updating the model objectives.")
+            update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent, flower_percent)
+            self.percentages = new_percentages
+
         solution = self.model.optimize()
 
         # calc_rates 1flux/s
@@ -140,8 +159,8 @@ class DynamicModel:
         hours = (ticks % day) / hour
         #RH = config.get_y(hours, config.humidity)
         #T = config.get_y(hours, config.summer)
-        In_Concentration = config.water_concentration_at_temp[int(T + 2)]
-        Out_Concentration = config.water_concentration_at_temp[int(T)]
+        In_Concentration = water_concentration_at_temp[int(T + 2)]
+        Out_Concentration = water_concentration_at_temp[int(T)]
         self.transpiration_factor = K * (In_Concentration - Out_Concentration * RH)
 
     def close_stomata(self):

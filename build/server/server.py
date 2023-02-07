@@ -3,6 +3,8 @@
 import asyncio
 import json
 import logging
+import threading
+from typing import Optional
 
 import websockets
 from websockets.legacy.server import WebSocketServerProtocol
@@ -10,7 +12,6 @@ from websockets.legacy.server import WebSocketServerProtocol
 from client.growth_percentage import GrowthPercent
 from client.water import Water
 from fba.dynamic_model import DynamicModel
-from gameobjects.plant import Plant
 
 logger = logging.getLogger(__name__)
 
@@ -20,44 +21,76 @@ class Server:
     A server that provides all necessary data for the user interface.
     """
 
-    def __init__(self):
+    def __init__(self, model:DynamicModel):
         self.clients = set()
-        self.websocket = None
-        self.plant: Plant
-        self.model: DynamicModel
+        self.websocket: websockets.WebSocketServer = None
+        self.model: DynamicModel = model
+        self.__future: asyncio.Future = None
+        self.loop: asyncio.AbstractEventLoop = None
 
-    def start(self, plant: Plant, model: DynamicModel):
+        thread = threading.Thread(
+            target=asyncio.run,
+            daemon=True,
+            args=(self.__start(), )
+        )
+        self.thread: threading.Thread = thread
+
+    def start(self):
         """
         Method to start the server.
         """
-        self.plant = plant
-        self.model = model
-        asyncio.run(self.__start())
+
+        logger.info("Starting the server.")
+        self.thread.start()
+
+    def kill(self):
+        """
+        Method to kill the server.
+        """
+
+        self.loop.stop()
+
+        self.thread.join()
+
+    def stop(self):
+        """
+        Method to shut down the local server.
+        Does not need to run inside the same thread or process as the server.
+        """
+        # self.__future.set_result("")
+        asyncio.run_coroutine_threadsafe(self.__stop_server(), self.loop)
+
+        self.thread.join()
+        logger.debug("Thread closed")
+
+    async def __stop_server(self):
+        self.__future.set_result("")
 
     async def __start(self):
+        self.loop = asyncio.get_running_loop()
+        self.__future = self.loop.create_future()
+
         async with websockets.serve(self.main_handler,
                                     "localhost",
                                     4000,
                                     ping_interval=10,
-                                    ping_timeout=30, ):
-            await asyncio.Future()  # run forever
+                                    ping_timeout=30,
+                                        ) as websocket:
+            self.websocket = websocket
+            await self.__future
 
-    async def register(self, ws: WebSocketServerProtocol):
+
+    async def open_connection(self, ws: WebSocketServerProtocol):
         self.clients.add(ws)
         logger.info(f"{ws.remote_address} connected.")
 
-    async def unregister(self, ws: WebSocketServerProtocol):
+    async def close_connection(self, ws: WebSocketServerProtocol):
         self.clients.remove(ws)
         logger.info(f"{ws.remote_address} disconnected.")
 
-    async def send_growth(self, ws: WebSocketServerProtocol):
+    async def send_growth_percent(self, ws: WebSocketServerProtocol):
 
-        message = json.dumps({
-            "leaf_percent": self.plant.organs[0].percentage,
-            "stem_percent": self.plant.organs[1].percentage,
-            "root_percent": self.plant.organs[2].percentage,
-            "starch_percent": self.plant.organ_starch.percentage,
-        })
+        message = self.model.percentages.to_json()
         logger.info(f"Sending {message}")
         await asyncio.wait([client.send(message) for client in self.clients])
 
@@ -116,56 +149,69 @@ class Server:
         Method that accepts all requests to the server
         and passes them on to the responsible methods.
         """
-        logger.info("Handler ready.")
-        await self.register(ws)
-        try:
-            while True:
+        logger.debug(f"Connection from {ws.remote_address} established.")
+        await self.open_connection(ws)
+        logger.debug(f"{ws.remote_address} registered as client")
+
+        while True:
+            try:
                 request = await ws.recv()
-                logger.info(f"Received {request}")
+            except websockets.ConnectionClosedOK:
+                await self.close_connection(ws)
+                logger.debug(f"{ws.remote_address} unregistered.")
+                break
 
-                request_decoded = json.loads(request)
-                try:
-                    command = request_decoded["event"]
-                except KeyError as e:
-                    logger.error("Recived Message could not be decoded"
-                                 f"\n {e}")
-                    # ToDo send error message back
+            logger.info(f"Received {request}")
+
+            request_decoded = json.loads(request)
+            try:
+                command = request_decoded["event"]
+            except KeyError as e:
+                logger.error("Received Message could not be decoded", exc_info= True)
+                # ToDo send error message back
+                continue
+
+            match command:
+
+                case "get_growth_percent":
+                    logger.debug("Received command identified as request of growth_percent.")
+                    await self.send_growth_percent(ws)
+
+                case "growth_rate":
+                    logger.debug("Received command identified as calculation of growth_rates.")
+
+                    await self.calc_send_growth_rate(data=request_decoded["data"])
+                case "open_stomata":
+                    logger.debug("Received command identified as open_stomata.")
+
+                    await self.open_stomata()
+
+                case "close_stomata":
+                    logger.debug("Received command identified as close_stomata.")
+
+                    await self.close_stomata()
+
+                case "deactivate_starch_resource":
+                    logger.debug("Received command identified as deactivate_starch_resource.")
+
+                    await self.deactivate_starch_resource()
+
+                case "activate_starch_resource":
+                    logger.debug("Received command identified as activate_starch_resource.")
+
+                    await self.activate_starch_resource()
+
+                case "get_water_pool":
+                    logger.debug("Received command identified as get_water_pool.")
+
+                    await self.get_water_pool()
+
+                case "stop":
+                    logger.debug("Received command identified as stop.")
+
+                    # await self.__stop_server()
+
+                case _:
+                    logger.error("Received command could not be identified")
+
                     continue
-
-                match command:
-                    case "GROWTH":
-                        logger.debug("Received command identified as request of growth values.")
-                        await self.send_growth(ws)
-                    case "growth_rate":
-                        logger.debug("Received command identified as calculation of growth_rates.")
-
-                        await self.calc_send_growth_rate(data=request_decoded["data"])
-                    case "open_stomata":
-                        logger.debug("Received command identified as open_stomata.")
-
-                        await self.open_stomata()
-
-                    case "close_stomata":
-                        logger.debug("Received command identified as close_stomata.")
-
-                        await self.close_stomata()
-
-                    case "deactivate_starch_resource":
-                        logger.debug("Received command identified as deactivate_starch_resource.")
-
-                        await self.deactivate_starch_resource()
-
-                    case "activate_starch_resource":
-                        logger.debug("Received command identified as activate_starch_resource.")
-
-                        await self.activate_starch_resource()
-
-                    case "get_water_pool":
-                        logger.debug("Received command identified as get_water_pool.")
-
-                        await self.get_water_pool()
-                    case _:
-                        logger.error("Received command could not be identified")
-
-        finally:
-            await self.unregister(ws)

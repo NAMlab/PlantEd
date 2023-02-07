@@ -216,19 +216,12 @@ class DefaultGameScene(object):
         model = self.model
 
         logger.info("Starting Server and client")
-        self.server = Server()
-        logger.info("Server started 1")
-        self.server_thread = threading.Thread(
-            target=self.server.start,
-            daemon=True,
-            args=(plant, model, )
-        )
-        logger.info("Server started  2")
-        self.server_thread.start()
-        logger.info("Server started  3")
-        self.client = Client()
+        logger.debug("Creating server")
+        self.server = Server(model=model)
+        logger.debug("Starting server")
+        self.server.start()
 
-        logger.info("Client started")
+        logger.debug("Creating Client")
 
         self.water_grid.add_base_water(
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
@@ -362,7 +355,6 @@ class DefaultGameScene(object):
                 self.pause_button_resume.handle_event(e)
                 self.pause_button_exit.handle_event(e)
             if e.type == GROWTH:
-                logger.info ( self.client.growth())
 
                 starch_percent = self.plant.organ_starch.percentage
                 if starch_percent < 0:

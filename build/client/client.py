@@ -31,12 +31,13 @@ class Client():
 
     async def __connect(self):
         self.websocket = await websockets.connect(self.url)
+        await self.websocket.send("{\"event\": \"connect\"}")
 
     def growth(self):
-        return self.loop.run_until_complete(self.__growth())
+        return self.loop.run_until_complete(self.__get_growth_percent())
 
-    async def __growth(self):
-        await self.websocket.send("{\"event\": \"GROWTH\"}")
+    async def __get_growth_percent(self):
+        await self.websocket.send("{\"event\": \"get_growth_percent\"}")
         logger.info(f"Send event GROWTH")
 
         data = await self.websocket.recv()
