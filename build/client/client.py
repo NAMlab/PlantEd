@@ -15,7 +15,7 @@ from client.water import Water
 logger = logging.getLogger(__name__)
 
 
-class Client():
+class Client:
     """
     A client that serves as an interface between the UI and the server.
     At the same time, it can also serve as an interface for software

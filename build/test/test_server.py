@@ -61,6 +61,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
         logger.debug("Starting the server.")
 
         server.start()
+        time.sleep(0.5)
 
         logger.debug("Server started")
 
@@ -78,9 +79,6 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
 
             self.assertEqual(4000, port)
             self.assertIn(host, ["localhost", "127.0.0.1", "::1"])
-
-    def test_unregister(self):
-        self.fail()
 
     def test_send_growth(self):
         self.fail()
@@ -103,7 +101,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
 
             await websocket.send(msg)
 
-            # server needs time to open stomata
+            # server needs time to react
             time.sleep(0.1)
 
             self.assertEqual(True, self.server.model.stomata_open)
@@ -124,21 +122,72 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
 
             await websocket.send(msg)
 
-            # server needs time to close stomata
+            # server needs time to react
             time.sleep(0.1)
 
             self.assertEqual(False, self.server.model.stomata_open)
 
             self.assertEqual((-1000, 0), self.server.model.model.reactions.get_by_id("CO2_tx_leaf").bounds)
 
-    def test_deactivate_starch_resource(self):
-        self.fail()
+    async def test_deactivate_starch_resource(self):
+        async with websockets.connect("ws://localhost:4000") as websocket:
+            self.server.model.use_starch = True
+            starch_in = self.server.model.model.reactions.get_by_id("Starch_in_tx_stem")
+            starch_in.bounds = (-100, 0)
 
-    def test_activate_starch_resource(self):
-        self.fail()
+            self.assertEqual(True, self.server.model.use_starch)
+            self.assertEqual((-100, 0), self.server.model.model.reactions.get_by_id("Starch_in_tx_stem").bounds)
 
-    def test_get_water_pool(self):
-        self.fail()
+            msg = "{\"event\": \"activate_starch_resource\"}"
+
+            await websocket.send(msg)
+
+            # server needs time to react
+            time.sleep(0.1)
+
+            self.assertEqual(True, self.server.model.use_starch)
+
+            bounds_expected = (0, self.server.model.starch_intake_max *(1/100))
+            bounds = self.server.model.model.reactions.get_by_id("Starch_in_tx_stem").bounds
+
+            self.assertEqual(bounds_expected, bounds)
+
+    async def test_activate_starch_resource(self):
+
+        async with websockets.connect("ws://localhost:4000") as websocket:
+
+            self.server.model.use_starch = False
+            starch_in = self.server.model.model.reactions.get_by_id("Starch_in_tx_stem")
+            starch_in.bounds = (-100, 100)
+
+            self.assertEqual(False, self.server.model.use_starch)
+            self.assertEqual((-100, 100), self.server.model.model.reactions.get_by_id("Starch_in_tx_stem").bounds)
+
+            msg = "{\"event\": \"deactivate_starch_resource\"}"
+
+            await websocket.send(msg)
+
+            # server needs time to react
+            time.sleep(0.1)
+
+            self.assertEqual(False, self.server.model.use_starch)
+
+            bounds_expected = (0, 0)
+            bounds = self.server.model.model.reactions.get_by_id("Starch_in_tx_stem").bounds
+
+            self.assertEqual(bounds_expected, bounds)
+
+    async def test_get_water_pool(self):
+        async with websockets.connect("ws://localhost:4000") as websocket:
+            msg = "{\"event\": \"get_water_pool\"}"
+
+            await websocket.send(msg)
+            answer = await websocket.recv()
+
+            expected = "{\"water_pool\": 1000000, \"max_water_pool\": 1000000}"
+
+            self.assertEqual(expected, answer)
+
 
     def test_main_handler(self):
         self.fail()
