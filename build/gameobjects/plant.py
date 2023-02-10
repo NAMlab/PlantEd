@@ -48,7 +48,7 @@ class Plant:
         self.danger_mode = False
         self.gametime = GameTime.instance()
         organ_leaf = Leaf(self.x, self.y, "Leaves", self.LEAF, self.set_target_organ_leaf, self, leaves, mass=0.1, active=False)
-        organ_flower = Flower(self.x, self.y, "Roots", self.FLOWER, self.set_target_organ_flower, self, flowers, mass=0.8, active=False)
+        organ_flower = Flower(self.x, self.y, "Roots", self.FLOWER, self.set_target_organ_flower, self, flowers, mass=0.1, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, flower = organ_flower, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
         self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=1000000, active=True, model=self.model)
@@ -296,7 +296,6 @@ class Leaf(Organ):
             if event.type == pygame.KEYDOWN and event.key == pygame.K_i:
                 self.leaves.pop(self.target_leaf)
 
-
     def activate_add_leaf(self):
         self.can_add_leaf = True
 
@@ -314,6 +313,13 @@ class Leaf(Organ):
 
     def update_growth_rate(self, growth_rate):
         self.growth_rate = gram_mol * growth_rate
+
+    def yellow_leaf(self, image, alpha):
+        ghost_image = image.copy()
+        ghost_image.fill((0, 0, 0, alpha), special_flags=pygame.BLEND_RGBA_MULT)
+        shaded_image = image.copy()
+        shaded_image.blit(ghost_image, (0, 0))
+        return shaded_image
 
     def grow(self, dt):
         if self.growth_rate <= 0:
@@ -355,6 +361,7 @@ class Leaf(Organ):
         leaf = {"x": pos[0],
                 "y": pos[1],
                 "t": (highlight[1],highlight[2]),
+                "shadow_score": 1,
                 "image": image[0],
                 "offset_x": offset[0],
                 "offset_y": offset[1],
@@ -418,7 +425,9 @@ class Leaf(Organ):
             screen.blit(assets.img("leaf_small.PNG",(128,128)), (x,y-self.plant.camera.offset_y))
 
         for leaf in self.leaves:
-            screen.blit(leaf["image"], (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))
+            image = self.yellow_leaf(leaf["image"], 128)
+            screen.blit(image, (leaf["x"]-leaf["offset_x"], leaf["y"]-leaf["offset_y"]))
+
 
         if self.type == self.plant.target_organ.type:
             rects = self.get_rect()
@@ -846,7 +855,7 @@ class Flower(Organ):
                 "offset_x": offset[0],
                 "offset_y": offset[1],
                 "image": image,
-                "mass": 0.0001,
+                "mass": 0.01,
                 "flowering": True,
                 "maximum_mass": self.thresholds[-1],
                 "lifetime": 60*60*24*10, # 10 days of liefetime to grow

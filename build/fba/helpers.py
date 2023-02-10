@@ -4,12 +4,11 @@ This model contains the functions that enables the extension of the PlantED
 model.
 
 Functions that create Constraints are:
-    get_ngam
     get_ndaph_atp
-    get_nitrate_nh4
     create_objective
 """
 from contextlib import suppress
+from itertools import product
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -25,16 +24,23 @@ FILE = (
     .parent.joinpath("outputs", "non_negative_metabolites.txt")
 )
 
+CONSTRAINTS = [
+    f"{i}_{j}" for i, j in list(product(range(0, 5), range(0, 5)))
+] + ["5_5"]
+
+
 METABOLITES: List[str] = [
+    "PROTON_c",
+    "OXYGEN_MOLECULE_c",
+    "CARBON_DIOXIDE_c",
     "WATER_c",
     "NITRATE_c",
     "Pi_c",
     "SULFATE_c",
-    # organic acids
-    "CIT_c",
-    "FUM_c",
-    "MAL_c",
+    # organic acids and sugars
+    "4_AMINO_BUTYRATE_c",
     "FRU_c",
+    "GLC_c",
     "SUCROSE_c",
     # ions,
     "CAII_c",
@@ -104,10 +110,11 @@ def new_biomass(_model: Model, reaction: str) -> Model:
     return model
 
 
-def autotroph(model: Model, **kwargs) -> Solution:
+def autotroph(model: Model, uptake: int = 200, **kwargs) -> Solution:
     """
     Returns the solution for an autotroph environment of given model. It
-    raises an OptimizationError if the optimization fails
+    raises an OptimizationError if the optimization fails. By default uptake of
+    200
     """
 
     if model.reactions.has_id("Photon_tx"):
@@ -130,7 +137,7 @@ def autotroph(model: Model, **kwargs) -> Solution:
         up: int = 0
 
         if identifier[0] == "P":
-            up = 200
+            up = uptake
 
         model.reactions.get_by_id(identifier).bounds = (0, up)
 
@@ -150,10 +157,11 @@ def autotroph(model: Model, **kwargs) -> Solution:
         raise e
 
 
-def heterotroph(model: Model, **kwargs) -> Solution:
+def heterotroph(model: Model, uptake: int = 1000, **kwargs) -> Solution:
     """
     Returns the solution for an autotroph environment of given model. It
-    raises an OptimizationError if the optimization fails
+    raises an OptimizationError if the optimization fails. By default uptake of
+    1000
     """
 
     if model.reactions.has_id("Photon_tx"):
@@ -168,7 +176,7 @@ def heterotroph(model: Model, **kwargs) -> Solution:
                 "Photon_tx_leaf",
                 "GLC_tx_root",
                 "Sucrose_tx_root",
-                "Starch_in_tx_root",
+                "Starch_in_tx_stem",
             )
         }
 
@@ -177,7 +185,7 @@ def heterotroph(model: Model, **kwargs) -> Solution:
 
         # Starch
         if identifier[1] == "t":
-            up = 1000
+            up = uptake
 
         model.reactions.get_by_id(identifier).bounds = (0, up)
 
@@ -325,11 +333,8 @@ def normalize(
 
 def create_objective(model: Model, direction: str = "max") -> Objective:
     """
-    Returns a Objective which can be used by the PlantED model. Additionally,
-    the function creates and adds three constraints "root_stem",
-    "stem_leaf" and "biomass_organ", which are responsable for the rate
-    of the different biomass reactions.
-    """
+    Returns a Objective which can be used by the PlantED model. It creates
+    the corresponding organ-ratio constraints"""
 
     root: Reaction = model.reactions.get_by_id("Biomass_tx_root")
     stem: Reaction = model.reactions.get_by_id("Biomass_tx_stem")
@@ -356,21 +361,21 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
         Add(root.flux_expression) - Add(stem.flux_expression),
         lb=0,
         ub=0,
-        name="root_stem",
+        name="0_1",
     )
 
     stem_leaf: Constraint = model.problem.Constraint(
         Add(stem.flux_expression) - Add(leaf.flux_expression),
         lb=0,
         ub=0,
-        name="stem_leaf",
+        name="1_2",
     )
 
     leaf_seed: Constraint = model.problem.Constraint(
         Add(leaf.flux_expression) - Add(seed.flux_expression),
         lb=0,
         ub=0,
-        name="leaf_seed",
+        name="2_3",
     )
 
     # By default it should be 20% each
@@ -385,7 +390,7 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
         - 4 * Add(starch.flux_expression),
         lb=0,
         ub=0,
-        name="biomass_organ",
+        name="5_5",
     )
 
     model.add_cons_vars([root_stem, stem_leaf, leaf_seed, biomass_organ])
@@ -398,8 +403,8 @@ def update_objective(
     root: float,
     stem: float,
     leaf: float,
-    starch: float,
     seed: float,
+    starch: float,
 ):
     """
     Updates the corresponding constraints for the multi objective in the model
@@ -409,82 +414,65 @@ def update_objective(
     constraints have to be added. Additionally, bounds are limited in case
     that the rate would be 0.
     """
-    try:
-        model.constraints["biomass_organ"]
-
-    except KeyError:
-
-        raise Exception(
-            "'biomass_organ' constraint was not found in the model. "
-            "Please be sure to use the 'create_objective' funcion."
-        )
+    if model.objective.name != "multi_objective":
+        raise Exception("Multi-objective was not found in the model")
 
     ORGANS = root + stem + leaf + seed
 
-    root_rxn: Reaction = model.reactions.get_by_id("Biomass_tx_root")
-    stem_rxn: Reaction = model.reactions.get_by_id("Biomass_tx_stem")
-    leaf_rxn: Reaction = model.reactions.get_by_id("Biomass_tx_leaf")
-    seed_rxn: Reaction = model.reactions.get_by_id("Biomass_tx_seed")
-    starch_rxn: Reaction = model.reactions.get_by_id("Starch_out_tx_stem")
+    # FIXME: For the time being there is no way to change the attribute
+    for name in CONSTRAINTS:
+        con: Constraint = model.constraints.get(name)
+        if con:
+            model.remove_cons_vars([con])
 
-    # FIXME: temporarily solution
-    for reaction, factor in [
-        (root_rxn, root),
-        (stem_rxn, stem),
-        (leaf_rxn, leaf),
-        (seed_rxn, seed),
-        (starch_rxn, starch),
-    ]:
+    reactions = [
+        model.reactions.get_by_id("Biomass_tx_root"),
+        model.reactions.get_by_id("Biomass_tx_stem"),
+        model.reactions.get_by_id("Biomass_tx_leaf"),
+        model.reactions.get_by_id("Biomass_tx_seed"),
+        model.reactions.get_by_id("Starch_out_tx_stem"),
+    ]
 
-        if factor == 0:
-            reaction.bounds = (0, 0)
+    expr: List[Add] = [Add(rxn.flux_expression) for rxn in reactions]
+
+    args = [root, stem, leaf, seed, starch]
+
+    graph = [bool(i) for i in args]
+
+    cons: List[Constraint] = list()
+
+    start = -1
+    for (i, node) in enumerate(graph):
+
+        # TODO: Add bounds from COBRApy configuration
+        if node:
+            reactions[i].bounds = (0, 1000)
+
+            # NOTE: only create if there is at least 1 organ beside starch
+            if i == 4 and sum(graph[:-1]) >= 1:
+                con = model.problem.Constraint(
+                    starch * Add(expr[0] + expr[1], expr[2] + expr[3])
+                    - ORGANS * expr[i],
+                    lb=0,
+                    ub=0,
+                    name="5_5",
+                )
+                cons.append(con)
+                break
+
+            if start != -1:
+                con = model.problem.Constraint(
+                    args[i] * expr[start] - args[start] * expr[i],
+                    lb=0,
+                    ub=0,
+                    name=f"{start}_{i}",
+                )
+                cons.append(con)
+
+            start = i
+
         else:
-            reaction.bounds = (0, 1000)
+            reactions[i].bounds = (0, 0)
 
-    # FIXME: expression attribute cannot be modified
-    root_stem: Constraint = model.constraints["root_stem"]
-    stem_leaf: Constraint = model.constraints["stem_leaf"]
-    leaf_seed: Constraint = model.constraints["leaf_seed"]
-    biomass_organ: Constraint = model.constraints["biomass_organ"]
-
-    model.remove_cons_vars([root_stem, stem_leaf, biomass_organ, leaf_seed])
-
-    root_stem = model.problem.Constraint(
-        stem * Add(root_rxn.flux_expression)
-        - root * Add(stem_rxn.flux_expression),
-        lb=0,
-        ub=0,
-        name="root_stem",
-    )
-
-    stem_leaf = model.problem.Constraint(
-        leaf * Add(stem_rxn.flux_expression)
-        - stem * Add(leaf_rxn.flux_expression),
-        lb=0,
-        ub=0,
-        name="stem_leaf",
-    )
-
-    leaf_seed = model.problem.Constraint(
-        seed * Add(leaf_rxn.flux_expression)
-        - leaf * Add(seed_rxn.flux_expression),
-        lb=0,
-        ub=0,
-        name="leaf_seed",
-    )
-
-    biomass_organ = model.problem.Constraint(
-        starch
-        * (
-            Add(root_rxn.flux_expression)
-            + Add(stem_rxn.flux_expression)
-            + Add(leaf_rxn.flux_expression)
-            + Add(seed_rxn.flux_expression)
-        )
-        - ORGANS * Add(starch_rxn.flux_expression),
-        lb=0,
-        ub=0,
-        name="biomass_organ",
-    )
-
-    model.add_cons_vars([root_stem, stem_leaf, leaf_seed, biomass_organ])
+    if cons:
+        model.add_cons_vars(cons)

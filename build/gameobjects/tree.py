@@ -77,7 +77,7 @@ class Tree:
             base_image_index = 1
             opacity = (time-9*day)/(8*day)
         # 19 - 27 autum
-        elif time < 24*day:
+        elif time < 27*day:
             fadeout = True
             base_image_index = 2
             opacity = (time-18*day)/(8*day)
