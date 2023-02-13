@@ -37,24 +37,23 @@ class Client:
         return self.loop.run_until_complete(self.__get_growth_percent())
 
     async def __get_growth_percent(self):
-        await self.websocket.send("{\"event\": \"get_growth_percent\"}")
+        await self.websocket.send("{\"get_growth_percent\": \"null\"}")
         logger.info(f"Send event GROWTH")
 
         data = await self.websocket.recv()
         logger.info(f"Received {data}")
 
-        return data
+        return data["get_growth_percent"]
 
-    def growth_rate(self, data: GrowthPercent) -> GrowthRates:
-        return self.loop.run_until_complete(self.__growth_rate(data = data))
+    def growth_rate(self, growth_percent: GrowthPercent) -> GrowthRates:
+        return self.loop.run_until_complete(self.__growth_rate(growth_percent = growth_percent))
 
-    async def __growth_rate(self, data: GrowthPercent) -> GrowthRates:
+    async def __growth_rate(self, growth_percent: GrowthPercent) -> GrowthRates:
 
-        if data.starch < 0:
-            data.starch = 0
+        if growth_percent.starch < 0:
+            growth_percent.starch = 0
 
-        message = {"event": "growth_rate"}
-        message["data"] = data.to_json()
+        message = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
 
         logger.info("Sending Request for growth rates."
                      f"Payload is :\n"
@@ -64,18 +63,18 @@ class Client:
         await self.websocket.send(message)
         logger.info(f"Send event growth_rate")
 
-        data = await self.websocket.recv()
-        logger.info(f"Received {data}")
-        data = GrowthRates.from_json(data)
+        growth_rates = await self.websocket.recv()
+        logger.info(f"Received {growth_rates}")
+        growth_rates = GrowthRates.from_json(growth_rates["growth_rate"])
 
-        return data
+        return growth_rates
 
     def open_stomata(self):
         self.loop.run_until_complete(self.__open_stomata())
     async def __open_stomata(self):
         logger.debug("Sending request for open_stomata")
 
-        message = "{\"event\": \"open_stomata\"}"
+        message = "{\"open_stomata\": \"null\"}"
 
         await self.websocket.send(message)
 
@@ -85,7 +84,7 @@ class Client:
         logger.debug("Sending request for close_stomata")
 
 
-        message = "{\"event\": \"close_stomata\"}"
+        message = "{\"close_stomata\": \"null\"}"
 
         await self.websocket.send(message)
 
@@ -95,7 +94,7 @@ class Client:
     async def __deactivate_starch_resource(self):
         logger.debug("Sending request to deactivate_starch_resource")
 
-        message = "{\"event\": \"deactivate_starch_resource\"}"
+        message = "{\"deactivate_starch_resource\": \"null\"}"
 
         await self.websocket.send(message)
 
@@ -105,7 +104,7 @@ class Client:
     async def __activate_starch_resource(self):
         logger.debug("Sending request to activate_starch_resource")
 
-        message = "{\"event\": \"activate_starch_resource\"}"
+        message = "{\"activate_starch_resource\": \"null\"}"
 
         await self.websocket.send(message)
 
@@ -115,7 +114,7 @@ class Client:
     async def __get_water_pool(self) -> Water:
         logger.debug("Sending request for water_pool")
 
-        message = "{\"event\": \"get_water_pool\"}"
+        message = "{\"get_water_pool\": \"null\"}"
 
         await self.websocket.send(message)
         logger.debug("Waiting for answer")
@@ -123,7 +122,7 @@ class Client:
         answer = await self.websocket.recv()
         logger.debug(f"Recived {answer}")
 
-        water: Water = Water.from_json(answer)
+        water: Water = Water.from_json(answer["get_water_pool"])
         logger.debug(f"Decoded answer to {water}")
 
         return water

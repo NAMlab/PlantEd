@@ -222,6 +222,7 @@ class DefaultGameScene(object):
         self.server.start()
 
         logger.debug("Creating Client")
+        self.client = Client()
 
         self.water_grid.add_base_water(
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
@@ -377,7 +378,7 @@ class DefaultGameScene(object):
                     flower= self.plant.organs[3].percentage,
                 )
 
-                growth_rates = self.client.growth_rate(data= growth_percent)
+                growth_rates = self.client.growth_rate(growth_percent= growth_percent)
                 self.ui.growth_rates = growth_rates
 
 

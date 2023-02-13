@@ -17,6 +17,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+from build.game import main
 
 class TestServer(unittest.IsolatedAsyncioTestCase):
 
@@ -97,7 +98,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((0, 0), self.server.model.model.reactions.get_by_id("CO2_tx_leaf").bounds)
 
 
-            msg = "{\"event\": \"open_stomata\"}"
+            msg = "{\"open_stomata\": \"null\"}"
 
             await websocket.send(msg)
 
@@ -118,7 +119,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(True, self.server.model.stomata_open)
             self.assertEqual((0, 1000), self.server.model.model.reactions.get_by_id("CO2_tx_leaf").bounds)
 
-            msg = "{\"event\": \"close_stomata\"}"
+            msg = "{\"close_stomata\": \"null\"}"
 
             await websocket.send(msg)
 
@@ -138,7 +139,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(True, self.server.model.use_starch)
             self.assertEqual((-100, 0), self.server.model.model.reactions.get_by_id("Starch_in_tx_stem").bounds)
 
-            msg = "{\"event\": \"activate_starch_resource\"}"
+            msg = "{\"activate_starch_resource\": \"null\"}"
 
             await websocket.send(msg)
 
@@ -163,7 +164,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(False, self.server.model.use_starch)
             self.assertEqual((-100, 100), self.server.model.model.reactions.get_by_id("Starch_in_tx_stem").bounds)
 
-            msg = "{\"event\": \"deactivate_starch_resource\"}"
+            msg = "{\"deactivate_starch_resource\": \"null\"}"
 
             await websocket.send(msg)
 
@@ -179,7 +180,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_water_pool(self):
         async with websockets.connect("ws://localhost:4000") as websocket:
-            msg = "{\"event\": \"get_water_pool\"}"
+            msg = "{\"get_water_pool\": \"null\"}"
 
             await websocket.send(msg)
             answer = await websocket.recv()

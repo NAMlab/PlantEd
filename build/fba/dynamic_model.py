@@ -80,15 +80,12 @@ class DynamicModel:
         self.water_intake = 0
         self.transpiration_factor = 0
         self.co2_intake = 0
-        self.starch_intake = 0                  # actual starch consumption
         self.starch_intake_max = MAX_STARCH_INTAKE           # upper bound
         self.percentages_sum = 0
 
         # growth rates for each objective
-        self.root_rate = 0
-        self.stem_rate = 0
-        self.leaf_rate = 0
-        self.starch_rate = 0
+        self.growth_rates = GrowthRates("1flux/s", 0, 0, 0, 0, 0, 0)
+
         self.percentages = GrowthPercent(0,0,0,0,0)
         self.init_constraints()
         self.calc_growth_rate(0.1,0.1,1,0.1,0)
@@ -122,20 +119,22 @@ class DynamicModel:
             update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent, flower_percent)
             self.percentages = new_percentages
 
+
         solution = self.model.optimize()
 
         # calc_rates 1flux/s
-        self.root_rate = (solution.fluxes.get(BIOMASS_ROOT))
-        self.stem_rate = (solution.fluxes.get(BIOMASS_STEM))
-        self.leaf_rate = (solution.fluxes.get(BIOMASS_LEAF))
-        self.starch_rate = (solution.fluxes.get(STARCH_OUT))
-        self.seed_rate = (solution.fluxes.get(BIOMASS_SEED))
+        self.growth_rates.root_rate = (solution.fluxes.get(BIOMASS_ROOT))
+        self.growth_rates.stem_rate = (solution.fluxes.get(BIOMASS_STEM))
+        self.growth_rates.leaf_rate = (solution.fluxes.get(BIOMASS_LEAF))
+        self.growth_rates.starch_rate = (solution.fluxes.get(STARCH_OUT))
+        self.growth_rates.seed_rate = (solution.fluxes.get(BIOMASS_SEED))
+
 
         # 1/s
         self.water_intake = solution.fluxes[WATER]
         self.co2_intake = solution.fluxes[CO2]
         self.nitrate_intake = solution.fluxes[NITRATE]
-        self.starch_intake =  solution.fluxes[STARCH_IN]
+        self.growth_rates.starch_intake = solution.fluxes[STARCH_IN]
         self.photon_intake = solution.fluxes[PHOTON]
 
         if self.stomata_open:
@@ -172,27 +171,20 @@ class DynamicModel:
         logger.debug(f"CO2 bounds set to {bounds}")
 
     def get_rates(self) -> GrowthRates:
-        gamespeed = self.gametime.GAMESPEED
 
-        leaf = self.leaf_rate*gamespeed*FLUX_TO_GRAMM
-        stem = self.stem_rate*gamespeed*FLUX_TO_GRAMM
-        root = self.root_rate*gamespeed*FLUX_TO_GRAMM
-        starch = self.starch_rate*gamespeed
-        starch_intake = self.starch_intake*gamespeed
-        seed = self.seed_rate*gamespeed
+        growth_rates = self.growth_rates.flux2grams(self.gametime)
 
-        logging.info("Returning following growth rates:\n"
-                     f"leaf: {leaf}, stem {stem}, root {root}, starch: {starch}, starch_intake {starch_intake}, seed {seed}")
+        # ToDo berechne ab wann stärke aufgebraucht ist
+        # ToDO dann optimiere erneut summiere Gramm
 
-        growth_rates = GrowthRates(
-            leaf_rate= leaf,
-            stem_rate= stem,
-            root_rate= root,
-            starch_rate= starch,
-            starch_intake= starch_intake,
-            seed_rate= seed,
+        logger.info("Returning following growth rates:\n"
+                     f"leaf: {growth_rates.root_rate}, "
+                    f"stem {growth_rates.stem_rate}, "
+                    f"root {growth_rates.root_rate}, "
+                    f"starch: {growth_rates.starch_rate}, "
+                    f"starch_intake {growth_rates.starch_intake}, "
+                    f"seed {growth_rates.seed_rate}")
 
-        )
         return growth_rates
 
     def get_absolute_rates(self):
@@ -200,7 +192,13 @@ class DynamicModel:
                 0.0049 * self.model.reactions.get_by_id("Photon_tx_leaf").upper_bound
                 + 2.7851
         )
-        return (self.leaf_rate, self.stem_rate, self.root_rate, self.seed_rate, self.stem_rate, self.starch_intake, forced_ATP)
+        return (self.growth_rates.leaf_rate,
+                self.growth_rates.stem_rate,
+                self.growth_rates.root_rate,
+                self.growth_rates.seed_rate,
+                self.growth_rates.stem_rate,
+                self.growth_rates.starch_intake,
+                forced_ATP)
 
     def get_actual_water_drain(self):
         return self.water_intake + self.water_intake_pool

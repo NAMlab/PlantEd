@@ -80,21 +80,21 @@ class Server:
             await self.__future
 
 
-    async def open_connection(self, ws: WebSocketServerProtocol):
+    def open_connection(self, ws: WebSocketServerProtocol):
         self.clients.add(ws)
         logger.info(f"{ws.remote_address} connected.")
 
-    async def close_connection(self, ws: WebSocketServerProtocol):
+    def close_connection(self, ws: WebSocketServerProtocol):
         self.clients.remove(ws)
         logger.info(f"{ws.remote_address} disconnected.")
 
-    async def send_growth_percent(self, ws: WebSocketServerProtocol):
+    def send_growth_percent(self, ws: WebSocketServerProtocol) -> str:
 
         message = self.model.percentages.to_json()
         logger.info(f"Sending {message}")
-        await asyncio.wait([client.send(message) for client in self.clients])
+        return message
 
-    async def calc_send_growth_rate(self, data):
+    def calc_send_growth_rate(self, data) -> str:
 
 
         logger.info(f"Calculating growth rates from {data}")
@@ -112,25 +112,26 @@ class Server:
 
         # send growth_rates as json
         logger.info(f"Sending following answer for growth rates. \n {message}")
-        await asyncio.wait([client.send(message) for client in self.clients])
 
-    async def open_stomata(self):
+        return message
+
+    def open_stomata(self):
         logger.info("Opening stomata")
         self.model.open_stomata()
 
-    async def close_stomata(self):
+    def close_stomata(self):
         logger.info("Closing stomata")
         self.model.close_stomata()
 
-    async def deactivate_starch_resource(self):
+    def deactivate_starch_resource(self):
         logger.info("Deactivating starch use")
         self.model.deactivate_starch_resource()
 
-    async def activate_starch_resource(self):
+    def activate_starch_resource(self):
         logger.info("Activating starch use")
         self.model.activate_starch_resource()
 
-    async def get_water_pool(self):
+    def get_water_pool(self) -> str:
         logger.info("Creating Water Object and sending it back")
 
         water = Water(
@@ -142,7 +143,7 @@ class Server:
 
         logger.debug(f"Responding to a water request with {answer}")
 
-        await asyncio.wait([client.send(answer) for client in self.clients])
+        return answer
 
     async def main_handler(self, ws: WebSocketServerProtocol):
         """
@@ -163,55 +164,54 @@ class Server:
 
             logger.info(f"Received {request}")
 
-            request_decoded = json.loads(request)
-            try:
-                command = request_decoded["event"]
-            except KeyError as e:
-                logger.error("Received Message could not be decoded", exc_info= True)
-                # ToDo send error message back
-                continue
+            commands = json.loads(request)
+            respsonse = {}
 
-            match command:
+            for command in commands:
 
-                case "get_growth_percent":
-                    logger.debug("Received command identified as request of growth_percent.")
-                    await self.send_growth_percent(ws)
+                match command:
 
-                case "growth_rate":
-                    logger.debug("Received command identified as calculation of growth_rates.")
+                    case "get_growth_percent":
+                        logger.debug("Received command identified as request of growth_percent.")
+                        respsonse["get_growth_percent"] = self.send_growth_percent(ws)
 
-                    await self.calc_send_growth_rate(data=request_decoded["data"])
-                case "open_stomata":
-                    logger.debug("Received command identified as open_stomata.")
+                    case "growth_rate":
+                        logger.debug("Received command identified as calculation of growth_rates.")
 
-                    await self.open_stomata()
+                        respsonse["growth_rate"] = self.calc_send_growth_rate(data=command["GrowthPercent"])
+                    case "open_stomata":
+                        logger.debug("Received command identified as open_stomata.")
 
-                case "close_stomata":
-                    logger.debug("Received command identified as close_stomata.")
+                        self.open_stomata()
 
-                    await self.close_stomata()
+                    case "close_stomata":
+                        logger.debug("Received command identified as close_stomata.")
 
-                case "deactivate_starch_resource":
-                    logger.debug("Received command identified as deactivate_starch_resource.")
+                        self.close_stomata()
 
-                    await self.deactivate_starch_resource()
+                    case "deactivate_starch_resource":
+                        logger.debug("Received command identified as deactivate_starch_resource.")
 
-                case "activate_starch_resource":
-                    logger.debug("Received command identified as activate_starch_resource.")
+                        self.deactivate_starch_resource()
 
-                    await self.activate_starch_resource()
+                    case "activate_starch_resource":
+                        logger.debug("Received command identified as activate_starch_resource.")
 
-                case "get_water_pool":
-                    logger.debug("Received command identified as get_water_pool.")
+                        self.activate_starch_resource()
 
-                    await self.get_water_pool()
+                    case "get_water_pool":
+                        logger.debug("Received command identified as get_water_pool.")
 
-                case "stop":
-                    logger.debug("Received command identified as stop.")
+                        respsonse["get_water_pool"] = self.get_water_pool()
 
-                    # await self.__stop_server()
+                    case "stop":
+                        logger.debug("Received command identified as stop.")
 
-                case _:
-                    logger.error("Received command could not be identified")
+                        # await self.__stop_server()
 
-                    continue
+                    case _:
+                        logger.error("Received command could not be identified")
+
+                        continue
+
+            await asyncio.wait([client.send(respsonse) for client in self.clients])
