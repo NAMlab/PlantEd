@@ -186,7 +186,6 @@ class Environment:
     def draw_shadows(self, screen):
         if self.shadow_map is not None:
             self.s.fill((0,0,0,0))
-            print("draw shadows")
             # draw polygon for each shadow vs make polygon from all outer points
             for (x, y), value in np.ndenumerate(self.shadow_map):
                 if self.shadow_map[x,y] > 0:

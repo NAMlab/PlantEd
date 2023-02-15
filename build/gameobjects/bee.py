@@ -6,18 +6,75 @@ import pygame
 import numpy as np
 import config
 
+class Hive():
+    def __init__(self, pos, amount, plant, camera, spawn_rate):
+        self.pos = pos
+        self.image = assets.img("bee/hive.png", (128,128))
+        self.amount = amount
+        self.plant = plant
+        self.camera = camera
+        self.spawn_rate = spawn_rate
+
+        self.bees = []
+
+    def handle_event(self, e):
+        for bee in self.bees:
+            bee.handle_event(e)
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            #print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
+            #if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
+            if self.get_rect().collidepoint(pygame.mouse.get_pos()):
+                assets.sfx("bee/beehive_clicked.mp3").play()
+                if self.amount > len(self.bees):
+                    self.spawn_bee((self.pos[0]+self.image.get_width()/2,self.pos[1]+self.image.get_height()/2))
+
+    def get_rect(self):
+        return pygame.Rect(self.pos[0], self.pos[1], self.image.get_width(), self.image.get_height())
+
+    def spawn_bee(self, pos=None):
+        if not pos:
+            pos = (190 * random.randint(0, 10), random.randint(0, 800))
+        self.bees.append(Bee(pos, pygame.Rect(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT - 200),
+            [assets.img("bee/{}.PNG".format(i), (64, 64)) for i in range(6)], self.camera,
+            self.plant.organs[3].pollinate, pos))
+
+    def update(self, dt):
+        for bee in self.bees:
+            bee.update(dt)
+        if random.random() > 0.99999 and self.amount > len(self.bees):
+            self.spawn_bee((self.pos[0]+self.image.get_width()/2,self.pos[1]+self.image.get_height()/2))
+        for i in range(len(self.bees)):
+            if self.get_rect().collidepoint(self.bees[i].pos):
+                if self.bees[i].lifetime <= 0:
+                    #if abs((self.bees[i].pos[0] - (self.pos[0]+self.image.get_width()/2)) + (self.bees[i].pos[0] - (self.pos[1]+self.image.get_height()/2))) < 25:
+                    self.bees.pop(i)
+
+    def draw(self, screen):
+        screen.blit(self.image, self.pos)
+        for bee in self.bees:
+            bee.draw(screen)
+
+    def start_pollination(self, flower_pos):
+        if len(self.bees) > 0:
+            self.bees[0].target_flower(flower_pos, 6)
+
+
+
 class Bee():
-    def __init__(self, pos, bounding_rect, images, camera, callback, image=None, speed=3):
+    def __init__(self, pos, bounding_rect, images, camera, callback, hive_pos, image=None, speed=4, lifetime=7):
         self.pos = pos
         self.bounding_rect = bounding_rect
         self.images = images
         self.camera = camera
         self.callback = callback
+        self.hive_pos = hive_pos
         self.animation = Animation(self.images, 0.5)
         self.speed = speed
+        self.lifetime = lifetime
         self.rect = self.images[0].get_rect()
         self.dir = (0,0)
         self.target = None
+        self.return_home = False
         self.pollinating = False
         self.timer = 0
         self.max_timer = 10
@@ -25,6 +82,10 @@ class Bee():
         self.set_random_direction()
 
     def update(self,dt):
+        if self.lifetime <= 0 and not self.return_home:
+            self.set_target_home()
+        else:
+            self.lifetime -= dt
         if self.pollinating:
             self.timer -= dt
             if self.timer <= 0:
@@ -33,12 +94,12 @@ class Bee():
                 self.target = None
                 self.set_random_direction()
                 self.speed = 3
-        if random.random() > 0.999:
-            self.set_random_direction()
+                self.callback()
+        '''if random.random() > 0.999:
+            self.set_random_direction()'''
         self.move(dt)
         if self.animation:
             self.animation.update(dt)
-
 
     def handle_event(self, e):
         if e.type == pygame.MOUSEBUTTONDOWN:
@@ -65,19 +126,28 @@ class Bee():
     def move(self, dt):
         self.check_boundaries()
         self.pos = (self.pos[0]+self.dir[0]*self.speed,self.pos[1]-self.dir[1]*self.speed)
+
         if self.target is not None:
             if abs((self.target[0]-self.pos[0]) + (self.target[1]-self.pos[1])) < 100 and not self.pollinating:
                 self.speed = 2
                 if abs((self.target[0] - self.pos[0]) + (self.target[1] - self.pos[1])) < 5:
                     self.start_pollinating()
-                    self.callback()
+                    #self.callback()
 
-    def target_flower(self, flower_pos):
+    def target_flower(self, flower_pos, speed):
+        self.speed = speed
         x_dist = flower_pos[0]-self.pos[0]
         y_dist = flower_pos[1]-self.pos[1]
         max_distance = max(x_dist, y_dist)
         self.dir = (x_dist/abs(max_distance),-1* y_dist/abs(max_distance))
         self.target = flower_pos
+
+    def set_target_home(self):
+        self.return_home = True
+        x_dist = self.hive_pos[0] - self.pos[0]
+        y_dist = self.hive_pos[1] - self.pos[1]
+        max_distance = max(x_dist, y_dist)
+        self.dir = (x_dist / abs(max_distance), -1 * y_dist / abs(max_distance))
 
     def check_boundaries(self):
         if self.pos[0] < self.bounding_rect[0]:

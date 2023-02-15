@@ -115,7 +115,6 @@ class DynamicModel:
             if solution.fluxes[CO2] > 0 and self.water_intake > 0:
                 self.water_intake = self.water_intake + solution.fluxes[CO2]*self.transpiration_factor
 
-
     def open_stomata(self):
         self.stomata_open = True
         self.set_bounds(CO2, (-1000,1000))

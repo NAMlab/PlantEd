@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 from data import assets
 from analysis.logger import Log
-from gameobjects.bee import Bee
+from gameobjects.bee import Bee, Hive
 from gameobjects.plant import Plant
 from gameobjects.snail import Snail
 from utils.button import Button, Slider, ToggleButton, Textbox
@@ -212,15 +212,8 @@ class DefaultGameScene(object):
         self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
 '''
         self.entities = []
-        self.special_bee = Bee((190 * random.randint(0, 10), random.randint(0, 800)),
-                      pygame.Rect(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT-200),
-                      [assets.img("bee/{}.PNG".format(i),(64,64)) for i in range(6)], self.camera, self.plant.organs[3].pollinate)
-        self.entities.append(self.special_bee)
-        for i in range(0, 5):
-            bee = Bee((190 * random.randint(0, 10), random.randint(0, 800)),
-                      pygame.Rect(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT-200),
-                      [assets.img("bee/{}.PNG".format(i),(64,64)) for i in range(6)], self.camera, self.plant.organs[3].pollinate)
-            self.entities.append(bee)
+        self.hive = Hive((1500,600),10,self.plant, self.camera, 10)
+        self.entities.append(self.hive)
 
         for i in range(0, 10):
             bug = Bug((190 * random.randint(0, 10), 900 + random.randint(0, 200)),
@@ -404,9 +397,7 @@ class DefaultGameScene(object):
             if e.type == KEYDOWN and e.key == K_h:
                 #self.ui.init_flowering_ui()
                 flower_pos = (self.plant.organs[3].flowers[0]["x"]+self.plant.organs[3].flowers[0]["offset_x"]/2,self.plant.organs[3].flowers[0]["y"]+self.plant.organs[3].flowers[0]["offset_y"]/2-20)
-                self.special_bee.target_flower(flower_pos)
-                self.special_bee.speed = 10
-                print(self.special_bee.dir)
+                self.hive.start_pollination(flower_pos)
             if e.type == KEYDOWN and e.key == K_p:
                 NITRATE = "Nitrate_tx_root"
                 WATER = "H2O_tx_root"
@@ -430,7 +421,7 @@ class DefaultGameScene(object):
                 leaf_rate = self.model.leaf_rate
                 stem_rate = self.model.stem_rate
                 root_rate = self.model.root_rate
-                seed_rate = 0
+                seed_rate = self.model.seed_rate
 
                 ticks = self.gametime.get_time()
                 day = 1000 * 60 * 60 * 24
