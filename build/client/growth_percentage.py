@@ -11,17 +11,18 @@ class GrowthPercent:
     Klasse, die die verteilung der Stärke beschreibt. Alle Werte sind in Prozent.
 
     Attributes:
-        leaf (int):
-        stem (int):
-        root (int):
-        starch (int):
+        leaf (float):
+        stem (float):
+        root (float):
+        starch (float):
+        flower (float):
     """
 
-    leaf: int
-    stem: int
-    root: int
-    starch: int
-    flower: int
+    leaf: float
+    stem: float
+    root: float
+    starch: float
+    flower: float
 
     def __iter__(self):
         for field in dataclasses.fields(self):

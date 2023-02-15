@@ -86,9 +86,9 @@ class DynamicModel:
         # growth rates for each objective
         self.growth_rates = GrowthRates("1flux/s", 0, 0, 0, 0, 0, 0)
 
-        self.percentages = GrowthPercent(0,0,0,0,0)
+        self.percentages = GrowthPercent(0.1,0.1,1,0.1,0)
         self.init_constraints()
-        self.calc_growth_rate(0.1,0.1,1,0.1,0)
+        self.calc_growth_rate(self.percentages)
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
@@ -104,21 +104,12 @@ class DynamicModel:
         atp = 0.00727 /24
         nadhp = 0.00256 /24
 
-    def calc_growth_rate(self, leaf_percent, stem_percent, root_percent, starch_percent, flower_percent):
+    def calc_growth_rate(self, new_growth_percentages:GrowthPercent):
 
-        new_percentages: GrowthPercent = GrowthPercent(
-            leaf = leaf_percent,
-            stem = stem_percent,
-            root = root_percent,
-            starch = starch_percent,
-            flower = flower_percent,
-        )
-
-        if new_percentages != self.percentages:
+        if new_growth_percentages != self.percentages:
             logger.info("Updating the model objectives.")
-            update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent, flower_percent)
-            self.percentages = new_percentages
-
+            update_objective(self.model, growth_percentages=new_growth_percentages)
+            self.percentages = new_growth_percentages
 
         solution = self.model.optimize()
 
@@ -143,6 +134,10 @@ class DynamicModel:
 
 
     def open_stomata(self):
+        """
+        Method that realizes the opening of the stomas.
+        """
+
         logger.info("Opening stomata")
         self.stomata_open = True
 
@@ -163,6 +158,9 @@ class DynamicModel:
         self.transpiration_factor = K * (In_Concentration - Out_Concentration * RH)
 
     def close_stomata(self):
+        """
+        Method that realizes the closing of the stomas.
+        """
         logger.info("Closing stomata")
         self.stomata_open = False
 
@@ -171,6 +169,13 @@ class DynamicModel:
         logger.debug(f"CO2 bounds set to {bounds}")
 
     def get_rates(self) -> GrowthRates:
+        """
+        Method to obtain the GrowthRates in grams for the specified time period.
+        The time period corresponds to the variable GAMESPEED of the gametime object.
+
+        Returns: A GrowthRates object that describes the growth rates in grams.
+
+        """
 
         growth_rates = self.growth_rates.flux2grams(self.gametime)
 

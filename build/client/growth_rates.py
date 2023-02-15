@@ -41,7 +41,19 @@ class GrowthRates:
             yield getattr(self, field.name)
 
     def flux2grams(self, gametime: GameTime) -> GrowthRates:
-        gamespeed = self.gametime.GAMESPEED
+        """
+        Method to obtain the GrowthRates in grams for the specified time period.
+
+        Args:
+            gametime: Gametime object that defines the speed and thus also
+            the time period for the GrowthRates. The GAMESPEED variable is
+            used here.
+
+        Returns: The growth rates of all organs in grams for the specified time.
+
+        """
+
+        gamespeed = gametime.GAMESPEED
 
         leaf = self.leaf_rate * gamespeed * FLUX_TO_GRAMM
         stem = self.stem_rate * gamespeed * FLUX_TO_GRAMM

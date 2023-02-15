@@ -1,5 +1,6 @@
 import pygame
 from data import assets
+from gameobjects.water_reservoir import Water_Grid
 from utils.particle import ParticleSystem
 from pygame import Rect
 import config
@@ -9,11 +10,10 @@ from fba import dynamic_model
 
 
 class Watering_can:
-    def __init__(self, pos, model=None, water_grid=None, amount=None, rate=3000000, cost=1, active=False, callback=None): # take from config
+    def __init__(self, pos, water_grid: Water_Grid=None, amount=None, rate=3000000, cost=1, active=False, callback=None): # take from config
         self.gametime = GameTime.instance()
         self.pos = (pos[0]-20,pos[1]-120)
-        self.model = model
-        self.water_grid = water_grid
+        self.water_grid = water_grid #remove
         self.image = assets.img("watering_can.PNG",(214,147))
         self.default_amount = rate*3 #default gamespeed 3s
         self.amount = amount if amount else self.default_amount

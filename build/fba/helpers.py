@@ -19,6 +19,8 @@ from cobra.exceptions import OptimizationError
 from optlang.interface import Constraint, Objective
 from sympy import Add
 
+from client import GrowthPercent
+
 FILE = (
     Path(__file__)
     .resolve()
@@ -395,11 +397,7 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
 
 def update_objective(
     model: Model,
-    root: float,
-    stem: float,
-    leaf: float,
-    starch: float,
-    seed: float,
+    growth_percentages: GrowthPercent,
 ):
     """
     Updates the corresponding constraints for the multi objective in the model
@@ -409,6 +407,14 @@ def update_objective(
     constraints have to be added. Additionally, bounds are limited in case
     that the rate would be 0.
     """
+
+    root = growth_percentages.root
+    stem = growth_percentages.stem
+    leaf = growth_percentages.leaf
+    starch = growth_percentages.starch
+    seed = growth_percentages.flower
+
+
     try:
         model.constraints["biomass_organ"]
 

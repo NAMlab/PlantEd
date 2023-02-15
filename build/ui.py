@@ -267,7 +267,8 @@ class UI:
         else:
             self.open_stomata()
 
-    def toggle_starch_as_resource(self):
+    # ToDo unused code
+    def toggle_starch_as_resource(self, percentage: float = 1):
         if self.plant.use_starch:
             self.drain_starch_particle.deactivate()
             self.plant.use_starch = False
@@ -277,7 +278,7 @@ class UI:
             self.drain_starch_particle.activate()
             self.plant.use_starch = True
 
-            self.client.activate_starch_resource()
+            self.client.activate_starch_resource(percentage = percentage)
 
     def draw_ui(self, screen):
         # new surface to get alpha

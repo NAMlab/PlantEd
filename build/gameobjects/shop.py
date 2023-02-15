@@ -121,7 +121,7 @@ class Shop:
         self.green_thumbs_icon = assets.img("green_thumb.PNG",(26,26))
         self.current_cost = 0
         self.animations = []
-        self.watering_can = Watering_can((0,0), self.model, self.water_grid)
+        self.watering_can = Watering_can((0, 0), self.water_grid)
         self.blue_grain = Blue_grain((0,0), self.model)
         self.spraycan = Spraycan((0,0), self.model,3,2)
         self.root_item = Root_Item(self.plant.organs[2].create_new_root,self.plant)

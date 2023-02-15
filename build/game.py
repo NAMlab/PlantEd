@@ -209,11 +209,13 @@ class DefaultGameScene(object):
         # self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
         # self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
         # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
+
         self.model = DynamicModel(self.gametime, self.log)
-        self.plant = Plant((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5), self.model,
-                           self.camera, self.water_grid, growth_boost=1)
-        plant = self.plant
+
         model = self.model
+
+        logger.debug("Creating Client")
+        self.client = Client()
 
         logger.info("Starting Server and client")
         logger.debug("Creating server")
@@ -221,15 +223,20 @@ class DefaultGameScene(object):
         logger.debug("Starting server")
         self.server.start()
 
-        logger.debug("Creating Client")
-        self.client = Client()
+
+        self.plant = Plant(pos =(config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5),
+                           camera=self.camera,
+                           client= self.client,
+                           water_grid=self.water_grid,
+                           growth_boost=1)
+
 
         self.water_grid.add_base_water(
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
-        self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
+        self.environment = Environment(self.plant, self.water_grid, 0, 0, self.gametime)
         self.shadow_map = None
 
-        growth_rates = GrowthRates(0, 0, 0, 0, 0, 0)
+        growth_rates = GrowthRates("grams",0, 0, 0, 0, 0, 0)
         self.ui = UI(scale=1,
                      plant=self.plant,
                      client=self.client,
@@ -434,9 +441,9 @@ class DefaultGameScene(object):
                 starch_pool = self.plant.organ_starch.mass
                 nitrate_pool = self.model.nitrate_pool
 
-                leaf_rate = self.model.leaf_rate
-                stem_rate = self.model.stem_rate
-                root_rate = self.model.root_rate
+                leaf_rate = self.model.growth_rates.leaf_rate
+                stem_rate = self.model.growth_rates.stem_rate
+                root_rate = self.model.growth_rates.root_rate
                 seed_rate = 0
 
                 ticks = self.gametime.get_time()

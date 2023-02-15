@@ -8,8 +8,8 @@ import logging
 
 import websockets
 
-from build.client.init import GrowthPercent
-from build.client.init import GrowthRates
+from client import GrowthPercent
+from client import GrowthRates
 from client.water import Water
 
 logger = logging.getLogger(__name__)
@@ -98,13 +98,14 @@ class Client:
 
         await self.websocket.send(message)
 
-    def activate_starch_resource(self):
-        self.loop.run_until_complete(self.__activate_starch_resource())
+    def activate_starch_resource(self, percentage: float):
+        self.loop.run_until_complete(self.__activate_starch_resource(percentage = percentage))
 
-    async def __activate_starch_resource(self):
+    async def __activate_starch_resource(self, percentage: float):
         logger.debug("Sending request to activate_starch_resource")
 
-        message = "{\"activate_starch_resource\": \"null\"}"
+        message = {"activate_starch_resource": percentage}
+        message = json.dumps(message)
 
         await self.websocket.send(message)
 

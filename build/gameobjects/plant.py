@@ -1,6 +1,7 @@
 import random
 import pygame
 
+from client import Client
 from client.growth_rates import GrowthRates
 from data import assets
 from utils.spline import Beziere, Cubic, Cubic_Tree
@@ -39,11 +40,11 @@ class Plant:
     STARCH = 4
     FLOWER = 5
 
-    def __init__(self, pos, model, camera, water_grid, growth_boost=1, upgrade_points=10):
+    def __init__(self, pos, camera,client:Client, water_grid, growth_boost=1, upgrade_points=10):
         self.x = pos[0]
         self.y = pos[1]
+        self.client = client
         self.upgrade_points = upgrade_points
-        self.model = model
         self.stromata_open = True,
         self.use_starch = True
         self.camera = camera
@@ -55,7 +56,7 @@ class Plant:
         organ_flower = Flower(self.x, self.y, "Roots", self.FLOWER, self.set_target_organ_flower, self, flowers, mass=0.8, active=False)
         organ_stem = Stem(self.x, self.y, "Stem", self.STEM, self.set_target_organ_stem, self, mass=0.1, leaf = organ_leaf, flower = organ_flower, active=False)
         organ_root = Root(self.x, self.y, "Roots", self.ROOTS, self.set_target_organ_root, self, mass=0.8, active=True)
-        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=1000000, active=True, model=self.model)
+        self.organ_starch = Starch(self.x, self.y, "Starch", self.STARCH, self, None, None, mass=1000000, active=True)
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_flower]
         self.target_organ = self.organs[2]
@@ -395,7 +396,7 @@ class Leaf(Organ):
             offset_y = self.leaves[i]["offset_y"]
             self.particle_systems[i].spawn_box = (int(self.leaves[i]["x"]-offset_x+size[0]/2),
                                                   int(self.leaves[i]["y"]-offset_y+size[1]/2), 0, 0)
-            if self.photon_intake > 0 and self.plant.model.stomata_open:
+            if self.photon_intake > 0 and self.plant.stomata_open:
                 adapted_pi = self.photon_intake/50*3 + 5
                 self.particle_systems[i].lifetime=adapted_pi
                 self.particle_systems[i].activate()
@@ -722,10 +723,9 @@ class Stem(Organ):
         return x, dir
 
 class Starch(Organ):
-    def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active, model):
+    def __init__(self, x, y, name, organ_type, callback, plant, image, mass, active):
         super().__init__(x, y, name, organ_type, callback, plant, image, mass=mass, active=active, thresholds=[500])
         self.toggle_button = None
-        self.model = model
         self.starch_intake = 0
 
     def grow(self,dt):
@@ -746,9 +746,9 @@ class Starch(Organ):
     def set_percentage(self, percentage):
         self.percentage = percentage
         if percentage < 0:
-            self.model.activate_starch_resource(abs(percentage))
+            self.plant.client.activate_starch_resource(abs(percentage))
         else:
-            self.model.deactivate_starch_resource()
+            self.plant.client.deactivate_starch_resource()
 
     def drain(self, dt):
         delta = self.starch_intake*dt

@@ -4,7 +4,6 @@ import asyncio
 import json
 import logging
 import threading
-from typing import Optional
 
 import websockets
 from websockets.legacy.server import WebSocketServerProtocol
@@ -64,9 +63,18 @@ class Server:
         logger.debug("Thread closed")
 
     async def __stop_server(self):
+        """
+        Internal function that stops the websocket by assigning a result to the future object.
+
+        """
         self.__future.set_result("")
 
     async def __start(self):
+        """
+        Internal function that creates the loop of the object, creates
+        a future object that is used as a stop signal and starts the websocket.
+
+        """
         self.loop = asyncio.get_running_loop()
         self.__future = self.loop.create_future()
 
@@ -81,24 +89,56 @@ class Server:
 
 
     def open_connection(self, ws: WebSocketServerProtocol):
+        """
+        Function that registers a client.
+
+        Args:
+            ws: WebsocketServerProtocol, the new connection.
+
+        """
+
         self.clients.add(ws)
         logger.info(f"{ws.remote_address} connected.")
 
     def close_connection(self, ws: WebSocketServerProtocol):
+        """
+        Function that logs off a client.
+
+        Args:
+            ws: WebsocketServerProtocol object, of the connection to be closed.
+
+        Returns:
+
+        """
         self.clients.remove(ws)
         logger.info(f"{ws.remote_address} disconnected.")
 
-    def send_growth_percent(self, ws: WebSocketServerProtocol) -> str:
+    def get_growth_percent(self) -> str:
+        """
+        Function that queries the server-side growth_percent.
+
+        Returns: A GrowthPercent object encoded in JSON.
+
+        """
 
         message = self.model.percentages.to_json()
         logger.info(f"Sending {message}")
         return message
 
-    def calc_send_growth_rate(self, data) -> str:
+    def calc_send_growth_rate(self, growth_percent:GrowthPercent) -> str:
+        """
+        Function that calculates the grams per specified time step.
 
+        Args:
+            growth_percent: A GrowthPercent object that determines the
+                distribution of starch within the plant.
 
-        logger.info(f"Calculating growth rates from {data}")
-        growth_percent: GrowthPercent = GrowthPercent.from_json(data)
+        Returns: Returns a GrowthRates object encoded in JSON that describes
+            the grams in the specified time period.
+        """
+
+        logger.info(f"Calculating growth rates from {growth_percent}")
+
         self.model.calc_growth_rate(leaf_percent=growth_percent.leaf,
                                     stem_percent=growth_percent.stem,
                                     root_percent=growth_percent.root,
@@ -116,22 +156,45 @@ class Server:
         return message
 
     def open_stomata(self):
+        """
+        Method to open the stomas of the dynamic model.
+        """
+
         logger.info("Opening stomata")
         self.model.open_stomata()
 
     def close_stomata(self):
+        """
+        Method to open the stomas of the dynamic model.
+
+        """
         logger.info("Closing stomata")
         self.model.close_stomata()
 
     def deactivate_starch_resource(self):
+        """
+
+        Methode to disable the use of the starch pool.
+
+        """
         logger.info("Deactivating starch use")
         self.model.deactivate_starch_resource()
 
     def activate_starch_resource(self):
+        """
+        Methode to enable the use of the starch pool.
+
+        """
         logger.info("Activating starch use")
         self.model.activate_starch_resource()
 
     def get_water_pool(self) -> str:
+        """
+        Method to obtain the WaterPool defined in the DynamicModel.
+
+        Returns: The WaterPool object encoded in JSON.
+
+        """
         logger.info("Creating Water Object and sending it back")
 
         water = Water(
@@ -151,14 +214,14 @@ class Server:
         and passes them on to the responsible methods.
         """
         logger.debug(f"Connection from {ws.remote_address} established.")
-        await self.open_connection(ws)
+        self.open_connection(ws)
         logger.debug(f"{ws.remote_address} registered as client")
 
         while True:
             try:
                 request = await ws.recv()
             except websockets.ConnectionClosedOK:
-                await self.close_connection(ws)
+                self.close_connection(ws)
                 logger.debug(f"{ws.remote_address} unregistered.")
                 break
 
@@ -173,12 +236,13 @@ class Server:
 
                     case "get_growth_percent":
                         logger.debug("Received command identified as request of growth_percent.")
-                        respsonse["get_growth_percent"] = self.send_growth_percent(ws)
+                        respsonse["get_growth_percent"] = self.get_growth_percent()
 
                     case "growth_rate":
                         logger.debug("Received command identified as calculation of growth_rates.")
+                        growth_percent = GrowthPercent.from_json(command["GrowthPercent"])
 
-                        respsonse["growth_rate"] = self.calc_send_growth_rate(data=command["GrowthPercent"])
+                        respsonse["growth_rate"] = self.calc_send_growth_rate(growth_percent=growth_percent)
                     case "open_stomata":
                         logger.debug("Received command identified as open_stomata.")
 
@@ -214,4 +278,5 @@ class Server:
 
                         continue
 
+            respsonse = json.dumps(respsonse)
             await asyncio.wait([client.send(respsonse) for client in self.clients])

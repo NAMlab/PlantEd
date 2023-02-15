@@ -33,10 +33,9 @@ rain_sound.set_volume(0.05)
 
 
 class Environment:
-    def __init__(self, plant, model, water_grid, nitrate, water, gametime, activate_hawk=None):
+    def __init__(self, plant, water_grid, nitrate, water, gametime, activate_hawk=None):
         self.s = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         self.w = SCREEN_WIDTH
-        self.model = model
         self.season = config.spring
         self.water_grid = water_grid
         self.gametime = gametime
@@ -80,7 +79,10 @@ class Environment:
 
         self.nitrate = StillParticles(10, spawn_box=Rect(0,950,1920,300),
                                     boundary_box=Rect(0,950,1920,300),
-                                    color=(0,0,0), images=[assets.img("nitrogen.PNG",(20,20))], speed=[0, 0], callback=self.model.get_nitrate_percentage,
+                                    color=(0,0,0),
+                                    images=[assets.img("nitrogen.PNG",(20,20))],
+                                    speed=[0, 0],
+                                    callback=self.model.get_nitrate_percentage,
                                     active=True, size=4, factor=100, once=True)
         self.weather_events = config.e
 
