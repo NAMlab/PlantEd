@@ -1,0 +1,186 @@
+[
+  {
+    "x": 810,
+    "y": 151,
+    "lines": [
+      "Welcome to PlantEd!",
+      "> This is PlantEd <",
+      "Grow your seedling",
+      "into a big plant.",
+      " To win the game",
+      "reach level 20"
+    ],
+    "font": null,
+    "headfont": true,
+    "mass": 0,
+    "center": false
+  },
+  {
+    "x": 550,
+    "y": 100,
+    "lines": [
+      "Your plant starts as a seed.",
+      "To grow it, enable starch consumption."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 0,
+    "center": false
+  },
+  {
+    "x": 454,
+    "y": 58,
+    "lines": [
+      "Starch and Water are stored in your plant.",
+      "Storages increase during growth.",
+      "You can refill your starch deposit while there is sun.",
+      "Water will be filled automatically, if possible."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 1,
+    "center": false
+  },
+  {
+    "x": 785,
+    "y": 145,
+    "lines": [
+      "The upper bars show",
+      "plant Level: at 20 you win",
+      "plant mass: combined organ biomass",
+      "water stored: in your plant",
+      "your name: change it in options",
+      "In the center you can see",
+      "relative humidity",
+      "days played and daytime",
+      "temperature"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 1,
+    "center": false
+  },
+  {
+    "x": 87,
+    "y": 848,
+    "lines": [
+      "Time can be controlled",
+      "in 2 different speeds.",
+      "You can also hide Tooltipps"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 1,
+    "center": false
+  },
+  {
+    "x": 80,
+    "y": 251,
+    "lines": [
+      "These are your main 3 organs.",
+      "Once your roots are big enough (4 gramm)",
+      "you are able to grow other parts of your plant."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 2,
+    "center": false
+  },
+  {
+    "x": 414,
+    "y": 723,
+    "lines": [
+      "Your sprout started stem and leaf development.",
+      "Grow its mass further to increase nutrient intake."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 3,
+    "center": false
+  },
+  {
+    "x": 800,
+    "y": 153,
+    "lines": [
+      "Seedling Stage",
+      "Stem and leaf development",
+      "are now available.",
+      "Decide wich organs to grow.",
+      "Larger roots will lead",
+      "to faster nitrate and water intake.",
+      "Larger leaves result in more",
+      "light reaching the plant.",
+      "A bigger Stem will provide",
+      "more spots to grow leaves."
+    ],
+    "font": null,
+    "headfont": true,
+    "mass": 5,
+    "center": false
+  },
+  {
+    "x": 10,
+    "y": 498,
+    "lines": [
+      "To perform photosynthesis",
+      "open the plants stomata",
+      "Be careful, hot and dry days",
+      "will result in a big water loss.",
+      "Close the stomata to survive",
+      "if your storage depletes"
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 4,
+    "center": false
+  },
+  {
+    "x": 1339,
+    "y": 120,
+    "lines": [
+      "For every level up",
+      "you will get one Green Thumb",
+      "to buy items."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 5,
+    "center": false
+  },
+  {
+    "x": 1091,
+    "y": 635,
+    "lines": [
+      "The yellow particles indicate",
+      "that your plant is performing photosyntesis."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 6,
+    "center": false
+  },
+  {
+    "x": 571,
+    "y": 55,
+    "lines": [
+      "Name your plant",
+      "in the options to identify",
+      "your score after the game."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 7,
+    "center": false
+  },
+  {
+    "x": 900,
+    "y": 300,
+    "lines": [
+      "50 gramms! Keep it up."
+    ],
+    "font": null,
+    "headfont": false,
+    "mass": 50,
+    "center": false
+  }
+]

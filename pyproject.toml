@@ -32,7 +32,7 @@ repository = "https://github.com/NAMlab/PlantEd"
 PlantEd = "PlantEd.game"
 
 [tool.setuptools.packages.find]
-where = ["build"]
+where = ["src"]
 
 [tool.setuptools.package-data]
 mypkg = ["*.PNG", "*.mp3", "*.png", "JPG", "jpg"]
