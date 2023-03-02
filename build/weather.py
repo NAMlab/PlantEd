@@ -7,6 +7,7 @@ import random
 import config
 from data import assets
 from utils.spline import Beziere
+import pandas as pd
 from gameobjects.water_reservoir import Water_Reservoir, Water_Grid
 
 SUN = 0
@@ -33,31 +34,33 @@ rain_sound.set_volume(0.05)
 
 
 class Environment:
-    def __init__(self, plant, model, water_grid, nitrate, water, gametime):
+    def __init__(self, plant, model, water_grid, gametime):
         self.s = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        self.w = SCREEN_WIDTH
         self.model = model
-        self.season = config.spring
         self.water_grid = water_grid
         self.gametime = gametime
         self.background = assets.img("soil.PNG").convert_alpha()
-        #self.background_moist = pygame.transform.scale(assets.img("background_moist.png"), (SCREEN_WIDTH, SCREEN_HEIGHT)).convert_alpha()
-        self.h = SCREEN_HEIGHT
         self.sun_pos_spline = Beziere([(-100,800),(960,-200),(2020,800)],res=10000).points_to_draw
         self.sunpos = (0,0)
         self.rain_rate = 0.0003
-        self.font = pygame.font.SysFont('Arial', 56)
-        self.sfont = pygame.font.SysFont('Arial', 32)
         self.plant = plant
-        self.draw = True
         self.raining = False
-        self.sprites = pygame.sprite.Group()
         rain_images = [assets.img("gif_rain/frame_{index}_delay-0.05s.png".format(index=i)) for i in range(0,21)]
         self.animations = [Animation(rain_images,10,(480,0),running=False)]
-        self.weather_events = []
-        self.state = SUN # mask for weather 0sun,1rain,2cloud
         self.star_pos_size = [((random.randint(0,SCREEN_WIDTH), random.randint(0,SCREEN_HEIGHT/2)), random.randint(0,10)) for i in range(0,50)]
         self.shadow_map = None
+
+        # fixed for spring currently
+        df = pd.read_csv("cleaned_weather_spring.csv")
+        self.weather_simulator = WeatherSimulator(df)
+        start_temp = df["temp 2m avg"][0]
+        start_hum = df["humidity"][0]
+        start_precip = df["precipitation"][0]
+        self.simulated_weather = self.weather_simulator.simulate(start_temp, start_hum, start_precip)
+
+        self.temperature = 0
+        self.humidity = 0
+        self.precipitation = 0
 
         # init drop sprites
         #drops = [pygame.transform.scale(assets.img("rain/raindrop{}.png".format(i)), (16, 16)) for i in range(0, 3)]
@@ -80,56 +83,20 @@ class Environment:
                                     boundary_box=Rect(0,950,1920,300),
                                     color=(0,0,0), images=[assets.img("nitrogen.PNG",(20,20))], speed=[0, 0], callback=self.model.get_nitrate_percentage,
                                     active=True, size=4, factor=100, once=True)
-        self.weather_events = config.e
-
 
     def update(self, dt):
         #self.sun_pos_spline.update(dt)
         for animation in self.animations:
             animation.update(dt)
-        self.handle_weather_events()
+        self.update_weather()
         #self.rain.update(dt)
         self.nitrate.update(dt)
-        for sprite in self.sprites:
-            # sprites are able to cancle themselves, OneShotAnimation / Animation (loop)
-            if not sprite.update():
-                self.sprites.remove(sprite) # dumb to remove during iteration, maybe don't
 
         day_time = self.get_day_time_t()
         if day_time > 0 and day_time < 1:
             self.sunpos = self.sun_pos_spline[(int(day_time * 10000) - 1)]
             self.plant.organs[1].sunpos = self.sunpos
 
-        days, hours, minutes = self.get_day_time()
-
-
-        # spring
-        if days < config.MAX_DAYS/6:
-            self.season = config.spring
-
-        # summer
-        elif days < config.MAX_DAYS/3*2:
-            self.season = config.summer
-
-        # fall
-        elif days < config.MAX_DAYS:
-            self.season = config.fall
-
-        else:
-            self.season = config.winter
-
-        #sun_intensity = self.get_sun_intensity()
-        #x = (self.sun_pos_night[0] + (self.sun_pos_noon[0] - self.sun_pos_night[0]) * sun_intensity)
-        #y = (self.sun_pos_night[1] + (self.sun_pos_noon[1] - self.sun_pos_night[1]) * sun_intensity)
-        #self.sun_pos = (x, y)
-
-    def get_r_humidity(self):
-        days, hours, minutes = self.get_day_time()
-        return config.get_y(hours, config.humidity)
-
-    def get_temperature(self):
-        days, hours, minutes = self.get_day_time()
-        return config.get_y(hours, self.season)
 
     def calc_shadowmap(self, leaves, sun_dir=(0.5, 1), resolution=10):
         width = config.SCREEN_WIDTH
@@ -139,13 +106,10 @@ class Environment:
         res_height = int(height/resolution)
 
         map = np.zeros((res_width, res_height))
-
-
         sun_dir_x = sun_dir[0]
         sun_dir_y = sun_dir[1]
 
         # calc below shadows
-        #print(sun_dir_x)
         for leaf in leaves:
             bottom_left = (leaf['x']-leaf['offset_x'],leaf['y']-leaf['offset_y']+leaf['image'].get_height())
             bottom_right = (bottom_left[0] + leaf['image'].get_width(),bottom_left[1])
@@ -159,26 +123,8 @@ class Environment:
                     if i*resolution > bottom_left[0]+delta_x and i*resolution < bottom_right[0]+delta_x and j*resolution > bottom_left[1]:
                         #print(bottom_right, bottom_left, i * resolution, j * resolution)
                         map[i,j] += 1
-            # cast rays, mark each cell of subset below rect: x: min x + dir_x * delta_y, max x+width + dir_x * delta_y ->  divide by resolution
-
-        # 00000000
-        # 01110000
-        # 01210000
-        # 01210011
-        # 01210011
-
-
-        # the higher the number, the thicker the shadow -> less photon
-
-
-        #for (x, y), value in np.ndenumerate(map):
-        #    print(x, y)
         self.shadow_map = map
         return map, resolution
-        # sun_direction
-        # leaves
-        # 2d shadow array, resolution
-        # thickness --> light reduction
 
     def draw_shadows(self, screen):
         if self.shadow_map is not None:
@@ -198,12 +144,6 @@ class Environment:
             screen.blit(self.s, (0, 0))
 
     def draw_background(self, screen):
-        #if self.draw:
-        #    self.draw = False
-        #    return
-        #self.draw = True
-        # sun-->Photon_intensity, moon, water_lvl
-
         sun_intensity = self.get_sun_intensity()
 
         if sun_intensity > 0:
@@ -220,88 +160,23 @@ class Environment:
         # self.sun_pos_spline.draw(s)
         if day_time > 0 and day_time < 1:
             #sunpos = self.sun_pos_spline.get_point(day_time)
-
             offset_sunpos = (self.sunpos[0] - self.sun.get_width() / 2, self.sunpos[1] - self.sun.get_height() / 2)
             self.s.blit(self.sun, offset_sunpos)
-
-        '''if sun_intensity > 0:
-            color = self.get_color(orange, blue, sun_intensity)
-            # sun_intensity 0, 1 -->
-            sun_index = min(max(int(self.get_sun_intensity() * len(self.sun)), 0), 4)
-            s.blit(self.sun[sun_index], self.sun_pos)
-
-        else:
-            color= self.get_color(orange, (0,0,0), abs(sun_intensity))
-
-            for pos in self.star_pos_size:
-                pygame.draw.circle(s, (255,255,255, abs(sun_intensity)*128), pos[0], pos[1])
-                pygame.draw.circle(s, (255,255,255, abs(sun_intensity)*180), pos[0], max(pos[1]-5,0))
-        '''
-        if self.state == CLOUD:
-            self.s.blit(self.cloud, (430,-100))
-            self.s.blit(self.cloud, (810,-140))
-            self.s.blit(self.cloud, (1140,-110))
-        if self.state == RAIN:
-            self.s.blit(self.cloud_dark, (430,-100))
-            self.s.blit(self.cloud_dark, (810,-140))
-            self.s.blit(self.cloud_dark, (1140,-110))
-
-
-
-        #for animation in self.animations:
-        #    s.blit(animation.image, animation.pos)
         screen.blit(self.s, (0, 0))
-
-
-        #if self.model.water_pool > 0:
-        #    pygame.draw.circle(s, (50, 40, 20, min(int(self.model.water_pool / self.model.max_water_pool * 32), 255)),
-        #                       (1430, 1000), min(1, self.model.water_pool / self.model.max_water_pool) * 40 + 70)
-            # background_moist = self.background_moist.copy()
-            # background_moist.set_alpha(int(self.model.water_pool/self.model.max_water_pool*255))
-            # screen.blit(background_moist, (0,0))
 
     def get_color(self, color0, color1, grad):
         return (int(color0[0] * (1 - grad) + color1[0] * grad), int(color0[1] * (1 - grad) + color1[1] * grad),
                 int(color0[2] * (1 - grad) + color1[2] * grad))
 
     def draw_foreground(self, screen):
-        #self.draw_clock(screen)
-        #self.rain.draw(screen)
         screen.blit(self.background, (0, -140))
         self.nitrate.draw(screen)
-        self.sprites.draw(screen)
         for animation in self.animations:
             animation.draw(screen)
 
-    def handle_weather_events(self):
-        time = self.gametime.get_time()
-
-        for event in self.weather_events:
-            if event["start_time"] <= time:
-                self.start_event(event)
-
-    def start_event(self, event):
-        self.state = event["type"]
-        if self.state == RAIN:
-            pygame.mixer.Sound.play(rain_sound, -1)
-            self.raining = True
-            self.animations[0].running = True
-            self.water_grid.activate_rain()
-        elif self.state == SUN:
-            pygame.mixer.Sound.stop(rain_sound)
-            self.raining = False
-            self.animations[0].running = False
-            self.water_grid.deactivate_rain()
-        elif self.state == CLOUD:
-            pygame.mixer.Sound.stop(rain_sound)
-            self.raining = False
-            self.animations[0].running = False
-            self.water_grid.deactivate_rain()
-        elif self.state == HAWK:
-            pass
-            #self.activate_hawk()
-
-        self.weather_events.remove(event)
+    def update_weather(self):
+        days, hours, minutes = self.get_day_time()
+        self.temperature, self.humidity, self.precipitation, hour = self.simulated_weather[int(int(days)*24+int(hours))]
 
     def get_day_time(self):
         ticks = self.gametime.get_time()
@@ -329,8 +204,6 @@ class WeatherSimulator:
         self.hum_step = 100 / hum_bins
         self.precip_step = 0.1
         self.precip_bins = precip_bins
-
-        self.simulated_hours = []
 
         # Calculate transition probabilities
         self.transitions = {}
@@ -369,10 +242,10 @@ class WeatherSimulator:
             for next_state in self.transitions[curr_state]:
                 self.transitions[curr_state][next_state] /= total_transitions
 
-    def simulate(self, start_temp, start_hum, start_precip, start_hour, start_day, num_days, seed=None):
+    def simulate(self, start_temp, start_hum, start_precip, start_hour=0, start_day=0, num_days=30, seed=None):
         if seed is not None:
             random.seed(seed)
-        self.simulated_hours = []
+        simulated_hours = []
 
         curr_temp_bin = int((start_temp - self.temp_min) / self.temp_step)
         curr_hum_bin = int(start_hum / self.hum_step)
@@ -388,7 +261,7 @@ class WeatherSimulator:
                 curr_hum = curr_hum_bin * self.hum_step
                 curr_precip = curr_precip_bin * self.precip_step
 
-                self.simulated_hours.append([int(curr_temp), int(curr_hum), int(curr_precip), day+(hour/24)])
+                simulated_hours.append([int(curr_temp), int(curr_hum), int(curr_precip), day+(hour/24)])
                 #print(f"Day {day}, Hour {hour}:", f"Temperature: {curr_temp}°C", f"Humidity: {curr_hum}%", f"Precipitation: {curr_precip} mm/h")
 
 
@@ -404,4 +277,5 @@ class WeatherSimulator:
                 hour += 1
             hour = 0
             day += 1
+        return simulated_hours
 

@@ -354,8 +354,8 @@ class UI:
         s.blit(clock_text, (config.SCREEN_WIDTH/2-clock_text.get_width()/2,16))
 
 
-        RH =  self.environment.get_r_humidity()
-        T = self.environment.get_temperature()
+        RH =  self.environment.humidity
+        T = self.environment.temperature
 
         RH_label = config.FONT.render("{:.0f} %".format(RH*100), True, config.BLACK)
         T_label = config.FONT.render("{:.0f} °C".format(T), True, config.BLACK)

@@ -553,7 +553,6 @@ class Stem(Organ):
         self.flower = flower
         self.width = 15
         self.highlight = None
-        self.sunpos = (0,0)
         self.curve = Cubic_Tree([Cubic([[955,900],[960,820],[940,750]])])
         self.gametime = GameTime.instance()
         self.timer = 0

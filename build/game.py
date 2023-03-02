@@ -198,7 +198,7 @@ class DefaultGameScene(object):
                            self.camera, self.water_grid, growth_boost=1)
         self.water_grid.add_base_water(
             Base_water(10, 100, config.SCREEN_WIDTH, config.SCREEN_HEIGHT + 450, config.DARK_BLUE, config.LIGHT_BLUE))
-        self.environment = Environment(self.plant, self.model, self.water_grid, 0, 0, self.gametime)
+        self.environment = Environment(self.plant, self.model, self.water_grid, self.gametime)
         self.ui = UI(1, self.plant, self.model, self.environment, self.camera)
 
         '''example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
@@ -503,10 +503,9 @@ class DefaultGameScene(object):
             self.shop.active = True
 
         self.tree.update(dt)
-
         self.model.update(dt, self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.get_PLA(),
                           max(self.environment.get_sun_intensity(), 0),
-                          self.water_grid.max_drain_rate, self.plant.get_biomass(), self.environment.get_r_humidity() , self.environment.get_temperature())
+                          self.water_grid.max_drain_rate, self.plant.get_biomass(), self.environment.humidity , self.environment.temperature)
 
     def render(self, screen):
         screen.fill((0, 0, 0))
