@@ -754,6 +754,7 @@ def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
+
         # camera.render(screen)
         pygame.display.update()
 

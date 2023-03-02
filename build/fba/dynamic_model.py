@@ -92,7 +92,7 @@ class DynamicModel:
         new_percentages = [leaf_percent, stem_percent, root_percent, starch_percent, flower_percent]
         for i in range(0, len(self.percentages)):
             if self.percentages[i] != new_percentages[i]:
-                update_objective(self.model, root_percent, stem_percent, leaf_percent, starch_percent, flower_percent)
+                update_objective(self.model, root_percent, stem_percent, leaf_percent, flower_percent, starch_percent)
                 self.percentages = new_percentages
                 break
         solution = self.model.optimize()
