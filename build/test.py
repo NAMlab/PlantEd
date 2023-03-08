@@ -2,10 +2,11 @@ import random
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
 
 class WeatherSimulator:
-    def __init__(self, data, temp_bins=50, hum_bins=50, precip_bins=100):
+    def __init__(self, data, temp_bins=100, hum_bins=100, precip_bins=100):
         self.temp_min = data["temp 2m avg"].min()
         self.temp_max = data["temp 2m avg"].max()
         self.temp_step = (self.temp_max - self.temp_min) / temp_bins
@@ -94,25 +95,37 @@ summer = "cleaned_weather_summer"
 fall = "cleaned_weather_fall"
 seasons = [spring, summer, fall]
 
-for i in range(3):
-    data = pd.read_csv(seasons[i]+'.csv').fillna(value=0)
-    ws = WeatherSimulator(data)
-    ws.simulate(12,83,0,0,0,30)
-    temp = [row[0] for row in ws.simulated_hours]
-    hum = [row[1] for row in ws.simulated_hours]
-    preci = [row[2] for row in ws.simulated_hours]
-    time = [row[3] for row in ws.simulated_hours]
-    #plt.plot(time, preci)
-    '''plt.xticks(np.arange(30, step=1))
-    for i in(np.arange(30)):
-        plt.axvline(i)'''
-    fig, axs = plt.subplots(3)
-    fig.suptitle(seasons[i])
-    axs[0].plot(time, temp)
-    axs[1].plot(time, hum)
-    axs[2].plot(time, preci)
+def main(seed=None):
+    if not seed:
+        seed = random.random()
+    print(seed)
+    for i in range(3):
+        data = pd.read_csv(seasons[i]+'.csv').fillna(value=0)
+        ws = WeatherSimulator(data)
+        ws.simulate(12,83,0,0,0,30, seed)
+        temp = [row[0] for row in ws.simulated_hours]
+        hum = [row[1] for row in ws.simulated_hours]
+        preci = [row[2] for row in ws.simulated_hours]
+        time = [row[3] for row in ws.simulated_hours]
+        #plt.plot(time, preci)
+        '''plt.xticks(np.arange(30, step=1))
+        for i in(np.arange(30)):
+            plt.axvline(i)'''
+        fig, axs = plt.subplots(3)
+        fig.suptitle(seasons[i])
+        axs[0].plot(time, temp)
+        axs[1].plot(time, hum)
+        axs[2].plot(time, preci)
 
-    #plt.plot(temp)
-    #plt.plot(preci)
-    plt.xlabel = "days"
-    plt.savefig(seasons[i]+'.svg')
+        #plt.plot(temp)
+        #plt.plot(preci)
+        plt.xlabel = "days"
+        plt.savefig(seasons[i]+'.svg')
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    if len(args) > 0:
+        main(args[0])
+    else:
+        main()

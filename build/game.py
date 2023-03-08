@@ -363,7 +363,7 @@ class DefaultGameScene(object):
                 leaf_rate = self.model.leaf_rate
                 stem_rate = self.model.stem_rate
                 root_rate = self.model.root_rate
-                seed_rate = 0
+                seed_rate = self.model.seed_rate
 
                 ticks = self.gametime.get_time()
                 day = 1000 * 60 * 60 * 24

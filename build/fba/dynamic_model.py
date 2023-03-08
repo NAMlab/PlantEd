@@ -135,6 +135,9 @@ class DynamicModel:
         self.stomata_open = False
         self.set_bounds(CO2, (-1000,0))
 
+    def get_rates_unchanged(self):
+        return (self.leaf_rate, self.stem_rate, self.root_rate, self.starch_rate, self.starch_intake, self.seed_rate)
+
     def get_rates(self):
         gamespeed = self.gametime.GAMESPEED
         return (self.leaf_rate*gamespeed*FLUX_TO_GRAMM, self.stem_rate*gamespeed*FLUX_TO_GRAMM, self.root_rate*gamespeed*FLUX_TO_GRAMM, self.starch_rate*gamespeed, self.starch_intake*gamespeed, self.seed_rate*gamespeed)

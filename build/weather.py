@@ -150,10 +150,10 @@ class Environment:
             color = self.get_color(orange, blue, sun_intensity)
         else:
             color = self.get_color(orange, (0, 0, 0), abs(sun_intensity))
-
+            '''
             for pos in self.star_pos_size:
                 pygame.draw.circle(self.s, (255, 255, 255, abs(sun_intensity) * 128), pos[0], pos[1])
-                pygame.draw.circle(self.s, (255, 255, 255, abs(sun_intensity) * 180), pos[0], max(pos[1] - 5, 0))
+                pygame.draw.circle(self.s, (255, 255, 255, abs(sun_intensity) * 180), pos[0], max(pos[1] - 5, 0))'''
         self.s.fill(color)
 
         day_time = self.get_day_time_t()
@@ -178,7 +178,7 @@ class Environment:
         days, hours, minutes = self.get_day_time()
         self.temperature, self.humidity, self.precipitation, hour = self.simulated_weather[int(int(days)*24+int(hours))]
 
-    def get_day_time(self):
+    def get_day_time(self) -> (int, float, float):
         ticks = self.gametime.get_time()
         day = 1000*60*60*24
         hour = day/24
@@ -197,7 +197,10 @@ class Environment:
 
 
 class WeatherSimulator:
-    def __init__(self, data, temp_bins=50, hum_bins=50, precip_bins=100):
+    def __init__(self, data, temp_bins=50, hum_bins=50, precip_bins=100, seed=None):
+        if not seed:
+            seed = random.randint(0,100)
+        self.seed = seed
         self.temp_min = data["temp 2m avg"].min()
         self.temp_max = data["temp 2m avg"].max()
         self.temp_step = (self.temp_max - self.temp_min) / temp_bins
@@ -242,9 +245,8 @@ class WeatherSimulator:
             for next_state in self.transitions[curr_state]:
                 self.transitions[curr_state][next_state] /= total_transitions
 
-    def simulate(self, start_temp, start_hum, start_precip, start_hour=0, start_day=0, num_days=30, seed=None):
-        if seed is not None:
-            random.seed(seed)
+    def simulate(self, start_temp, start_hum, start_precip, start_hour=0, start_day=0, num_days=30):
+        random.seed(self.seed)
         simulated_hours = []
 
         curr_temp_bin = int((start_temp - self.temp_min) / self.temp_step)

@@ -14,7 +14,6 @@ from utils.hover_message import Hover_Message
 # constants in dynamic model, beter in config? dont think so
 from data import assets
 
-
 '''
 UI: set up all UI elements, update them, link them to functions
 @param  scale:size UI dynamically
@@ -27,23 +26,25 @@ Below: 4 Organs, Production
             
 '''
 
-preset = {"leaf_slider" : 0,
-          "stem_slider" : 0,
-          "root_slider" : 100,
-          "starch_slider" : 0,
-          "consume_starch" : False}
+preset = {"leaf_slider": 0,
+          "stem_slider": 0,
+          "root_slider": 100,
+          "starch_slider": 0,
+          "consume_starch": False}
+
 
 class UI:
-    def __init__(self, scale, plant, model, environment, camera, production_topleft=(10,100), plant_details_topleft=(10,10),
-                 organ_details_topleft=(10,430), dev_mode=False):
+    def __init__(self, scale, plant, model, environment, camera, production_topleft=(10, 100),
+                 plant_details_topleft=(10, 10),
+                 organ_details_topleft=(10, 430), dev_mode=False):
         self.name = config.load_options(config.OPTIONS_PATH)["name"]
-        self.name_label = config.FONT.render(self.name,True,config.BLACK)
+        self.name_label = config.FONT.render(self.name, True, config.BLACK)
         self.plant = plant
         self.model = model
         self.environment = environment
         self.gametime = GameTime.instance()
 
-        self.hover = Hover_Message(config.FONT,30,5)
+        self.hover = Hover_Message(config.FONT, 30, 5)
         self.camera = camera
         self.dev_mode = dev_mode
 
@@ -53,7 +54,7 @@ class UI:
 
         self.danger_box = self.init_danger_box()
 
-        #performance boost:
+        # performance boost:
         self.label_leaf = config.FONT.render("Leaf", True, (0, 0, 0))  # title
         self.label_stem = config.FONT.render("Stem", True, (0, 0, 0))  # title
         self.label_root = config.FONT.render("Root", True, (0, 0, 0))  # title
@@ -77,19 +78,23 @@ class UI:
         self.floating_elements = []
         self.animations = []
 
-        #put somewhere
+        # put somewhere
         topleft = self.organ_details_topleft
 
-        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+530, self.production_topleft[1]+80, 0, 20), lifetime=10, color=config.WHITE,
-                                              apply_gravity=False,
-                                              speed=[-30, 0], spread=[0, 0], active=False)
+        self.drain_starch_particle = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0] + 530,
+                                                                       self.production_topleft[1] + 80, 0, 20),
+                                                    lifetime=10, color=config.WHITE,
+                                                    apply_gravity=False,
+                                                    speed=[-30, 0], spread=[0, 0], active=False)
 
         self.open_stomata_particle_in = Inwards_Particle_System(20, spawn_box=Rect(self.production_topleft[0] + 10,
-                                                                       self.production_topleft[1] + 80, 100, 50),
-                                                    lifetime=6, color=config.GRAY, active=False, center=(50,0))
+                                                                                   self.production_topleft[1] + 80, 100,
+                                                                                   50),
+                                                                lifetime=6, color=config.GRAY, active=False,
+                                                                center=(50, 0))
 
-        self.open_stomata_particle_out = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0]+55,
-                                                                           self.production_topleft[1]+80, 10, 0),
+        self.open_stomata_particle_out = ParticleSystem(20, spawn_box=Rect(self.production_topleft[0] + 55,
+                                                                           self.production_topleft[1] + 80, 10, 0),
                                                         lifetime=10, color=config.WHITE,
                                                         apply_gravity=False,
                                                         speed=[0, -4], spread=[5, 5], active=False)
@@ -99,15 +104,19 @@ class UI:
         self.particle_systems.append(self.open_stomata_particle_out)
 
         tipps = config.load_tooltipps("tooltipps.json")
-        tooltipps = [ToolTip(tip["x"],tip["y"],tip["lines"],headfont=tip["headfont"],mass=tip["mass"],center=tip["center"]) for tip in tipps]
+        tooltipps = [
+            ToolTip(tip["x"], tip["y"], tip["lines"], headfont=tip["headfont"], mass=tip["mass"], center=tip["center"])
+            for tip in tipps]
         self.tool_tip_manager = ToolTipManager(tooltipps, callback=self.plant.get_biomass)
         self.button_sprites.add(ToggleButton(260, config.SCREEN_HEIGHT - 50, 64, 32,
                                              [self.tool_tip_manager.toggle_activate], config.FONT,
                                              text="HINT", pressed=True))
 
-
-        self.button_sprites.add(Arrow_Button(config.SCREEN_WIDTH/2-100,60,200,50,[self.camera.move_up],0,border_w=3))
-        self.button_sprites.add(Arrow_Button(config.SCREEN_WIDTH/2-100,config.SCREEN_HEIGHT-60,200,40,[self.camera.move_down],2,border_w=3))
+        self.button_sprites.add(
+            Arrow_Button(config.SCREEN_WIDTH / 2 - 100, 60, 200, 50, [self.camera.move_up], 0, border_w=3))
+        self.button_sprites.add(
+            Arrow_Button(config.SCREEN_WIDTH / 2 - 100, config.SCREEN_HEIGHT - 60, 200, 40, [self.camera.move_down], 2,
+                         border_w=3))
 
         # init speed control
         speed_options = [RadioButton(120, config.SCREEN_HEIGHT - 50, 32, 32, [self.gametime.play], config.FONT,
@@ -123,14 +132,16 @@ class UI:
             self.button_sprites.add(rb)
         speed_options[0].button_down = True
 
-        self.skip_intro = Button_Once(330, config.SCREEN_HEIGHT - 50,140,32,[self.skip_intro_ui],config.FONT,"SKIP INTRO",border_w=3)
+        self.skip_intro = Button_Once(330, config.SCREEN_HEIGHT - 50, 140, 32, [self.skip_intro_ui], config.FONT,
+                                      "SKIP INTRO", border_w=3)
         self.button_sprites.add(self.skip_intro)
 
-        self.button_array = ButtonArray((1485,10,30,30),12, 2,5, self.set_stomata_automation, self.hover.set_message)
+        self.button_array = ButtonArray((1485, 10, 30, 30), 12, 2, 5, self.set_stomata_automation,
+                                        self.hover.set_message)
 
         self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
-        #self.gradient = self.init_gradient()
+        # self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
         self.tool_tip_manager.deactivate_tooltipps()
@@ -185,25 +196,25 @@ class UI:
         active_consumption = False
         '''if self.plant.organs[2].toggle_button is not None:
             active_consumption = self.plant.organs[2].toggle_button.active'''
-        preset = {"leaf_slider" : self.leaf_slider.get_percentage(),
-                  "stem_slider" : self.stem_slider.get_percentage(),
-                  "root_slider" : self.root_slider.get_percentage(),
-                  "starch_slider" : self.starch_slider.get_percentage(),
-                  "consume_starch" : active_consumption}
+        preset = {"leaf_slider": self.leaf_slider.get_percentage(),
+                  "stem_slider": self.stem_slider.get_percentage(),
+                  "root_slider": self.root_slider.get_percentage(),
+                  "starch_slider": self.starch_slider.get_percentage(),
+                  "consume_starch": active_consumption}
         self.presets[id] = preset
         return preset
 
     def draw(self, screen):
-        #screen.blit(self.gradient,(0,0))
+        # screen.blit(self.gradient,(0,0))
         self.button_array.draw(screen)
         self.button_sprites.draw(screen)
         [slider.draw(screen) for slider in self.sliders]
         self.draw_ui(screen)
-        #self.draw_energy_meter(screen)
+        # self.draw_energy_meter(screen)
         for element in self.floating_elements:
             element.draw(screen)
         for animation in self.animations:
-            screen.blit(animation.image,animation.pos)
+            screen.blit(animation.image, animation.pos)
         for system in self.particle_systems:
             system.draw(screen)
         self.tool_tip_manager.draw(screen)
@@ -211,9 +222,9 @@ class UI:
 
         # draw danger mode
         if self.danger_timer < 0.5:
-            pygame.draw.rect(screen,config.RED,(0,0,config.SCREEN_WIDTH,config.SCREEN_HEIGHT),8)
+            pygame.draw.rect(screen, config.RED, (0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT), 8)
         if self.plant.danger_mode:
-            screen.blit(self.danger_box,(1350,750))
+            screen.blit(self.danger_box, (1350, 750))
         self.hover.draw(screen)
 
     def set_stomata_automation(self, hours):
@@ -225,7 +236,7 @@ class UI:
         hour = 1000 * 60 * 60
         hours = ((ticks % day) / hour)
         self.button_array.update(hours)
-        hours = (int) (hours/2)
+        hours = (int)(hours / 2)
         open = self.stomata_hours[hours]
         if open and self.model.stomata_open is False:
             self.open_stomata()
@@ -233,7 +244,6 @@ class UI:
         if not open and self.model.stomata_open is True:
             self.close_stomata()
             self.button_array.go_red()
-
 
     def open_stomata(self):
         self.model.open_stomata()
@@ -261,27 +271,68 @@ class UI:
 
     def draw_ui(self, screen):
         # new surface to get alpha
-        self.s.fill((0,0,0,0))
+        self.s.fill((0, 0, 0, 0))
         self.draw_plant_details(self.s)
         self.draw_clock(self.s)
         self.draw_production(self.s)
-        #self.draw_organ_details(self.s)
-        #self.draw_starch_details(s)
+        self.draw_energy_meter(self.s)
+        # self.draw_organ_details(self.s)
+        # self.draw_starch_details(s)
         # name plant, make textbox
         screen.blit(self.s, (0, 0))
 
     def draw_energy_meter(self, screen):
-        rates = self.model.get_rates()
-        sum_rates = sum(rates)-rates[4]-rates[3]
+        rates = self.model.get_rates_unchanged()
+        sum_rates = sum(rates) - rates[4]
         width = 500
+        if sum_rates > 0:
+            # leaf_rate, self.stem_rate, root_rate, starch_rate, starch_intake, seed_rate)
+            leaf_percentage = rates[0] / sum_rates * 100
+            stem_percentage = rates[1] / sum_rates * 100
+            root_percentage = rates[2] / sum_rates * 100
+            starch_prod_percentage = rates[3] / sum_rates * 100
+            seed_percentage = rates[5] / sum_rates * 100
 
-        # leaf_rate, self.stem_rate, root_rate, starch_rate, starch_intake, seed_rate)
+            leaf_width = rates[0] / sum_rates * width
+            stem_width = rates[1] / sum_rates * width
+            root_width = rates[2] / sum_rates * width
+            starch_prod_width = rates[3] / sum_rates * width
+            seed_width = rates[5] / sum_rates * width
 
-        starch = rates
+            pygame.draw.rect(screen, config.GREEN, (700, 100, leaf_width, 50))
+            pygame.draw.rect(screen, config.GRAY, (700 + leaf_width, 100, stem_width, 50))
+            pygame.draw.rect(screen, config.BROWN, (700 + leaf_width + stem_width, 100, root_width, 50))
+            pygame.draw.rect(screen, config.YELLOW, (700 + leaf_width + stem_width + root_width, 100, seed_width, 50))
+            pygame.draw.rect(screen, config.WHITE,
+                             (700 + leaf_width + stem_width + root_width + seed_width, 100, starch_prod_width, 50))
+            pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700, 100, width, 50), 5, border_radius=2)
 
-        #  self.starch_rate*gamespeed, self.starch_intake*gamespeed, self.seed_rate*gamespeed)
+            if leaf_percentage > 0.1:
+                leaf_rate_label = config.BIG_FONT.render("{:.0f}%".format(leaf_percentage), True, config.BLACK)
+                screen.blit(leaf_rate_label, (700 + leaf_width / 2 - leaf_rate_label.get_width() / 2, 110))
+
+            if stem_percentage > 0.1:
+                stem_rate_label = config.BIG_FONT.render("{:.0f}%".format(stem_percentage), True, config.BLACK)
+                screen.blit(stem_rate_label, (700 + leaf_width + stem_width / 2 - stem_rate_label.get_width() / 2, 110))
+
+            if root_percentage > 0.1:
+                root_rate_label = config.BIG_FONT.render("{:.0f}%".format(root_percentage), True, config.BLACK)
+                screen.blit(root_rate_label,
+                            (700 + leaf_width + stem_width + root_width / 2 - root_rate_label.get_width() / 2, 110))
+
+            if seed_percentage > 0.1:
+                seed_rate_label = config.BIG_FONT.render("{:.0f}%".format(seed_percentage), True, config.BLACK)
+                screen.blit(seed_rate_label, (
+                700 + leaf_width + stem_width + root_width + seed_width/2 - seed_rate_label.get_width() / 2, 110))
+
+            if starch_prod_percentage > 0.1:
+                starch_prod_rate_label = config.BIG_FONT.render("{:.0f}%".format(starch_prod_percentage), True, config.BLACK)
+                screen.blit(starch_prod_rate_label, (
+                700 + stem_width + root_width + leaf_width + seed_width+ starch_prod_width / 2 - starch_prod_rate_label.get_width() / 2,
+                110))
 
 
+        '''
         pygame.draw.rect(screen, config.WHITE, (700,100,rates[0]/sum_rates*width, 50),border_radius=3)
         pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700,100,width, 50),3,border_radius=3)
         leaf_rate_label = config.BIG_FONT.render("LEAF {}".format(rates[0]), True, config.BLACK)
@@ -310,38 +361,34 @@ class UI:
         pygame.draw.rect(screen, config.WHITE, (700, 400, width, 50), border_radius=3)
         pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700, 400, width, 50), 3, border_radius=3)
         starch_intake_rate_label = config.BIG_FONT.render("STARCH CONSUMPTION {}".format(rates[4]), True, config.BLACK)
-        screen.blit(starch_intake_rate_label, (750, 410))
-
-
+        screen.blit(starch_intake_rate_label, (750, 410))'''
 
     def draw_plant_details(self, s):
         # details
         topleft = self.plant_details_topleft
         pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1], 470, 40), border_radius=3)
 
-
         # plant lvl
         lvl_text = config.FONT.render("LvL:", True, (0, 0, 0))
-        s.blit(lvl_text, dest=(topleft[0]+10, topleft[1]+6))
+        s.blit(lvl_text, dest=(topleft[0] + 10, topleft[1] + 6))
         level = config.FONT.render("{:.0f}".format(self.plant.get_level()), True, (0, 0, 0))  # title
-        s.blit(level, dest=(topleft[0]+lvl_text.get_width()+30, topleft[1]+6))
+        s.blit(level, dest=(topleft[0] + lvl_text.get_width() + 30, topleft[1] + 6))
 
         # biomass
         biomass_text = config.FONT.render("Mass:", True, (0, 0, 0))
-        s.blit(biomass_text, dest=(topleft[0]+110, topleft[1]+6))
+        s.blit(biomass_text, dest=(topleft[0] + 110, topleft[1] + 6))
         biomass = config.FONT.render("{:.2f} g".format(self.plant.get_biomass()), True, (0, 0, 0))  # title
-        s.blit(biomass, dest=(topleft[0]+biomass_text.get_width()+130, topleft[1]+6))
+        s.blit(biomass, dest=(topleft[0] + biomass_text.get_width() + 130, topleft[1] + 6))
 
         # name
-        s.blit(self.name_label, (topleft[0]+300, topleft[1] + 6))
-
+        s.blit(self.name_label, (topleft[0] + 300, topleft[1] + 6))
 
     def get_day_time(self):
         ticks = self.gametime.get_time()
-        day = 1000*60*60*24
-        hour = day/24
-        min = hour/60
-        days = int(ticks/day)
+        day = 1000 * 60 * 60 * 24
+        hour = day / 24
+        min = hour / 60
+        days = int(ticks / day)
         hours = (ticks % day) / hour
         minutes = (ticks % hour) / min
         return days, hours, minutes
@@ -351,17 +398,16 @@ class UI:
         output_string = "Day {0} {1:02}:{2:02}".format(days, int(hours), int(minutes))
         clock_text = config.FONT.render(output_string, True, config.BLACK)
         pygame.draw.rect(s, config.WHITE, Rect(config.SCREEN_WIDTH / 2 - 140, 10, 280, 40), border_radius=3)
-        s.blit(clock_text, (config.SCREEN_WIDTH/2-clock_text.get_width()/2,16))
+        s.blit(clock_text, (config.SCREEN_WIDTH / 2 - clock_text.get_width() / 2, 16))
 
-
-        RH =  self.environment.humidity
+        RH = self.environment.humidity
         T = self.environment.temperature
 
-        RH_label = config.FONT.render("{:.0f} %".format(RH*100), True, config.BLACK)
+        RH_label = config.FONT.render("{:.0f} %".format(RH * 100), True, config.BLACK)
         T_label = config.FONT.render("{:.0f} °C".format(T), True, config.BLACK)
 
-        s.blit(RH_label, ((config.SCREEN_WIDTH / 2-110) - RH_label.get_width()/2, 16))
-        s.blit(T_label, ((config.SCREEN_WIDTH / 2+110) - T_label.get_width()/2, 16))
+        s.blit(RH_label, ((config.SCREEN_WIDTH / 2 - 110) - RH_label.get_width() / 2, 16))
+        s.blit(T_label, ((config.SCREEN_WIDTH / 2 + 110) - T_label.get_width() / 2, 16))
 
     def init_gradient(self):
         width = 30
@@ -376,13 +422,11 @@ class UI:
                   (255, 72, 0),
                   (255, 12, 12)]
         gradient = pygame.Surface((width, config.SCREEN_HEIGHT), pygame.SRCALPHA)
-        height = config.SCREEN_HEIGHT/10
+        height = config.SCREEN_HEIGHT / 10
         for i in range(len(colors)):
-            pygame.draw.rect(gradient,colors[i],(0,config.SCREEN_HEIGHT-((i+1)*height),width,height))
+            pygame.draw.rect(gradient, colors[i], (0, config.SCREEN_HEIGHT - ((i + 1) * height), width, height))
 
         return gradient
-
-
 
     def init_danger_box(self):
         danger_label_0 = config.BIGGER_FONT.render("ENERGY WARNING", True, config.BLACK)
@@ -408,8 +452,8 @@ class UI:
     def init_flowering_ui(self):
         topleft = self.production_topleft
         self.flower_slider = Slider((topleft[0] + 25, topleft[1] + 300, 15, 200), config.FONT, (50, 20),
-                                  organ=self.plant.organs[3],
-                                  plant=self.plant, percent=0, active=True)
+                                    organ=self.plant.organs[3],
+                                    plant=self.plant, percent=0, active=True)
         self.sliders.append(self.flower_slider)
 
     def init_production_ui(self):
@@ -418,13 +462,13 @@ class UI:
         radioButtons = [
             RadioButton(topleft[0], topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_leaf],
-                        config.FONT, image=assets.img("leaf_small.PNG",(100,100))),
-            RadioButton(topleft[0]+110, topleft[1] + 40, 100, 100,
+                        config.FONT, image=assets.img("leaf_small.PNG", (100, 100))),
+            RadioButton(topleft[0] + 110, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_stem],
-                        config.FONT, image=assets.img("stem_small.PNG",(100,100))),
-            RadioButton(topleft[0]+220, topleft[1] + 40, 100, 100,
+                        config.FONT, image=assets.img("stem_small.PNG", (100, 100))),
+            RadioButton(topleft[0] + 220, topleft[1] + 40, 100, 100,
                         [self.plant.set_target_organ_root],
-                        config.FONT, image=assets.img("root_deep.PNG",(100,100))),
+                        config.FONT, image=assets.img("root_deep.PNG", (100, 100))),
         ]
 
         '''RadioButton(topleft[0] + 540, topleft[1] + 0, 100, 100,
@@ -436,27 +480,26 @@ class UI:
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
 
-
         '''stomata_toggle_button = ToggleButton(topleft[0] + 0, topleft[1] + 360, 200, 30,
                                             [self.toggle_stomata], config.FONT,
                                             "Open Stomata", vertical=False)
         '''
-        #self.button_sprites.add(starch_toggle_button, stomata_toggle_button)
-        #self.plant.organ_starch.toggle_button = starch_toggle_button
+        # self.button_sprites.add(starch_toggle_button, stomata_toggle_button)
+        # self.plant.organ_starch.toggle_button = starch_toggle_button
 
-        self.leaf_slider = Slider((topleft[0]+25, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
+        self.leaf_slider = Slider((topleft[0] + 25, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[0],
                                   plant=self.plant, active=False)
-        self.stem_slider = Slider((topleft[0]+25+110, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
+        self.stem_slider = Slider((topleft[0] + 25 + 110, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[1],
                                   plant=self.plant, active=False)
-        self.root_slider = Slider((topleft[0]+25+220, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
+        self.root_slider = Slider((topleft[0] + 25 + 220, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
                                   organ=self.plant.organs[2],
                                   plant=self.plant, percent=100, active=False)
-        self.starch_slider = NegativeSlider((topleft[0]+25+330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
-                                    organ=self.plant.organ_starch,
-                                    plant=self.plant, callback=self.plant.organs[2].set_percentage, percent=0, active=False)
-
+        self.starch_slider = NegativeSlider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
+                                            organ=self.plant.organ_starch,
+                                            plant=self.plant, callback=self.plant.organs[2].set_percentage, percent=0,
+                                            active=False)
 
         self.sliders.append(self.leaf_slider)
         self.sliders.append(self.stem_slider)
@@ -464,20 +507,23 @@ class UI:
         self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
 
-        #test_slider = NegativeSlider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
+        # test_slider = NegativeSlider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
         #                             organ=self.plant.organ_starch,
         #                             plant=self.plant, active=True)
-        #self.sliders.append(test_slider)
+        # self.sliders.append(test_slider)
 
         preset = self.generate_preset()
 
         radioButtons = [
-            DoubleRadioButton(topleft[0]+500, topleft[1] + 170, 45, 45,
-                        [self.apply_preset,self.generate_preset], preset=preset, callback_var=0,border_radius=1),
-            DoubleRadioButton(topleft[0]+500, topleft[1] + 240, 45, 45,
-                        [self.apply_preset,self.generate_preset], preset=preset, callback_var=1, border_radius=1),
-            DoubleRadioButton(topleft[0]+500, topleft[1] + 310, 45, 45,
-                        [self.apply_preset,self.generate_preset], preset=preset, callback_var=2, border_radius=1),
+            DoubleRadioButton(topleft[0] + 500, topleft[1] + 170, 45, 45,
+                              [self.apply_preset, self.generate_preset], preset=preset, callback_var=0,
+                              border_radius=1),
+            DoubleRadioButton(topleft[0] + 500, topleft[1] + 240, 45, 45,
+                              [self.apply_preset, self.generate_preset], preset=preset, callback_var=1,
+                              border_radius=1),
+            DoubleRadioButton(topleft[0] + 500, topleft[1] + 310, 45, 45,
+                              [self.apply_preset, self.generate_preset], preset=preset, callback_var=2,
+                              border_radius=1),
         ]
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
@@ -496,36 +542,37 @@ class UI:
             pygame.draw.circle(s, config.WHITE, (topleft[0] + 20, topleft[1] + 60), 20, width=3)
             level = organ.level
             level_label = config.FONT.render("{:.0f}".format(level), True, (0, 0, 0))
-            s.blit(level_label, (topleft[0] + 20 - level_label.get_width() / 2, topleft[1] + 60 - level_label.get_height() / 2))
+            s.blit(level_label,
+                   (topleft[0] + 20 - level_label.get_width() / 2, topleft[1] + 60 - level_label.get_height() / 2))
 
         exp_width = 100
-        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1]+120, exp_width, 16), border_radius=3)
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1] + 120, exp_width, 16), border_radius=3)
         needed_exp = organ.get_threshold()
         exp = organ.mass / needed_exp
         width = min(int(exp_width / 1 * exp), exp_width)
-        pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1]+120, width, 16), border_radius=3)  # exp
-        text_organ_mass = config.SMALL_FONT.render("{:.2f} / {:.2f}".format(organ.mass/factor,
-                                                organ.get_threshold()/factor),
-                                                True, (0, 0, 0))
+        pygame.draw.rect(s, (255, 255, 255), (topleft[0], topleft[1] + 120, width, 16), border_radius=3)  # exp
+        text_organ_mass = config.SMALL_FONT.render("{:.2f} / {:.2f}".format(organ.mass / factor,
+                                                                            organ.get_threshold() / factor),
+                                                   True, (0, 0, 0))
 
         j = 0
-        for i in range(0,len(skills)):
+        for i in range(0, len(skills)):
             if skills[i].active == True:
-                #pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0]+15,topleft[1]+360+i*75,70,70),border_radius=3)
-                pygame.draw.rect(s, config.WHITE, (topleft[0]+15,topleft[1]+410+j*75,70,70),3,border_radius=3)
-                s.blit(skills[i].image_skilled, (topleft[0]+17, topleft[1]+413+j*75))
+                # pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0]+15,topleft[1]+360+i*75,70,70),border_radius=3)
+                pygame.draw.rect(s, config.WHITE, (topleft[0] + 15, topleft[1] + 410 + j * 75, 70, 70), 3,
+                                 border_radius=3)
+                s.blit(skills[i].image_skilled, (topleft[0] + 17, topleft[1] + 413 + j * 75))
                 j += 1
 
-        s.blit(text_organ_mass, dest=(topleft[0]+exp_width/2-text_organ_mass.get_width()/2, topleft[1]+120))  # Todo change x, y
-
+        s.blit(text_organ_mass, dest=(
+        topleft[0] + exp_width / 2 - text_organ_mass.get_width() / 2, topleft[1] + 120))  # Todo change x, y
 
     def draw_production(self, s):
         topleft = self.production_topleft
         # headbox
-        self.draw_organ_detail_temp(s,self.plant.organs[0],topleft,self.label_leaf)
-        self.draw_organ_detail_temp(s,self.plant.organs[1],(topleft[0]+110,topleft[1]),self.label_stem)
-        self.draw_organ_detail_temp(s,self.plant.organs[2],(topleft[0]+220,topleft[1]),self.label_root)
-
+        self.draw_organ_detail_temp(s, self.plant.organs[0], topleft, self.label_leaf)
+        self.draw_organ_detail_temp(s, self.plant.organs[1], (topleft[0] + 110, topleft[1]), self.label_stem)
+        self.draw_organ_detail_temp(s, self.plant.organs[2], (topleft[0] + 220, topleft[1]), self.label_root)
 
         # WATER
         topleft = (topleft[0] + 330, topleft[1])
@@ -533,37 +580,38 @@ class UI:
         s.blit(self.label_water, dest=(topleft[0] + 70 - self.label_water.get_width() / 2, topleft[1]))
 
         width = 140
-        water_percentage = self.model.water_pool/self.model.max_water_pool
+        water_percentage = self.model.water_pool / self.model.max_water_pool
         pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1] + 40, width, 30),
                          border_radius=3)
-        pygame.draw.rect(s, config.BLUE, (topleft[0], topleft[1] + 40, int(width*water_percentage),30),
+        pygame.draw.rect(s, config.BLUE, (topleft[0], topleft[1] + 40, int(width * water_percentage), 30),
                          border_radius=3)  # exp
-        text_water_pool = config.FONT.render("{:.0f} MMol".format(self.model.water_pool/1000), True, (0, 0, 0))
-        s.blit(text_water_pool, dest=(topleft[0]+width/2-text_water_pool.get_width()/2, topleft[1]+45))  # Todo change x, y
+        text_water_pool = config.FONT.render("{:.0f} MMol".format(self.model.water_pool / 1000), True, (0, 0, 0))
+        s.blit(text_water_pool,
+               dest=(topleft[0] + width / 2 - text_water_pool.get_width() / 2, topleft[1] + 45))  # Todo change x, y
 
-
-
-        #self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),self.label_starch, False, factor=1000)
+        # self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),self.label_starch, False, factor=1000)
         organ = self.plant.organ_starch
-        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1]+100, 140, 30), border_radius=3)
-        s.blit(self.label_starch, dest=(topleft[0] + 70 - self.label_starch.get_width() / 2, topleft[1]+100))
-
+        pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1] + 100, 140, 30), border_radius=3)
+        s.blit(self.label_starch, dest=(topleft[0] + 70 - self.label_starch.get_width() / 2, topleft[1] + 100))
 
         exp_height = 200
-        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0]+100, topleft[1] + 150, 30, exp_height), border_radius=3)
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0] + 100, topleft[1] + 150, 30, exp_height),
+                         border_radius=3)
         needed_exp = organ.get_threshold()
         exp = organ.mass / needed_exp
-        #factor = 10000
+        # factor = 10000
         height = min(int(exp_height / 1 * exp), exp_height)
-        pygame.draw.rect(s, (255, 255, 255), (topleft[0]+100, topleft[1] + 150 + exp_height - height, 30, height), border_radius=3)  # exp
-        #if organ.
-        #text_organ_mass = config.FONT.render("{:.0f}".format(organ.mass / factor), True, (0, 0, 0))
-        #s.blit(text_organ_mass, dest=(topleft[0]+100, topleft[1]+150+exp_height/2))  # Todo change x, y
+        pygame.draw.rect(s, (255, 255, 255), (topleft[0] + 100, topleft[1] + 150 + exp_height - height, 30, height),
+                         border_radius=3)  # exp
+        # if organ.
+        # text_organ_mass = config.FONT.render("{:.0f}".format(organ.mass / factor), True, (0, 0, 0))
+        # s.blit(text_organ_mass, dest=(topleft[0]+100, topleft[1]+150+exp_height/2))  # Todo change x, y
         if organ.percentage > 0:
-            s.blit(self.label_producing, dest=(topleft[0]+100,topleft[1]+150+100-self.label_producing.get_height()/2))
+            s.blit(self.label_producing,
+                   dest=(topleft[0] + 100, topleft[1] + 150 + 100 - self.label_producing.get_height() / 2))
         else:
-            s.blit(self.label_consuming, dest=(topleft[0]+100,topleft[1]+150+100-self.label_consuming.get_height()/2))
-
+            s.blit(self.label_consuming,
+                   dest=(topleft[0] + 100, topleft[1] + 150 + 100 - self.label_consuming.get_height() / 2))
 
     '''def draw_starch_details(self, s):
         topleft = self.organ_details_topleft

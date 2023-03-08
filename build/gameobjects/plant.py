@@ -770,7 +770,6 @@ class Flower(Organ):
         self.base_mass = 1
         self.target_flower = 0
         self.can_add_flower = False
-        self.pollinated = False
         self.flowering = False
 
     def handle_event(self, event):
@@ -787,29 +786,20 @@ class Flower(Organ):
                         self.target_flower = i
 
     def activate_add_flower(self):
-        if self.flowering:
-            self.can_add_flower = True
         self.can_add_flower = True
 
     def start_flowering(self):
-        if self.pollinated:
-            self.flowering = True
+        self.flowering = True
 
-    def pollinate(self):
-        self.pollinated = True
-
-    def get_random_flower(self):
-        if len(leaves) > 0:
-            return self.flowers[random.randint(0,len(self.flowers)-1)]
-        else:
-            return None
+    def pollinate(self, i):
+        self.flowers[i]["pollinated"] = True
 
     def update_growth_rate(self, growth_rate):
         # Todo change gram_mol = flower mol
         self.growth_rate = gram_mol * growth_rate
 
     def grow(self, dt):
-        if self.growth_rate <= 0 or not self.flowering:
+        if self.growth_rate <= 0:
             return
         # get leaf age, if too old -> stop growth, then die later
         growable_flowers = []
@@ -819,10 +809,18 @@ class Flower(Organ):
             if flower["mass"] < flower["maximum_mass"]:
                 growable_flowers.append(flower)
             # if max age*2 -> kill leaf
+        if self.flowering:
+            for flower in self.flowers:
+                if flower["pollinated"]:
+                    growable_flowers.append(flower)
 
         growth_per_flower = (self.growth_rate*dt)/len(growable_flowers) if len(growable_flowers) > 0 else 0
         for flower in growable_flowers:
-            flower["mass"] += growth_per_flower
+            if flower["mass"] >= flower["maximum_mass"]:
+                flower["seed_mass"] += growth_per_flower
+            else:
+                flower["mass"] += growth_per_flower
+
 
         # age 0
         # max_age 1000
@@ -835,13 +833,32 @@ class Flower(Organ):
     def get_mass(self):
         return sum([leaf["mass"] for leaf in self.flowers])+self.base_mass  # basemass for seedling leaves
 
+    def get_random_flower_pos(self):
+        viable_flowers = []
+        for flower in self.flowers:
+            if not flower["pollinated"] and flower["mass"] >= flower["maximum_mass"]:
+                viable_flowers.append(flower)
+        if len(viable_flowers) > 0:
+            i = int(random.random() * len(viable_flowers))
+            pos = (viable_flowers[i]["x"] + viable_flowers[i]["offset_x"] / 2,
+                   viable_flowers[i]["y"] + viable_flowers[i]["offset_y"] / 2 - 20)
+            target_flower_id = self.flowers.index(viable_flowers[i])
+            return pos, target_flower_id
+        else:
+            return None, None
+
     def get_flowering_flowers(self):
         flowering_flowers = []
-        if not self.flowering:
-            return flowering_flowers
+        # flowering can be central activated to enable all pollinated flowers to produce seeds
+        # add all growing flowers
         for flower in self.flowers:
-            if flower["mass"] < flower["maximum_mass"] and flower["flowering"]:
+            if flower["mass"] < flower["maximum_mass"]:
                 flowering_flowers.append(flower)
+        # add all seed producing flowrs
+        if self.flowering:
+            for flower in self.flowers:
+                if flower["pollinated"]:
+                    flowering_flowers.append(flower)
         return flowering_flowers
 
     def append_flower(self, highlight):
@@ -855,7 +872,8 @@ class Flower(Organ):
                 "offset_y": offset[1],
                 "image": image,
                 "mass": 0.01,
-                "flowering": True,
+                "seed_mass": 0,
+                "pollinated": False,
                 "maximum_mass": self.thresholds[-1],
                 "lifetime": 60*60*24*10, # 10 days of liefetime to grow
                 "growth_index": self.active_threshold} # to get relative size, depending on current threshold - init threshold
@@ -897,15 +915,29 @@ class Flower(Organ):
                 screen.blit(s, (self.flowers[i]["x"]-flower["offset_x"], self.flowers[i]["y"]-flower["offset_y"]))
 
         # progress bar
-        if self.flowering:
-            for flower in self.flowers:
-                if flower["mass"] < flower["maximum_mass"]:
-                    width = flower["image"].get_width()
-                    percentage = flower["mass"]/flower["maximum_mass"]
-                    pygame.draw.rect(screen, config.WHITE, (flower["x"]-flower["offset_x"],flower["y"]-width/4-10-flower["offset_y"],width*percentage,width/4),border_radius=3)
-                    pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (flower["x"]-flower["offset_x"],flower["y"]-width/4-10-flower["offset_y"],width,width/4),2,3)
-                    percentage_label = config.SMALL_FONT.render("{:.0f}".format(percentage*100),True,config.BLACK)
-                    screen.blit(percentage_label, (flower["x"]-flower["offset_x"]+width/2-percentage_label.get_width()/2,flower["y"]-width/4-10-flower["offset_y"]))
+        for flower in self.flowers:
+            if flower["mass"] < flower["maximum_mass"]:
+                width = flower["image"].get_width()
+                percentage = flower["mass"] / flower["maximum_mass"]
+                pygame.draw.rect(screen, config.WHITE, (
+                flower["x"] - flower["offset_x"], flower["y"] - width / 4 - 10 - flower["offset_y"], width * percentage,
+                width / 4), border_radius=3)
+                pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (
+                flower["x"] - flower["offset_x"], flower["y"] - width / 4 - 10 - flower["offset_y"], width, width / 4),
+                                 2, 3)
+                percentage_label = config.SMALL_FONT.render("{:.0f}".format(percentage * 100), True, config.BLACK)
+                screen.blit(percentage_label, (
+                flower["x"] - flower["offset_x"] + width / 2 - percentage_label.get_width() / 2,
+                flower["y"] - width / 4 - 10 - flower["offset_y"]))
+            if flower["pollinated"] and self.flowering:
+                width = flower["image"].get_width()
+                pygame.draw.rect(screen, config.WHITE, (
+                    flower["x"] - flower["offset_x"], flower["y"] - width / 4 - 10 - flower["offset_y"],
+                    width, width / 4), border_radius=3)
+                seed_mass_label = config.SMALL_FONT.render("{:.2f}".format(flower["seed_mass"]), True, config.BLACK)
+                screen.blit(seed_mass_label, (
+                    flower["x"] - flower["offset_x"] + width / 2 - seed_mass_label.get_width() / 2,
+                    flower["y"] - width / 4 - 10 - flower["offset_y"]))
 
     def get_outlines(self):
         outlines = []
