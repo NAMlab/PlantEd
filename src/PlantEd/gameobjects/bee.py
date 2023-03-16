@@ -41,27 +41,43 @@ class Hive():
     def update(self, dt):
         for bee in self.bees:
             bee.update(dt)
-        if random.random() > 0.99999 and self.amount > len(self.bees):
+        if random.random() > 0.99 and self.amount > len(self.bees):
             self.spawn_bee((self.pos[0]+self.image.get_width()/2,self.pos[1]+self.image.get_height()/2))
+        if random.random() > 0.995 and len(self.bees) > 0:
+            free_bees = self.get_free_bees()
+            if len(free_bees) > 0:
+                i = int(random.random() * len(free_bees))
+                flower_pos, target_flower_id = self.plant.organs[3].get_random_flower_pos()
+                if flower_pos:
+                    '''flower_pos = (self.plant.organs[3].flowers[0]["x"] + self.plant.organs[3].flowers[0]["offset_x"] / 2,
+                              self.plant.organs[3].flowers[0]["y"] + self.plant.organs[3].flowers[0]["offset_y"] / 2 - 20)'''
+                    self.start_pollination(flower_pos, target_flower_id, free_bees[i])
         for i in range(len(self.bees)):
             if self.get_rect().collidepoint(self.bees[i].pos):
                 if self.bees[i].lifetime <= 0:
                     #if abs((self.bees[i].pos[0] - (self.pos[0]+self.image.get_width()/2)) + (self.bees[i].pos[0] - (self.pos[1]+self.image.get_height()/2))) < 25:
                     self.bees.pop(i)
+                    break
 
     def draw(self, screen):
         screen.blit(self.image, self.pos)
         for bee in self.bees:
             bee.draw(screen)
 
-    def start_pollination(self, flower_pos):
-        if len(self.bees) > 0:
-            self.bees[0].target_flower(flower_pos, 6)
+    def start_pollination(self, flower_pos, target_flower_id, bee):
+        bee.target_flower(flower_pos, target_flower_id, 6)
+
+    def get_free_bees(self):
+        free_bees = []
+        for bee in self.bees:
+            if not bee.target:
+                free_bees.append(bee)
+        return free_bees
 
 
 
 class Bee():
-    def __init__(self, pos, bounding_rect, images, camera, callback, hive_pos, image=None, speed=4, lifetime=7):
+    def __init__(self, pos, bounding_rect, images, camera, callback, hive_pos, image=None, speed=4, lifetime=20):
         self.pos = pos
         self.bounding_rect = bounding_rect
         self.images = images
@@ -74,6 +90,7 @@ class Bee():
         self.rect = self.images[0].get_rect()
         self.dir = (0,0)
         self.target = None
+        self.target_flower_id = None
         self.return_home = False
         self.pollinating = False
         self.timer = 0
@@ -94,7 +111,8 @@ class Bee():
                 self.target = None
                 self.set_random_direction()
                 self.speed = 3
-                self.callback()
+                self.callback(self.target_flower_id)
+                self.target_flower_id = None
         '''if random.random() > 0.999:
             self.set_random_direction()'''
         self.move(dt)
@@ -134,7 +152,8 @@ class Bee():
                     self.start_pollinating()
                     #self.callback()
 
-    def target_flower(self, flower_pos, speed):
+    def target_flower(self, flower_pos, target_flower_id, speed):
+        self.target_flower_id = target_flower_id
         self.speed = speed
         x_dist = flower_pos[0]-self.pos[0]
         y_dist = flower_pos[1]-self.pos[1]
