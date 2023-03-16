@@ -18,7 +18,7 @@ from client.growth_percentage import GrowthPercent
 from client.growth_rates import GrowthRates
 from data import assets
 from fba.dynamic_model import DynamicModel
-from gameobjects.bee import Bee
+from gameobjects.bee import Bee, Hive
 from gameobjects.bug import Bug
 from gameobjects.level_card import Card
 from gameobjects.plant import Plant
@@ -383,14 +383,10 @@ class DefaultGameScene(object):
         self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
 """
         self.entities = []
-        self.special_bee = Bee(
-            (190 * random.randint(0, 10), random.randint(0, 800)),
-            pygame.Rect(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT - 200),
-            [assets.img("bee/{}.PNG".format(i), (64, 64)) for i in range(6)],
-            self.camera,
-            self.plant.organs[3].pollinate,
-        )
-        self.entities.append(self.special_bee)
+
+        self.hive = Hive((1500, 600), 10, self.plant, self.camera, 10)
+        self.entities.append(self.hive)
+
         for i in range(0, 5):
             bee = Bee(
                 (190 * random.randint(0, 10), random.randint(0, 800)),
@@ -601,9 +597,8 @@ class DefaultGameScene(object):
                     + self.plant.organs[3].flowers[0]["offset_y"] / 2
                     - 20,
                 )
-                self.special_bee.target_flower(flower_pos)
-                self.special_bee.speed = 10
-                print(self.special_bee.dir)
+                self.hive.start_pollination(flower_pos)
+
             # if e.type == KEYDOWN and e.key == K_p:
             #     NITRATE = "Nitrate_tx_root"
             #     WATER = "H2O_tx_root"

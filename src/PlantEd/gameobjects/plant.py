@@ -633,8 +633,8 @@ class Leaf(Organ):
             )
 
         for leaf in self.leaves:
-            image = self.yellow_leaf(leaf["image"], 128)
-            screen.blit(image, (leaf["x"] - leaf["offset_x"], leaf["y"] - leaf["offset_y"]))
+            # image = self.yellow_leaf(leaf["image"], 128)
+            screen.blit(leaf["image"], (leaf["x"] - leaf["offset_x"], leaf["y"] - leaf["offset_y"]))
 
         if self.type == self.plant.target_organ.type:
             rects = self.get_rect()
