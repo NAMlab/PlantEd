@@ -30,9 +30,7 @@ class Server:
         self.loop: asyncio.AbstractEventLoop = None
 
         thread = threading.Thread(
-            target=asyncio.run,
-            daemon=True,
-            args=(self.__start(),)
+            target=asyncio.run, daemon=True, args=(self.__start(),)
         )
         self.thread: threading.Thread = thread
 
@@ -80,12 +78,13 @@ class Server:
         self.loop = asyncio.get_running_loop()
         self.__future = self.loop.create_future()
 
-        async with websockets.serve(self.main_handler,
-                                    "localhost",
-                                    4000,
-                                    ping_interval=10,
-                                    ping_timeout=30,
-                                    ) as websocket:
+        async with websockets.serve(
+            self.main_handler,
+            "localhost",
+            4000,
+            ping_interval=10,
+            ping_timeout=30,
+        ) as websocket:
             self.websocket = websocket
             await self.__future
 
@@ -195,7 +194,7 @@ class Server:
 
         water = Water(
             water_pool=self.model.water_pool,
-            max_water_pool=self.model.max_water_pool
+            max_water_pool=self.model.max_water_pool,
         )
 
         answer = water.to_json()
@@ -223,7 +222,6 @@ class Server:
         return str(drain)
 
     def create_leaf(self, leaf: Leaf):
-
         self.plant.create_leaf(leaf)
 
     async def main_handler(self, ws: WebSocketServerProtocol):
@@ -249,73 +247,109 @@ class Server:
             response = {}
 
             for command, payload in commands.items():
-
                 match command:
-
                     case "get_growth_percent":
-                        logger.debug("Received command identified as request of growth_percent.")
-                        response["get_growth_percent"] = self.get_growth_percent()
+                        logger.debug(
+                            "Received command identified as request of growth_percent."
+                        )
+                        response[
+                            "get_growth_percent"
+                        ] = self.get_growth_percent()
 
                     case "growth_rate":
-                        logger.debug("Received command identified as calculation of growth_rates.")
+                        logger.debug(
+                            "Received command identified as calculation of growth_rates."
+                        )
 
-                        growth_percent = GrowthPercent.from_json(payload["GrowthPercent"])
+                        growth_percent = GrowthPercent.from_json(
+                            payload["GrowthPercent"]
+                        )
 
-                        response["growth_rate"] = self.calc_send_growth_rate(growth_percent=growth_percent)
+                        response["growth_rate"] = self.calc_send_growth_rate(
+                            growth_percent=growth_percent
+                        )
                     case "open_stomata":
-                        logger.debug("Received command identified as open_stomata.")
+                        logger.debug(
+                            "Received command identified as open_stomata."
+                        )
 
                         self.open_stomata()
 
                     case "close_stomata":
-                        logger.debug("Received command identified as close_stomata.")
+                        logger.debug(
+                            "Received command identified as close_stomata."
+                        )
 
                         self.close_stomata()
 
                     case "deactivate_starch_resource":
-                        logger.debug("Received command identified as deactivate_starch_resource.")
+                        logger.debug(
+                            "Received command identified as deactivate_starch_resource."
+                        )
 
                         self.deactivate_starch_resource()
 
                     case "activate_starch_resource":
-                        logger.debug("Received command identified as activate_starch_resource.")
+                        logger.debug(
+                            "Received command identified as activate_starch_resource."
+                        )
 
                         self.activate_starch_resource()
 
                     case "get_water_pool":
-                        logger.debug("Received command identified as get_water_pool.")
+                        logger.debug(
+                            "Received command identified as get_water_pool."
+                        )
 
                         response["get_water_pool"] = self.get_water_pool()
 
                     case "get_nitrate_percentage":
-                        logger.debug("Received command identified as get_nitrate_percentage.")
+                        logger.debug(
+                            "Received command identified as get_nitrate_percentage."
+                        )
 
-                        response["get_nitrate_percentage"] = self.get_nitrate_percentage()
+                        response[
+                            "get_nitrate_percentage"
+                        ] = self.get_nitrate_percentage()
 
                     case "increase_nitrate":
-                        logger.debug("Received command identified as increase_nitrate.")
+                        logger.debug(
+                            "Received command identified as increase_nitrate."
+                        )
                         self.model.increase_nitrate(amount=5000)
 
                     case "get_nitrate_pool":
-                        logger.debug("Received command identified as get_nitrate_pool.")
+                        logger.debug(
+                            "Received command identified as get_nitrate_pool."
+                        )
 
                     case "get_actual_water_drain":
-                        logger.debug("Received command identified as get_actual_water_drain.")
+                        logger.debug(
+                            "Received command identified as get_actual_water_drain."
+                        )
 
-                        response["get_actual_water_drain"] = self.get_actual_water_drain()
+                        response[
+                            "get_actual_water_drain"
+                        ] = self.get_actual_water_drain()
 
                     case "create_leaf":
-                        logger.debug("Received command identified as create_leaf.")
+                        logger.debug(
+                            "Received command identified as create_leaf."
+                        )
 
                         leaf: Leaf = Leaf.from_json(payload["create_leaf"])
 
                         self.create_leaf(leaf=leaf)
 
                     case _:
-                        logger.error(f"Received command {command} could not be identified")
+                        logger.error(
+                            f"Received command {command} could not be identified"
+                        )
 
                         continue
 
             if response:
                 response = json.dumps(response)
-                await asyncio.wait([client.send(response) for client in self.clients])
+                await asyncio.wait(
+                    [client.send(response) for client in self.clients]
+                )

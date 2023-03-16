@@ -12,9 +12,27 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # You can draw and update all sprites in a group by
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None,
-                 button_sound=None, active=True, offset=(0,0), callback_var=None):
+    def __init__(
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        font=None,
+        text="",
+        button_color=WHITE_TRANSPARENT,
+        text_color=BLACK,
+        image=None,
+        border_w=None,
+        post_hover_message=None,
+        hover_message=None,
+        hover_message_image=None,
+        button_sound=None,
+        active=True,
+        offset=(0, 0),
+        callback_var=None,
+    ):
         super().__init__()
         self.posted = False
         self.button_sound = button_sound
@@ -34,13 +52,26 @@ class Button(pygame.sprite.Sprite):
             self.button_image.fill(button_color)
             self.hover_image.fill(button_color)
             self.clicked_image.fill(button_color)
-        pygame.draw.rect(self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w)
-        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w)
+        pygame.draw.rect(
+            self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w
+        )
+        pygame.draw.rect(
+            self.clicked_image,
+            WHITE,
+            self.clicked_image.get_rect(),
+            self.border_w,
+        )
         if text and font:
             text_surf = font.render(text, True, text_color)
-            self.button_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.hover_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.clicked_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
+            self.button_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
+            self.hover_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
+            self.clicked_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
         # This function will be called when the button gets pressed.
@@ -50,27 +81,38 @@ class Button(pygame.sprite.Sprite):
         if post_hover_message and hover_message:
             self.posted = False
             hover_message = font.render(hover_message, True, text_color)
-            w = hover_message.get_width()+10
+            w = hover_message.get_width() + 10
             if self.hover_message_image:
-                w += hover_message_image.get_width() +10
-            self.hover_message = pygame.Surface((w, hover_message.get_height()+10), pygame.SRCALPHA)
+                w += hover_message_image.get_width() + 10
+            self.hover_message = pygame.Surface(
+                (w, hover_message.get_height() + 10), pygame.SRCALPHA
+            )
             self.hover_message.fill(WHITE_TRANSPARENT)
-            self.hover_message.blit(hover_message, (5,5))
+            self.hover_message.blit(hover_message, (5, 5))
             if self.hover_message_image:
-                self.hover_message.blit(self.hover_message_image,(hover_message.get_width()+10, 8))
+                self.hover_message.blit(
+                    self.hover_message_image,
+                    (hover_message.get_width() + 10, 8),
+                )
 
     def handle_event(self, event):
         if not self.active:
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = (event.pos[0]-self.offset[0], event.pos[1]-self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             if self.rect.collidepoint(pos):
                 self.image = self.clicked_image
                 if self.button_sound:
                     pygame.mixer.Sound.play(self.button_sound)
                 self.button_down = True
         elif event.type == pygame.MOUSEBUTTONUP:
-            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             # If the rect collides with the mouse pos.
             if self.rect.collidepoint(pos) and self.button_down:
                 for callback in self.callbacks:
@@ -81,7 +123,10 @@ class Button(pygame.sprite.Sprite):
                 self.image = self.hover_image
             self.button_down = False
         elif event.type == pygame.MOUSEMOTION:
-            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             collided = self.rect.collidepoint(pos)
             if collided and not self.button_down:
                 self.image = self.hover_image
@@ -95,16 +140,35 @@ class Button(pygame.sprite.Sprite):
                 self.image = self.button_image
 
     def draw(self, screen):
-        screen.blit(self.image, (self.rect[0],self.rect[1]))
+        screen.blit(self.image, (self.rect[0], self.rect[1]))
 
     def set_pos(self, pos):
         self.x = pos[0]
         self.y = pos[1]
 
+
 class Button_Once(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None,
-                 button_sound=None, active=True, offset=(0,0), callback_var=None):
+    def __init__(
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        font=None,
+        text="",
+        button_color=WHITE_TRANSPARENT,
+        text_color=BLACK,
+        image=None,
+        border_w=None,
+        post_hover_message=None,
+        hover_message=None,
+        hover_message_image=None,
+        button_sound=None,
+        active=True,
+        offset=(0, 0),
+        callback_var=None,
+    ):
         super().__init__()
         self.posted = False
         self.button_sound = button_sound
@@ -125,13 +189,26 @@ class Button_Once(pygame.sprite.Sprite):
             self.button_image.fill(button_color)
             self.hover_image.fill(button_color)
             self.clicked_image.fill(button_color)
-        pygame.draw.rect(self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w)
-        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w)
+        pygame.draw.rect(
+            self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w
+        )
+        pygame.draw.rect(
+            self.clicked_image,
+            WHITE,
+            self.clicked_image.get_rect(),
+            self.border_w,
+        )
         if text and font:
             text_surf = font.render(text, True, text_color)
-            self.button_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.hover_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.clicked_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
+            self.button_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
+            self.hover_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
+            self.clicked_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
         # This function will be called when the button gets pressed.
@@ -141,27 +218,38 @@ class Button_Once(pygame.sprite.Sprite):
         if post_hover_message and hover_message:
             self.posted = False
             hover_message = font.render(hover_message, True, text_color)
-            w = hover_message.get_width()+10
+            w = hover_message.get_width() + 10
             if self.hover_message_image:
-                w += hover_message_image.get_width() +10
-            self.hover_message = pygame.Surface((w, hover_message.get_height()+10), pygame.SRCALPHA)
+                w += hover_message_image.get_width() + 10
+            self.hover_message = pygame.Surface(
+                (w, hover_message.get_height() + 10), pygame.SRCALPHA
+            )
             self.hover_message.fill(WHITE_TRANSPARENT)
-            self.hover_message.blit(hover_message, (5,5))
+            self.hover_message.blit(hover_message, (5, 5))
             if self.hover_message_image:
-                self.hover_message.blit(self.hover_message_image,(hover_message.get_width()+10, 8))
+                self.hover_message.blit(
+                    self.hover_message_image,
+                    (hover_message.get_width() + 10, 8),
+                )
 
     def handle_event(self, event):
         if not self.active:
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = (event.pos[0]-self.offset[0], event.pos[1]-self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             if self.rect.collidepoint(pos):
                 self.image = self.clicked_image
                 if self.button_sound:
                     pygame.mixer.Sound.play(self.button_sound)
                 self.button_down = True
         elif event.type == pygame.MOUSEBUTTONUP:
-            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             # If the rect collides with the mouse pos.
             if self.rect.collidepoint(pos) and self.button_down:
                 for callback in self.callbacks:
@@ -174,7 +262,10 @@ class Button_Once(pygame.sprite.Sprite):
                 self.visible = False
             self.button_down = False
         elif event.type == pygame.MOUSEMOTION:
-            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             collided = self.rect.collidepoint(pos)
             if collided and not self.button_down:
                 self.image = self.hover_image
@@ -189,16 +280,34 @@ class Button_Once(pygame.sprite.Sprite):
 
     def draw(self, screen):
         if self.visible:
-            screen.blit(self.image, (self.rect[0],self.rect[1]))
+            screen.blit(self.image, (self.rect[0], self.rect[1]))
 
     def set_pos(self, pos):
         self.x = pos[0]
         self.y = pos[1]
 
+
 class Arrow_Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callbacks, arrow_dir, font=None, text='', arrow_color=WHITE,
-                 border_w=None, post_hover_message=None, hover_message=None, hover_message_image=None,
-                 button_sound=None, active=True, offset=(0,0), callback_var=None):
+    def __init__(
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        arrow_dir,
+        font=None,
+        text="",
+        arrow_color=WHITE,
+        border_w=None,
+        post_hover_message=None,
+        hover_message=None,
+        hover_message_image=None,
+        button_sound=None,
+        active=True,
+        offset=(0, 0),
+        callback_var=None,
+    ):
         super().__init__()
         self.posted = False
         self.button_sound = button_sound
@@ -211,31 +320,92 @@ class Arrow_Button(pygame.sprite.Sprite):
         self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.offset = offset
 
-
         if arrow_dir == 0:
-            pygame.draw.line(self.button_image,arrow_color,(0+border_w,h-border_w),(w/2,0+border_w),width=border_w)
-            pygame.draw.line(self.button_image,arrow_color,(w-border_w,h-border_w),(w/2,0+border_w),width=border_w)
-            pygame.draw.line(self.hover_image, arrow_color, (0 + border_w, h - border_w), (w / 2, 0 + border_w),
-                             width=border_w+2)
-            pygame.draw.line(self.hover_image, arrow_color, (w - border_w, h - border_w), (w / 2, 0 + border_w),
-                             width=border_w+2)
-            pygame.draw.line(self.clicked_image, arrow_color, (0 + border_w, h - border_w), (w / 2, 0 + border_w),
-                             width=border_w+4)
-            pygame.draw.line(self.clicked_image, arrow_color, (w - border_w, h - border_w), (w / 2, 0 + border_w),
-                             width=border_w+4)
+            pygame.draw.line(
+                self.button_image,
+                arrow_color,
+                (0 + border_w, h - border_w),
+                (w / 2, 0 + border_w),
+                width=border_w,
+            )
+            pygame.draw.line(
+                self.button_image,
+                arrow_color,
+                (w - border_w, h - border_w),
+                (w / 2, 0 + border_w),
+                width=border_w,
+            )
+            pygame.draw.line(
+                self.hover_image,
+                arrow_color,
+                (0 + border_w, h - border_w),
+                (w / 2, 0 + border_w),
+                width=border_w + 2,
+            )
+            pygame.draw.line(
+                self.hover_image,
+                arrow_color,
+                (w - border_w, h - border_w),
+                (w / 2, 0 + border_w),
+                width=border_w + 2,
+            )
+            pygame.draw.line(
+                self.clicked_image,
+                arrow_color,
+                (0 + border_w, h - border_w),
+                (w / 2, 0 + border_w),
+                width=border_w + 4,
+            )
+            pygame.draw.line(
+                self.clicked_image,
+                arrow_color,
+                (w - border_w, h - border_w),
+                (w / 2, 0 + border_w),
+                width=border_w + 4,
+            )
         else:
-            pygame.draw.line(self.button_image, arrow_color, (0 + border_w, border_w), (w / 2, h - border_w),
-                             width=border_w)
-            pygame.draw.line(self.button_image, arrow_color, (w - border_w, border_w), (w / 2, h - border_w),
-                             width=border_w)
-            pygame.draw.line(self.hover_image, arrow_color, (0 + border_w, border_w), (w / 2, h - border_w),
-                             width=border_w+2)
-            pygame.draw.line(self.hover_image, arrow_color, (w - border_w, border_w), (w / 2, h - border_w),
-                             width=border_w+2)
-            pygame.draw.line(self.clicked_image, arrow_color, (0 + border_w, border_w), (w / 2, h - border_w),
-                             width=border_w+4)
-            pygame.draw.line(self.clicked_image, arrow_color, (w - border_w, border_w), (w / 2, h - border_w),
-                             width=border_w+4)
+            pygame.draw.line(
+                self.button_image,
+                arrow_color,
+                (0 + border_w, border_w),
+                (w / 2, h - border_w),
+                width=border_w,
+            )
+            pygame.draw.line(
+                self.button_image,
+                arrow_color,
+                (w - border_w, border_w),
+                (w / 2, h - border_w),
+                width=border_w,
+            )
+            pygame.draw.line(
+                self.hover_image,
+                arrow_color,
+                (0 + border_w, border_w),
+                (w / 2, h - border_w),
+                width=border_w + 2,
+            )
+            pygame.draw.line(
+                self.hover_image,
+                arrow_color,
+                (w - border_w, border_w),
+                (w / 2, h - border_w),
+                width=border_w + 2,
+            )
+            pygame.draw.line(
+                self.clicked_image,
+                arrow_color,
+                (0 + border_w, border_w),
+                (w / 2, h - border_w),
+                width=border_w + 4,
+            )
+            pygame.draw.line(
+                self.clicked_image,
+                arrow_color,
+                (w - border_w, border_w),
+                (w / 2, h - border_w),
+                width=border_w + 4,
+            )
 
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
@@ -246,27 +416,38 @@ class Arrow_Button(pygame.sprite.Sprite):
         if post_hover_message and hover_message:
             self.posted = False
             hover_message = font.render(hover_message, True, text_color)
-            w = hover_message.get_width()+10
+            w = hover_message.get_width() + 10
             if self.hover_message_image:
-                w += hover_message_image.get_width() +10
-            self.hover_message = pygame.Surface((w, hover_message.get_height()+10), pygame.SRCALPHA)
+                w += hover_message_image.get_width() + 10
+            self.hover_message = pygame.Surface(
+                (w, hover_message.get_height() + 10), pygame.SRCALPHA
+            )
             self.hover_message.fill(WHITE_TRANSPARENT)
-            self.hover_message.blit(hover_message, (5,5))
+            self.hover_message.blit(hover_message, (5, 5))
             if self.hover_message_image:
-                self.hover_message.blit(self.hover_message_image,(hover_message.get_width()+10, 8))
+                self.hover_message.blit(
+                    self.hover_message_image,
+                    (hover_message.get_width() + 10, 8),
+                )
 
     def handle_event(self, event):
         if not self.active:
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = (event.pos[0]-self.offset[0], event.pos[1]-self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             if self.rect.collidepoint(pos):
                 self.image = self.clicked_image
                 if self.button_sound:
                     pygame.mixer.Sound.play(self.button_sound)
                 self.button_down = True
         elif event.type == pygame.MOUSEBUTTONUP:
-            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             # If the rect collides with the mouse pos.
             if self.rect.collidepoint(pos) and self.button_down:
                 for callback in self.callbacks:
@@ -277,7 +458,10 @@ class Arrow_Button(pygame.sprite.Sprite):
                 self.image = self.hover_image
             self.button_down = False
         elif event.type == pygame.MOUSEMOTION:
-            pos = (event.pos[0] - self.offset[0], event.pos[1] - self.offset[1])
+            pos = (
+                event.pos[0] - self.offset[0],
+                event.pos[1] - self.offset[1],
+            )
             collided = self.rect.collidepoint(pos)
             if collided and not self.button_down:
                 self.image = self.hover_image
@@ -291,7 +475,7 @@ class Arrow_Button(pygame.sprite.Sprite):
                 self.image = self.button_image
 
     def draw(self, screen):
-        screen.blit(self.image, (self.rect[0],self.rect[1]))
+        screen.blit(self.image, (self.rect[0], self.rect[1]))
 
     def set_pos(self, pos):
         self.x = pos[0]
@@ -299,8 +483,24 @@ class Arrow_Button(pygame.sprite.Sprite):
 
 
 class ToggleButton(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, pressed=False, fixed=False, vertical=False, cross=False):
+    def __init__(
+        self,
+        x,
+        y,
+        w,
+        h,
+        callback,
+        font=None,
+        text="",
+        button_color=WHITE_TRANSPARENT,
+        text_color=BLACK,
+        image=None,
+        border_w=None,
+        pressed=False,
+        fixed=False,
+        vertical=False,
+        cross=False,
+    ):
         super().__init__()
         self.fixed = fixed
         self.border_w = int(5) if not border_w else border_w
@@ -315,20 +515,40 @@ class ToggleButton(pygame.sprite.Sprite):
             self.button_image.fill(button_color)
             self.hover_image.fill(button_color)
             self.clicked_image.fill(button_color)
-        pygame.draw.rect(self.hover_image, WHITE_TRANSPARENT, self.hover_image.get_rect(), self.border_w)
+        pygame.draw.rect(
+            self.hover_image,
+            WHITE_TRANSPARENT,
+            self.hover_image.get_rect(),
+            self.border_w,
+        )
         if cross:
-            pygame.draw.line(self.clicked_image, WHITE, (0,0),(w,h),self.border_w)
-            pygame.draw.line(self.clicked_image, WHITE, (0,h),(w,0),self.border_w)
+            pygame.draw.line(
+                self.clicked_image, WHITE, (0, 0), (w, h), self.border_w
+            )
+            pygame.draw.line(
+                self.clicked_image, WHITE, (0, h), (w, 0), self.border_w
+            )
         else:
-            pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w)
+            pygame.draw.rect(
+                self.clicked_image,
+                WHITE,
+                self.clicked_image.get_rect(),
+                self.border_w,
+            )
 
         if text and font:
             text_surf = font.render(text, True, text_color)
             if vertical:
-                text_surf = pygame.transform.rotate(text_surf,90)
-            self.button_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.hover_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.clicked_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
+                text_surf = pygame.transform.rotate(text_surf, 90)
+            self.button_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
+            self.hover_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
+            self.clicked_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
         # This function will be called when the button gets pressed.
@@ -340,7 +560,6 @@ class ToggleButton(pygame.sprite.Sprite):
             if self.callback:
                 for callback in self.callback:
                     callback()
-
 
     def handle_event(self, event):
         if self.fixed:
@@ -371,12 +590,28 @@ class ToggleButton(pygame.sprite.Sprite):
             callback()
 
     def draw(self, screen):
-        screen.blit(self.image,(self.rect[0],self.rect[1]))
+        screen.blit(self.image, (self.rect[0], self.rect[1]))
+
 
 # image size has to be = w,h
 class RadioButton(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callbacks, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-                 image=None, border_w=None, target=None, callback_var=None, border_radius=0):
+    def __init__(
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        font=None,
+        text="",
+        button_color=WHITE_TRANSPARENT,
+        text_color=BLACK,
+        image=None,
+        border_w=None,
+        target=None,
+        callback_var=None,
+        border_radius=0,
+    ):
         super().__init__()
         self.callback_var = callback_var
         self.target = target if target else None
@@ -389,19 +624,52 @@ class RadioButton(pygame.sprite.Sprite):
             self.hover_image.blit(image.copy(), (0, 0))
             self.clicked_image.blit(image.copy(), (0, 0))
         else:
-            pygame.draw.rect(self.button_image,button_color,(0,0,w,h),border_radius=border_radius)
-            pygame.draw.rect(self.hover_image,button_color,(0,0,w,h),border_radius=border_radius)
-            pygame.draw.rect(self.clicked_image,button_color,(0,0,w,h),border_radius=border_radius)
-            #self.button_image.fill(button_color)
-            #self.hover_image.fill(button_color)
-            #self.clicked_image.fill(button_color)
-        pygame.draw.rect(self.hover_image, WHITE_TRANSPARENT, self.hover_image.get_rect(), self.border_w, border_radius=border_radius)
-        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=border_radius)
+            pygame.draw.rect(
+                self.button_image,
+                button_color,
+                (0, 0, w, h),
+                border_radius=border_radius,
+            )
+            pygame.draw.rect(
+                self.hover_image,
+                button_color,
+                (0, 0, w, h),
+                border_radius=border_radius,
+            )
+            pygame.draw.rect(
+                self.clicked_image,
+                button_color,
+                (0, 0, w, h),
+                border_radius=border_radius,
+            )
+            # self.button_image.fill(button_color)
+            # self.hover_image.fill(button_color)
+            # self.clicked_image.fill(button_color)
+        pygame.draw.rect(
+            self.hover_image,
+            WHITE_TRANSPARENT,
+            self.hover_image.get_rect(),
+            self.border_w,
+            border_radius=border_radius,
+        )
+        pygame.draw.rect(
+            self.clicked_image,
+            WHITE,
+            self.clicked_image.get_rect(),
+            self.border_w,
+            border_radius=border_radius,
+        )
         if text and font:
             text_surf = font.render(text, True, text_color)
-            self.button_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.hover_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
-            self.clicked_image.blit(text_surf, text_surf.get_rect(center=(w // 2, h // 2)))
+            self.button_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
+            self.hover_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
+            self.clicked_image.blit(
+                text_surf, text_surf.get_rect(center=(w // 2, h // 2))
+            )
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
         # This function will be called when the button gets pressed.
@@ -433,8 +701,19 @@ class RadioButton(pygame.sprite.Sprite):
 
 # image size has to be = w,h
 class DoubleRadioButton(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, callbacks, button_color=WHITE_TRANSPARENT,
-                 border_w=None, callback_var=None, border_radius=0, preset=None):
+    def __init__(
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        button_color=WHITE_TRANSPARENT,
+        border_w=None,
+        callback_var=None,
+        border_radius=0,
+        preset=None,
+    ):
         super().__init__()
         self.w = w
         self.h = h
@@ -449,16 +728,54 @@ class DoubleRadioButton(pygame.sprite.Sprite):
         if preset:
             self.generate_image_from_preset(preset)
         else:
-            pygame.draw.rect(self.button_image,button_color,(0,0,w,h),border_radius=border_radius)
-            pygame.draw.rect(self.hover_image,button_color,(0,0,w,h),border_radius=border_radius)
-            pygame.draw.rect(self.clicked_image,button_color,(0,0,w,h),border_radius=border_radius)
-            pygame.draw.rect(self.hover_selected_image,button_color,(0,0,w,h),border_radius=border_radius)
-            #self.button_image.fill(button_color)
-            #self.hover_image.fill(button_color)
-            #self.clicked_image.fill(button_color)
-        pygame.draw.rect(self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w, border_radius=border_radius)
-        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=border_radius)
-        pygame.draw.rect(self.hover_selected_image, config.GREEN, self.clicked_image.get_rect(), self.border_w, border_radius=self.border_radius)
+            pygame.draw.rect(
+                self.button_image,
+                button_color,
+                (0, 0, w, h),
+                border_radius=border_radius,
+            )
+            pygame.draw.rect(
+                self.hover_image,
+                button_color,
+                (0, 0, w, h),
+                border_radius=border_radius,
+            )
+            pygame.draw.rect(
+                self.clicked_image,
+                button_color,
+                (0, 0, w, h),
+                border_radius=border_radius,
+            )
+            pygame.draw.rect(
+                self.hover_selected_image,
+                button_color,
+                (0, 0, w, h),
+                border_radius=border_radius,
+            )
+            # self.button_image.fill(button_color)
+            # self.hover_image.fill(button_color)
+            # self.clicked_image.fill(button_color)
+        pygame.draw.rect(
+            self.hover_image,
+            WHITE,
+            self.hover_image.get_rect(),
+            self.border_w,
+            border_radius=border_radius,
+        )
+        pygame.draw.rect(
+            self.clicked_image,
+            WHITE,
+            self.clicked_image.get_rect(),
+            self.border_w,
+            border_radius=border_radius,
+        )
+        pygame.draw.rect(
+            self.hover_selected_image,
+            config.GREEN,
+            self.clicked_image.get_rect(),
+            self.border_w,
+            border_radius=self.border_radius,
+        )
 
         self.image = self.button_image
         self.rect = pygame.Rect(x, y, w, h)
@@ -473,35 +790,103 @@ class DoubleRadioButton(pygame.sprite.Sprite):
         self.button_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
         self.hover_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
         self.clicked_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
-        self.hover_selected_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
+        self.hover_selected_image = pygame.Surface(
+            (self.w, self.h), pygame.SRCALPHA
+        )
 
-        pygame.draw.rect(self.button_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
-        pygame.draw.rect(self.hover_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
-        pygame.draw.rect(self.clicked_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
-        pygame.draw.rect(self.hover_selected_image, self.button_color, (0, 0, self.w, self.h), border_radius=self.border_radius)
+        pygame.draw.rect(
+            self.button_image,
+            self.button_color,
+            (0, 0, self.w, self.h),
+            border_radius=self.border_radius,
+        )
+        pygame.draw.rect(
+            self.hover_image,
+            self.button_color,
+            (0, 0, self.w, self.h),
+            border_radius=self.border_radius,
+        )
+        pygame.draw.rect(
+            self.clicked_image,
+            self.button_color,
+            (0, 0, self.w, self.h),
+            border_radius=self.border_radius,
+        )
+        pygame.draw.rect(
+            self.hover_selected_image,
+            self.button_color,
+            (0, 0, self.w, self.h),
+            border_radius=self.border_radius,
+        )
 
-        line_width = self.w/4
+        line_width = self.w / 4
 
-        leaf_height = preset["leaf_slider"]/100
-        stem_height = preset["stem_slider"]/100
-        root_height = preset["root_slider"]/100
-        starch_height = preset["starch_slider"]/100
+        leaf_height = preset["leaf_slider"] / 100
+        stem_height = preset["stem_slider"] / 100
+        root_height = preset["root_slider"] / 100
+        starch_height = preset["starch_slider"] / 100
 
-        images = [self.button_image, self.hover_image, self.clicked_image, self.hover_selected_image]
+        images = [
+            self.button_image,
+            self.hover_image,
+            self.clicked_image,
+            self.hover_selected_image,
+        ]
 
-        h = self.h*0.8
-        margin = self.h*0.1
+        h = self.h * 0.8
+        margin = self.h * 0.1
 
-        for i in range(0,len(images)):
-            pygame.draw.line(images[i],(255,255,255),(0*line_width,self.h-h*leaf_height-margin),(1*line_width,self.h-h*leaf_height-margin),4)
-            pygame.draw.line(images[i],(255,255,255),(1*line_width,self.h-h*stem_height-margin),(2*line_width,self.h-h*stem_height-margin),4)
-            pygame.draw.line(images[i],(255,255,255),(2*line_width,self.h-h*root_height-margin),(3*line_width,self.h-h*root_height-margin),4)
-            pygame.draw.line(images[i],(255,255,255),(3*line_width,self.h-h*starch_height-margin),(4*line_width,self.h-h*starch_height-margin),4)
+        for i in range(0, len(images)):
+            pygame.draw.line(
+                images[i],
+                (255, 255, 255),
+                (0 * line_width, self.h - h * leaf_height - margin),
+                (1 * line_width, self.h - h * leaf_height - margin),
+                4,
+            )
+            pygame.draw.line(
+                images[i],
+                (255, 255, 255),
+                (1 * line_width, self.h - h * stem_height - margin),
+                (2 * line_width, self.h - h * stem_height - margin),
+                4,
+            )
+            pygame.draw.line(
+                images[i],
+                (255, 255, 255),
+                (2 * line_width, self.h - h * root_height - margin),
+                (3 * line_width, self.h - h * root_height - margin),
+                4,
+            )
+            pygame.draw.line(
+                images[i],
+                (255, 255, 255),
+                (3 * line_width, self.h - h * starch_height - margin),
+                (4 * line_width, self.h - h * starch_height - margin),
+                4,
+            )
 
-        pygame.draw.rect(self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w, border_radius=self.border_radius)
-        pygame.draw.rect(self.clicked_image, WHITE, self.clicked_image.get_rect(), self.border_w, border_radius=self.border_radius)
-        pygame.draw.rect(self.hover_selected_image, config.GREEN, self.clicked_image.get_rect(), self.border_w, border_radius=self.border_radius)
-
+        pygame.draw.rect(
+            self.hover_image,
+            WHITE,
+            self.hover_image.get_rect(),
+            self.border_w,
+            border_radius=self.border_radius,
+        )
+        pygame.draw.rect(
+            self.clicked_image,
+            WHITE,
+            self.clicked_image.get_rect(),
+            self.border_w,
+            border_radius=self.border_radius,
+        )
+        pygame.draw.rect(
+            self.hover_selected_image,
+            config.GREEN,
+            self.clicked_image.get_rect(),
+            self.border_w,
+            border_radius=self.border_radius,
+        )
 
     def handle_event(self, event):
         hover = self.rect.collidepoint(pygame.mouse.get_pos())
@@ -531,7 +916,9 @@ class DoubleRadioButton(pygame.sprite.Sprite):
 
 
 class OptionBox:
-    def __init__(self, x, y, w, h, color, highlight_color, font, option_list, selected=0):
+    def __init__(
+        self, x, y, w, h, color, highlight_color, font, option_list, selected=0
+    ):
         self.color = color
         self.highlight_color = highlight_color
         self.rect = pygame.Rect(x, y, w, h)
@@ -543,7 +930,11 @@ class OptionBox:
         self.active_option = -1
 
     def draw(self, surf):
-        pygame.draw.rect(surf, self.highlight_color if self.menu_active else self.color, self.rect)
+        pygame.draw.rect(
+            surf,
+            self.highlight_color if self.menu_active else self.color,
+            self.rect,
+        )
         pygame.draw.rect(surf, (0, 0, 0), self.rect, 2)
         msg = self.font.render(self.option_list[self.selected], 1, (0, 0, 0))
         surf.blit(msg, msg.get_rect(center=self.rect.center))
@@ -552,11 +943,21 @@ class OptionBox:
             for i, text in enumerate(self.option_list):
                 rect = self.rect.copy()
                 rect.y += (i + 1) * self.rect.height
-                pygame.draw.rect(surf, self.highlight_color if i == self.active_option else self.color, rect)
+                pygame.draw.rect(
+                    surf,
+                    self.highlight_color
+                    if i == self.active_option
+                    else self.color,
+                    rect,
+                )
                 msg = self.font.render(text, 1, (0, 0, 0))
                 surf.blit(msg, msg.get_rect(center=rect.center))
             outer_rect = (
-                self.rect.x, self.rect.y + self.rect.height, self.rect.width, self.rect.height * len(self.option_list))
+                self.rect.x,
+                self.rect.y + self.rect.height,
+                self.rect.width,
+                self.rect.height * len(self.option_list),
+            )
             pygame.draw.rect(surf, (0, 0, 0), outer_rect, 2)
 
     def update(self, event_list):
@@ -584,12 +985,30 @@ class OptionBox:
                     return self.active_option
         return -1
 
+
 # Todo include slider to mouse offset when clicked to avoid jumping
-class Slider():
-    def __init__(self, rect, font, slider_size, organ=None, plant=None, color=None, slider_color=None, callback=None, percent=0, active=True, visible=True):
+class Slider:
+    def __init__(
+        self,
+        rect,
+        font,
+        slider_size,
+        organ=None,
+        plant=None,
+        color=None,
+        slider_color=None,
+        callback=None,
+        percent=0,
+        active=True,
+        visible=True,
+    ):
         super().__init__()
         self.color = color if color else (255, 255, 255, 128)
-        self.slider_color = slider_color if slider_color else (self.color[0], self.color[1], self.color[2])
+        self.slider_color = (
+            slider_color
+            if slider_color
+            else (self.color[0], self.color[1], self.color[2])
+        )
         self.drag = False
         self.font = font
         self.visible = visible
@@ -604,35 +1023,34 @@ class Slider():
         self.rect = rect
         self.set_percentage(percent)
 
-
     def update(self):
-
         if self.plant is not None:
             if self.plant.get_biomass() > self.plant.seedling.max:
                 self.active = True
-        '''if self.organ is not None:
+        """if self.organ is not None:
             if self.organ.active:
                 self.active = True
         #whats that?
         if not self.active:
-            return'''
-
+            return"""
 
     def get_percentage(self):
         line_height = self.h - self.slider_h
         slider_length = self.slider_y
-        percent = slider_length/line_height*100
-        return 100-percent
+        percent = slider_length / line_height * 100
+        return 100 - percent
 
     def get_slider_rect_global(self):
-        return pygame.Rect(self.x, self.y+self.slider_y, self.slider_w, self.slider_h)
+        return pygame.Rect(
+            self.x, self.y + self.slider_y, self.slider_w, self.slider_h
+        )
 
     def get_slider_rect_local(self):
         return pygame.Rect(0, self.slider_y, self.slider_w, self.slider_h)
 
     def set_percentage(self, percent):
         line_height = self.h - self.slider_h
-        slider_length = (100-percent)*line_height/100
+        slider_length = (100 - percent) * line_height / 100
         self.slider_y = slider_length
         if self.organ:
             self.organ.percentage = self.get_percentage()
@@ -651,16 +1069,31 @@ class Slider():
     def draw(self, screen):
         if not self.visible:
             return
-        slider_color = self.slider_color if self.active else (150,150,150,128)
+        slider_color = (
+            self.slider_color if self.active else (150, 150, 150, 128)
+        )
         w = self.w if self.w >= self.slider_w else self.slider_w
         border = pygame.Surface((w, self.h), pygame.SRCALPHA)
         # line
-        pygame.draw.rect(border, self.color, (w / 2 - self.w / 2, self.slider_h/2, self.w, self.h-self.slider_h))
+        pygame.draw.rect(
+            border,
+            self.color,
+            (
+                w / 2 - self.w / 2,
+                self.slider_h / 2,
+                self.w,
+                self.h - self.slider_h,
+            ),
+        )
 
         # draw slider
         pygame.draw.rect(border, slider_color, self.get_slider_rect_local())
-        msg = self.font.render("{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0))
-        border.blit(msg, msg.get_rect(center=self.get_slider_rect_local().center))
+        msg = self.font.render(
+            "{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0)
+        )
+        border.blit(
+            msg, msg.get_rect(center=self.get_slider_rect_local().center)
+        )
         screen.blit(border, (self.x, self.y))
 
     def handle_event(self, event):
@@ -671,7 +1104,7 @@ class Slider():
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if hover and event.button == 1:
-                #print(event.type, "Hopefully a slider move", hover, self.drag)
+                # print(event.type, "Hopefully a slider move", hover, self.drag)
                 self.drag = True
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.drag:
@@ -683,7 +1116,15 @@ class Slider():
         if event.type == pygame.MOUSEMOTION:
             if self.drag:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
-                self.slider_y = clamp(pygame.mouse.get_pos()[1], self.y, self.y - self.slider_h + self.h) - self.y
+                self.slider_y = (
+                    clamp(
+                        pygame.mouse.get_pos()[1],
+                        self.y,
+                        self.y - self.slider_h + self.h,
+                    )
+                    - self.y
+                )
+
 
 class SliderGroup:
     def __init__(self, sliders, max_sum):
@@ -692,7 +1133,7 @@ class SliderGroup:
         self.max_sum = max_sum
 
         for slider in self.sliders:
-            slider.callback= self.change_percentage
+            slider.callback = self.change_percentage
             # slider.set_percentage(self.max_sum/len(self.sliders))
 
     def slider_sum(self):
@@ -700,12 +1141,17 @@ class SliderGroup:
 
     def change_percentage(self, slider):
         # @slider: slider that changed
-        while self.max_sum < self.slider_sum()-0.1 or self.max_sum > self.slider_sum()+1:
+        while (
+            self.max_sum < self.slider_sum() - 0.1
+            or self.max_sum > self.slider_sum() + 1
+        ):
             # special case, if max is smaller than 100%
             if slider.get_percentage() > self.max_sum:
                 slider.set_percentage(self.max_sum)
             # slider that called and zero sliders aren't able to reduce --> available_sliders
-            available_sliders = (len(self.sliders) - len(self.sliders_zero)) - 1
+            available_sliders = (
+                len(self.sliders) - len(self.sliders_zero)
+            ) - 1
             delta = (self.slider_sum() - self.max_sum) / (available_sliders)
             for s in self.sliders:
                 if s == slider or s in self.sliders_zero:
@@ -716,11 +1162,29 @@ class SliderGroup:
                     if extra > 0:
                         self.sliders_zero.append(s)
 
-class NegativeSlider():
-    def __init__(self, rect, font, slider_size, organ=None, plant=None, color=None, slider_color=None, callback=None, percent=0, active=True, visible=True):
+
+class NegativeSlider:
+    def __init__(
+        self,
+        rect,
+        font,
+        slider_size,
+        organ=None,
+        plant=None,
+        color=None,
+        slider_color=None,
+        callback=None,
+        percent=0,
+        active=True,
+        visible=True,
+    ):
         super().__init__()
         self.color = color if color else (255, 255, 255, 128)
-        self.slider_color = slider_color if slider_color else (self.color[0], self.color[1], self.color[2])
+        self.slider_color = (
+            slider_color
+            if slider_color
+            else (self.color[0], self.color[1], self.color[2])
+        )
         self.drag = False
         self.font = font
         self.visible = visible
@@ -735,35 +1199,34 @@ class NegativeSlider():
         self.rect = rect
         self.set_percentage(percent)
 
-
     def update(self):
-
         if self.plant is not None:
             if self.plant.get_biomass() > self.plant.seedling.max:
                 self.active = True
-        '''if self.organ is not None:
+        """if self.organ is not None:
             if self.organ.active:
                 self.active = True
         #whats that?
         if not self.active:
-            return'''
-
+            return"""
 
     def get_percentage(self):
         line_height = self.h - self.slider_h
         slider_length = self.slider_y
-        percent = slider_length/line_height*100
-        return (50-percent)*2
+        percent = slider_length / line_height * 100
+        return (50 - percent) * 2
 
     def get_slider_rect_global(self):
-        return pygame.Rect(self.x, self.y+self.slider_y, self.slider_w, self.slider_h)
+        return pygame.Rect(
+            self.x, self.y + self.slider_y, self.slider_w, self.slider_h
+        )
 
     def get_slider_rect_local(self):
         return pygame.Rect(0, self.slider_y, self.slider_w, self.slider_h)
 
     def set_percentage(self, percent):
         line_height = self.h - self.slider_h
-        slider_length = (100-percent)*line_height/100
+        slider_length = (100 - percent) * line_height / 100
         self.slider_y = slider_length
         if self.organ:
             self.organ.set_percentage(self.get_percentage())
@@ -780,19 +1243,40 @@ class NegativeSlider():
     def draw(self, screen):
         if not self.visible:
             return
-        slider_color = self.slider_color if self.active else (150,150,150,128)
+        slider_color = (
+            self.slider_color if self.active else (150, 150, 150, 128)
+        )
         w = self.w if self.w >= self.slider_w else self.slider_w
         border = pygame.Surface((w, self.h), pygame.SRCALPHA)
         # line
-        pygame.draw.rect(border, self.color, (w / 2 - self.w / 2, self.slider_h/2, self.w, self.h-self.slider_h))
+        pygame.draw.rect(
+            border,
+            self.color,
+            (
+                w / 2 - self.w / 2,
+                self.slider_h / 2,
+                self.w,
+                self.h - self.slider_h,
+            ),
+        )
 
         # show zero
-        pygame.draw.line(border, config.GRAY, (0, self.h / 2), (self.slider_w, self.h / 2), width=2)
+        pygame.draw.line(
+            border,
+            config.GRAY,
+            (0, self.h / 2),
+            (self.slider_w, self.h / 2),
+            width=2,
+        )
 
         # draw slider
         pygame.draw.rect(border, slider_color, self.get_slider_rect_local())
-        msg = self.font.render("{:02.0f}".format(abs(self.get_percentage())), 1, (0, 0, 0))
-        border.blit(msg, msg.get_rect(center=self.get_slider_rect_local().center))
+        msg = self.font.render(
+            "{:02.0f}".format(abs(self.get_percentage())), 1, (0, 0, 0)
+        )
+        border.blit(
+            msg, msg.get_rect(center=self.get_slider_rect_local().center)
+        )
         screen.blit(border, (self.x, self.y))
 
     def handle_event(self, event):
@@ -803,7 +1287,7 @@ class NegativeSlider():
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if hover and event.button == 1:
-                #print(event.type, "Hopefully a slider move", hover, self.drag)
+                # print(event.type, "Hopefully a slider move", hover, self.drag)
                 self.drag = True
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.drag:
@@ -815,8 +1299,15 @@ class NegativeSlider():
         if event.type == pygame.MOUSEMOTION:
             if self.drag:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
-                self.slider_y = clamp(pygame.mouse.get_pos()[1], self.y, self.y - self.slider_h + self.h) - self.y
-                #print("Get: ", self.get_percentage())
+                self.slider_y = (
+                    clamp(
+                        pygame.mouse.get_pos()[1],
+                        self.y,
+                        self.y - self.slider_h + self.h,
+                    )
+                    - self.y
+                )
+                # print("Get: ", self.get_percentage())
 
 
 class SliderGroup:
@@ -826,7 +1317,7 @@ class SliderGroup:
         self.max_sum = max_sum
 
         for slider in self.sliders:
-            slider.callback= self.change_percentage
+            slider.callback = self.change_percentage
             # slider.set_percentage(self.max_sum/len(self.sliders))
 
     def slider_sum(self):
@@ -836,16 +1327,21 @@ class SliderGroup:
             percent = 0 if percent < 0 else percent
             sum += percent
         return sum
-        #return sum([slider.get_percentage() for slider in self.sliders])
+        # return sum([slider.get_percentage() for slider in self.sliders])
 
     def change_percentage(self, slider):
         # @slider: slider that changed
-        while self.max_sum < self.slider_sum()-0.1 or self.max_sum > self.slider_sum()+1:
+        while (
+            self.max_sum < self.slider_sum() - 0.1
+            or self.max_sum > self.slider_sum() + 1
+        ):
             # special case, if max is smaller than 100%
             if slider.get_percentage() > self.max_sum:
                 slider.set_percentage(self.max_sum)
             # slider that called and zero sliders aren't able to reduce --> available_sliders
-            available_sliders = (len(self.sliders) - len(self.sliders_zero)) - 1
+            available_sliders = (
+                len(self.sliders) - len(self.sliders_zero)
+            ) - 1
             delta = (self.slider_sum() - self.max_sum) / (available_sliders)
             for s in self.sliders:
                 if s == slider or s in self.sliders_zero:
@@ -856,13 +1352,25 @@ class SliderGroup:
                     if extra > 0:
                         self.sliders_zero.append(s)
 
+
 class Textbox:
-    def __init__(self, x,y,w,h, font, text="name", background_color=(240,240,240,180), highlight_color=(255,255,255),textcolor=(0,0,0)):
+    def __init__(
+        self,
+        x,
+        y,
+        w,
+        h,
+        font,
+        text="name",
+        background_color=(240, 240, 240, 180),
+        highlight_color=(255, 255, 255),
+        textcolor=(0, 0, 0),
+    ):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
-        self.rect = pygame.Rect(x,y,w,h)
+        self.rect = pygame.Rect(x, y, w, h)
         self.text = text
         self.font = font
         self.textcolor = textcolor
@@ -876,7 +1384,6 @@ class Textbox:
         self.cursor_timer = 0
         self.max_cursor_timer = 60
 
-
     def handle_event(self, e):
         if e.type == pygame.MOUSEMOTION:
             if self.rect.collidepoint(e.pos):
@@ -886,7 +1393,7 @@ class Textbox:
         if e.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(e.pos):
                 self.active = True
-                #print(self.active)
+                # print(self.active)
             else:
                 self.active = False
         if not self.active:
@@ -909,22 +1416,55 @@ class Textbox:
             if self.cursor_timer == self.max_cursor_timer:
                 self.cursor_timer = 0
 
-
     def draw(self, screen):
-        pygame.draw.rect(screen, self.background_color, self.rect, border_radius=3)
+        pygame.draw.rect(
+            screen, self.background_color, self.rect, border_radius=3
+        )
 
-        #pygame.draw.rect(screen, self.border_color, self.rect, border_radius=3, width=3)
-        screen.blit(self.render_text, (self.x+self.w/2-self.render_text.get_width()/2,self.y+self.h/2-self.render_text.get_height()/2))
+        # pygame.draw.rect(screen, self.border_color, self.rect, border_radius=3, width=3)
+        screen.blit(
+            self.render_text,
+            (
+                self.x + self.w / 2 - self.render_text.get_width() / 2,
+                self.y + self.h / 2 - self.render_text.get_height() / 2,
+            ),
+        )
         if self.active:
-            if self.cursor_timer > self.max_cursor_timer/2:
-                screen.blit(self.cursor, (self.x+self.w/2+self.render_text.get_width()/2+1,self.y+self.h/2-self.render_text.get_height()/2))
-            pygame.draw.line(screen, self.higlight_color, (self.rect[0],self.rect[1]+self.rect[3]),(self.rect[0]+self.rect[2],self.rect[1]+self.rect[3]), width=3)
+            if self.cursor_timer > self.max_cursor_timer / 2:
+                screen.blit(
+                    self.cursor,
+                    (
+                        self.x
+                        + self.w / 2
+                        + self.render_text.get_width() / 2
+                        + 1,
+                        self.y
+                        + self.h / 2
+                        - self.render_text.get_height() / 2,
+                    ),
+                )
+            pygame.draw.line(
+                screen,
+                self.higlight_color,
+                (self.rect[0], self.rect[1] + self.rect[3]),
+                (self.rect[0] + self.rect[2], self.rect[1] + self.rect[3]),
+                width=3,
+            )
 
         elif self.hover:
-            pygame.draw.line(screen, self.higlight_color, (self.rect[0],self.rect[1]+self.rect[3]),(self.rect[0]+self.rect[2],self.rect[1]+self.rect[3]), width=3)
+            pygame.draw.line(
+                screen,
+                self.higlight_color,
+                (self.rect[0], self.rect[1] + self.rect[3]),
+                (self.rect[0] + self.rect[2], self.rect[1] + self.rect[3]),
+                width=3,
+            )
 
-class ButtonArray():
-    def __init__(self, rect, amount, resolution, margin, callback, set_hover_message):
+
+class ButtonArray:
+    def __init__(
+        self, rect, amount, resolution, margin, callback, set_hover_message
+    ):
         self.toggle_buttons = []
         self.callback = callback
         self.set_hover_message = set_hover_message
@@ -933,12 +1473,27 @@ class ButtonArray():
         self.label = config.BIG_FONT.render("Stomata:", True, config.BLACK)
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
 
-        self.rect = pygame.Rect(rect[0],rect[1],(rect[2]+margin)*amount-margin,rect[3]+60)
-        for i in range(0,amount):
-            self.toggle_buttons.append(ToggleButton(rect[0] + i * (rect[2]+margin), rect[1] + 50, rect[2], rect[3], [], font=config.FONT, text="{}".format(i * resolution)))
+        self.rect = pygame.Rect(
+            rect[0],
+            rect[1],
+            (rect[2] + margin) * amount - margin,
+            rect[3] + 60,
+        )
+        for i in range(0, amount):
+            self.toggle_buttons.append(
+                ToggleButton(
+                    rect[0] + i * (rect[2] + margin),
+                    rect[1] + 50,
+                    rect[2],
+                    rect[3],
+                    [],
+                    font=config.FONT,
+                    text="{}".format(i * resolution),
+                )
+            )
 
-            #self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
-            #image=None, border_w=None, pressed=False, fixed=False, vertical=False, cross=False):
+            # self, x, y, w, h, callback, font=None, text='', button_color=WHITE_TRANSPARENT, text_color=BLACK,
+            # image=None, border_w=None, pressed=False, fixed=False, vertical=False, cross=False):
 
     def update(self, hours):
         self.hours = hours
@@ -956,10 +1511,11 @@ class ButtonArray():
                     button.handle_event(e)
                 self.set_hover_message(self.hover_message)
 
-
-
     def get_bool_list(self):
-        return [True if button.button_down else False for button in self.toggle_buttons]
+        return [
+            True if button.button_down else False
+            for button in self.toggle_buttons
+        ]
 
     def go_green(self):
         self.color = config.GREEN
@@ -971,14 +1527,29 @@ class ButtonArray():
         self.rect
 
     def draw(self, screen):
-        #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, self.rect)
-        pygame.draw.rect(screen, self.color, (self.rect[2]/24*self.hours+self.rect[0]-7,self.rect[1]+32+50,15,5),border_radius=2)
-        pygame.draw.rect(screen, config.WHITE, (self.rect[0], self.rect[1], 415, 40), border_radius=3)
+        # pygame.draw.rect(screen, config.WHITE_TRANSPARENT, self.rect)
+        pygame.draw.rect(
+            screen,
+            self.color,
+            (
+                self.rect[2] / 24 * self.hours + self.rect[0] - 7,
+                self.rect[1] + 32 + 50,
+                15,
+                5,
+            ),
+            border_radius=2,
+        )
+        pygame.draw.rect(
+            screen,
+            config.WHITE,
+            (self.rect[0], self.rect[1], 415, 40),
+            border_radius=3,
+        )
         if self.color == config.GREEN:
             open_closed = config.BIG_FONT.render("Open", True, self.color)
         else:
             open_closed = config.BIG_FONT.render("Closed", True, self.color)
-        screen.blit(self.label,(self.rect[0]+5,self.rect[1]+5))
-        screen.blit(open_closed,(self.rect[0]+120,self.rect[1]+5))
+        screen.blit(self.label, (self.rect[0] + 5, self.rect[1] + 5))
+        screen.blit(open_closed, (self.rect[0] + 120, self.rect[1] + 5))
         for button in self.toggle_buttons:
             button.draw(screen)

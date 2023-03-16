@@ -15,9 +15,6 @@ def test_01():
     gametime = FixedGametime()
     model = DynamicModel(gametime)
 
-
     #    def update(self, dt, leaf_mass, stem_mass, root_mass, PLA, sun_intensity, max_water_drain, plant_mass):
 
     model.update(20, 1, 1, 1, 0.3, 1, 1)
-
-

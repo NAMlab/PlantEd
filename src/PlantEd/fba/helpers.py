@@ -86,7 +86,6 @@ def new_biomass(_model: Model, reaction: str) -> Model:
 
     metabolite: Metabolite
     for metabolite, value in metabolites:
-
         biomass.add_metabolites({metabolite: value})
 
         try:
@@ -94,7 +93,6 @@ def new_biomass(_model: Model, reaction: str) -> Model:
             assert round(sol.objective_value, 4) < 0.0
 
         except (OptimizationError, AssertionError):
-
             problematic.append(metabolite.id)
             biomass.add_metabolites({metabolite: 0}, False)
 
@@ -145,7 +143,6 @@ def autotroph(model: Model, **kwargs) -> Solution:
         return sol
 
     except OptimizationError as e:
-
         for identifier, bounds in defaults.items():
             model.reactions.get_by_id(identifier).bounds = bounds
 
@@ -192,7 +189,6 @@ def heterotroph(model: Model, **kwargs) -> Solution:
         return sol
 
     except OptimizationError as e:
-
         for identifier, bounds in defaults.items():
             model.reactions.get_by_id(identifier).bounds = bounds
 
@@ -270,7 +266,6 @@ def update_stoichiometry(
     metabolites: Dict[Metabolite, float] = reaction.metabolites
 
     for metabolite, coef in metabolites.items():
-
         if coef < 0:
             coef = -left
 
@@ -299,7 +294,6 @@ def _normalize_reactions(
 
     reaction: Reaction
     for reaction in transfers:
-
         update_stoichiometry(reaction, LEFT, RIGHT)
 
 
@@ -414,12 +408,10 @@ def update_objective(
     starch = growth_percentages.starch
     seed = growth_percentages.flower
 
-
     try:
         model.constraints["biomass_organ"]
 
     except KeyError:
-
         raise Exception(
             "'biomass_organ' constraint was not found in the model. "
             "Please be sure to use the 'create_objective' funcion."
@@ -441,7 +433,6 @@ def update_objective(
         (seed_rxn, seed),
         (starch_rxn, starch),
     ]:
-
         if factor == 0:
             reaction.bounds = (0, 0)
         else:

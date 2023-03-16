@@ -3,15 +3,18 @@ from pygame import Rect
 import numpy as np
 import config
 
-class Animation():
-    def __init__(self, images, duration, pos=[0,0], running=True):
+
+class Animation:
+    def __init__(self, images, duration, pos=[0, 0], running=True):
         self.pos = pos
         self.rect = Rect(pos[0], pos[1], 10, 10)
         self.images = images
         self.image = images[0]
         self.duration = duration
         self.timer = 0
-        self.interval = int(duration / len(images)) # delta time to switch images
+        self.interval = int(
+            duration / len(images)
+        )  # delta time to switch images
         self.start_interval = self.interval
         self.index = 0
         self.running = running
@@ -35,4 +38,4 @@ class Animation():
 
     def draw(self, screen):
         if self.running:
-            screen.blit(self.image,self.pos)
+            screen.blit(self.image, self.pos)

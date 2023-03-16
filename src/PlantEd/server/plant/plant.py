@@ -1,5 +1,6 @@
 from src.PlantEd.server.plant import Leaf
 
+
 class Plant:
     leafs: list[Leaf]
 

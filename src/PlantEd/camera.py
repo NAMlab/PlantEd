@@ -1,5 +1,6 @@
 import pygame
 
+
 class Camera:
     def __init__(self, offset_y):
         self.offset_y = offset_y
@@ -9,8 +10,8 @@ class Camera:
     def update(self, dt):
         diff = self.target_offset - self.offset_y
         if diff != 0:
-            diff = diff/abs(diff)
-            self.offset_y += diff*self.speed
+            diff = diff / abs(diff)
+            self.offset_y += diff * self.speed
 
     def handle_event(self, e: pygame.event.Event):
         if e.type == pygame.KEYDOWN and e.key == pygame.K_w:
@@ -23,4 +24,3 @@ class Camera:
 
     def move_down(self):
         self.target_offset = -400
-

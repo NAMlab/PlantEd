@@ -1,6 +1,7 @@
 import config
 import pygame
 
+
 class Tree:
     def __init__(self, pos, images, environment):
         self.pos = pos
@@ -9,10 +10,8 @@ class Tree:
         self.environment = environment
         self.index = 0
 
-
-
     def apply_shading(self):
-       self.image = self.shaded_image(self.image, (0,0,0,10))
+        self.image = self.shaded_image(self.image, (0, 0, 0, 10))
 
     def ghost_image(self, image, color):
         shaded = image.copy()
@@ -27,8 +26,8 @@ class Tree:
 
     def update(self, dt):
         pass
-        #days, hours, minutes = self.environment.get_day_time()
-        #self.image = self.images[int(days * len(self.images)/config.MAX_DAYS)]
+        # days, hours, minutes = self.environment.get_day_time()
+        # self.image = self.images[int(days * len(self.images)/config.MAX_DAYS)]
 
     def handle_event(self, e):
         if e.type == pygame.KEYDOWN and e.key == pygame.K_t:
@@ -37,7 +36,7 @@ class Tree:
             if self.index >= len(self.images):
                 self.index = 0
             print(self.index)
-            #self.image = self.images[self.index]
+            # self.image = self.images[self.index]
 
     def draw(self, screen):
         screen.blit(self.image, self.pos)

@@ -1,5 +1,6 @@
 import pygame
 
+
 class Singleton:
     """
     A non-thread-safe helper class to ease implementing singletons.
@@ -33,13 +34,15 @@ class Singleton:
             return self._instance
 
     def __call__(self):
-        raise TypeError('Singletons must be accessed through `instance()`.')
+        raise TypeError("Singletons must be accessed through `instance()`.")
 
     def __instancecheck__(self, inst):
         return isinstance(inst, self._decorated)
 
+
 def get_time():
     return pygame.time.get_ticks()
+
 
 @Singleton
 class GameTime:
@@ -47,13 +50,17 @@ class GameTime:
         self.starttime = pygame.time.get_ticks()
         self.currenttime = self.starttime
         self.GAMESPEED = 240
-        self.timediff = 0  # used to add sped up or slowed time to the current time
+        self.timediff = (
+            0  # used to add sped up or slowed time to the current time
+        )
         self.deltatime = self.starttime  # tmp time for states
         self.set_speed(self.GAMESPEED)
 
     def set_speed(self, speed):
         ticks = pygame.time.get_ticks()
-        self.timediff += (ticks - self.deltatime) * self.GAMESPEED  # how long the gamespeed has beend altered
+        self.timediff += (
+            ticks - self.deltatime
+        ) * self.GAMESPEED  # how long the gamespeed has beend altered
         self.deltatime = ticks  # set up
         self.GAMESPEED = speed
 
@@ -73,8 +80,12 @@ class GameTime:
         self.set_speed(2400)
 
     def forward(self):
-        self.set_speed(9600*4)
+        self.set_speed(9600 * 4)
 
     def get_time(self):
-        return pygame.time.get_ticks() - self.starttime + self.timediff + (
-                (pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED)
+        return (
+            pygame.time.get_ticks()
+            - self.starttime
+            + self.timediff
+            + ((pygame.time.get_ticks() - self.deltatime) * self.GAMESPEED)
+        )

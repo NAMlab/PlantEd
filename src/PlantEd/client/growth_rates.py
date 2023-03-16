@@ -13,7 +13,8 @@ from src.PlantEd.utils.gametime import GameTime
 logger = logging.getLogger(__name__)
 
 
-FLUX_TO_GRAMM : Final[float] = 0.002299662183
+FLUX_TO_GRAMM: Final[float] = 0.002299662183
+
 
 @dataclass_json
 @dataclass
@@ -58,7 +59,9 @@ class GrowthRates:
         """
         gamespeed = gametime.GAMESPEED
 
-        logger.debug(f"Create GrowthRates object in grams from {self} for a period of {gamespeed} seconds.")
+        logger.debug(
+            f"Create GrowthRates object in grams from {self} for a period of {gamespeed} seconds."
+        )
 
         leaf = self.leaf_rate * gamespeed * FLUX_TO_GRAMM
         stem = self.stem_rate * gamespeed * FLUX_TO_GRAMM
@@ -68,23 +71,24 @@ class GrowthRates:
         seed = self.seed_rate * gamespeed
 
         growth_rates_grams = GrowthRates(
-            unit = "grams",
-            leaf_rate= leaf,
-            stem_rate = stem,
-            root_rate = root,
-            starch_rate = starch,
-            starch_intake = starch_intake,
-            seed_rate = seed,
+            unit="grams",
+            leaf_rate=leaf,
+            stem_rate=stem,
+            root_rate=root,
+            starch_rate=starch,
+            starch_intake=starch_intake,
+            seed_rate=seed,
         )
 
         return growth_rates_grams
 
     def __radd__(self, other):
-        return other \
-            + self.leaf_rate \
-            + self.stem_rate \
-            + self.root_rate \
-            + self.starch_rate \
-            + self.starch_rate \
+        return (
+            other
+            + self.leaf_rate
+            + self.stem_rate
+            + self.root_rate
+            + self.starch_rate
+            + self.starch_rate
             + self.seed_rate
-
+        )

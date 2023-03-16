@@ -44,16 +44,20 @@ while running:
         y = center[1] + radius * math.sin(angle_start)
         next_x = center[0] + radius * math.cos(angle_start + angle)
         next_y = center[1] + radius * math.sin(angle_start + angle)
-        pygame.draw.line(screen, (255, 0, 0), (x, y), (next_x, next_y), line_thickness)
+        pygame.draw.line(
+            screen, (255, 0, 0), (x, y), (next_x, next_y), line_thickness
+        )
 
     # Draw the second pentagram
     for i in range(points):
         angle_start = i * angle
-        x = center[0] + radius * 2/3 * math.cos(angle_start)
-        y = center[1] + radius * 2/3 * math.sin(angle_start)
-        next_x = center[0] + radius * 2/3 * math.cos(angle_start + angle)
-        next_y = center[1] + radius * 2/3 * math.sin(angle_start + angle)
-        pygame.draw.line(screen, (255, 0, 0), (x, y), (next_x, next_y), line_thickness)
+        x = center[0] + radius * 2 / 3 * math.cos(angle_start)
+        y = center[1] + radius * 2 / 3 * math.sin(angle_start)
+        next_x = center[0] + radius * 2 / 3 * math.cos(angle_start + angle)
+        next_y = center[1] + radius * 2 / 3 * math.sin(angle_start + angle)
+        pygame.draw.line(
+            screen, (255, 0, 0), (x, y), (next_x, next_y), line_thickness
+        )
 
     # Update the angle offset
     angle_offset += angle_offset_delta
