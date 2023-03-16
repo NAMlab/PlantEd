@@ -19,7 +19,7 @@ from cobra.exceptions import OptimizationError
 from optlang.interface import Constraint, Objective
 from sympy import Add
 
-from client import GrowthPercent
+from src.PlantEd.client import GrowthPercent
 
 FILE = (
     Path(__file__)

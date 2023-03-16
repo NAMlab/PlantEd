@@ -2,6 +2,7 @@ import argparse
 import os
 import random
 import sys
+import time
 from datetime import datetime
 from typing import List
 
@@ -795,6 +796,7 @@ def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
+        screen.blit(fps_text,(500,500))
         # camera.render(screen)
         pygame.display.update()
 

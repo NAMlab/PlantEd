@@ -4,13 +4,8 @@ from pathlib import Path
 import cobra
 import os
 
-from client.growth_percentage import GrowthPercent
-from client.growth_rates import GrowthRates
-from fba.helpers import (
-    update_objective,
-    create_objective,
-    normalize
-)
+from src.PlantEd.client import GrowthRates, GrowthPercent
+from src.PlantEd.fba.helpers import create_objective, update_objective, normalize
 
 # states for objective
 BIOMASS_ROOT = "Biomass_tx_root"
@@ -179,8 +174,6 @@ class DynamicModel:
 
         growth_rates = self.growth_rates.flux2grams(self.gametime)
 
-        # ToDo berechne ab wann stärke aufgebraucht ist
-        # ToDO dann optimiere erneut summiere Gramm
 
         logger.info("Returning following growth rates:\n"
                      f"leaf: {growth_rates.root_rate}, "

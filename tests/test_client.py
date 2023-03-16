@@ -1,6 +1,5 @@
 import unittest
 
-from server.server import Server
 
 class TestClient(unittest.IsolatedAsyncioTestCase):
     def test_growth(self):

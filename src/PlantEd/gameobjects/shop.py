@@ -1,15 +1,15 @@
 import pygame
 
-from client import Client
-from fba.dynamic_model import DynamicModel
-from gameobjects.water_reservoir import Water_Grid
-from utils.button import Button
-import config
-from gameobjects.watering_can import Watering_can
-from gameobjects.blue_grain import Blue_grain
-from gameobjects.spraycan import Spraycan
-from gameobjects.root_item import Root_Item
-from data import assets
+from src.PlantEd import config
+from src.PlantEd.client import Client
+from src.PlantEd.data import assets
+from src.PlantEd.gameobjects.blue_grain import Blue_grain
+from src.PlantEd.gameobjects.root_item import Root_Item
+from src.PlantEd.gameobjects.spraycan import Spraycan
+from src.PlantEd.gameobjects.water_reservoir import Water_Grid
+from src.PlantEd.gameobjects.watering_can import Watering_can
+from src.PlantEd.utils.button import Button
+
 '''
 shop holds items and interfaces actions to consumables
 holds green thumbs, checks if buyable
@@ -189,7 +189,6 @@ class Shop:
                             if item.condition_not_met_message is not None:
                                 item.post_hover_message(item.condition_not_met_message)
                             return
-                    print("bought")
                     self.plant.upgrade_points -= item.cost
                     item.callback()
                     item.selected = False

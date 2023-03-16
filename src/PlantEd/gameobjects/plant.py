@@ -1,33 +1,36 @@
 import random
+from typing import Tuple, Optional
+
 import pygame
 
-from client import Client
-from client.growth_rates import GrowthRates
-from data import assets
-from utils.spline import Cubic, Cubic_Tree
-import config
 import math
-from utils.particle import ParticleSystem
 from pygame import Rect
-from utils.LSystem import LSystem
 from pygame.locals import *
 import numpy as np
-from utils.gametime import GameTime
+
+from src.PlantEd import config
+from src.PlantEd.client import Client, GrowthRates
+from src.PlantEd.data import assets
+from src.PlantEd.utils.LSystem import LSystem
+from src.PlantEd.utils.gametime import GameTime
+from src.PlantEd.utils.particle import ParticleSystem
+from src.PlantEd.utils.spline import Cubic_Tree, Cubic
+from src.PlantEd import client
 
 pygame.init()
 gram_mol = 0.5124299411
-WIN = pygame.USEREVENT+1
-#pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
-pivot_pos = [(286,113),(76,171),(254,78),(19,195),(271,114),(47,114)]
+WIN = pygame.USEREVENT + 1
+# pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
+pivot_pos = [(286, 113), (76, 171), (254, 78), (19, 195), (271, 114), (47, 114)]
 leaves = [(assets.img("leaves/{index}.PNG".format(index=i)), pivot_pos[i]) for i in range(0, 6)]
 flowers = [(assets.img("sunflowers/{index}.PNG".format(index=i), (64, 64))) for i in range(0, 3)]
-#flowers = [assets.img("flowers/flower.PNG",(64,64))]
-#stem = (assets.img("stem.png"), (15, 1063))
-#roots = (assets.img("roots.png"), (387, 36))
+# flowers = [assets.img("flowers/flower.PNG",(64,64))]
+# stem = (assets.img("stem.png"), (15, 1063))
+# roots = (assets.img("roots.png"), (387, 36))
 
 beans = [assets.img("bean_growth/{}.PNG".format(index), (150, 150)) for index in range(0, 6)]
-#beans = []
-#for bean in beans_big:
+# beans = []
+# for bean in beans_big:
 #    beans.append(pygame.transform.scale(bean, (int(bean.get_width()/4), int(bean.get_height()/4))))
 plopp = assets.sfx('plopp.wav')
 plopp.set_volume(0.4)

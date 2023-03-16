@@ -6,8 +6,8 @@ import unittest
 
 import websockets
 
-from fba.dynamic_model import DynamicModel
-from server.server import Server
+from src.PlantEd.fba.dynamic_model import DynamicModel
+from src.PlantEd.server import Server
 
 logging.basicConfig(
     level="DEBUG",

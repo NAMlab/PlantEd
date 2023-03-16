@@ -8,9 +8,10 @@ import threading
 import websockets
 from websockets.legacy.server import WebSocketServerProtocol
 
-from client.growth_percentage import GrowthPercent
-from client.water import Water
-from fba.dynamic_model import DynamicModel
+from src.PlantEd.client import GrowthPercent, Water
+from src.PlantEd.fba.dynamic_model import DynamicModel
+from src.PlantEd import server
+from src.PlantEd.server import Leaf
 
 logger = logging.getLogger(__name__)
 
@@ -20,17 +21,18 @@ class Server:
     A server that provides all necessary data for the user interface.
     """
 
-    def __init__(self, model:DynamicModel):
+    def __init__(self, model: DynamicModel):
         self.clients = set()
         self.websocket: websockets.WebSocketServer = None
         self.model: DynamicModel = model
+        self.plant: server.plant.Plant = server.plant.Plant()
         self.__future: asyncio.Future = None
         self.loop: asyncio.AbstractEventLoop = None
 
         thread = threading.Thread(
             target=asyncio.run,
             daemon=True,
-            args=(self.__start(), )
+            args=(self.__start(),)
         )
         self.thread: threading.Thread = thread
 
@@ -83,10 +85,9 @@ class Server:
                                     4000,
                                     ping_interval=10,
                                     ping_timeout=30,
-                                        ) as websocket:
+                                    ) as websocket:
             self.websocket = websocket
             await self.__future
-
 
     def open_connection(self, ws: WebSocketServerProtocol):
         """
@@ -125,7 +126,7 @@ class Server:
         logger.info(f"Sending {message}")
         return message
 
-    def calc_send_growth_rate(self, growth_percent:GrowthPercent) -> str:
+    def calc_send_growth_rate(self, growth_percent: GrowthPercent) -> str:
         """
         Function that calculates the grams per specified time step.
 
@@ -221,6 +222,10 @@ class Server:
 
         return str(drain)
 
+    def create_leaf(self, leaf: Leaf):
+
+        self.plant.create_leaf(leaf)
+
     async def main_handler(self, ws: WebSocketServerProtocol):
         """
         Method that accepts all requests to the server
@@ -289,7 +294,7 @@ class Server:
 
                     case "increase_nitrate":
                         logger.debug("Received command identified as increase_nitrate.")
-                        self.model.increase_nitrate(amount = 5000)
+                        self.model.increase_nitrate(amount=5000)
 
                     case "get_nitrate_pool":
                         logger.debug("Received command identified as get_nitrate_pool.")
@@ -299,14 +304,15 @@ class Server:
 
                         response["get_actual_water_drain"] = self.get_actual_water_drain()
 
+                    case "create_leaf":
+                        logger.debug("Received command identified as create_leaf.")
 
-                    case "stop":
-                        logger.debug("Received command identified as stop.")
+                        leaf: Leaf = Leaf.from_json(payload["create_leaf"])
 
-                        # await self.__stop_server()
+                        self.create_leaf(leaf=leaf)
 
                     case _:
-                        logger.error("Received command could not be identified")
+                        logger.error(f"Received command {command} could not be identified")
 
                         continue
 

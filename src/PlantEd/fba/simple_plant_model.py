@@ -32,6 +32,7 @@ class TestBuild(unittest.TestCase):
         """
         Adds the prefix 'leaf' to all genes, reactions, metabolites and groups
         """
+
         seed(777)
         for dictlist in [
             leaf.reactions,

@@ -7,7 +7,7 @@ name = "PlantEd"
 version = "0.1.0"
 description = "Lovely Spam! Wonderful Spam!"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -15,7 +15,7 @@ classifiers = [
 ]
 
 dependencies = [
-  "httpx",
+  "cobra",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +30,10 @@ repository = "https://github.com/NAMlab/PlantEd"
 
 [project.scripts]
 PlantEd = "PlantEd.game"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 
 [tool.setuptools.packages.find]
 where = ["src"]
