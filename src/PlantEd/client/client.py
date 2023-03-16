@@ -8,7 +8,7 @@ import logging
 
 import websockets
 
-from src.PlantEd import client
+from src.PlantEd.client.leaf import Leaf
 from src.PlantEd.client import GrowthPercent, GrowthRates, Water
 
 logger = logging.getLogger(__name__)
@@ -25,15 +25,11 @@ class Client:
     def __init__(self):
         self.url = "ws://localhost:4000"
         self.loop = asyncio.get_event_loop()
-        self.future = self.loop.create_future()
-        self.loop.create_task(self.__connect())
-
         self.loop.run_until_complete(self.__connect())
         logger.info(f"Connected to localhost")
 
     async def __connect(self):
         self.websocket = await websockets.connect(self.url)
-        await self.websocket.send('{"event": "connect"}')
 
     def growth(self):
         return self.loop.run_until_complete(self.__get_growth_percent())
@@ -242,10 +238,10 @@ class Client:
 
         return float(answer)
 
-    def create_leaf(self, leaf: client.Leaf):
+    def create_leaf(self, leaf: Leaf):
         self.loop.run_until_complete(self.__create_leaf(leaf=leaf))
 
-    async def __create_leaf(self, leaf: client.Leaf):
+    async def __create_leaf(self, leaf: Leaf):
         logger.debug("Request for the creation of a new leaf.")
 
         data = leaf.strip2server_version()

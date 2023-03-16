@@ -1,8 +1,11 @@
+import importlib.resources
+
 import pandas as pd
 import pygame
 from pygame.locals import *
 
 from client import Client
+from src.PlantEd import data
 from utils.particle import StillParticles
 from utils.animation import Animation
 import numpy as np
@@ -77,11 +80,14 @@ class Environment:
         self.shadow_map = None
 
         # fixed for spring currently
-        df = pd.read_csv("cleaned_weather_spring.csv")
-        self.weather_simulator = WeatherSimulator(df)
-        start_temp = df["temp 2m avg"][0]
-        start_hum = df["humidity"][0]
-        start_precip = df["precipitation"][0]
+        self.weather_data = importlib.resources.files(data) / "weather"
+        weather_spring = (self.weather_data / "cleaned_weather_spring.csv").open()
+
+        df_weather_spring = pd.read_csv(weather_spring)
+        self.weather_simulator = WeatherSimulator(df_weather_spring)
+        start_temp = df_weather_spring["temp 2m avg"][0]
+        start_hum = df_weather_spring["humidity"][0]
+        start_precip = df_weather_spring["precipitation"][0]
         self.simulated_weather = self.weather_simulator.simulate(start_temp, start_hum, start_precip)
 
         self.temperature = 0
@@ -322,7 +328,7 @@ class WeatherSimulator:
 
     def simulate(self, start_temp, start_hum, start_precip, start_hour=0, start_day=0, num_days=30):
         random.seed(self.seed)
-        
+
         simulated_hours = []
 
         curr_temp_bin = int((start_temp - self.temp_min) / self.temp_step)

@@ -399,6 +399,7 @@ class DefaultGameScene(object):
                 ],
                 self.camera,
                 self.plant.organs[3].pollinate,
+                hive_pos=(1500, 600),
             )
             self.entities.append(bee)
 

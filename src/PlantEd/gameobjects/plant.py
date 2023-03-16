@@ -8,14 +8,15 @@ from pygame import Rect
 from pygame.locals import *
 import numpy as np
 
+from src.PlantEd import client as c
 from src.PlantEd import config
 from src.PlantEd.client import Client, GrowthRates
 from src.PlantEd.data import assets
+from src.PlantEd.gameobjects.water_reservoir import Water_Grid
 from src.PlantEd.utils.LSystem import LSystem
 from src.PlantEd.utils.gametime import GameTime
 from src.PlantEd.utils.particle import ParticleSystem
 from src.PlantEd.utils.spline import Cubic_Tree, Cubic
-from src.PlantEd import client
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -64,7 +65,7 @@ class Plant:
         pos,
         camera,
         client: Client,
-        water_grid,
+        water_grid: Water_Grid,
         growth_boost=1,
         upgrade_points=10,
     ):
@@ -89,6 +90,7 @@ class Plant:
             leaves,
             mass=0.1,
             active=False,
+            client= client
         )
         organ_flower = Flower(
             self.x,
@@ -100,6 +102,7 @@ class Plant:
             flowers,
             mass=0.1,
             active=False,
+            client= client,
         )
         organ_stem = Stem(
             self.x,
@@ -112,16 +115,18 @@ class Plant:
             leaf=organ_leaf,
             flower=organ_flower,
             active=False,
+            client = client,
         )
         organ_root = Root(
-            self.x,
-            self.y,
-            "Roots",
-            self.ROOTS,
-            self.set_target_organ_root,
-            self,
+            x = self.x,
+            y = self.y,
+            name = "Roots",
+            organ_type= self.ROOTS,
+            callback= self.set_target_organ_root,
+            plant=self,
             mass=0.8,
             active=True,
+            client=client
         )
         self.organ_starch = Starch(
             x=self.x,
@@ -133,6 +138,7 @@ class Plant:
             image=None,
             mass=1000000,
             active=True,
+            client= client
         )
 
         self.seedling = Seedling(self.x, self.y, beans, 4)
@@ -404,18 +410,19 @@ class Organ:
 
 class Leaf(Organ):
     def __init__(
-        self, x, y, name, organ_type, callback, plant, images, mass, active
+        self, x, y, name, organ_type, callback, plant, images, mass, active, client: Client
     ):
         self.leaves = []
         super().__init__(
-            x,
-            y,
-            name,
-            organ_type,
+            x = x,
+            y = y,
+            name = name,
+            organ_type=organ_type,
             plant=plant,
             mass=mass,
             active=active,
             thresholds=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40],
+            client= client,
         )
         self.callback = callback
         self.images = images
@@ -531,7 +538,7 @@ class Leaf(Organ):
             "growth_index": self.active_threshold,
         }  # to get relative size, depending on current threshold - init threshold
 
-        client_leaf = client.Leaf(
+        client_leaf = c.Leaf(
             pos_x=pos[0],
             pos_y=pos[1],
             t=(highlight[1], highlight[2]),
@@ -684,30 +691,33 @@ class Root(Organ):
         name,
         organ_type,
         callback,
-        plant,
+        plant: Plant,
+        client: Client,
         image=None,
         pivot=None,
         mass=0.0,
         active=False,
     ):
         super().__init__(
-            x,
-            y,
-            name,
-            organ_type,
-            callback,
-            plant,
-            image,
-            pivot,
+            x = x,
+            y = y,
+            name = name,
+            organ_type=organ_type,
+            callback=callback,
+            plant=plant,
+            image=image,
+            pivot=pivot,
             mass=mass,
             active=active,
+            client=client
         )
         # self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
         # positions = [(x,y+45)]
         # directions = [(0,1)]
-        root_grid = np.zeros(self.plant.water_grid.get_shape())
-        water_grid_pos = self.plant.water_grid.pos
+
+        root_grid = np.zeros(plant.water_grid.get_shape())
+        water_grid_pos = plant.water_grid.pos
 
         self.ls = LSystem(root_grid, water_grid_pos)
         self.create_new_root(dir=(0, 1))
@@ -796,6 +806,7 @@ class Stem(Organ):
         organ_type,
         callback,
         plant,
+        client: Client,
         image=None,
         pivot=None,
         leaf=None,
@@ -816,17 +827,18 @@ class Stem(Organ):
         # self.add_branch(Cubic([[700,750],[880,710],[900,610]]))
 
         super().__init__(
-            x,
-            y,
-            name,
-            organ_type,
-            callback,
-            plant,
-            image,
-            pivot,
+            x = x,
+            y = y,
+            name = name,
+            organ_type=organ_type,
+            callback=callback,
+            plant=plant,
+            image = image,
+            pivot = pivot,
             mass=mass,
             active=active,
             base_mass=1,
+            client=client,
         )
         # self.curve = Beziere([(self.x-5, self.y+40), (self.x-5, self.y), (self.x - 15, self.y - 50), (self.x+13, self.y - 150), (self.x+3, self.y - 190)],res=20)
         # self.new_curve = Beziere([(self.x - 15, self.y - 50), (self.x+30, self.y - 150), (self.x+30, self.y - 190)],width=5, res=15)
@@ -1016,19 +1028,20 @@ class Stem(Organ):
 
 class Starch(Organ):
     def __init__(
-        self, x, y, name, organ_type, callback, plant, image, mass, active
+        self, x, y, name, organ_type, callback, plant, image, mass, active, client: Client
     ):
         super().__init__(
-            x,
-            y,
-            name,
-            organ_type,
-            callback,
-            plant,
-            image,
+            x = x,
+            y = y,
+            name = name,
+            organ_type=organ_type,
+            callback=callback,
+            plant=plant,
+            image=image,
             mass=mass,
             active=active,
             thresholds=[500],
+            client=client
         )
         self.toggle_button = None
         self.starch_intake = 0
@@ -1052,9 +1065,9 @@ class Starch(Organ):
         self.percentage = percentage
         if percentage < 0:
             print(self.plant)
-            self.plant.client.activate_starch_resource(abs(percentage))
+            self.client.activate_starch_resource(abs(percentage))
         else:
-            self.plant.client.deactivate_starch_resource()
+            self.client.deactivate_starch_resource()
 
     def drain(self, dt):
         delta = self.starch_intake * dt
@@ -1067,18 +1080,19 @@ class Starch(Organ):
 
 class Flower(Organ):
     def __init__(
-        self, x, y, name, organ_type, callback, plant, images, mass, active
+        self, x, y, name, organ_type, callback, plant, images, mass, active, client:Client,
     ):
         self.flowers = []
         super().__init__(
-            x,
-            y,
-            name,
-            organ_type,
+            x = x,
+            y = y,
+            name = name,
+            organ_type=organ_type,
             plant=plant,
             mass=mass,
             active=active,
             thresholds=[1, 2, 3, 10],
+            client= client,
         )
         self.callback = callback
         self.images = images

@@ -11,7 +11,7 @@ from websockets.legacy.server import WebSocketServerProtocol
 from src.PlantEd.client import GrowthPercent, Water
 from src.PlantEd.fba.dynamic_model import DynamicModel
 from src.PlantEd import server
-from src.PlantEd.server import Leaf
+from src.PlantEd.server.plant.leaf import Leaf
 
 logger = logging.getLogger(__name__)
 

@@ -18,6 +18,8 @@ from cobra.exceptions import OptimizationError
 from optlang.interface import Constraint, Objective
 from sympy import Add
 
+from src.PlantEd.client import GrowthPercent
+
 FILE = (
     Path(__file__)
     .resolve()
@@ -400,11 +402,7 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
 
 def update_objective(
     model: Model,
-    root: float,
-    stem: float,
-    leaf: float,
-    seed: float,
-    starch: float,
+    growth_percentages: GrowthPercent,
 ):
     """
     Updates the corresponding constraints for the multi objective in the model
@@ -416,6 +414,12 @@ def update_objective(
     """
     if model.objective.name != "multi_objective":
         raise Exception("Multi-objective was not found in the model")
+
+    root = growth_percentages.root
+    stem = growth_percentages.stem
+    leaf = growth_percentages.leaf
+    starch = growth_percentages.starch
+    seed = growth_percentages.flower
 
     ORGANS = root + stem + leaf + seed
 
