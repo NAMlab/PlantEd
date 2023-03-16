@@ -715,8 +715,8 @@ class DefaultGameScene(object):
             max(self.environment.get_sun_intensity(), 0),
             self.water_grid.max_drain_rate,
             self.plant.get_biomass(),
-            self.environment.get_r_humidity(),
-            self.environment.get_temperature(),
+            self.environment.humidity,
+            self.environment.temperature,
         )
 
     def render(self, screen):
