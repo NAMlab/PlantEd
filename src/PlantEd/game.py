@@ -361,7 +361,6 @@ class DefaultGameScene(object):
             water=0,
             gametime=self.gametime,
         )
-        self.shadow_map = None
 
         growth_rates = GrowthRates("grams", 0, 0, 0, 0, 0, 0)
         self.ui = UI(
@@ -566,8 +565,8 @@ class DefaultGameScene(object):
                 flower_percent = 0
                 # Todo fix percentages
                 for flower in flowering_flowers:
-                    flower_percent = 100
-                    root_percent = 0
+                    flower_percent += 10
+                    self.plant.organs[3].percentage = flower_percent
 
                 # print(leaf_percent, stem_percent, root_percent, starch_percent)
 
@@ -584,22 +583,6 @@ class DefaultGameScene(object):
                 )
                 self.ui.growth_rates = growth_rates
 
-                # nitrate_pool = self.model.nitrate_pool
-                # water_pool = self.water_grid.water_pool
-                # self.log.append_log(growth_rate, starch_rate, self.gametime.get_time(), self.gametime.GAMESPEED, water_pool, nitrate_pool)
-                # self.log.append_plant_log(self.plant.organs[0].mass, self.plant.organs[1].mass, self.plant.organs[2].mass, self.plant.organ_starch.mass)
-                # self.log.append_row(growth_rates.leaf_rate,
-                #                     growth_rates.stem_rate,
-                #                     growth_rates.root_rate,
-                #                     growth_rates.starch_rate,
-                #                     self.gametime.get_time(),
-                #                     self.gametime.GAMESPEED,
-                #                     water_pool,
-                #                     nitrate_pool,
-                #                     self.plant.organs[0].mass,
-                #                     self.plant.organs[1].mass,
-                #                     self.plant.organs[2].mass,
-                #                     self.plant.organ_starch.mass)
                 self.plant.update_growth_rates(growth_rates)
 
             if e.type == KEYDOWN and e.key == K_ESCAPE:
@@ -685,13 +668,29 @@ class DefaultGameScene(object):
         hours = (ticks % day) / hour
         if 8 < hours < 20:
             # print(hours)
-            self.shadow_map = self.environment.calc_shadowmap(
-                self.plant.organs[0].leaves,
-                sun_dir=(((-(20 / 12) * hours) + 23.33), 1),
-            )
+            shadow_map, resolution = self.environment.calc_shadowmap(self.plant.organs[0].leaves,
+                                                                     sun_dir=(((-(20 / 12) * hours) + 23.33), 1))
+            # apply shadow penalty to leaves
+            for leaf in self.plant.organs[0].leaves:
+                x = int((leaf["x"] - leaf["offset_x"]) / resolution)
+                y = int((leaf["y"] - leaf["offset_y"]) / resolution)
+
+                width = int(leaf["image"].get_width() / resolution)
+                height = int(leaf["image"].get_height() / resolution)
+
+                # rect = pygame.Rect(x,y,width,height)
+
+                dots = width * height
+                shadow_dots = 0
+                for i in range(x, x + width):
+                    for j in range(y, y + height):
+                        shadow_dots += shadow_map[i, j]
+
+                leaf["shadow_score"] = shadow_dots / dots
+                # print(leaf["x"], leaf["y"], dots, shadow_dots, shadow_dots/(dots*3))
             # print((-(20/12)*hours)+23.33)
         else:
-            self.shadow_map = None
+            self.environment.shadow_map = None
         # get root grid, water grid
         self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
         self.water_grid.actual_drain_rate = (
@@ -743,26 +742,14 @@ class DefaultGameScene(object):
 
         self.environment.draw_foreground(temp_surface)
         self.water_grid.draw(temp_surface)
+        self.environment.draw_shadows(temp_surface)
         self.floating_shop.draw(temp_surface)
         self.shop.draw(temp_surface)
 
         self.ui.draw(temp_surface)
         screen.blit(temp_surface, (0, self.camera.offset_y))
 
-        """if self.shadow_map is not None:
-            for (x, y), value in np.ndenumerate(self.shadow_map):
-                if self.shadow_map[x,y] > 0:
-                    if self.shadow_map[x,y] > 1:
-                        if self.shadow_map[x,y] > 2:
-                            pygame.draw.circle(screen, config.RED, (x*10, y*10), 3)
-                        else:
-                            pygame.draw.circle(screen, config.ORANGE, (x*10, y*10), 3)
-                    else:
-                        pygame.draw.circle(screen, config.YELLOW, (x*10, y*10), 3)
-                else:
-                    pygame.draw.circle(screen, config.GREEN, (x * 10, y * 10), 3)"""
-
-        # self.skill_system.draw(screen)
+        screen.blit(temp_surface, (0,0))
 
 
 class TitleScene(object):

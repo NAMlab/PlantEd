@@ -193,7 +193,7 @@ class Environment:
             )
             # check x below
             for i in range(map.shape[0]):
-                for j in range(map.shape[1]):
+                for j in range(map.shape[1]-20):
                     # delta_x for angle
                     delta_x = (j * resolution - bottom_left[1]) * sun_dir_x
 
@@ -217,12 +217,30 @@ class Environment:
         # for (x, y), value in np.ndenumerate(map):
         #    print(x, y)
 
-        return map
+        self.shadow_map = map
+        return map, resolution
         # sun_direction
         # leaves
         # 2d shadow array, resolution
         # thickness --> light reduction
 
+    def draw_shadows(self, screen):
+        if self.shadow_map is not None:
+            self.s.fill((0, 0, 0, 0))
+            print("draw shadows")
+            # draw polygon for each shadow vs make polygon from all outer points
+            for (x, y), value in np.ndenumerate(self.shadow_map):
+                if self.shadow_map[x, y] > 0:
+                    if self.shadow_map[x, y] > 1:
+                        if self.shadow_map[x, y] > 2:
+                            pygame.draw.circle(self.s, config.RED_TRANSPARENT, (x * 10, y * 10), 6)
+                        else:
+                            pygame.draw.circle(self.s, config.RED_GRAY_TRANSPARENT, (x * 10, y * 10), 4)
+                    else:
+                        pygame.draw.circle(self.s, config.DARKER_GREY_TRANSPARENT, (x * 10, y * 10), 2)
+                else:
+                    pass
+            screen.blit(self.s, (0, 0))
     def draw_background(self, screen):
         # if self.draw:
         #    self.draw = False

@@ -1,70 +1,47 @@
-import pygame
+import random
 import math
 
-# Initialize the display
-pygame.init()
-screen = pygame.display.set_mode((400, 400))
+# Constants
+BASE_TEMP = 15  # Base temperature in °C
+TEMP_AMPLITUDE = 15  # Maximum temperature deviation from base in °C
+SOLAR_CONSTANT = 1367  # W/m^2
+LATITUDE = 51.17  # Latitude of location in degrees
+DECLINATION = 23.44  # Declination angle in degrees
 
-# Define the center of the pentagrams
-center = (200, 200)
+# Seasonal temperature model based on sinusoidal function
+def seasonal_temperature(time_in_hours, latitude, declination, solar_constant):
+    time_in_days = time_in_hours / 24
+    seasonal_factor = math.sin(2 * math.pi * (time_in_days - 93) / 365)
+    solar_angle = math.acos(-math.tan(math.radians(latitude)) * math.tan(math.radians(declination)))
+    if solar_angle < 0 or solar_angle > math.pi:
+        solar_angle = 0
+    solar_radiation = solar_constant * math.cos(solar_angle)
+    temperature = BASE_TEMP + TEMP_AMPLITUDE * seasonal_factor + solar_radiation / (60 * 60 * 24)
+    return temperature
 
-# Define the radius of the pentagrams
-radius = 100
+# Humidity model based on relative humidity data
+def humidity(temperature, time_of_day):
+    if time_of_day >= 6 and time_of_day < 18:
+        relative_humidity = random.uniform(30, 60)
+    elif time_of_day >= 18 or time_of_day < 6:
+        relative_humidity = random.uniform(60, 80)
+    else:
+        raise ValueError("Invalid time of day")
+    saturation_vapor_pressure = 6.11 * math.exp(17.67 * temperature / (temperature + 243.5))
+    actual_vapor_pressure = relative_humidity * saturation_vapor_pressure / 100
+    return relative_humidity, actual_vapor_pressure
 
-# Define the number of points in the pentagrams
-points = 5
+# Main function for weather simulation
+def simulate_weather(time_in_hours, time_of_day):
+    temperature = seasonal_temperature(time_in_hours, LATITUDE, DECLINATION, SOLAR_CONSTANT)
+    relative_humidity, vapor_pressure = humidity(temperature, time_of_day)
+    return temperature, relative_humidity
 
-# Define the angle between each point in radians
-angle = 2 * math.pi / points
-
-# Define the initial angle offset
-angle_offset = 0
-
-# Define the angle offset change per frame
-angle_offset_delta = 0.05
-
-# Define the line thickness
-line_thickness = 10
-
-# Main game loop
-running = True
-clock = pygame.time.Clock()
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    # Clear the screen
-    screen.fill((0, 0, 0))
-
-    # Draw the first pentagram
-    for i in range(points):
-        angle_start = i * angle + angle_offset
-        x = center[0] + radius * math.cos(angle_start)
-        y = center[1] + radius * math.sin(angle_start)
-        next_x = center[0] + radius * math.cos(angle_start + angle)
-        next_y = center[1] + radius * math.sin(angle_start + angle)
-        pygame.draw.line(
-            screen, (255, 0, 0), (x, y), (next_x, next_y), line_thickness
-        )
-
-    # Draw the second pentagram
-    for i in range(points):
-        angle_start = i * angle
-        x = center[0] + radius * 2 / 3 * math.cos(angle_start)
-        y = center[1] + radius * 2 / 3 * math.sin(angle_start)
-        next_x = center[0] + radius * 2 / 3 * math.cos(angle_start + angle)
-        next_y = center[1] + radius * 2 / 3 * math.sin(angle_start + angle)
-        pygame.draw.line(
-            screen, (255, 0, 0), (x, y), (next_x, next_y), line_thickness
-        )
-
-    # Update the angle offset
-    angle_offset += angle_offset_delta
-
-    # Update the display
-    pygame.display.update()
-    clock.tick(60)
-
-# Quit Pygame
-pygame.quit()
+# Example usage
+time_in_hours = 24 * 150 + 12
+time_of_day = 12
+for i in range(24):
+    time_of_day = i
+    time_in_hours = 25*110+i
+    temperature, relative_humidity = simulate_weather(time_in_hours, time_of_day)
+    print(f"Time: {time_of_day} Temperature: {temperature}°C, Relative Humidity: {relative_humidity}%")
