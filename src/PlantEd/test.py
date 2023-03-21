@@ -1,7 +1,10 @@
+import importlib
 import random
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+
+from PlantEd import data
 
 
 class WeatherSimulator:
@@ -120,8 +123,11 @@ def main(seed=None):
         seed = random.random()
     print(seed)
     for i in range(3):
-        data = pd.read_csv(seasons[i] + ".csv").fillna(value=0)
-        ws = WeatherSimulator(data)
+        season_data = (
+            importlib.resources.files(data) / "weather" / (seasons[i] + ".csv")
+        )
+        df = pd.read_csv(season_data).fillna(value=0)
+        ws = WeatherSimulator(df)
         ws.simulate(12, 83, 0, 0, 0, 30, seed)
         temp = [row[0] for row in ws.simulated_hours]
         hum = [row[1] for row in ws.simulated_hours]

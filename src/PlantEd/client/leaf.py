@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Tuple
 
 from PlantEd import server
 
@@ -22,3 +21,5 @@ class Leaf(server.Leaf):
             age=self.age,
             growth_time=self.growth_time,
         )
+
+        return leaf
