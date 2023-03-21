@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PlantEd"
+version = "0.1.0"
+description = "Lovely Spam! Wonderful Spam!"
+readme = "README.md"
+requires-python = ">=3.10"
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+
+dependencies = [
+  "cobra",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest < 5.0.0",
+  "pytest-cov[all]"
+]
+
+[project.urls]
+homepage = "https://github.com/NAMlab/PlantEd"
+repository = "https://github.com/NAMlab/PlantEd"
+
+[project.scripts]
+PlantEd = "PlantEd.game"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mypkg = ["*.PNG", "*.mp3", "*.png", "JPG", "jpg"]
