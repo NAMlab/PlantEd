@@ -92,7 +92,6 @@ def new_biomass(_model: Model, reaction: str) -> Model:
 
     metabolite: Metabolite
     for metabolite, value in metabolites:
-
         biomass.add_metabolites({metabolite: value})
 
         try:
@@ -100,7 +99,6 @@ def new_biomass(_model: Model, reaction: str) -> Model:
             assert round(sol.objective_value, 4) < 0.0
 
         except (OptimizationError, AssertionError):
-
             problematic.append(metabolite.id)
             biomass.add_metabolites({metabolite: 0}, False)
 
@@ -152,7 +150,6 @@ def autotroph(model: Model, uptake: int = 200, **kwargs) -> Solution:
         return sol
 
     except OptimizationError as e:
-
         for identifier, bounds in defaults.items():
             model.reactions.get_by_id(identifier).bounds = bounds
 
@@ -200,7 +197,6 @@ def heterotroph(model: Model, uptake: int = 1000, **kwargs) -> Solution:
         return sol
 
     except OptimizationError as e:
-
         for identifier, bounds in defaults.items():
             model.reactions.get_by_id(identifier).bounds = bounds
 
@@ -278,7 +274,6 @@ def update_stoichiometry(
     metabolites: Dict[Metabolite, float] = reaction.metabolites
 
     for metabolite, coef in metabolites.items():
-
         if coef < 0:
             coef = -left
 
@@ -307,7 +302,6 @@ def _normalize_reactions(
 
     reaction: Reaction
     for reaction in transfers:
-
         update_stoichiometry(reaction, LEFT, RIGHT)
 
 
@@ -446,8 +440,7 @@ def update_objective(
     cons: List[Constraint] = list()
 
     start = -1
-    for (i, node) in enumerate(graph):
-
+    for i, node in enumerate(graph):
         # TODO: Add bounds from COBRApy configuration
         if node:
             reactions[i].bounds = (0, 1000)

@@ -90,7 +90,7 @@ class Plant:
             leaves,
             mass=0.1,
             active=False,
-            client= client
+            client=client,
         )
         organ_flower = Flower(
             self.x,
@@ -102,7 +102,7 @@ class Plant:
             flowers,
             mass=0.1,
             active=False,
-            client= client,
+            client=client,
         )
         organ_stem = Stem(
             self.x,
@@ -115,18 +115,18 @@ class Plant:
             leaf=organ_leaf,
             flower=organ_flower,
             active=False,
-            client = client,
+            client=client,
         )
         organ_root = Root(
-            x = self.x,
-            y = self.y,
-            name = "Roots",
-            organ_type= self.ROOTS,
-            callback= self.set_target_organ_root,
+            x=self.x,
+            y=self.y,
+            name="Roots",
+            organ_type=self.ROOTS,
+            callback=self.set_target_organ_root,
             plant=self,
             mass=0.8,
             active=True,
-            client=client
+            client=client,
         )
         self.organ_starch = Starch(
             x=self.x,
@@ -138,7 +138,7 @@ class Plant:
             image=None,
             mass=1000000,
             active=True,
-            client= client
+            client=client,
         )
 
         self.seedling = Seedling(self.x, self.y, beans, 4)
@@ -326,11 +326,12 @@ class Organ:
 
     def yellow_leaf(self, image, alpha):
         ghost_image = image.copy()
-        ghost_image.fill((0, 0, 0, alpha), special_flags=pygame.BLEND_RGBA_MULT)
+        ghost_image.fill(
+            (0, 0, 0, alpha), special_flags=pygame.BLEND_RGBA_MULT
+        )
         shaded_image = image.copy()
         shaded_image.blit(ghost_image, (0, 0))
         return shaded_image
-
 
     def get_rate(self):
         return self.growth_rate
@@ -410,19 +411,29 @@ class Organ:
 
 class Leaf(Organ):
     def __init__(
-        self, x, y, name, organ_type, callback, plant, images, mass, active, client: Client
+        self,
+        x,
+        y,
+        name,
+        organ_type,
+        callback,
+        plant,
+        images,
+        mass,
+        active,
+        client: Client,
     ):
         self.leaves = []
         super().__init__(
-            x = x,
-            y = y,
-            name = name,
+            x=x,
+            y=y,
+            name=name,
             organ_type=organ_type,
             plant=plant,
             mass=mass,
             active=active,
             thresholds=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40],
-            client= client,
+            client=client,
         )
         self.callback = callback
         self.images = images
@@ -641,7 +652,10 @@ class Leaf(Organ):
 
         for leaf in self.leaves:
             # image = self.yellow_leaf(leaf["image"], 128)
-            screen.blit(leaf["image"], (leaf["x"] - leaf["offset_x"], leaf["y"] - leaf["offset_y"]))
+            screen.blit(
+                leaf["image"],
+                (leaf["x"] - leaf["offset_x"], leaf["y"] - leaf["offset_y"]),
+            )
 
         if self.type == self.plant.target_organ.type:
             rects = self.get_rect()
@@ -699,9 +713,9 @@ class Root(Organ):
         active=False,
     ):
         super().__init__(
-            x = x,
-            y = y,
-            name = name,
+            x=x,
+            y=y,
+            name=name,
             organ_type=organ_type,
             callback=callback,
             plant=plant,
@@ -709,7 +723,7 @@ class Root(Organ):
             pivot=pivot,
             mass=mass,
             active=active,
-            client=client
+            client=client,
         )
         # self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
@@ -827,14 +841,14 @@ class Stem(Organ):
         # self.add_branch(Cubic([[700,750],[880,710],[900,610]]))
 
         super().__init__(
-            x = x,
-            y = y,
-            name = name,
+            x=x,
+            y=y,
+            name=name,
             organ_type=organ_type,
             callback=callback,
             plant=plant,
-            image = image,
-            pivot = pivot,
+            image=image,
+            pivot=pivot,
             mass=mass,
             active=active,
             base_mass=1,
@@ -1028,12 +1042,22 @@ class Stem(Organ):
 
 class Starch(Organ):
     def __init__(
-        self, x, y, name, organ_type, callback, plant, image, mass, active, client: Client
+        self,
+        x,
+        y,
+        name,
+        organ_type,
+        callback,
+        plant,
+        image,
+        mass,
+        active,
+        client: Client,
     ):
         super().__init__(
-            x = x,
-            y = y,
-            name = name,
+            x=x,
+            y=y,
+            name=name,
             organ_type=organ_type,
             callback=callback,
             plant=plant,
@@ -1041,7 +1065,7 @@ class Starch(Organ):
             mass=mass,
             active=active,
             thresholds=[500],
-            client=client
+            client=client,
         )
         self.toggle_button = None
         self.starch_intake = 0
@@ -1080,19 +1104,29 @@ class Starch(Organ):
 
 class Flower(Organ):
     def __init__(
-        self, x, y, name, organ_type, callback, plant, images, mass, active, client:Client,
+        self,
+        x,
+        y,
+        name,
+        organ_type,
+        callback,
+        plant,
+        images,
+        mass,
+        active,
+        client: Client,
     ):
         self.flowers = []
         super().__init__(
-            x = x,
-            y = y,
-            name = name,
+            x=x,
+            y=y,
+            name=name,
             organ_type=organ_type,
             plant=plant,
             mass=mass,
             active=active,
             thresholds=[1, 2, 3, 10],
-            client= client,
+            client=client,
         )
         self.callback = callback
         self.images = images
@@ -1175,12 +1209,19 @@ class Flower(Organ):
     def get_random_flower_pos(self):
         viable_flowers = []
         for flower in self.flowers:
-            if not flower["pollinated"] and flower["mass"] >= flower["maximum_mass"]:
+            if (
+                not flower["pollinated"]
+                and flower["mass"] >= flower["maximum_mass"]
+            ):
                 viable_flowers.append(flower)
         if len(viable_flowers) > 0:
             i = int(random.random() * len(viable_flowers))
-            pos = (viable_flowers[i]["x"] + viable_flowers[i]["offset_x"] / 2,
-                   viable_flowers[i]["y"] + viable_flowers[i]["offset_y"] / 2 - 20)
+            pos = (
+                viable_flowers[i]["x"] + viable_flowers[i]["offset_x"] / 2,
+                viable_flowers[i]["y"]
+                + viable_flowers[i]["offset_y"] / 2
+                - 20,
+            )
             target_flower_id = self.flowers.index(viable_flowers[i])
             return pos, target_flower_id
         else:
@@ -1213,8 +1254,8 @@ class Flower(Organ):
             "offset_y": offset[1],
             "image": image,
             "mass": 0.01,
-                            "seed_mass": 0,
-                "pollinated": False,
+            "seed_mass": 0,
+            "pollinated": False,
             "maximum_mass": self.thresholds[-1],
             "lifetime": 60 * 60 * 24 * 10,  # 10 days of liefetime to grow
             "growth_index": self.active_threshold,
@@ -1286,27 +1327,68 @@ class Flower(Organ):
             if flower["mass"] < flower["maximum_mass"]:
                 width = flower["image"].get_width()
                 percentage = flower["mass"] / flower["maximum_mass"]
-                pygame.draw.rect(screen, config.WHITE, (
-                    flower["x"] - flower["offset_x"], flower["y"] - width / 4 - 10 - flower["offset_y"],
-                    width * percentage,
-                    width / 4), border_radius=3)
-                pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (
-                    flower["x"] - flower["offset_x"], flower["y"] - width / 4 - 10 - flower["offset_y"], width,
-                    width / 4),
-                                 2, 3)
-                percentage_label = config.SMALL_FONT.render("{:.0f}".format(percentage * 100), True, config.BLACK)
-                screen.blit(percentage_label, (
-                    flower["x"] - flower["offset_x"] + width / 2 - percentage_label.get_width() / 2,
-                    flower["y"] - width / 4 - 10 - flower["offset_y"]))
+                pygame.draw.rect(
+                    screen,
+                    config.WHITE,
+                    (
+                        flower["x"] - flower["offset_x"],
+                        flower["y"] - width / 4 - 10 - flower["offset_y"],
+                        width * percentage,
+                        width / 4,
+                    ),
+                    border_radius=3,
+                )
+                pygame.draw.rect(
+                    screen,
+                    config.WHITE_TRANSPARENT,
+                    (
+                        flower["x"] - flower["offset_x"],
+                        flower["y"] - width / 4 - 10 - flower["offset_y"],
+                        width,
+                        width / 4,
+                    ),
+                    2,
+                    3,
+                )
+                percentage_label = config.SMALL_FONT.render(
+                    "{:.0f}".format(percentage * 100), True, config.BLACK
+                )
+                screen.blit(
+                    percentage_label,
+                    (
+                        flower["x"]
+                        - flower["offset_x"]
+                        + width / 2
+                        - percentage_label.get_width() / 2,
+                        flower["y"] - width / 4 - 10 - flower["offset_y"],
+                    ),
+                )
             if flower["pollinated"] and self.flowering:
                 width = flower["image"].get_width()
-                pygame.draw.rect(screen, config.WHITE, (
-                    flower["x"] - flower["offset_x"], flower["y"] - width / 4 - 10 - flower["offset_y"],
-                    width, width / 4), border_radius=3)
-                seed_mass_label = config.SMALL_FONT.render("{:.2f}".format(flower["seed_mass"]), True, config.BLACK)
-                screen.blit(seed_mass_label, (
-                    flower["x"] - flower["offset_x"] + width / 2 - seed_mass_label.get_width() / 2,
-                    flower["y"] - width / 4 - 10 - flower["offset_y"]))
+                pygame.draw.rect(
+                    screen,
+                    config.WHITE,
+                    (
+                        flower["x"] - flower["offset_x"],
+                        flower["y"] - width / 4 - 10 - flower["offset_y"],
+                        width,
+                        width / 4,
+                    ),
+                    border_radius=3,
+                )
+                seed_mass_label = config.SMALL_FONT.render(
+                    "{:.2f}".format(flower["seed_mass"]), True, config.BLACK
+                )
+                screen.blit(
+                    seed_mass_label,
+                    (
+                        flower["x"]
+                        - flower["offset_x"]
+                        + width / 2
+                        - seed_mass_label.get_width() / 2,
+                        flower["y"] - width / 4 - 10 - flower["offset_y"],
+                    ),
+                )
 
     def get_outlines(self):
         outlines = []

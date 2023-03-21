@@ -664,8 +664,10 @@ class DefaultGameScene(object):
         hours = (ticks % day) / hour
         if 8 < hours < 20:
             # print(hours)
-            shadow_map, resolution = self.environment.calc_shadowmap(self.plant.organs[0].leaves,
-                                                                     sun_dir=(((-(20 / 12) * hours) + 23.33), 1))
+            shadow_map, resolution = self.environment.calc_shadowmap(
+                self.plant.organs[0].leaves,
+                sun_dir=(((-(20 / 12) * hours) + 23.33), 1),
+            )
             # apply shadow penalty to leaves
             for leaf in self.plant.organs[0].leaves:
                 x = int((leaf["x"] - leaf["offset_x"]) / resolution)
@@ -745,7 +747,7 @@ class DefaultGameScene(object):
         self.ui.draw(temp_surface)
         screen.blit(temp_surface, (0, self.camera.offset_y))
 
-        screen.blit(temp_surface, (0,0))
+        screen.blit(temp_surface, (0, 0))
 
 
 class TitleScene(object):

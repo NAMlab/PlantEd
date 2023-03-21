@@ -81,14 +81,18 @@ class Environment:
 
         # fixed for spring currently
         self.weather_data = importlib.resources.files(data) / "weather"
-        weather_spring = (self.weather_data / "cleaned_weather_spring.csv").open()
+        weather_spring = (
+            self.weather_data / "cleaned_weather_spring.csv"
+        ).open()
 
         df_weather_spring = pd.read_csv(weather_spring)
         self.weather_simulator = WeatherSimulator(df_weather_spring)
         start_temp = df_weather_spring["temp 2m avg"][0]
         start_hum = df_weather_spring["humidity"][0]
         start_precip = df_weather_spring["precipitation"][0]
-        self.simulated_weather = self.weather_simulator.simulate(start_temp, start_hum, start_precip)
+        self.simulated_weather = self.weather_simulator.simulate(
+            start_temp, start_hum, start_precip
+        )
 
         self.temperature = 0
         self.humidity = 0
@@ -163,7 +167,7 @@ class Environment:
             )
             # check x below
             for i in range(map.shape[0]):
-                for j in range(map.shape[1]-20):
+                for j in range(map.shape[1] - 20):
                     # delta_x for angle
                     delta_x = (j * resolution - bottom_left[1]) * sun_dir_x
 
@@ -186,16 +190,31 @@ class Environment:
                 if self.shadow_map[x, y] > 0:
                     if self.shadow_map[x, y] > 1:
                         if self.shadow_map[x, y] > 2:
-                            pygame.draw.circle(self.s, config.RED_TRANSPARENT, (x * 10, y * 10), 6)
+                            pygame.draw.circle(
+                                self.s,
+                                config.RED_TRANSPARENT,
+                                (x * 10, y * 10),
+                                6,
+                            )
                         else:
-                            pygame.draw.circle(self.s, config.RED_GRAY_TRANSPARENT, (x * 10, y * 10), 4)
+                            pygame.draw.circle(
+                                self.s,
+                                config.RED_GRAY_TRANSPARENT,
+                                (x * 10, y * 10),
+                                4,
+                            )
                     else:
-                        pygame.draw.circle(self.s, config.DARKER_GREY_TRANSPARENT, (x * 10, y * 10), 2)
+                        pygame.draw.circle(
+                            self.s,
+                            config.DARKER_GREY_TRANSPARENT,
+                            (x * 10, y * 10),
+                            2,
+                        )
                 else:
                     pass
             screen.blit(self.s, (0, 0))
-    def draw_background(self, screen):
 
+    def draw_background(self, screen):
         sun_intensity = self.get_sun_intensity()
 
         if sun_intensity > 0:
@@ -246,7 +265,13 @@ class Environment:
 
     def update_weather(self):
         days, hours, minutes = self.get_day_time()
-        self.temperature, self.humidity, self.precipitation, hour = self.simulated_weather[int(int(days)*24+int(hours))]
+        (
+            self.temperature,
+            self.humidity,
+            self.precipitation,
+            hour,
+        ) = self.simulated_weather[int(int(days) * 24 + int(hours))]
+
     def get_day_time(self) -> (int, float, float):
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
@@ -276,8 +301,11 @@ class Environment:
             % 1
         ) * 2 - 1
 
+
 class WeatherSimulator:
-    def __init__(self, data, temp_bins=50, hum_bins=50, precip_bins=100, seed=None):
+    def __init__(
+        self, data, temp_bins=50, hum_bins=50, precip_bins=100, seed=None
+    ):
         if not seed:
             seed = random.randint(0, 100)
         self.seed = seed
@@ -295,11 +323,11 @@ class WeatherSimulator:
             curr_temp = data["temp 2m avg"][i]
             curr_hum = data["humidity"][i]
             curr_precip = data["precipitation"][i]
-            next_temp = data["temp 2m avg"][i+1]
-            next_hum = data["humidity"][i+1]
-            next_precip = data["precipitation"][i+1]
+            next_temp = data["temp 2m avg"][i + 1]
+            next_hum = data["humidity"][i + 1]
+            next_precip = data["precipitation"][i + 1]
 
-            #print(i, curr_temp, curr_hum, curr_precip, next_temp, next_hum, next_precip, self.temp_step, self.hum_step, self.precip_step, next_precip / self.precip_step)
+            # print(i, curr_temp, curr_hum, curr_precip, next_temp, next_hum, next_precip, self.temp_step, self.hum_step, self.precip_step, next_precip / self.precip_step)
 
             curr_temp_bin = int((curr_temp - self.temp_min) / self.temp_step)
             curr_hum_bin = int(curr_hum / self.hum_step)
@@ -326,7 +354,15 @@ class WeatherSimulator:
             for next_state in self.transitions[curr_state]:
                 self.transitions[curr_state][next_state] /= total_transitions
 
-    def simulate(self, start_temp, start_hum, start_precip, start_hour=0, start_day=0, num_days=30):
+    def simulate(
+        self,
+        start_temp,
+        start_hum,
+        start_precip,
+        start_hour=0,
+        start_day=0,
+        num_days=30,
+    ):
         random.seed(self.seed)
 
         simulated_hours = []
@@ -345,14 +381,25 @@ class WeatherSimulator:
                 curr_hum = curr_hum_bin * self.hum_step
                 curr_precip = curr_precip_bin * self.precip_step
 
-                simulated_hours.append([int(curr_temp), int(curr_hum), int(curr_precip), day+(hour/24)])
-                #print(f"Day {day}, Hour {hour}:", f"Temperature: {curr_temp}°C", f"Humidity: {curr_hum}%", f"Precipitation: {curr_precip} mm/h")
-
+                simulated_hours.append(
+                    [
+                        int(curr_temp),
+                        int(curr_hum),
+                        int(curr_precip),
+                        day + (hour / 24),
+                    ]
+                )
+                # print(f"Day {day}, Hour {hour}:", f"Temperature: {curr_temp}°C", f"Humidity: {curr_hum}%", f"Precipitation: {curr_precip} mm/h")
 
                 next_state_probs = self.transitions.get(curr_state, {})
-                #print(next_state_probs)
-                next_state_probs = {k: v for k, v in next_state_probs.items() if v > 0}  # remove zero-probability states
-                next_state = random.choices(list(next_state_probs.keys()), list(next_state_probs.values()))[0]
+                # print(next_state_probs)
+                next_state_probs = {
+                    k: v for k, v in next_state_probs.items() if v > 0
+                }  # remove zero-probability states
+                next_state = random.choices(
+                    list(next_state_probs.keys()),
+                    list(next_state_probs.values()),
+                )[0]
 
                 # Update current state
                 curr_state = next_state

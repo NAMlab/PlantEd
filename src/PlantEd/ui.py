@@ -463,38 +463,123 @@ class UI:
             seed_width = rates[5] / sum_rates * width
 
             pygame.draw.rect(screen, config.GREEN, (700, 100, leaf_width, 50))
-            pygame.draw.rect(screen, config.GRAY, (700 + leaf_width, 100, stem_width, 50))
-            pygame.draw.rect(screen, config.BROWN, (700 + leaf_width + stem_width, 100, root_width, 50))
-            pygame.draw.rect(screen, config.YELLOW, (700 + leaf_width + stem_width + root_width, 100, seed_width, 50))
-            pygame.draw.rect(screen, config.WHITE,
-                             (700 + leaf_width + stem_width + root_width + seed_width, 100, starch_prod_width, 50))
-            pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (700, 100, width, 50), 5, border_radius=2)
+            pygame.draw.rect(
+                screen, config.GRAY, (700 + leaf_width, 100, stem_width, 50)
+            )
+            pygame.draw.rect(
+                screen,
+                config.BROWN,
+                (700 + leaf_width + stem_width, 100, root_width, 50),
+            )
+            pygame.draw.rect(
+                screen,
+                config.YELLOW,
+                (
+                    700 + leaf_width + stem_width + root_width,
+                    100,
+                    seed_width,
+                    50,
+                ),
+            )
+            pygame.draw.rect(
+                screen,
+                config.WHITE,
+                (
+                    700 + leaf_width + stem_width + root_width + seed_width,
+                    100,
+                    starch_prod_width,
+                    50,
+                ),
+            )
+            pygame.draw.rect(
+                screen,
+                config.WHITE_TRANSPARENT,
+                (700, 100, width, 50),
+                5,
+                border_radius=2,
+            )
 
             if leaf_percentage > 0.1:
-                leaf_rate_label = config.BIG_FONT.render("{:.0f}%".format(leaf_percentage), True, config.BLACK)
-                screen.blit(leaf_rate_label, (700 + leaf_width / 2 - leaf_rate_label.get_width() / 2, 110))
+                leaf_rate_label = config.BIG_FONT.render(
+                    "{:.0f}%".format(leaf_percentage), True, config.BLACK
+                )
+                screen.blit(
+                    leaf_rate_label,
+                    (
+                        700 + leaf_width / 2 - leaf_rate_label.get_width() / 2,
+                        110,
+                    ),
+                )
 
             if stem_percentage > 0.1:
-                stem_rate_label = config.BIG_FONT.render("{:.0f}%".format(stem_percentage), True, config.BLACK)
-                screen.blit(stem_rate_label, (700 + leaf_width + stem_width / 2 - stem_rate_label.get_width() / 2, 110))
+                stem_rate_label = config.BIG_FONT.render(
+                    "{:.0f}%".format(stem_percentage), True, config.BLACK
+                )
+                screen.blit(
+                    stem_rate_label,
+                    (
+                        700
+                        + leaf_width
+                        + stem_width / 2
+                        - stem_rate_label.get_width() / 2,
+                        110,
+                    ),
+                )
 
             if root_percentage > 0.1:
-                root_rate_label = config.BIG_FONT.render("{:.0f}%".format(root_percentage), True, config.BLACK)
-                screen.blit(root_rate_label,
-                            (700 + leaf_width + stem_width + root_width / 2 - root_rate_label.get_width() / 2, 110))
+                root_rate_label = config.BIG_FONT.render(
+                    "{:.0f}%".format(root_percentage), True, config.BLACK
+                )
+                screen.blit(
+                    root_rate_label,
+                    (
+                        700
+                        + leaf_width
+                        + stem_width
+                        + root_width / 2
+                        - root_rate_label.get_width() / 2,
+                        110,
+                    ),
+                )
 
             if seed_percentage > 0.1:
-                seed_rate_label = config.BIG_FONT.render("{:.0f}%".format(seed_percentage), True, config.BLACK)
-                screen.blit(seed_rate_label, (
-                700 + leaf_width + stem_width + root_width + seed_width/2 - seed_rate_label.get_width() / 2, 110))
+                seed_rate_label = config.BIG_FONT.render(
+                    "{:.0f}%".format(seed_percentage), True, config.BLACK
+                )
+                screen.blit(
+                    seed_rate_label,
+                    (
+                        700
+                        + leaf_width
+                        + stem_width
+                        + root_width
+                        + seed_width / 2
+                        - seed_rate_label.get_width() / 2,
+                        110,
+                    ),
+                )
 
             if starch_prod_percentage > 0.1:
-                starch_prod_rate_label = config.BIG_FONT.render("{:.0f}%".format(starch_prod_percentage), True, config.BLACK)
-                screen.blit(starch_prod_rate_label, (
-                700 + stem_width + root_width + leaf_width + seed_width+ starch_prod_width / 2 - starch_prod_rate_label.get_width() / 2,
-                110))
+                starch_prod_rate_label = config.BIG_FONT.render(
+                    "{:.0f}%".format(starch_prod_percentage),
+                    True,
+                    config.BLACK,
+                )
+                screen.blit(
+                    starch_prod_rate_label,
+                    (
+                        700
+                        + stem_width
+                        + root_width
+                        + leaf_width
+                        + seed_width
+                        + starch_prod_width / 2
+                        - starch_prod_rate_label.get_width() / 2,
+                        110,
+                    ),
+                )
 
-        '''
+        """
         pygame.draw.rect(
             screen,
             config.WHITE,
@@ -596,7 +681,7 @@ class UI:
             "STARCH CONSUMPTION {}".format(rates[4]), True, config.BLACK
         )
         screen.blit(starch_intake_rate_label, (750, 410))
-        '''
+        """
 
     def draw_plant_details(self, s):
         # details
