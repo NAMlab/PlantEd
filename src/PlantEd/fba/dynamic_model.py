@@ -2,10 +2,9 @@ import logging
 from pathlib import Path
 
 import cobra
-import os
 
-from src.PlantEd.client import GrowthRates, GrowthPercent
-from src.PlantEd.fba.helpers import (
+from PlantEd.client import GrowthRates, GrowthPercent
+from PlantEd.fba.helpers import (
     create_objective,
     update_objective,
     normalize,

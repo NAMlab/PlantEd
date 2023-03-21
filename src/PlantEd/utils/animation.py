@@ -1,7 +1,4 @@
-import pygame
 from pygame import Rect
-import numpy as np
-import config
 
 
 class Animation:

@@ -4,15 +4,15 @@ import pandas as pd
 import pygame
 from pygame.locals import *
 
-from client import Client
-from src.PlantEd import data
-from utils.particle import StillParticles
-from utils.animation import Animation
+from PlantEd.client import Client
+from PlantEd import data
+from PlantEd.utils.particle import StillParticles
+from PlantEd.utils.animation import Animation
 import numpy as np
 import random
 import config
-from data import assets
-from utils.spline import Beziere
+from PlantEd.data import assets
+from PlantEd.utils.spline import Beziere
 
 SUN = 0
 RAIN = 1

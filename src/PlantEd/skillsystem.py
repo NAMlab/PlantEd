@@ -1,7 +1,7 @@
 import pygame
 import config
-from data import assets
-from utils.button import Button
+from PlantEd.data import assets
+from PlantEd.utils.button import Button
 
 
 class Skill:

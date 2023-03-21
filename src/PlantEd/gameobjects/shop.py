@@ -1,14 +1,14 @@
 import pygame
 
-from src.PlantEd import config
-from src.PlantEd.client import Client
-from src.PlantEd.data import assets
-from src.PlantEd.gameobjects.blue_grain import Blue_grain
-from src.PlantEd.gameobjects.root_item import Root_Item
-from src.PlantEd.gameobjects.spraycan import Spraycan
-from src.PlantEd.gameobjects.water_reservoir import Water_Grid
-from src.PlantEd.gameobjects.watering_can import Watering_can
-from src.PlantEd.utils.button import Button
+from PlantEd import config
+from PlantEd.client import Client
+from PlantEd.data import assets
+from PlantEd.gameobjects.blue_grain import Blue_grain
+from PlantEd.gameobjects.root_item import Root_Item
+from PlantEd.gameobjects.spraycan import Spraycan
+from PlantEd.gameobjects.water_reservoir import Water_Grid
+from PlantEd.gameobjects.watering_can import Watering_can
+from PlantEd.utils.button import Button
 
 """
 shop holds items and interfaces actions to consumables

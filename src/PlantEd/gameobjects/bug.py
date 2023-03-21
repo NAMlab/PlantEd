@@ -1,6 +1,6 @@
-from utils.animation import Animation
+from PlantEd.utils.animation import Animation
 import random
-from data import assets
+from PlantEd.data import assets
 import math
 import pygame
 import numpy as np

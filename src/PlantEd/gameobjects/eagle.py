@@ -1,7 +1,5 @@
 import pygame
-import random
-from utils.button import Button
-from utils.particle import ParticleSystem
+from PlantEd.utils.button import Button
 from pygame import Rect
 
 

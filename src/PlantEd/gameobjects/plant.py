@@ -8,15 +8,15 @@ from pygame import Rect
 from pygame.locals import *
 import numpy as np
 
-from src.PlantEd import client as c
-from src.PlantEd import config
-from src.PlantEd.client import Client, GrowthRates
-from src.PlantEd.data import assets
-from src.PlantEd.gameobjects.water_reservoir import Water_Grid
-from src.PlantEd.utils.LSystem import LSystem
-from src.PlantEd.utils.gametime import GameTime
-from src.PlantEd.utils.particle import ParticleSystem
-from src.PlantEd.utils.spline import Cubic_Tree, Cubic
+from PlantEd import client as c
+from PlantEd import config
+from PlantEd.client import Client, GrowthRates
+from PlantEd.data import assets
+from PlantEd.gameobjects.water_reservoir import Water_Grid
+from PlantEd.utils.LSystem import LSystem
+from PlantEd.utils.gametime import GameTime
+from PlantEd.utils.particle import ParticleSystem
+from PlantEd.utils.spline import Cubic_Tree, Cubic
 
 pygame.init()
 gram_mol = 0.5124299411

@@ -1,6 +1,7 @@
 import pygame
-import config
-from utils.button import Button
+
+from PlantEd import config
+from PlantEd.utils.button import Button
 
 
 class ToolTipManager:

@@ -1,6 +1,4 @@
 import pygame, random
-from pygame.locals import *
-import numpy as np
 from pygame import Rect
 
 

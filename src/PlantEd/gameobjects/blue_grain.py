@@ -1,10 +1,10 @@
 import pygame
 
-from client import Client
-from data import assets
-from utils.particle import ParticleSystem
+from PlantEd.client import Client
+from PlantEd.data import assets
+from PlantEd.utils.particle import ParticleSystem
 from pygame import Rect
-import config
+
 from pygame.locals import *
 
 

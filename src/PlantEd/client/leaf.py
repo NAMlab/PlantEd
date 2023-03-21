@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Tuple
 
-from src.PlantEd import server
+from PlantEd import server
 
 
 @dataclass(kw_only=True)

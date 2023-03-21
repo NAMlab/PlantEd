@@ -1,5 +1,6 @@
 import pygame
-import config
+
+from PlantEd import config
 
 BLACK = (0, 0, 0)
 WHITE_TRANSPARENT = (255, 255, 255, 128)

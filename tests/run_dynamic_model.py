@@ -1,5 +1,4 @@
-from fba.helpers import normalize, update_objective, create_objective
-from fba.dynamic_model import DynamicModel
+from PlantEd.fba.dynamic_model import DynamicModel
 
 
 class FixedGametime:

@@ -10,27 +10,32 @@ import pygame
 from pygame.locals import *
 
 import config
-from analysis import scoring
-from analysis.logger import Log
-from camera import Camera
-from client.client import Client
-from client.growth_percentage import GrowthPercent
-from client.growth_rates import GrowthRates
-from data import assets
-from fba.dynamic_model import DynamicModel
-from gameobjects.bee import Bee, Hive
-from gameobjects.bug import Bug
-from gameobjects.level_card import Card
-from gameobjects.plant import Plant
-from gameobjects.shop import Shop, Shop_Item, FloatingShopItem, FloatingShop
-from gameobjects.snail import Snail
-from gameobjects.tree import Tree
-from gameobjects.water_reservoir import Water_Grid, Base_water
-from server.server import Server
-from ui import UI
-from utils.button import Button, Slider, ToggleButton, Textbox
-from utils.gametime import GameTime
-from weather import Environment
+from PlantEd.analysis import scoring
+from PlantEd.analysis.logger import Log
+from PlantEd.camera import Camera
+from PlantEd.client.client import Client
+from PlantEd.client.growth_percentage import GrowthPercent
+from PlantEd.client.growth_rates import GrowthRates
+from PlantEd.data import assets
+from PlantEd.fba.dynamic_model import DynamicModel
+from PlantEd.gameobjects.bee import Bee, Hive
+from PlantEd.gameobjects.bug import Bug
+from PlantEd.gameobjects.level_card import Card
+from PlantEd.gameobjects.plant import Plant
+from PlantEd.gameobjects.shop import (
+    Shop,
+    Shop_Item,
+    FloatingShopItem,
+    FloatingShop,
+)
+from PlantEd.gameobjects.snail import Snail
+from PlantEd.gameobjects.tree import Tree
+from PlantEd.gameobjects.water_reservoir import Water_Grid, Base_water
+from PlantEd.server.server import Server
+from PlantEd.ui import UI
+from PlantEd.utils.button import Button, Slider, ToggleButton, Textbox
+from PlantEd.utils.gametime import GameTime
+from PlantEd.weather import Environment
 
 # currentdir = os.path.abspath('../..')
 # parentdir = os.path.dirname(currentdir)

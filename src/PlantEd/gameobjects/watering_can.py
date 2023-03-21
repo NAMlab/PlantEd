@@ -1,10 +1,9 @@
 import pygame
-from data import assets
-from gameobjects.water_reservoir import Water_Grid
-from utils.particle import ParticleSystem
+from PlantEd.data import assets
+from PlantEd.gameobjects.water_reservoir import Water_Grid
+from PlantEd.utils.particle import ParticleSystem
 from pygame import Rect
-import config
-from utils.gametime import GameTime
+from PlantEd.utils.gametime import GameTime
 from pygame.locals import *
 
 

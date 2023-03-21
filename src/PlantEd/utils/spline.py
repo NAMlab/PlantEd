@@ -5,9 +5,10 @@ from scipy.special import comb
 import pygame
 import math
 from pygame.locals import *
-import config
 import numpy as np
-from utils.gametime import GameTime
+
+from PlantEd import config
+from PlantEd.utils.gametime import GameTime
 
 
 class Cubic_Tree:

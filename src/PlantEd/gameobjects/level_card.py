@@ -1,6 +1,5 @@
 # from game import SceneMananger, CustomScene, DevScene, DefaultGameScene
 import pygame
-import config
 
 
 class Card:

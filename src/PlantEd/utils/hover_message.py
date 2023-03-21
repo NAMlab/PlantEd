@@ -1,5 +1,6 @@
 import pygame
-import config
+
+from PlantEd import config
 
 
 class Hover_Message:

@@ -6,8 +6,8 @@ import unittest
 
 import websockets
 
-from src.PlantEd.fba.dynamic_model import DynamicModel
-from src.PlantEd.server import Server
+from PlantEd.fba.dynamic_model import DynamicModel
+from PlantEd.server import Server
 
 logging.basicConfig(
     level="DEBUG",
@@ -216,7 +216,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             await websocket.send(msg)
             answer = await websocket.recv()
 
-            expected = '{"water_pool": 1000000, "max_water_pool": 1000000}'
+            expected = '{"get_water_pool": "{"water_pool": 1000000, "max_water_pool": 1000000}"}'
 
             self.assertEqual(expected, answer)
 

@@ -1,6 +1,6 @@
 import pygame
 
-from src.PlantEd.utils.gametime import GameTime
+from PlantEd.utils.gametime import GameTime
 
 
 class Tree:

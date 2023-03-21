@@ -8,7 +8,7 @@ from typing import Literal, Final
 
 from dataclasses_json import dataclass_json
 
-from src.PlantEd.utils.gametime import GameTime
+from PlantEd.utils.gametime import GameTime
 
 logger = logging.getLogger(__name__)
 

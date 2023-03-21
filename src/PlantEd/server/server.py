@@ -8,10 +8,10 @@ import threading
 import websockets
 from websockets.legacy.server import WebSocketServerProtocol
 
-from src.PlantEd.client import GrowthPercent, Water
-from src.PlantEd.fba.dynamic_model import DynamicModel
-from src.PlantEd import server
-from src.PlantEd.server.plant.leaf import Leaf
+from PlantEd.client import GrowthPercent, Water
+from PlantEd.fba.dynamic_model import DynamicModel
+from PlantEd import server
+from PlantEd.server.plant.leaf import Leaf
 
 logger = logging.getLogger(__name__)
 

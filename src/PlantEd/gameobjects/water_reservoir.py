@@ -1,9 +1,8 @@
 import numpy as np
 import math
 import pygame
-from utils.gametime import GameTime
+from PlantEd.utils.gametime import GameTime
 import random
-import config
 
 
 # normal plant intake 83 (flux)

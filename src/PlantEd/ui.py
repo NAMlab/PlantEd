@@ -2,12 +2,13 @@ from typing import Tuple
 
 import pygame
 
-from client.client import Client
-from client.growth_rates import GrowthRates
-from camera import Camera
-from gameobjects.plant import Plant
-from utils.gametime import GameTime
-from utils.button import (
+from PlantEd import config
+from PlantEd.client.client import Client
+from PlantEd.client.growth_rates import GrowthRates
+from PlantEd.camera import Camera
+from PlantEd.gameobjects.plant import Plant
+from PlantEd.utils.gametime import GameTime
+from PlantEd.utils.button import (
     DoubleRadioButton,
     RadioButton,
     ToggleButton,
@@ -18,15 +19,14 @@ from utils.button import (
     ButtonArray,
     NegativeSlider,
 )
-from utils.tool_tip import ToolTip, ToolTipManager
-from utils.particle import ParticleSystem, Inwards_Particle_System
-import config
+from PlantEd.utils.tool_tip import ToolTip, ToolTipManager
+from PlantEd.utils.particle import ParticleSystem, Inwards_Particle_System
 from pygame import Rect
-from utils.hover_message import Hover_Message
+from PlantEd.utils.hover_message import Hover_Message
 
 # constants in dynamic model, beter in config? dont think so
-from data import assets
-from weather import Environment
+from PlantEd.data import assets
+from PlantEd.weather import Environment
 
 """
 UI: set up all UI elements, update them, link them to functions

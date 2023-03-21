@@ -8,8 +8,8 @@ import logging
 
 import websockets
 
-from src.PlantEd.client.leaf import Leaf
-from src.PlantEd.client import GrowthPercent, GrowthRates, Water
+from PlantEd.client.leaf import Leaf
+from PlantEd.client import GrowthPercent, GrowthRates, Water
 
 logger = logging.getLogger(__name__)
 
