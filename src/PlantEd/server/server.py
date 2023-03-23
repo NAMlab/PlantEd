@@ -64,7 +64,8 @@ class Server:
 
     async def __stop_server(self):
         """
-        Internal function that stops the websocket by assigning a result to the future object.
+        Internal function that stops the websocket by assigning a result
+        to the future object.
 
         """
         self.__future.set_result("")
@@ -250,7 +251,8 @@ class Server:
                 match command:
                     case "get_growth_percent":
                         logger.debug(
-                            "Received command identified as request of growth_percent."
+                            "Received command identified as request of "
+                            "growth_percent."
                         )
                         response[
                             "get_growth_percent"
@@ -258,7 +260,8 @@ class Server:
 
                     case "growth_rate":
                         logger.debug(
-                            "Received command identified as calculation of growth_rates."
+                            "Received command identified as calculation "
+                            "of growth_rates."
                         )
 
                         growth_percent = GrowthPercent.from_json(
@@ -284,14 +287,16 @@ class Server:
 
                     case "deactivate_starch_resource":
                         logger.debug(
-                            "Received command identified as deactivate_starch_resource."
+                            "Received command identified as "
+                            "deactivate_starch_resource."
                         )
 
                         self.deactivate_starch_resource()
 
                     case "activate_starch_resource":
                         logger.debug(
-                            "Received command identified as activate_starch_resource."
+                            "Received command identified as "
+                            "activate_starch_resource."
                         )
 
                         self.activate_starch_resource()
@@ -305,7 +310,8 @@ class Server:
 
                     case "get_nitrate_percentage":
                         logger.debug(
-                            "Received command identified as get_nitrate_percentage."
+                            "Received command identified as "
+                            "get_nitrate_percentage."
                         )
 
                         response[
@@ -325,7 +331,8 @@ class Server:
 
                     case "get_actual_water_drain":
                         logger.debug(
-                            "Received command identified as get_actual_water_drain."
+                            "Received command identified as "
+                            "get_actual_water_drain."
                         )
 
                         response[
@@ -343,7 +350,8 @@ class Server:
 
                     case _:
                         logger.error(
-                            f"Received command {command} could not be identified"
+                            f"Received command {command} could not "
+                            f"be identified"
                         )
 
                         continue

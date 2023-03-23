@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import threading
 import time
@@ -19,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestServer(unittest.IsolatedAsyncioTestCase):
+    semaphore: threading.Lock
     @classmethod
     def setUpClass(cls) -> None:
         cls.semaphore = threading.Lock()
@@ -65,7 +65,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
         server.stop()
 
     async def test_connect(self):
-        async with websockets.connect("ws://localhost:4000") as websocket:
+        async with websockets.connect("ws://localhost:4000") as _:
             msg = "Single connection results in multiple registered clients"
             self.assertEqual(1, len(self.server.clients), msg)
 
@@ -216,7 +216,10 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             await websocket.send(msg)
             answer = await websocket.recv()
 
-            expected = '{"get_water_pool": "{"water_pool": 1000000, "max_water_pool": 1000000}"}'
+            expected = (
+                '{"get_water_pool": '
+                '"{"water_pool": 1000000, "max_water_pool": 1000000}"}'
+            )
 
             self.assertEqual(expected, answer)
 

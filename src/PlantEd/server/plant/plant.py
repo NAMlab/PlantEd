@@ -1,8 +1,8 @@
-from src.PlantEd.server.plant import Leaf
+from PlantEd.server.plant import Leaf
 
 
 class Plant:
-    leafs: list[Leaf]
+    leafs: list[Leaf] = []
 
-    def create_leaf(self, leaf: Leaf):
-        leaf.append(leaf)
+    def new_leaf(self, leaf: Leaf):
+        self.leafs.append(leaf)

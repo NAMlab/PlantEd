@@ -1,6 +1,8 @@
 # from game import SceneMananger, CustomScene, DevScene, DefaultGameScene
 import pygame
 
+from PlantEd import config
+
 
 class Card:
     def __init__(

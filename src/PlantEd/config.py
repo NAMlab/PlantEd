@@ -76,7 +76,8 @@ _OPTIONS = None
 
 spring = {"Min_T": 5, "Max_T": 20, "shift": 10, "skew": 3.2}
 
-# shift should be -20.8 according to Nadines paper. But this seems easier to grasp for the player as it is wamrest 1 to 6 pm
+# shift should be -20.8 according to Nadines paper.
+# But this seems easier to grasp for the player as it is wamrest 1 to 6 pm
 summer = {"Min_T": 15, "Max_T": 30, "shift": 10, "skew": 3.2}
 
 fall = {"Min_T": 1, "Max_T": 18, "shift": 10, "skew": 3.2}

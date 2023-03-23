@@ -26,7 +26,7 @@ class Client:
         self.url = "ws://localhost:4000"
         self.loop = asyncio.get_event_loop()
         self.loop.run_until_complete(self.__connect())
-        logger.info(f"Connected to localhost")
+        logger.info("Connected to localhost")
 
     async def __connect(self):
         self.websocket = await websockets.connect(self.url)
@@ -36,7 +36,7 @@ class Client:
 
     async def __get_growth_percent(self):
         await self.websocket.send('{"get_growth_percent": "null"}')
-        logger.info(f"Send event GROWTH")
+        logger.info("Send event GROWTH")
 
         data = await self.websocket.recv()
         logger.info(f"Received {data}")
@@ -54,15 +54,15 @@ class Client:
         if growth_percent.starch < 0:
             growth_percent.starch = 0
 
-        message = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
+        message_dict = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
 
         logger.info(
-            "Sending Request for growth rates." f"Payload is :\n" f"{message}"
+            "Sending Request for growth rates." f"Payload is :\n" f"{message_dict}"
         )
 
-        message = json.dumps(message)
-        await self.websocket.send(message)
-        logger.info(f"Send event growth_rate")
+        message_str = json.dumps(message_dict)
+        await self.websocket.send(message_str)
+        logger.info("Send event growth_rate")
 
         answer = await self.websocket.recv()
         logger.info(f"Received {answer}")
@@ -180,7 +180,8 @@ class Client:
 
     def increase_nitrate(self):
         """
-        Method that realizes the increase of the nitrate pool through the store.
+        Method that realizes the increase of the nitrate pool
+        through the store.
 
         """
         return self.loop.run_until_complete(self.__increase_nitrate())

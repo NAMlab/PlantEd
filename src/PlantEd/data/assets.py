@@ -1,11 +1,6 @@
-import os
 from pathlib import Path
 
 import pygame
-
-# import ctypes
-import numpy as np
-import math
 
 # assets is supposed to allow access to images, sounds
 # assets also handles options like volume, lists of songs to play or
@@ -22,7 +17,10 @@ pygame.init()
 true_res = (
     1920,
     1080,
-)  # (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
+)
+# (ctypes.windll.user32.GetSystemMetrics(0),
+# ctypes.windll.user32.GetSystemMetrics(1))
+
 screen = pygame.display.set_mode(
     true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16
 )
@@ -32,7 +30,7 @@ def img(path, size=None):
     path = data_dir / "assets" / path
     global _image_library
     image = _image_library.get(path)
-    if image == None:
+    if image is None:
         # canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
         image = pygame.image.load(path).convert_alpha()
         _image_library[path] = image
@@ -49,7 +47,7 @@ def sfx(path, volume=None):
 
     global _sound_library
     sound = _sound_library.get(path)
-    if sound == None:
+    if sound is None:
         # canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
         sound = pygame.mixer.Sound(path)
         _sound_library[path] = sound
