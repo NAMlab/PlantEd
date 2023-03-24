@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import json
 import logging
 from dataclasses import dataclass
 from typing import Literal, Final
@@ -47,20 +46,23 @@ class GrowthRates:
 
     def flux2grams(self, gametime: GameTime) -> GrowthRates:
         """
-        Method to obtain the GrowthRates in grams for the specified time period.
+        Method to obtain the GrowthRates in grams for the specified
+        time period.
 
         Args:
             gametime: Gametime object that defines the speed and thus also
             the time period for the GrowthRates. The GAMESPEED variable is
             used here.
 
-        Returns: The growth rates of all organs in grams for the specified time.
+        Returns: The growth rates of all organs in grams for the
+        specified time.
 
         """
         gamespeed = gametime.GAMESPEED
 
         logger.debug(
-            f"Create GrowthRates object in grams from {self} for a period of {gamespeed} seconds."
+            f"Create GrowthRates object in grams from {self} "
+            f"for a period of {gamespeed} seconds."
         )
 
         leaf = self.leaf_rate * gamespeed * FLUX_TO_GRAMM

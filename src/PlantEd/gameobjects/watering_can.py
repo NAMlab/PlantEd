@@ -1,4 +1,6 @@
 import pygame
+
+from PlantEd import config
 from PlantEd.data import assets
 from PlantEd.gameobjects.water_reservoir import Water_Grid
 from PlantEd.utils.particle import ParticleSystem

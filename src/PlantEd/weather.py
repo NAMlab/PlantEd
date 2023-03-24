@@ -2,7 +2,7 @@ import importlib.resources
 
 import pandas as pd
 import pygame
-from pygame.locals import *
+from pygame.locals import Rect
 
 from PlantEd.client import Client
 from PlantEd import data
@@ -153,7 +153,7 @@ class Environment:
         map = np.zeros((res_width, res_height))
 
         sun_dir_x = sun_dir[0]
-        sun_dir_y = sun_dir[1]
+        # sun_dir_y = sun_dir[1]
 
         # calc below shadows
         for leaf in leaves:
@@ -176,7 +176,8 @@ class Environment:
                         and i * resolution < bottom_right[0] + delta_x
                         and j * resolution > bottom_left[1]
                     ):
-                        # print(bottom_right, bottom_left, i * resolution, j * resolution)
+                        # print(bottom_right,
+                        # bottom_left, i * resolution, j * resolution)
                         map[i, j] += 1
 
         self.shadow_map = map
@@ -185,7 +186,10 @@ class Environment:
     def draw_shadows(self, screen):
         if self.shadow_map is not None:
             self.s.fill((0, 0, 0, 0))
-            # draw polygon for each shadow vs make polygon from all outer points
+
+            # draw polygon for each shadow
+            # vs make polygon from all outer points
+
             for (x, y), value in np.ndenumerate(self.shadow_map):
                 if self.shadow_map[x, y] > 0:
                     if self.shadow_map[x, y] > 1:
@@ -327,7 +331,9 @@ class WeatherSimulator:
             next_hum = data["humidity"][i + 1]
             next_precip = data["precipitation"][i + 1]
 
-            # print(i, curr_temp, curr_hum, curr_precip, next_temp, next_hum, next_precip, self.temp_step, self.hum_step, self.precip_step, next_precip / self.precip_step)
+            # print(i, curr_temp, curr_hum, curr_precip, next_temp,
+            # next_hum, next_precip, self.temp_step,
+            # self.hum_step, self.precip_step, next_precip / self.precip_step)
 
             curr_temp_bin = int((curr_temp - self.temp_min) / self.temp_step)
             curr_hum_bin = int(curr_hum / self.hum_step)
@@ -389,7 +395,10 @@ class WeatherSimulator:
                         day + (hour / 24),
                     ]
                 )
-                # print(f"Day {day}, Hour {hour}:", f"Temperature: {curr_temp}°C", f"Humidity: {curr_hum}%", f"Precipitation: {curr_precip} mm/h")
+                # print(f"Day {day}, Hour {hour}:",
+                # f"Temperature: {curr_temp}°C",
+                # f"Humidity: {curr_hum}%",
+                # f"Precipitation: {curr_precip} mm/h")
 
                 next_state_probs = self.transitions.get(curr_state, {})
                 # print(next_state_probs)

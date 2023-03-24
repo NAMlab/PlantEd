@@ -3,6 +3,7 @@ from pathlib import Path
 
 import cobra
 
+from PlantEd import server
 from PlantEd.client import GrowthRates, GrowthPercent
 from PlantEd.fba.helpers import (
     create_objective,
@@ -98,6 +99,8 @@ class DynamicModel:
         model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
     ):
         self.model = model.copy()
+        self.plant = server.Plant()
+
         self.gametime = gametime
         self.water_grid = water_grid
         self.plant_mass = plant_mass
@@ -143,7 +146,7 @@ class DynamicModel:
         atp = 0.00727 / 24
         nadhp = 0.00256 / 24
 
-    def calc_growth_rate(self, new_growth_percentages: GrowthPercent):
+    def calc_growth_rate(self, new_growth_percentages: GrowthPercent) -> GrowthRates:
         if new_growth_percentages != self.percentages:
             logger.info("Updating the model objectives.")
             update_objective(
@@ -173,6 +176,8 @@ class DynamicModel:
                     self.water_intake
                     + solution.fluxes[CO2] * self.transpiration_factor
                 )
+
+        return self.get_rates()
 
     def open_stomata(self):
         """

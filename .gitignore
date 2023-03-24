@@ -1,4 +1,5 @@
 .idea/
+.tox/
 dist/
 build/build
 build/dist

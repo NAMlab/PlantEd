@@ -63,7 +63,7 @@ class UI:
         organ_details_topleft: Tuple[int, int] = (10, 430),
         dev_mode: bool = False,
     ):
-        self.name = config.load_options(config.OPTIONS_PATH)["name"]
+        self.name = config.load_options()["name"]
         self.name_label = config.FONT.render(self.name, True, config.BLACK)
         self.plant = plant
         self.client = client
@@ -172,7 +172,7 @@ class UI:
         self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
 
-        tipps = config.load_tooltipps("tooltipps.json")
+        tipps = config.load_tooltipps()
         tooltipps = [
             ToolTip(
                 tip["x"],

@@ -29,7 +29,7 @@ homepage = "https://github.com/NAMlab/PlantEd"
 repository = "https://github.com/NAMlab/PlantEd"
 
 [project.scripts]
-PlantEd = "PlantEd.game"
+PlantEd = "PlantEd.game:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

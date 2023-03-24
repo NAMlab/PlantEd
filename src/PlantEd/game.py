@@ -102,7 +102,7 @@ def shake():
 
 class OptionsScene:
     def __init__(self):
-        self.options = config.load_options("options.json")
+        self.options = config.load_options()
 
         self.option_label = config.MENU_TITLE.render(
             "Options", True, config.WHITE
@@ -201,7 +201,7 @@ class OptionsScene:
         self.init_labels()
 
     def return_to_menu(self):
-        config.write_options(config.OPTIONS_PATH, self.get_options())
+        config.write_options(self.get_options())
         self.manager.go_to(TitleScene(self.manager))
 
     def cancel_return_to_menu(self):
@@ -282,7 +282,7 @@ class OptionsScene:
 
 class DefaultGameScene(object):
     def __init__(self):
-        options = config.load_options(config.OPTIONS_PATH)
+        options = config.load_options()
 
         global plant
 
