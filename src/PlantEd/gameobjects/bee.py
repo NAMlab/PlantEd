@@ -1,3 +1,4 @@
+from PlantEd import config
 from PlantEd.utils.animation import Animation
 import random
 from PlantEd.data import assets

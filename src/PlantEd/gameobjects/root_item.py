@@ -1,4 +1,6 @@
 import pygame
+
+from PlantEd import config
 from PlantEd.utils.particle import ParticleSystem
 from pygame import Rect
 

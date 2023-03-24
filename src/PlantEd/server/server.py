@@ -140,9 +140,8 @@ class Server:
 
         logger.info(f"Calculating growth rates from {growth_percent}")
 
-        self.model.calc_growth_rate(growth_percent)
+        growth_rates = self.model.calc_growth_rate(growth_percent)
 
-        growth_rates = self.model.get_rates()
         logger.info(f"Calculated growth rates: \n {growth_rates}")
         message = growth_rates.to_json()
 

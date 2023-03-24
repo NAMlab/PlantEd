@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import pygame
 import math
 import json
+
+from PlantEd import data
 from data import assets
 import os
 
@@ -152,14 +156,18 @@ def get_y(x, dict):
     return temp
 
 
-def load_options(path):
-    with open(path) as convert_file:
+def load_options():
+    fileDir = Path(__file__).parent / "options.json"
+
+    with open(fileDir) as convert_file:
         options = json.load(convert_file)
     return options
 
 
-def write_options(path, options):
-    with open(path, "w") as convert_file:
+def write_options(options):
+    fileDir = Path(__file__).parent / "options.json"
+
+    with open(fileDir, "w") as convert_file:
         convert_file.write(json.dumps(options))
 
 
@@ -196,14 +204,18 @@ def apply_volume(options):
 # build complete ui in a separate class (watering can, tooltips, slider, ..)
 
 
-def load_tooltipps(path):
-    with open(path) as convert_file:
+def load_tooltipps():
+    fileDir = Path(__file__).parent / "tooltipps.json"
+
+    with open(fileDir) as convert_file:
         tooltipps = json.load(convert_file)
     return tooltipps
 
 
-def write_tooltipps(path, tooltipps):
-    with open(path, "w") as convert_file:
+def write_tooltipps(tooltipps):
+    fileDir = Path(__file__).parent / "tooltipps.json"
+
+    with open(fileDir, "w") as convert_file:
         convert_file.write(json.dumps(tooltipps))
 
 
