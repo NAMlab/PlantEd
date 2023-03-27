@@ -5,12 +5,11 @@ import pygame
 from pygame.locals import Rect
 
 from PlantEd.client import Client
-from PlantEd import data
+from PlantEd import data, config, server
 from PlantEd.utils.particle import StillParticles
 from PlantEd.utils.animation import Animation
 import numpy as np
 import random
-import config
 from PlantEd.data import assets
 from PlantEd.utils.spline import Beziere
 
@@ -40,7 +39,7 @@ class Environment:
     def __init__(
         self,
         plant,
-        client: Client,
+        server_plant: server.Plant,
         water_grid,
         nitrate,
         water,
@@ -56,7 +55,7 @@ class Environment:
         self.sunpos = (0, 0)
         self.rain_rate = 0.0003
         self.plant = plant
-        self.client = client
+        self.server_plant = server_plant
         self.wind_force = (0, 0)
         self.wind_duration = 0  # at 60fps
         self.raining = False
@@ -123,7 +122,7 @@ class Environment:
             images=[assets.img("nitrogen.PNG", (20, 20))],
             speed=[0, 0],
             # ToDo callback really needed scales only the particles?
-            callback=self.client.get_nitrate_percentage,
+            callback=self.server_plant.nitrate.get_nitrate_percentage,
             active=True,
             size=4,
             factor=100,

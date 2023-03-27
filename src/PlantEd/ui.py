@@ -2,7 +2,8 @@ from typing import Tuple
 
 import pygame
 
-from PlantEd import config
+from PlantEd import config, server
+from PlantEd.client import Water
 from PlantEd.client.client import Client
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.camera import Camera
@@ -54,6 +55,7 @@ class UI:
         self,
         scale: float,  # ToDo Float?
         plant: Plant,
+        server_plant: server.Plant,
         client: Client,
         growth_rates: GrowthRates,
         environment: Environment,
@@ -66,6 +68,9 @@ class UI:
         self.name = config.load_options()["name"]
         self.name_label = config.FONT.render(self.name, True, config.BLACK)
         self.plant = plant
+
+        self.server_plant = server_plant
+
         self.client = client
         self.growth_rates: GrowthRates = growth_rates
         self.environment = environment
@@ -1111,7 +1116,8 @@ class UI:
 
         width = 140
 
-        water = self.client.get_water_pool()
+        # Is updated every second via Growth event.
+        water = self.server_plant.water
 
         water_percentage = water.water_pool / water.max_water_pool
         pygame.draw.rect(

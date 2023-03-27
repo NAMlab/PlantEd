@@ -4,7 +4,7 @@ from pathlib import Path
 import cobra
 
 from PlantEd import server
-from PlantEd.client import GrowthRates, GrowthPercent
+from PlantEd.client import GrowthRates, GrowthPercent, Water
 from PlantEd.fba.helpers import (
     create_objective,
     update_objective,
@@ -29,14 +29,9 @@ CO2 = "CO2_tx_leaf"
 # mol
 Vmax = 3360 / 3600  # mikroMol/gDW/s
 Km = 4000  # mikromol
-max_nitrate_pool_low = 12000  # mikromol
-max_nitrate_pool_high = 100000  # mikromol
 
 # Todo change to 0.1 maybe
 MAX_STARCH_INTAKE = 0.9
-
-MAX_WATER_POOL = 1000000
-MAX_WATER_POOL_CONSUMPTION = 1
 
 FLUX_TO_GRAMM = 0.002299662183
 
@@ -99,6 +94,7 @@ class DynamicModel:
         model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
     ):
         self.model = model.copy()
+
         self.plant = server.Plant()
 
         self.gametime = gametime
@@ -108,18 +104,11 @@ class DynamicModel:
         objective = create_objective(self.model)
         self.model.objective = objective
         self.stomata_open = False
-        # define init pool and rates in JSON or CONFIG
-        self.nitrate_pool = 0
-        self.nitrate_delta_amount = 0
-        self.water_pool = 0
-        self.water_intake_pool = 0
-        self.max_water_pool = MAX_WATER_POOL
+
         self.temp = 20  # degree ceclsius
         # based on paper
         # copies of intake rates to drain form pools
-        self.nitrate_intake = 0  # Michaelis–Menten equation: gDW(root) Vmax ~ 0.00336 mol g DW−1 day−1
         self.photon_intake = 0  # 300micromol /m2 s * PLA(gDW * slope)
-        self.water_intake = 0
         self.transpiration_factor = 0
         self.co2_intake = 0
         self.starch_intake_max = MAX_STARCH_INTAKE  # upper bound
@@ -134,8 +123,8 @@ class DynamicModel:
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
-        self.nitrate_pool = max_nitrate_pool_high
-        self.water_pool = self.max_water_pool
+        self.plant.nitrate.set_pool_to_high()
+        self.plant.water.water_pool = self.plant.water.max_water_pool
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(0.1)))
         self.set_bounds(PHOTON, (0, 0))
         self.set_bounds(CO2, (-1000, 0))
@@ -164,16 +153,16 @@ class DynamicModel:
         self.growth_rates.seed_rate = solution.fluxes.get(BIOMASS_SEED)
 
         # 1/s
-        self.water_intake = solution.fluxes[WATER]
+        self.plant.water.water_intake = solution.fluxes[WATER]
         self.co2_intake = solution.fluxes[CO2]
-        self.nitrate_intake = solution.fluxes[NITRATE]
+        self.plant.nitrate.nitrate_intake = solution.fluxes[NITRATE]
         self.growth_rates.starch_intake = solution.fluxes[STARCH_IN]
         self.photon_intake = solution.fluxes[PHOTON]
 
         if self.stomata_open:
-            if solution.fluxes[CO2] > 0 and self.water_intake > 0:
-                self.water_intake = (
-                    self.water_intake
+            if solution.fluxes[CO2] > 0 and self.plant.water.water_intake > 0:
+                self.plant.water.water_intake = (
+                    self.plant.water.water_intake
                     + solution.fluxes[CO2] * self.transpiration_factor
                 )
 
@@ -255,28 +244,26 @@ class DynamicModel:
             forced_ATP,
         )
 
-    def get_actual_water_drain(self):
-        return self.water_intake + self.water_intake_pool
-
     def get_photon_upper(self):
         return self.model.reactions.get_by_id(PHOTON).bounds[1]
 
     def get_nitrate_pool(self):
-        return self.nitrate_pool
+        return self.plant.nitrate.nitrate_pool
 
     def increase_nitrate_pool(self, amount):
-        self.nitrate_pool += amount
-
-    def get_nitrate_percentage(self) -> float:
-        return self.nitrate_pool / max_nitrate_pool_high
+        self.plant.nitrate.nitrate_pool += amount
 
     def get_nitrate_intake(self, mass):
+        # ToDo move to nitrate class
+        nitrate_pool = self.plant.nitrate.nitrate_pool
+
+
         # Michaelis-Menten Kinetics
         # v = Vmax*S/Km+S, v=intake speed, Vmax=max Intake, Km=Where S that v=Vmax/2, S=Substrate Concentration
         # Literature: Vmax ~ 0.00336 mol g DW−1 day−1, KM = 0.4 mmol,  S = 50 mmol and 1.2 mmol (high, low)
         # day --> sec
         return max(
-            ((Vmax * self.nitrate_pool) / (Km + self.nitrate_pool)) * mass, 0
+            ((Vmax * nitrate_pool) / (Km + nitrate_pool)) * mass, 0
         )  # second
 
     def set_bounds(self, reaction, bounds):
@@ -286,7 +273,7 @@ class DynamicModel:
         return self.model.reactions.get_by_id(reaction).bounds
 
     def increase_nitrate(self, amount):
-        self.nitrate_delta_amount = amount
+        self.plant.nitrate.nitrate_delta_amount = amount
 
     def set_stomata_automation(self, hours):
         self.stomata_hours = hours
@@ -329,7 +316,7 @@ class DynamicModel:
         T,
     ):
         normalize(self.model, root_mass, stem_mass, leaf_mass, 1)
-        self.max_water_pool = MAX_WATER_POOL + (plant_mass * 10000)
+        self.plant.water.max_water_pool = self.plant.water.max_water_pool + (plant_mass * 10000)
         self.update_bounds(root_mass, PLA * sun_intensity, max_water_drain)
         self.update_pools(dt, max_water_drain)
         self.update_transpiration_factor(RH, T)
@@ -347,46 +334,62 @@ class DynamicModel:
 
         # take more water in, if possible and pool not full
 
-        if self.water_pool < self.max_water_pool:
-            if self.water_intake < max_water_drain:
-                self.water_intake_pool = 0
+        # Water
+        # ToDo move into water class?
+
+        if self.plant.water.water_pool < self.plant.water.max_water_pool:
+            if self.plant.water.water_intake < max_water_drain:
+                self.plant.water.water_intake_pool = 0
                 # excess has to be negative to get added to pool
-                excess = self.water_intake - max_water_drain
-                if excess < MAX_WATER_POOL_CONSUMPTION:
-                    self.water_intake_pool = excess
+                excess = self.plant.water.water_intake - max_water_drain
+                if excess < self.plant.water.max_water_pool_consumption:
+                    self.plant.water.water_intake_pool = excess
                 else:
-                    self.water_intake_pool = MAX_WATER_POOL_CONSUMPTION
-        self.water_pool -= self.water_intake_pool * dt * gamespeed
+                    self.plant.water.water_intake_pool = self.plant.water.max_water_pool_consumption
+        self.plant.water.water_pool -= self.plant.water.water_intake_pool * dt * gamespeed
 
-        if self.water_pool > self.max_water_pool:
-            self.water_pool = self.max_water_pool
+        if self.plant.water.water_pool > self.plant.water.max_water_pool:
+            self.plant.water.water_pool = self.plant.water.max_water_pool
 
-        self.nitrate_pool -= self.nitrate_intake * dt * gamespeed
-        if self.nitrate_pool < 0:
-            self.nitrate_pool = 0
+        # Nitrate
+        # ToDo move into Nitrate class?
+        nitrate_pool = self.plant.nitrate.nitrate_pool
+        nitrate_intake = self.plant.nitrate.nitrate_intake
+        nitrate_delta_amount = self.plant.nitrate.nitrate_delta_amount
+        max_nitrate_pool_high = self.plant.nitrate.max_nitrate_pool_high
+
+        nitrate_pool -= nitrate_intake * dt * gamespeed
+        if nitrate_pool < 0:
+            nitrate_pool = 0
         # slowly add nitrate after buying
-        if self.nitrate_delta_amount > 0:
-            self.nitrate_pool += max_nitrate_pool_high / 2 * dt
-            self.nitrate_delta_amount -= max_nitrate_pool_high / 2 * dt
+        if nitrate_delta_amount > 0:
+            nitrate_pool += max_nitrate_pool_high / 2 * dt
+            nitrate_delta_amount -= max_nitrate_pool_high / 2 * dt
+
+        self.plant.nitrate.nitrate_pool = nitrate_pool
+        self.plant.nitrate.nitrate_delta_amount = nitrate_delta_amount
 
     def update_bounds(self, root_mass, photon_in, max_water_drain):
         # update photon intake based on sun_intensity
         # update nitrate inteake based on Substrate Concentration
         # update water based on grid
         # co2? maybe later in dev
-        self.set_bounds(NITRATE, (0, self.get_nitrate_intake(root_mass)))
+
+        nitrate_intake = self.get_nitrate_intake(root_mass)
+        self.set_bounds(NITRATE, (0, nitrate_intake))
 
         # take from pool, if no enough
         # not enough water in soil - take from pool
         intake = max_water_drain
-        self.water_intake_pool = 0
+        self.plant.water.water_intake_pool = 0
+
         if photon_in > 0:
-            if max_water_drain < MAX_WATER_POOL_CONSUMPTION:
-                if self.water_pool > 0:
-                    shortage = MAX_WATER_POOL_CONSUMPTION - max_water_drain
+            if max_water_drain < self.plant.water.max_water_pool_consumption:
+                if self.plant.water.water_pool > 0:
+                    shortage = self.plant.water.max_water_pool_consumption - max_water_drain
                     # take diff from pool
-                    self.water_intake_pool = shortage
-                    intake = MAX_WATER_POOL_CONSUMPTION
+                    self.plant.water.water_intake_pool = shortage
+                    intake = self.plant.water.max_water_pool_consumption
 
         self.set_bounds(WATER, (-1000, intake))
         photon_in = photon_in * 300  # mikromol/m2/s

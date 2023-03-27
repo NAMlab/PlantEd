@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import os
 import random
 import sys
@@ -9,10 +10,11 @@ from typing import List
 import pygame
 from pygame.locals import *
 
-import config
+from PlantEd import config, server
 from PlantEd.analysis import scoring
 from PlantEd.analysis.logger import Log
 from PlantEd.camera import Camera
+from PlantEd.client import Water
 from PlantEd.client.client import Client
 from PlantEd.client.growth_percentage import GrowthPercent
 from PlantEd.client.growth_rates import GrowthRates
@@ -58,7 +60,7 @@ tmp_screen = pygame.display.set_mode(
 )
 temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 # screen_high = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.SRCALPHA)
-GROWTH = 24
+GROWTH = 26
 RECALC = 25
 WIN = pygame.USEREVENT + 1
 
@@ -337,6 +339,8 @@ class DefaultGameScene(object):
         logger.debug("Starting Client")
         self.client = Client()
 
+        self.server_plant = server.Plant()
+
         self.plant = Plant(
             pos=(
                 config.SCREEN_WIDTH / 2,
@@ -360,7 +364,7 @@ class DefaultGameScene(object):
         )
         self.environment = Environment(
             plant=self.plant,
-            client=self.client,
+            server_plant = self.server_plant,
             water_grid=self.water_grid,
             nitrate=0,
             water=0,
@@ -375,6 +379,7 @@ class DefaultGameScene(object):
             environment=self.environment,
             camera=self.camera,
             growth_rates=growth_rates,
+            server_plant=self.server_plant,
         )
 
         """example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
@@ -580,12 +585,19 @@ class DefaultGameScene(object):
                     flower=self.plant.organs[3].percentage,
                 )
 
-                growth_rates = self.client.growth_rate(
-                    growth_percent=growth_percent
+                self.client.growth_rate(
+                    growth_percent=growth_percent,
+                    callback = self.update_growth_rates,
                 )
-                self.ui.growth_rates = growth_rates
 
-                self.plant.update_growth_rates(growth_rates)
+                # update water
+                self.client.get_water_pool(self.server_plant.set_water)
+                # update nitrate
+                self.client.get_nitrate_pool(self.server_plant.set_nitrate)
+
+
+
+
 
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
@@ -658,6 +670,19 @@ class DefaultGameScene(object):
                 entity.handle_event(e)
             self.camera.handle_event(e)
 
+    def update_growth_rates(self, growth_rates: GrowthRates):
+        """
+        Callback function for the client to update the GrowthRates
+            of the UI.
+        Args:
+            growth_rates: The calculated GrowthRates.
+
+        """
+
+        self.ui.growth_rates = growth_rates
+
+        self.plant.update_growth_rates(growth_rates)
+
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
             pygame.event.post(pygame.event.Event(WIN))
@@ -697,7 +722,7 @@ class DefaultGameScene(object):
         # get root grid, water grid
         self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
         self.water_grid.actual_drain_rate = (
-            self.client.get_actual_water_drain()
+            self.server_plant.water.get_water_drain()
         )
         self.water_grid.update(dt)
 
