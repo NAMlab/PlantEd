@@ -31,7 +31,7 @@ Vmax = 3360 / 3600  # mikroMol/gDW/s
 Km = 4000  # mikromol
 
 # Todo change to 0.1 maybe
-MAX_STARCH_INTAKE = 0.9
+MAX_STARCH_INTAKE = 10
 
 FLUX_TO_GRAMM = 0.002299662183
 

@@ -58,7 +58,7 @@ class GrowthRates:
         specified time.
 
         """
-        gamespeed = gametime.GAMESPEED
+        gamespeed = gametime.GAMESPEED * 10
 
         logger.debug(
             f"Create GrowthRates object in grams from {self} "

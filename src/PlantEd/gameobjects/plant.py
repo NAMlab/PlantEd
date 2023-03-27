@@ -561,7 +561,7 @@ class Leaf(Organ):
             base_image_id=image_id,
         )
 
-        self.client.create_leaf(client_leaf)
+        #self.client.create_leaf(client_leaf)
         self.update_leaf_image(leaf, init=True)
         self.particle_systems.append(
             ParticleSystem(

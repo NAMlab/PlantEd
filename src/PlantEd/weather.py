@@ -252,7 +252,7 @@ class Environment:
             self.s.blit(self.sun, offset_sunpos)
 
         screen.blit(self.s, (0, 0))
-        screen.blit(self.background, (0, -140))
+
 
     def get_color(self, color0, color1, grad):
         return (
@@ -262,6 +262,7 @@ class Environment:
         )
 
     def draw_foreground(self, screen):
+        screen.blit(self.background, (0, -140))
         self.nitrate.draw(screen)
         for animation in self.animations:
             animation.draw(screen)

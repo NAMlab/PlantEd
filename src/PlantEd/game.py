@@ -397,7 +397,7 @@ class DefaultGameScene(object):
         self.hive = Hive((1500, 600), 10, self.plant, self.camera, 10)
         self.entities.append(self.hive)
 
-        for i in range(0, 5):
+        '''for i in range(0, 5):
             bee = Bee(
                 (190 * random.randint(0, 10), random.randint(0, 800)),
                 pygame.Rect(
@@ -411,7 +411,7 @@ class DefaultGameScene(object):
                 self.plant.organs[3].pollinate,
                 hive_pos=(1500, 600),
             )
-            self.entities.append(bee)
+            self.entities.append(bee)'''
 
         for i in range(0, 10):
             bug = Bug(
@@ -426,9 +426,9 @@ class DefaultGameScene(object):
             self.entities.append(bug)
 
         self.tree = Tree(
-            (1100, 20),
+            (1300, 100),
             [
-                (assets.img("tree/{index}.PNG".format(index=i), (1024, 1024)))
+                (assets.img("tree/{index}.PNG".format(index=i), (800, 800)))
                 for i in range(0, 4)
             ],
             self.environment,
@@ -764,11 +764,13 @@ class DefaultGameScene(object):
 
         self.environment.draw_background(temp_surface)
 
+        # Todo diffenciate between bugs, tree, bees, ground -> more layers
         for entity in self.entities:
             entity.draw(temp_surface)
-        self.plant.draw(temp_surface)
+
 
         self.environment.draw_foreground(temp_surface)
+        self.plant.draw(temp_surface)
         self.water_grid.draw(temp_surface)
         self.environment.draw_shadows(temp_surface)
         self.floating_shop.draw(temp_surface)
@@ -1128,7 +1130,7 @@ class SceneMananger(object):
 def main():
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
-    pygame.display.set_mode((0, 0), pygame.RESIZABLE)
+    pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     pygame.display.set_caption("PlantEd_0.1")
     timer = pygame.time.Clock()
     running = True
