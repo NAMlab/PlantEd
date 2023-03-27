@@ -33,7 +33,7 @@ max_nitrate_pool_low = 12000  # mikromol
 max_nitrate_pool_high = 100000  # mikromol
 
 # Todo change to 0.1 maybe
-MAX_STARCH_INTAKE = 0.9
+MAX_STARCH_INTAKE = 10
 
 MAX_WATER_POOL = 1000000
 MAX_WATER_POOL_CONSUMPTION = 1
