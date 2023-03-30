@@ -73,7 +73,7 @@ class Plant:
         self.y = pos[1]
         self.client = client
         self.upgrade_points = upgrade_points
-        self.stromata_open = (True,)
+        self.stomata_open = True
         self.use_starch = True
         self.camera = camera
         self.water_grid = water_grid
@@ -452,6 +452,9 @@ class Leaf(Organ):
             active=False,
         )
         self.particle_systems = []
+        self.shadow_map = None
+        self.shadow_resolution = 0
+        self.max_shadow = 0
 
     def handle_event(self, event):
         """if event.type == pygame.KEYDOWN and event.key == pygame.K_u:
@@ -598,6 +601,27 @@ class Leaf(Organ):
         )
 
     def update(self, dt):
+        # apply shadow penalty to leaves
+        if self.shadow_map is not None:
+            for leaf in self.leaves:
+                x = int((leaf["x"] - leaf["offset_x"]) / self.shadow_resolution)
+                y = int((leaf["y"] - leaf["offset_y"]) / self.shadow_resolution)
+
+                width = int(leaf["image"].get_width() / self.shadow_resolution)
+                height = int(leaf["image"].get_height() / self.shadow_resolution)
+
+                # rect = pygame.Rect(x,y,width,height)
+
+                dots = width * height * self.max_shadow
+                shadow_dots = 0
+                for i in range(x, x + width):
+                    for j in range(y, y + height):
+                        shadow_dots += self.shadow_map[i, j]
+                leaf["shadow_score"] = shadow_dots / dots
+        else:
+            for leaf in self.leaves:
+                leaf["shadow_score"] = 0
+
         for system in self.particle_systems:
             system.update(dt)
         for i in range(0, len(self.leaves)):
@@ -617,6 +641,8 @@ class Leaf(Organ):
                 self.particle_systems[i].activate()
             else:
                 self.particle_systems[i].deactivate()
+
+
 
     def update_image_size(self, factor=7, base=80):
         for leaf in self.leaves:

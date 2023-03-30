@@ -394,10 +394,10 @@ class UI:
         self.button_array.update(hours)
         hours = (int)(hours / 2)
         open = self.stomata_hours[hours]
-        if open and self.plant.stromata_open is False:
+        if open and self.plant.stomata_open is False:
             self.open_stomata()
             self.button_array.go_green()
-        if not open and self.plant.stromata_open is True:
+        if not open and self.plant.stomata_open is True:
             self.close_stomata()
             self.button_array.go_red()
 

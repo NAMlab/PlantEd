@@ -482,7 +482,7 @@ class DefaultGameScene(object):
 
         self.shop.shop_items.append(
             Shop_Item(
-                assets.img("root_lateral.PNG", (64, 64)),
+                assets.img("branch.PNG", (64, 64)),
                 self.plant.organs[1].activate_add_branch,
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
@@ -513,14 +513,14 @@ class DefaultGameScene(object):
         add_branch_item_floating = FloatingShopItem(
             (0, 0),
             self.plant.organs[1].activate_add_branch,
-            assets.img("leaf_small.PNG", (64, 64)),
+            assets.img("branch.PNG", (64, 64)),
             1,
             self.plant,
         )
         add_flower_item_floating = FloatingShopItem(
             (0, 0),
             self.plant.organs[3].activate_add_flower,
-            assets.img("leaf_small.PNG", (64, 64)),
+            assets.img("sunflowers/1.PNG", (64, 64)),
             1,
             self.plant,
         )
@@ -694,31 +694,18 @@ class DefaultGameScene(object):
         hours = (ticks % day) / hour
         if 8 < hours < 20:
             # print(hours)
-            shadow_map, resolution = self.environment.calc_shadowmap(
+            shadow_map, resolution, max_shadow = self.environment.calc_shadowmap(
                 self.plant.organs[0].leaves,
                 sun_dir=(((-(20 / 12) * hours) + 23.33), 1),
             )
-            # apply shadow penalty to leaves
-            for leaf in self.plant.organs[0].leaves:
-                x = int((leaf["x"] - leaf["offset_x"]) / resolution)
-                y = int((leaf["y"] - leaf["offset_y"]) / resolution)
-
-                width = int(leaf["image"].get_width() / resolution)
-                height = int(leaf["image"].get_height() / resolution)
-
-                # rect = pygame.Rect(x,y,width,height)
-
-                dots = width * height
-                shadow_dots = 0
-                for i in range(x, x + width):
-                    for j in range(y, y + height):
-                        shadow_dots += shadow_map[i, j]
-
-                leaf["shadow_score"] = shadow_dots / dots
+            self.plant.organs[0].shadow_map = shadow_map
+            self.plant.organs[0].shadow_resolution = resolution
+            self.plant.organs[0].max_shadow = max_shadow
                 # print(leaf["x"], leaf["y"], dots, shadow_dots, shadow_dots/(dots*3))
             # print((-(20/12)*hours)+23.33)
         else:
             self.environment.shadow_map = None
+            self.plant.organs[0].shadow_map = None
         # get root grid, water grid
         self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
         self.water_grid.actual_drain_rate = (

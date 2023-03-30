@@ -85,13 +85,16 @@ class Environment:
         ).open()
 
         df_weather_spring = pd.read_csv(weather_spring)
-        self.weather_simulator = WeatherSimulator(df_weather_spring)
+        self.weather_simulator = WeatherSimulator(df_weather_spring, seed = 0.7360593324276558)
         start_temp = df_weather_spring["temp 2m avg"][0]
         start_hum = df_weather_spring["humidity"][0]
         start_precip = df_weather_spring["precipitation"][0]
         self.simulated_weather = self.weather_simulator.simulate(
             start_temp, start_hum, start_precip
         )
+        for i in range(len(self.simulated_weather)):
+            if self.simulated_weather[i][2] > 0:
+                print(self.simulated_weather[i][2], self.simulated_weather[i][3])
 
         self.temperature = 0
         self.humidity = 0
@@ -142,7 +145,7 @@ class Environment:
             self.sunpos = self.sun_pos_spline[(int(day_time * 10000) - 1)]
             self.plant.organs[1].sunpos = self.sunpos
 
-    def calc_shadowmap(self, leaves, sun_dir=(0.5, 1), resolution=10):
+    def calc_shadowmap(self, leaves, sun_dir=(0.5, 1), resolution=10, max_shadow=5):
         width = config.SCREEN_WIDTH
         height = config.SCREEN_HEIGHT
 
@@ -177,10 +180,10 @@ class Environment:
                     ):
                         # print(bottom_right,
                         # bottom_left, i * resolution, j * resolution)
-                        map[i, j] += 1
+                        map[i, j] += 1 if map[i, j] < max_shadow else max_shadow
 
         self.shadow_map = map
-        return map, resolution
+        return map, resolution, max_shadow
 
     def draw_shadows(self, screen):
         if self.shadow_map is not None:
@@ -191,28 +194,12 @@ class Environment:
 
             for (x, y), value in np.ndenumerate(self.shadow_map):
                 if self.shadow_map[x, y] > 0:
-                    if self.shadow_map[x, y] > 1:
-                        if self.shadow_map[x, y] > 2:
-                            pygame.draw.circle(
-                                self.s,
-                                config.RED_TRANSPARENT,
-                                (x * 10, y * 10),
-                                6,
-                            )
-                        else:
-                            pygame.draw.circle(
-                                self.s,
-                                config.RED_GRAY_TRANSPARENT,
-                                (x * 10, y * 10),
-                                4,
-                            )
-                    else:
-                        pygame.draw.circle(
-                            self.s,
-                            config.DARKER_GREY_TRANSPARENT,
-                            (x * 10, y * 10),
-                            2,
-                        )
+                    pygame.draw.circle(
+                        self.s,
+                        config.GREY_TRANSPARENT,
+                        (x * 10, y * 10),
+                        1 + self.shadow_map[x, y],
+                    )
                 else:
                     pass
             screen.blit(self.s, (0, 0))
@@ -275,6 +262,15 @@ class Environment:
             self.precipitation,
             hour,
         ) = self.simulated_weather[int(int(days) * 24 + int(hours))]
+        if self.precipitation > 0:
+            self.raining = True
+            self.animations[0].running = True
+            self.rain_rate = self.precipitation
+            self.water_grid.activate_rain(self.precipitation)
+        else:
+            self.raining = False
+            self.animations[0].running = False
+            self.water_grid.deactivate_rain()
 
     def get_day_time(self) -> (int, float, float):
         ticks = self.gametime.get_time()

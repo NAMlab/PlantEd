@@ -146,7 +146,7 @@ def main(seed=None):
         # plt.plot(temp)
         # plt.plot(preci)
         plt.xlabel = "days"
-        plt.savefig(seasons[i] + ".svg")
+        plt.savefig("src/PlantEd/data/weather/" + seasons[i] + ".svg")
 
 
 if __name__ == "__main__":

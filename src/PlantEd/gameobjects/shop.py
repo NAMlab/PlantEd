@@ -22,9 +22,9 @@ class FloatingShop:
     def __init__(self, pos=(0, 0)):
         self.pos = pos
         self.shop_items = []
-        self.margin = 10
+        self.margin = 16
         self.rect = pygame.Rect(
-            (0, 0, len(self.shop_items) * (64 + self.margin), 64 + self.margin)
+            (0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin)
         )
         self.active = False
         self.s = pygame.Surface(
@@ -40,7 +40,7 @@ class FloatingShop:
         self.active = True
         self.pos = pos
         self.rect = pygame.Rect(
-            (0, 0, len(self.shop_items) * 80, 64 + self.margin * 2)
+            (0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin)
         )
 
     def deactivate(self):
@@ -50,7 +50,7 @@ class FloatingShop:
         self.shop_items.append(shop_item)
         self.shop_items[-1].shop_items = self.shop_items
         self.shop_items[-1].floating_shop = self
-        self.rect = pygame.Rect((0, 0, len(self.shop_items) * 80, 80))
+        self.rect = pygame.Rect((0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin))
 
     def get_rect(self):
         return pygame.Rect(

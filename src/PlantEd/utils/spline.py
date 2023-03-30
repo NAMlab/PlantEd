@@ -133,6 +133,7 @@ class Cubic:
         self.free_spots.append(True)
         self.new_curve = self.get_curve()
         self.growth_percentage = 0
+        self.move_offset = False
 
     def get_rects(self):
         rects = []
@@ -157,12 +158,13 @@ class Cubic:
                     self.new_curve[i + 1][1] - self.curve[i][1]
                 ) * self.growth_percentage + self.curve[i][1]
                 self.interpolated.append((x, y))
-                self.growth_percentage += dt / 100
+                self.growth_percentage += dt / 50
             self.interpolated.append(self.curve[-1])
         else:
             self.growth_percentage = 1
             self.curve = self.get_curve()
             self.new_curve = []
+            self.move_offset = True
 
     def handle_event(self, e):
         if self.move_offset:
