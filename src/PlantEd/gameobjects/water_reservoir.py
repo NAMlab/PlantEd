@@ -117,8 +117,8 @@ class Water_Grid:
     def add_base_water(self, base_water):
         self.base_waters.append(base_water)
 
-    def activate_rain(self):
-        self.raining = RAIN_RATE
+    def activate_rain(self, precipitation=RAIN_RATE):
+        self.raining = precipitation
 
     def deactivate_rain(self):
         self.raining = 0
