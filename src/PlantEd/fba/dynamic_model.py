@@ -33,9 +33,10 @@ max_nitrate_pool_low = 12000  # mikromol
 max_nitrate_pool_high = 100000  # mikromol
 
 # Todo change to 0.1 maybe
-MAX_STARCH_INTAKE = 10
+MAX_STARCH_INTAKE = 0.9
 
-MAX_WATER_POOL = 1000000
+# gram to mikromol
+MAX_WATER_POOL = 0.05550843506179199 * 1000000
 MAX_WATER_POOL_CONSUMPTION = 1
 
 FLUX_TO_GRAMM = 0.002299662183
@@ -103,7 +104,6 @@ class DynamicModel:
 
         self.gametime = gametime
         self.water_grid = water_grid
-        self.plant_mass = plant_mass
         self.use_starch = False
         objective = create_objective(self.model)
         self.model.objective = objective
@@ -328,8 +328,8 @@ class DynamicModel:
         RH,
         T,
     ):
-        normalize(self.model, root_mass, stem_mass, leaf_mass, 1)
-        self.max_water_pool = MAX_WATER_POOL + (plant_mass * 10000)
+        #normalize(self.model, root_mass, stem_mass, leaf_mass, 1)
+        self.max_water_pool = MAX_WATER_POOL * plant_mass * 0.8
         self.update_bounds(root_mass, PLA * sun_intensity, max_water_drain)
         self.update_pools(dt, max_water_drain)
         self.update_transpiration_factor(RH, T)

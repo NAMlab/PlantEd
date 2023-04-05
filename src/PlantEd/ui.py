@@ -172,22 +172,8 @@ class UI:
         self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
 
-        tipps = config.load_tooltipps()
-        tooltipps = [
-            ToolTip(
-                tip["x"],
-                tip["y"],
-                tip["lines"],
-                headfont=tip["headfont"],
-                mass=tip["mass"],
-                center=tip["center"],
-            )
-            for tip in tipps
-        ]
-        self.tool_tip_manager = ToolTipManager(
-            tooltipps, callback=self.plant.get_biomass
-        )
-        self.button_sprites.add(
+
+        '''self.button_sprites.add(
             ToggleButton(
                 260,
                 config.SCREEN_HEIGHT - 50,
@@ -199,7 +185,7 @@ class UI:
                 pressed=True,
             )
         )
-
+'''
         self.button_sprites.add(
             Arrow_Button(
                 config.SCREEN_WIDTH / 2 - 100,
@@ -232,6 +218,7 @@ class UI:
                 32,
                 [self.gametime.play],
                 config.FONT,
+                border_w=2,
                 image=assets.img("normal_speed.PNG"),
             ),
             RadioButton(
@@ -241,6 +228,7 @@ class UI:
                 32,
                 [self.gametime.faster],
                 config.FONT,
+                border_w=2,
                 image=assets.img("fast_speed.PNG"),
             ),
             RadioButton(
@@ -250,6 +238,7 @@ class UI:
                 32,
                 [self.gametime.fastest],
                 config.FONT,
+                border_w=2,
                 image=assets.img("fastest_speed.PNG"),
             ),
         ]
@@ -267,7 +256,7 @@ class UI:
             [self.skip_intro_ui],
             config.FONT,
             "SKIP INTRO",
-            border_w=3,
+            border_w=2,
         )
         self.button_sprites.add(self.skip_intro)
 
@@ -285,7 +274,7 @@ class UI:
         # self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
-        self.tool_tip_manager.deactivate_tooltipps()
+        #self.tool_tip_manager.deactivate_tooltipps()
         self.gametime.forward()
 
     def handle_event(self, e: pygame.event.Event):
@@ -297,8 +286,8 @@ class UI:
             button.handle_event(e)
         for slider in self.sliders:
             slider.handle_event(e)
-        for tips in self.tool_tip_manager.tool_tips:
-            tips.handle_event(e)
+        #for tips in self.tool_tip_manager.tool_tips:
+        #    tips.handle_event(e)
 
     def update(self, dt):
         self.hover.update(dt)
@@ -317,7 +306,7 @@ class UI:
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
-        self.tool_tip_manager.update()
+        #self.tool_tip_manager.update()
         for element in self.floating_elements:
             element.update(dt)
         for animation in self.animations:
@@ -363,8 +352,7 @@ class UI:
             screen.blit(animation.image, animation.pos)
         for system in self.particle_systems:
             system.draw(screen)
-        self.tool_tip_manager.draw(screen)
-        self.tool_tip_manager.draw(screen)
+        #self.tool_tip_manager.draw(screen)
 
         # draw danger mode
         if self.danger_timer < 0.5:
@@ -727,7 +715,7 @@ class UI:
 
     def draw_clock(self, s):
         days, hours, minutes = self.get_day_time()
-        output_string = "Day {0} {1:02}:{2:02}".format(
+        output_string = "Day {0}/30 {1:02}:{2:02}".format(
             days, int(hours), int(minutes)
         )
         clock_text = config.FONT.render(output_string, True, config.BLACK)
@@ -746,7 +734,7 @@ class UI:
         T = self.environment.temperature
 
         RH_label = config.FONT.render(
-            "{:.0f} %".format(RH * 100), True, config.BLACK
+            "{:.0f} %".format(RH), True, config.BLACK
         )
         T_label = config.FONT.render("{:.0f} °C".format(T), True, config.BLACK)
 

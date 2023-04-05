@@ -22,6 +22,7 @@ from PlantEd.gameobjects.bee import Bee, Hive
 from PlantEd.gameobjects.bug import Bug
 from PlantEd.gameobjects.level_card import Card
 from PlantEd.gameobjects.plant import Plant
+from PlantEd.utils.narrator import Narrator
 from PlantEd.gameobjects.shop import (
     Shop,
     Shop_Item,
@@ -367,6 +368,8 @@ class DefaultGameScene(object):
             gametime=self.gametime,
         )
 
+        self.narrator = Narrator(self.environment)
+
         growth_rates = GrowthRates("grams", 0, 0, 0, 0, 0, 0)
         self.ui = UI(
             scale=1,
@@ -589,8 +592,6 @@ class DefaultGameScene(object):
 
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
-            if e.type == KEYDOWN and e.key == K_o:
-                self.floating_shop.activate((500, 500))
             if e.type == KEYDOWN and e.key == K_k:
                 # self.ui.init_flowering_ui()
                 self.plant.organs[3].start_flowering()
@@ -656,6 +657,7 @@ class DefaultGameScene(object):
             # self.environment.handle_event(e)
             for entity in self.entities:
                 entity.handle_event(e)
+            self.narrator.handle_event(e)
             self.camera.handle_event(e)
 
     def check_game_end(self, days):
@@ -694,6 +696,7 @@ class DefaultGameScene(object):
         self.environment.update(dt)
         self.shop.update(dt)
         self.ui.update(dt)
+        self.narrator.update(dt)
 
         # self.skill_system.update(dt)
         self.plant.update(dt, self.model.get_photon_upper())
@@ -739,6 +742,7 @@ class DefaultGameScene(object):
         self.shop.draw(temp_surface)
 
         self.ui.draw(temp_surface)
+        self.narrator.draw(temp_surface)
         screen.blit(temp_surface, (0, self.camera.offset_y))
 
         screen.blit(temp_surface, (0, 0))
