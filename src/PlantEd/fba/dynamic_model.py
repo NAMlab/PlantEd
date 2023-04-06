@@ -153,7 +153,6 @@ class DynamicModel:
                 self.model, growth_percentages=new_growth_percentages
             )
             self.percentages = new_growth_percentages
-
         solution = self.model.optimize()
 
         # calc_rates 1flux/s
@@ -202,8 +201,9 @@ class DynamicModel:
         In_Concentration = water_concentration_at_temp[int(T + 2)]
         Out_Concentration = water_concentration_at_temp[int(T)]
         self.transpiration_factor = K * (
-            In_Concentration - Out_Concentration * RH
+            In_Concentration - Out_Concentration * RH/100
         )
+        print(K, In_Concentration, Out_Concentration, RH/100, self.transpiration_factor)
 
     def close_stomata(self):
         """

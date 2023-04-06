@@ -67,16 +67,6 @@ class Environment:
             for i in range(0, 21)
         ]
         self.animations = [Animation(rain_images, 10, (480, 0), running=False)]
-        self.star_pos_size = [
-            (
-                (
-                    random.randint(0, SCREEN_WIDTH),
-                    random.randint(0, SCREEN_HEIGHT / 3 * 2),
-                ),
-                random.randint(2, 5),
-            )
-            for i in range(0, 50)
-        ]
         self.shadow_map = None
 
         # fixed for spring currently
@@ -93,9 +83,6 @@ class Environment:
         self.simulated_weather = self.weather_simulator.simulate(
             start_temp, start_hum, start_precip
         )
-        for i in range(len(self.simulated_weather)):
-            if self.simulated_weather[i][2] > 0:
-                print(self.simulated_weather[i][2], self.simulated_weather[i][3])
 
         self.temperature = 0
         self.humidity = 0
@@ -107,17 +94,6 @@ class Environment:
         self.sun = assets.img("sun/sun.PNG", (256, 256))
         self.cloud = assets.img("clouds/cloud_0.PNG", (402, 230))
         self.cloud_dark = assets.img("clouds/cloud_dark_0.PNG", (402, 230))
-        """self.rain = ParticleSystem(50, spawn_box=Rect(SCREEN_WIDTH / 2-150, 100, 300, 30),
-                                    boundary_box=Rect(SCREEN_WIDTH/2-150,0,300,SCREEN_HEIGHT-250),
-                                    color=(0,0,100), apply_gravity=True, speed=[0, 180],
-                                    active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)"""
-        """self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH/2-110, 110,
-                                                      220, 20),
-                                   boundary_box=Rect(SCREEN_WIDTH/2-self.cloud.get_width()/2-80, 20,
-                                                     160,SCREEN_HEIGHT-250),
-                                size=8, color=config.BLUE, apply_gravity=False,
-                                   speed=[0, 150], spread=[0, 0], active=False, rectangle=True)"""
-
         self.nitrate = StillParticles(
             10,
             spawn_box=Rect(0, 950, 1920, 300),

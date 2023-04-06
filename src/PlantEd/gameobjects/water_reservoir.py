@@ -40,7 +40,6 @@ class Water_Grid:
         self.actual_drain_rate = 0  # sum of cell rates, calculated by model
         self.actual_drain_rate_cell = 0  # sum divided by (sum(drainage_grid())
 
-        self.grid[0, :] = self.max_water
     def update(self, dt):
         if self.raining > 0 and self.grid[0, 0] < self.max_water:
             self.grid[0, :] += self.raining * self.gametime.GAMESPEED * dt
