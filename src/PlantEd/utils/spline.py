@@ -12,8 +12,9 @@ from PlantEd.utils.gametime import GameTime
 
 
 class Cubic_Tree:
-    def __init__(self, branches):
+    def __init__(self, branches, camera):
         self.branches = branches
+        self.camera = camera
         self.branches[0].main = True
 
     def grow_main(self):
@@ -43,7 +44,7 @@ class Cubic_Tree:
 
     def handle_event(self, e):
         for branch in self.branches:
-            branch.handle_event(e)
+            branch.handle_event(e, self.camera.offset_y)
 
     def update(self, dt):
         for branch in self.branches:
@@ -166,9 +167,10 @@ class Cubic:
             self.new_curve = []
             self.move_offset = True
 
-    def handle_event(self, e):
+    def handle_event(self, e, offset_y):
+        pos = pygame.mouse.get_pos()
+        pos = (pos[0],pos[1]-offset_y)
         if self.move_offset:
-            pos = pygame.mouse.get_pos()
             point, min_dist, id = self.find_closest(pos)
             if min_dist <= 15:
                 if e.type == pygame.MOUSEBUTTONDOWN:
@@ -178,7 +180,6 @@ class Cubic:
                     self.id = id
                     self.drag = True
         if e.type == pygame.MOUSEMOTION and self.drag:
-            pos = pygame.mouse.get_pos()
             point, min_dist, self.id = self.find_closest(pos)
             if self.check_offset_bounds(self.id, pos):
                 self.points[self.id] = pos
@@ -192,18 +193,16 @@ class Cubic:
                 self.selected = False
             if self.selected:
                 pass
-                # Todo callback for shop selection
-        if e.type == KEYDOWN and e.key == K_SPACE:
-            print(self.points)
 
     def check_offset_bounds(self, id, pos):
         y_upper = self.get_upper(id)
         y_lower = self.get_lower(id)
         if y_upper:
-            if pos[1] < y_upper[1]:
+            print(pos[1], y_upper[1])
+            if pos[1] < y_upper[1]+10:
                 return False
         if y_lower:
-            if pos[1] > y_lower[1]:
+            if pos[1] > y_lower[1]-10:
                 return False
         else:
             if self.main:

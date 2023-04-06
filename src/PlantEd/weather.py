@@ -71,9 +71,9 @@ class Environment:
             (
                 (
                     random.randint(0, SCREEN_WIDTH),
-                    random.randint(0, SCREEN_HEIGHT / 2),
+                    random.randint(0, SCREEN_HEIGHT / 3 * 2),
                 ),
-                random.randint(0, 10),
+                random.randint(2, 5),
             )
             for i in range(0, 50)
         ]
@@ -187,8 +187,9 @@ class Environment:
         return map, resolution, max_shadow
 
     def draw_shadows(self, screen):
+        self.s.fill((0,0,0,0))
         if self.shadow_map is not None:
-            self.s.fill((0, 0, 0, 0))
+            #self.s.fill((0, 0, 0, 0))
 
             # draw polygon for each shadow
             # vs make polygon from all outer points
@@ -206,41 +207,22 @@ class Environment:
             screen.blit(self.s, (0, 0))
 
     def draw_background(self, screen):
+        self.s.fill((0, 0, 0, 0))
         sun_intensity = self.get_sun_intensity()
 
         if sun_intensity > 0:
             color = self.get_color(orange, blue, sun_intensity)
         else:
             color = self.get_color(orange, (0, 0, 0), abs(sun_intensity))
-
-            for pos in self.star_pos_size:
-                pygame.draw.circle(
-                    self.s,
-                    (255, 255, 255, abs(sun_intensity) * 128),
-                    pos[0],
-                    pos[1],
-                )
-                pygame.draw.circle(
-                    self.s,
-                    (255, 255, 255, abs(sun_intensity) * 180),
-                    pos[0],
-                    max(pos[1] - 5, 0),
-                )
         self.s.fill(color)
-
         day_time = self.get_day_time_t()
-        # self.sun_pos_spline.draw(s)
         if day_time > 0 and day_time < 1:
-            # sunpos = self.sun_pos_spline.get_point(day_time)
-
             offset_sunpos = (
                 self.sunpos[0] - self.sun.get_width() / 2,
                 self.sunpos[1] - self.sun.get_height() / 2,
             )
             self.s.blit(self.sun, offset_sunpos)
-
         screen.blit(self.s, (0, 0))
-
 
     def get_color(self, color0, color1, grad):
         return (
@@ -254,6 +236,7 @@ class Environment:
         self.nitrate.draw(screen)
         for animation in self.animations:
             animation.draw(screen)
+
 
     def update_weather(self):
         days, hours, minutes = self.get_day_time()

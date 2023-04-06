@@ -36,7 +36,7 @@ class Hive:
     def get_rect(self):
         return pygame.Rect(
             self.pos[0],
-            self.pos[1],
+            self.pos[1]+self.camera.offset_y,
             self.image.get_width(),
             self.image.get_height(),
         )

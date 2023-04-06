@@ -267,6 +267,7 @@ class UI:
             5,
             self.set_stomata_automation,
             self.hover.set_message,
+            border_w=2
         )
 
         self.presets = [preset for i in range(0, 3)]

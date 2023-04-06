@@ -10,6 +10,7 @@ import numpy as np
 
 from PlantEd import client as c
 from PlantEd import config
+from PlantEd.camera import Camera
 from PlantEd.client import Client, GrowthRates
 from PlantEd.data import assets
 from PlantEd.gameobjects.water_reservoir import Water_Grid
@@ -319,7 +320,7 @@ class Organ:
         self.percentage = percentage
 
     def update_growth_rate(self, growth_rate):
-        self.growth_rate = growth_rate * self.mass
+        self.growth_rate = growth_rate * 10
 
     def yellow_leaf(self, image, alpha):
         ghost_image = image.copy()
@@ -861,7 +862,7 @@ class Stem(Organ):
         self.flower = flower
         self.width = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
-        self.curve = Cubic_Tree([Cubic([[955, 900], [960, 820], [940, 750]])])
+        self.curve = Cubic_Tree([Cubic([[955, 900], [960, 820], [940, 750]])], plant.camera)
         self.gametime = GameTime.instance()
         self.timer = 0
         self.floating_shop = None
@@ -1107,7 +1108,7 @@ class Starch(Organ):
             self.mass += delta
 
     def update_growth_rate(self, growth_rate, plant_mass):
-        self.growth_rate = growth_rate * plant_mass
+        self.growth_rate = growth_rate *10
 
     def update_starch_max(self, max_pool):
         self.thresholds = [max_pool]

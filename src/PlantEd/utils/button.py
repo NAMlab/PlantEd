@@ -1464,13 +1464,14 @@ class Textbox:
 
 class ButtonArray:
     def __init__(
-        self, rect, amount, resolution, margin, callback, set_hover_message
+        self, rect, amount, resolution, margin, callback, set_hover_message, border_w=5
     ):
         self.toggle_buttons = []
         self.callback = callback
         self.set_hover_message = set_hover_message
         self.hours = 0
         self.color = config.RED
+        self.border_w = border_w
         self.label = config.BIG_FONT.render("Stomata:", True, config.BLACK)
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
 
@@ -1490,6 +1491,7 @@ class ButtonArray:
                     [],
                     font=config.FONT,
                     text="{}".format(i * resolution),
+                    border_w=border_w
                 )
             )
 

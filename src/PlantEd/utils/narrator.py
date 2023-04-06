@@ -25,6 +25,13 @@ class Narrator:
                                                 self.written_lines.queue_written_lines,
                                                 self.check_date, self.talking_times[i],
                                                 self.written_lines.get_line(i)))
+        #surrender.mp3
+        #warning.mp3
+        #end.mp3
+        #end_3_days.mp3
+        #seeds.mp3
+        #soil.mp3
+        #self.voicelines.append(VoiceLine())
 
     def check_date(self, condition_day):
         day, hour, minute = self.environment.get_day_time()
