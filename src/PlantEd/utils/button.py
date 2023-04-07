@@ -1464,7 +1464,7 @@ class Textbox:
 
 class ButtonArray:
     def __init__(
-        self, rect, amount, resolution, margin, callback, set_hover_message, border_w=5
+        self, rect, amount, resolution, margin, callback, set_hover_message, border_w=5, pressed=False
     ):
         self.toggle_buttons = []
         self.callback = callback
@@ -1491,6 +1491,7 @@ class ButtonArray:
                     [],
                     font=config.FONT,
                     text="{}".format(i * resolution),
+                    pressed=pressed,
                     border_w=border_w
                 )
             )

@@ -15,7 +15,7 @@ class Watering_can:
         pos,
         water_grid: Water_Grid = None,
         amount=None,
-        rate=3000000,
+        rate=30000,
         cost=1,
         active=False,
         callback=None,

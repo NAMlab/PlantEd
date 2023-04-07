@@ -194,7 +194,7 @@ class Server:
 
         water = Water(
             water_pool=self.model.water_pool,
-            max_water_pool=self.model.max_water_pool,
+            max_water_pool=self.model.maximum_water_pool,
         )
 
         answer = water.to_json()

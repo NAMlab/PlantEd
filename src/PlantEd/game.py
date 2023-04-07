@@ -320,12 +320,13 @@ class DefaultGameScene(object):
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
         self.log = Log()  # can be turned off
-        self.water_grid = Water_Grid(pos=(0, 900))
+
         # self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
         # self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
         # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
 
         self.model = DynamicModel(self.gametime, self.log)
+        self.water_grid = Water_Grid(self.model, pos=(0, 900))
 
         model = self.model
 
@@ -637,9 +638,9 @@ class DefaultGameScene(object):
             self.plant.organs[0].shadow_map = None
         # get root grid, water grid
         self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
-        self.water_grid.actual_drain_rate = (
-            self.client.get_actual_water_drain()
-        )
+        #self.water_grid.actual_drain_rate = (
+        #    self.client.get_actual_water_drain()
+        #)
         self.water_grid.update(dt)
         for snail in self.snails:
             snail.update(dt)
@@ -666,7 +667,6 @@ class DefaultGameScene(object):
             self.plant.organs[2].mass,
             self.plant.get_PLA(),
             max(self.environment.get_sun_intensity(), 0),
-            self.water_grid.max_drain_rate,
             self.plant.get_biomass(),
             self.environment.humidity,
             self.environment.temperature,

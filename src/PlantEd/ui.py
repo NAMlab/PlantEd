@@ -267,6 +267,7 @@ class UI:
             5,
             self.set_stomata_automation,
             self.hover.set_message,
+            pressed=True,
             border_w=2
         )
 
