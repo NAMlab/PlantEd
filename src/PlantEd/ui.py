@@ -22,6 +22,7 @@ from PlantEd.utils.button import (
 from PlantEd.utils.tool_tip import ToolTip, ToolTipManager
 from PlantEd.utils.particle import ParticleSystem, Inwards_Particle_System
 from pygame import Rect
+from PlantEd.utils.narrator import Narrator
 from PlantEd.utils.hover_message import Hover_Message
 
 # constants in dynamic model, beter in config? dont think so
@@ -54,6 +55,7 @@ class UI:
         self,
         scale: float,  # ToDo Float?
         plant: Plant,
+        narrator: Narrator,
         client: Client,
         growth_rates: GrowthRates,
         environment: Environment,
@@ -66,6 +68,7 @@ class UI:
         self.name = config.load_options()["name"]
         self.name_label = config.FONT.render(self.name, True, config.BLACK)
         self.plant = plant
+        self.narrator = narrator
         self.client = client
         self.growth_rates: GrowthRates = growth_rates
         self.environment = environment
@@ -75,7 +78,7 @@ class UI:
         self.camera = camera
         self.dev_mode = dev_mode
 
-        self.stomata_hours = [True for i in range(12)]
+        self.stomata_hours = [False for i in range(12)]
 
         self.danger_timer = 1
 
@@ -173,19 +176,6 @@ class UI:
         self.particle_systems.append(self.open_stomata_particle_out)
 
 
-        '''self.button_sprites.add(
-            ToggleButton(
-                260,
-                config.SCREEN_HEIGHT - 50,
-                64,
-                32,
-                [self.tool_tip_manager.toggle_activate],
-                config.FONT,
-                text="HINT",
-                pressed=True,
-            )
-        )
-'''
         self.button_sprites.add(
             Arrow_Button(
                 config.SCREEN_WIDTH / 2 - 100,
@@ -197,6 +187,20 @@ class UI:
                 border_w=3,
             )
         )
+
+        self.button_sprites.add(
+            ToggleButton(
+                80,
+                config.SCREEN_HEIGHT-100,
+                50,
+                30,
+                [self.narrator.toggle_mute],
+                config.FONT,
+                "mute",
+                border_w=3)
+        )
+
+
         self.button_sprites.add(
             Arrow_Button(
                 config.SCREEN_WIDTH / 2 - 100,
@@ -267,7 +271,6 @@ class UI:
             5,
             self.set_stomata_automation,
             self.hover.set_message,
-            pressed=True,
             border_w=2
         )
 
@@ -397,12 +400,6 @@ class UI:
         self.plant.stomata_open = False
         self.open_stomata_particle_in.deactivate()
         self.open_stomata_particle_out.deactivate()
-
-    def toggle_stomata(self):
-        if self.plant.stomata_open:
-            self.close_stomata()
-        else:
-            self.open_stomata()
 
     # ToDo unused code
     def toggle_starch_as_resource(self, percentage: float = 1):
@@ -1102,7 +1099,7 @@ class UI:
         width = 140
 
         water = self.client.get_water_pool()
-
+        print(water.water_pool, water.max_water_pool)
         water_percentage = water.water_pool / water.max_water_pool
         pygame.draw.rect(
             s,

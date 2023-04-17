@@ -1475,16 +1475,29 @@ class ButtonArray:
         self.label = config.BIG_FONT.render("Stomata:", True, config.BLACK)
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
 
+        set_all_width = 50
+
         self.rect = pygame.Rect(
             rect[0],
             rect[1],
-            (rect[2] + margin) * amount - margin,
+            (rect[2] + margin) * amount - margin + set_all_width + margin,
             rect[3] + 60,
         )
+
+        self.set_all_button = Button(
+            rect[0],
+            rect[1]+50,
+            set_all_width,30,
+            [self.toggle_all],
+            config.FONT,
+            "All",
+            hover_message="Activate/Deactivate all buttons",
+            border_w=border_w)
+
         for i in range(0, amount):
             self.toggle_buttons.append(
                 ToggleButton(
-                    rect[0] + i * (rect[2] + margin),
+                    rect[0] + i * (rect[2] + margin) + set_all_width + margin,
                     rect[1] + 50,
                     rect[2],
                     rect[3],
@@ -1503,6 +1516,7 @@ class ButtonArray:
         self.hours = hours
 
     def handle_event(self, e):
+        self.set_all_button.handle_event(e)
         if e.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(pygame.mouse.get_pos()):
                 for button in self.toggle_buttons:
@@ -1515,11 +1529,31 @@ class ButtonArray:
                     button.handle_event(e)
                 self.set_hover_message(self.hover_message)
 
+    def toggle_all(self):
+        print("all")
+        sum_true = 0
+        for bool in self.get_bool_list():
+            if bool:
+                sum_true += 1
+                print(sum_true)
+        if len(self.toggle_buttons)/2 > sum_true:
+            for button in self.toggle_buttons:
+                button.activate()
+            self.go_green()
+        else:
+            for button in self.toggle_buttons:
+                button.deactivate()
+            self.go_red()
+
     def get_bool_list(self):
         return [
             True if button.button_down else False
             for button in self.toggle_buttons
         ]
+
+    def press_all(self):
+        for button in self.toggle_buttons:
+            button.pressed = True
 
     def go_green(self):
         self.color = config.GREEN
@@ -1528,7 +1562,7 @@ class ButtonArray:
         self.color = config.RED
 
     def get_rect(self):
-        self.rect
+        return self.rect
 
     def draw(self, screen):
         # pygame.draw.rect(screen, config.WHITE_TRANSPARENT, self.rect)
@@ -1546,7 +1580,7 @@ class ButtonArray:
         pygame.draw.rect(
             screen,
             config.WHITE,
-            (self.rect[0], self.rect[1], 415, 40),
+            (self.rect[0], self.rect[1], 465, 40),
             border_radius=3,
         )
         if self.color == config.GREEN:
@@ -1555,5 +1589,6 @@ class ButtonArray:
             open_closed = config.BIG_FONT.render("Closed", True, self.color)
         screen.blit(self.label, (self.rect[0] + 5, self.rect[1] + 5))
         screen.blit(open_closed, (self.rect[0] + 120, self.rect[1] + 5))
+        self.set_all_button.draw(screen)
         for button in self.toggle_buttons:
             button.draw(screen)

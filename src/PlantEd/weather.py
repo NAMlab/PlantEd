@@ -10,7 +10,7 @@ from PlantEd.utils.particle import StillParticles
 from PlantEd.utils.animation import Animation
 import numpy as np
 import random
-import config
+from PlantEd import config
 from PlantEd.data import assets
 from PlantEd.utils.spline import Beziere
 
@@ -59,7 +59,6 @@ class Environment:
         self.client = client
         self.wind_force = (0, 0)
         self.wind_duration = 0  # at 60fps
-        self.raining = False
         rain_images = [
             assets.img(
                 "gif_rain/frame_{index}_delay-0.05s.png".format(index=i)
@@ -76,13 +75,33 @@ class Environment:
         ).open()
 
         df_weather_spring = pd.read_csv(weather_spring)
-        self.weather_simulator = WeatherSimulator(df_weather_spring, seed = 0.7360593324276558)
+        self.weather_simulator = WeatherSimulator(df_weather_spring)
         start_temp = df_weather_spring["temp 2m avg"][0]
         start_hum = df_weather_spring["humidity"][0]
         start_precip = df_weather_spring["precipitation"][0]
         self.simulated_weather = self.weather_simulator.simulate(
             start_temp, start_hum, start_precip
         )
+        '''import matplotlib.pyplot as plt
+
+        temp = [row[0] for row in self.simulated_weather]
+        hum = [row[1] for row in self.simulated_weather]
+        preci = [row[2] for row in self.simulated_weather]
+        time = [row[3] for row in self.simulated_weather]
+        # plt.plot(time, preci)
+        """plt.xticks(np.arange(30, step=1))
+        for i in(np.arange(30)):
+            plt.axvline(i)"""
+        fig, axs = plt.subplots(3)
+        fig.suptitle("spring")
+        axs[0].plot(time, temp)
+        axs[1].plot(time, hum)
+        axs[2].plot(time, preci)
+
+        # plt.plot(temp)
+        # plt.plot(preci)
+        plt.xlabel = "days"
+        plt.savefig("src/PlantEd/data/weather/" + "spring" + ".svg")'''
 
         self.temperature = 0
         self.humidity = 0
@@ -223,12 +242,10 @@ class Environment:
             hour,
         ) = self.simulated_weather[int(int(days) * 24 + int(hours))]
         if self.precipitation > 0:
-            self.raining = True
             self.animations[0].running = True
-            self.rain_rate = self.precipitation
-            self.water_grid.activate_rain(self.precipitation)
+            self.rain_rate = self.precipitation * 10
+            self.water_grid.activate_rain(self.rain_rate)
         else:
-            self.raining = False
             self.animations[0].running = False
             self.water_grid.deactivate_rain()
 
@@ -264,7 +281,7 @@ class Environment:
 
 class WeatherSimulator:
     def __init__(
-        self, data, temp_bins=50, hum_bins=50, precip_bins=100, seed=None
+        self, data, temp_bins=50, hum_bins=50, precip_bins=100, seed=15
     ):
         if not seed:
             seed = random.randint(0, 100)
@@ -342,12 +359,11 @@ class WeatherSimulator:
                 curr_temp = self.temp_min + curr_temp_bin * self.temp_step
                 curr_hum = curr_hum_bin * self.hum_step
                 curr_precip = curr_precip_bin * self.precip_step
-
                 simulated_hours.append(
                     [
                         int(curr_temp),
                         int(curr_hum),
-                        int(curr_precip),
+                        curr_precip,
                         day + (hour / 24),
                     ]
                 )

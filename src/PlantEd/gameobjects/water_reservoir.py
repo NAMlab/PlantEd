@@ -11,9 +11,9 @@ DRAIN_DEFAULT = 0.005  # *3600/240 to adjust to hourly
 
 # rain should be much more than consumption
 RAIN_RATE = 8
-TRICKLE_AMOUNT = 0.04
+TRICKLE_AMOUNT = 0.001
 
-MAX_DRAIN_CELL = 1
+MAX_DRAIN_CELL = 100
 
 
 # falling down over time, into base water level -> lowest line of the grid
@@ -36,14 +36,14 @@ class Water_Grid:
         self.gametime = GameTime.instance()
 
     def update(self, dt):
-        if self.raining > 0 and self.grid[0, 0] < self.max_water:
-            self.grid[0, :] += self.raining * self.gametime.GAMESPEED * dt
+        if self.raining > 0:
+            self.water_grid[0, :] += self.raining * self.gametime.GAMESPEED * dt
+            # self.water_grid[0, 0] < self.max_water_cell
         self.trickle(dt)
 
         #self.set_max_drain_rate()
         self.drain_grid(dt)
 
-        # print(self.water_pool_delta, self.water_pool)
         for reservoir in self.reservoirs:
             reservoir.update(dt)
         for base_water in self.base_waters:
@@ -55,6 +55,7 @@ class Water_Grid:
     def drain_grid(self, dt):
         # drain water from plant
         water_neded, transpiration = self.model.get_water_needed()
+        transpiration *= 10
         # if not enough water in plant_pool
         if self.model.water_pool - (water_neded + transpiration) < 0:
             # kill water intake
@@ -68,38 +69,40 @@ class Water_Grid:
             self.root_grid, self.water_grid
         )
 
-        print("AVAILABLEWater: ",available_water_grid, "ROTT: ", self.root_grid, "WATER: ", self.water_grid, "SUM: ", available_water_grid.sum())
-
         if self.model.water_pool < self.model.maximum_water_pool:
             # drain needed
             delta_water_pool = (self.model.maximum_water_pool - self.model.water_pool)
-            if available_water_grid.sum() > delta_water_pool:
-                tries = 10
+            tries = 10
+            while delta_water_pool > 0:
+                # ensure its not looping forever
+                tries -= 1
+                if tries <= 0:
+                    break
                 for (x, y), value in np.ndenumerate(available_water_grid):
-                    tries -= 1
-                    if tries <= 0:
-                        break
-                    # drainage per cell
-                    delta = (
-                            MAX_DRAIN_CELL
-                            * self.gametime.GAMESPEED
-                            * dt
-                    )
-                    # subtract from delta_water_pool preemtively
-                    delta_water_pool -= delta
-                    # check if was possible, then do so
-                    if self.water_grid[x, y] - delta >= 0:
-                        self.water_grid[x, y] -= delta
-                    else:
-                        # if there is not enough to drain, add it back to amount
-                        delta_water_pool += delta - self.water_grid[x, y]
-                        self.water_grid[x, y] = 0
-                self.model.water_pool = self.model.maximum_water_pool
+                    if available_water_grid[x, y] > 0:
+                        # drainage per cell
+
+                        delta = (
+                                MAX_DRAIN_CELL
+                                * self.gametime.GAMESPEED
+                                * dt
+                        )
+                        # subtract from delta_water_pool preemtively
+                        delta_water_pool -= delta
+                        # check if was possible, then do so
+                        if self.water_grid[x, y] - delta >= 0:
+                            self.water_grid[x, y] -= delta
+                        else:
+                            # if there is not enough to drain, add it back to amount
+                            delta_water_pool += delta - self.water_grid[x, y]
+                            self.water_grid[x, y] = 0
+
+                self.model.water_pool = self.model.maximum_water_pool - delta_water_pool
+            self.model.water_pool = self.model.maximum_water_pool if self.model.water_pool >= self.model.maximum_water_pool else self.model.water_pool
 
     def pour(self, rate, dt, pos):
         if not self.water_grid[0, int(pos[0] / 100)] > self.max_water_cell:
             self.water_grid[0, int(pos[0] / 100)] += rate * dt
-        # print(self.grid[0,int(pos[0]/100)])
 
     def add_reservoir(self, reservoir):
         self.reservoirs.append(reservoir)
@@ -119,7 +122,6 @@ class Water_Grid:
     def trickle(self, dt):
         for i in reversed(range(1, self.water_grid.shape[0])):
             for j in range(0, self.water_grid.shape[1]):
-                # print(i, i-1, j, "Current_Cell: ", self.grid[i, j], "Upper_CELL:", self.grid[i -1, j])
 
                 upper_cell = self.water_grid[i - 1, j]
                 if upper_cell > 0:
@@ -140,8 +142,6 @@ class Water_Grid:
                     else:
                         self.water_grid[i - 1, j] -= adjusted_trickle
                     self.water_grid[i, j] += adjusted_trickle
-        # Todo maybe shitty to just delete it
-        # self.grid[-1,:] = 0
 
     def print_grid(self):
         print(self.water_grid)
@@ -155,7 +155,6 @@ class Water_Grid:
                 cell = self.water_grid[i, j]
 
                 if cell > 20:
-                    # Todo make better loop, to draw at 0
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]
                     pygame.draw.circle(

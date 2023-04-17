@@ -5,7 +5,7 @@ import math
 import json
 
 from PlantEd import data
-from data import assets
+from PlantEd.data import assets
 import os
 
 # this file is for configurations, options, rates, gamespeed

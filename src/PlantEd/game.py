@@ -50,13 +50,7 @@ true_res = (
 screen = pygame.display.set_mode(
     true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16
 )
-# pygame.display.toggle_fullscreen()
-# print(pygame.display.list_modes(depth=0, flags=pygame.FULLSCREEN, display=0))
-# screen = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-# screen_high = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.DOUBLEBUF)
-tmp_screen = pygame.display.set_mode(
-    true_res, pygame.FULLSCREEN | pygame.SRCALPHA
-)
+
 temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 # screen_high = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.SRCALPHA)
 GROWTH = 24
@@ -258,7 +252,7 @@ class OptionsScene:
                     self.manager.go_to(TitleScene(self.manager))
             self.music_slider.handle_event(e)
             self.effect_slider.handle_event(e)
-            self.upload_score_button.handle_event(e)
+            #self.upload_score_button.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
             self.textbox.handle_event(e)
@@ -375,6 +369,7 @@ class DefaultGameScene(object):
         self.ui = UI(
             scale=1,
             plant=self.plant,
+            narrator=self.narrator,
             client=self.client,
             environment=self.environment,
             camera=self.camera,
@@ -498,6 +493,16 @@ class DefaultGameScene(object):
             )
         )
 
+        self.shop.shop_items.append(
+            Shop_Item(
+                assets.img("flowering.PNG", (64, 64)),
+                self.plant.organs[3].start_flowering,
+                condition_not_met_message="Level up any organ to get more green thumbs",
+                post_hover_message=self.ui.hover.set_message,
+                message="Start seed production for pollinated flowers",
+            )
+        )
+
         self.shop.add_shop_item(["watering", "blue_grain", "spraycan"])
 
         self.floating_shop = FloatingShop(self.camera, (0, 0))
@@ -598,7 +603,7 @@ class DefaultGameScene(object):
                 if self.log:
                     self.log.close_file()
                     self.log.close_model_file()
-                scoring.upload_score(self.ui.name, self.gametime.get_time())
+                scoring.upload_score(self.ui.name, self.plant.organs[3].get_mass())
                 self.manager.go_to(CustomScene())
             self.ui.handle_event(e)
             self.shop.handle_event(e)
@@ -621,7 +626,9 @@ class DefaultGameScene(object):
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
         hour = day / 24
+        days = int(ticks / day)
         hours = (ticks % day) / hour
+        self.check_game_end(days)
         if 8 < hours < 20:
             # print(hours)
             shadow_map, resolution, max_shadow = self.environment.calc_shadowmap(
@@ -865,9 +872,10 @@ class CustomScene(object):
         self.winners = sorted(self.winners, key=lambda x: x["score"])
 
         for winner in self.winners:
-            score = self.get_day_time(winner["score"])
-            score = config.BIGGER_FONT.render(score, True, (255, 255, 255))
-            self.scores.append(score)
+            print(winner["score"])
+            score = winner["score"]
+            score_label = config.BIGGER_FONT.render("Seed Mass {} gramms".format(score), True, (255, 255, 255))
+            self.scores.append(score_label)
             name = config.BIGGER_FONT.render(
                 winner["name"], True, (255, 255, 255)
             )

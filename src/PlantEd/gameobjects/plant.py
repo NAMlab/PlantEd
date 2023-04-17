@@ -74,7 +74,7 @@ class Plant:
         self.y = pos[1]
         self.client = client
         self.upgrade_points = upgrade_points
-        self.stomata_open = True
+        self.stomata_open = False
         self.use_starch = True
         self.camera = camera
         self.water_grid = water_grid
@@ -125,7 +125,7 @@ class Plant:
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
             plant=self,
-            mass=0.8,
+            mass=3,
             active=True,
             client=client,
         )
@@ -320,7 +320,7 @@ class Organ:
         self.percentage = percentage
 
     def update_growth_rate(self, growth_rate):
-        self.growth_rate = growth_rate * 10
+        self.growth_rate = growth_rate * 2
 
     def yellow_leaf(self, image, alpha):
         ghost_image = image.copy()
@@ -1108,7 +1108,7 @@ class Starch(Organ):
             self.mass += delta
 
     def update_growth_rate(self, growth_rate, plant_mass):
-        self.growth_rate = growth_rate *10
+        self.growth_rate = growth_rate * 2
 
     def update_starch_max(self, max_pool):
         self.thresholds = [max_pool]
@@ -1197,10 +1197,12 @@ class Flower(Organ):
         # get leaf age, if too old -> stop growth, then die later
         growable_flowers = []
         for flower in self.flowers:
-            id = int(
-                flower["mass"]
-                / flower["maximum_mass"]
-                * (len(self.images) - 1)
+            id = min(
+                int(
+                    flower["mass"]
+                    / flower["maximum_mass"]
+                    * (len(self.images) - 1)),
+                len(self.images)-1
             )
             flower["image"] = self.images[id]
             if flower["mass"] < flower["maximum_mass"]:
@@ -1267,7 +1269,7 @@ class Flower(Organ):
         # add all seed producing flowrs
         if self.flowering:
             for flower in self.flowers:
-                if flower["pollinated"]:
+                if flower["pollinated"] and flower["seed_mass"] < flower["maximum_seed_mass"]:
                     flowering_flowers.append(flower)
 
         return flowering_flowers

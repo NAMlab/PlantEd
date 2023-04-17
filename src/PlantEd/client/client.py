@@ -83,7 +83,7 @@ class Client:
         await self.websocket.send(message)
 
     def close_stomata(self):
-        self.loop.run_until_complete(self.__open_stomata())
+        self.loop.run_until_complete(self.__close_stomata())
 
     async def __close_stomata(self):
         logger.debug("Sending request for close_stomata")

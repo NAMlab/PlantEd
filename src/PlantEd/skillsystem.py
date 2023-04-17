@@ -1,6 +1,6 @@
 import pygame
 import config
-from PlantEd.data import assets
+import assets
 from PlantEd.utils.button import Button
 
 

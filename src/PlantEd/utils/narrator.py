@@ -13,6 +13,7 @@ class Narrator:
         self.active = True
         self.volume = 100
         self.queue = []
+        self.muted = False
         self.channel = pygame.mixer.Channel(1)
         self.channel.set_endevent(END_LINE)
         self.written_lines = Written_Lines()
@@ -39,6 +40,20 @@ class Narrator:
             return True
         else:
             return False
+
+    def toggle_mute(self):
+        if self.muted:
+            self.unmute()
+        else:
+            self.mute()
+
+    def mute(self):
+        self.muted = True
+        self.channel.set_volume(0)
+
+    def unmute(self):
+        self.muted = False
+        self.channel.set_volume(self.volume)
 
     def update(self, dt):
         if len(self.queue) > 0:

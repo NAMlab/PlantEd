@@ -1,3 +1,5 @@
+import math
+
 from PlantEd import config
 from PlantEd.utils.animation import Animation
 import random
@@ -143,7 +145,7 @@ class Bee:
         self.set_random_direction()
 
     def update(self, dt):
-        if self.lifetime <= 0 and not self.return_home:
+        if self.lifetime <= 0 and not self.return_home and not self.pollinating:
             self.set_target_home()
         else:
             self.lifetime -= dt
@@ -153,7 +155,7 @@ class Bee:
                 self.timer = 0
                 self.pollinating = False
                 self.target = None
-                self.set_random_direction()
+                self.set_target_home()
                 self.speed = 3
                 self.callback(self.target_flower_id)
                 self.target_flower_id = None
@@ -168,13 +170,14 @@ class Bee:
             # print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
             # if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
-                self.set_random_direction()
-                self.speed = 5
-                assets.sfx(
-                    "bug_click_sound/bug_squeek_{}.mp3".format(
-                        random.randint(0, 2)
-                    )
-                ).play()
+                if not self.target:
+                    self.set_random_direction()
+                    self.speed = 4
+                    assets.sfx(
+                        "bug_click_sound/bug_squeek_{}.mp3".format(
+                            random.randint(0, 2)
+                        )
+                    ).play()
 
     def set_random_direction(self):
         self.dir = (random.random() - 0.5, random.random() - 0.5)
@@ -201,46 +204,38 @@ class Bee:
         )
 
         if self.target is not None:
-            if (
-                abs(
-                    (self.target[0] - self.pos[0])
-                    + (self.target[1] - self.pos[1])
-                )
-                < 100
-                and not self.pollinating
-            ):
+            dist = self.get_dist_abs(self.target)
+            if dist < 100:
                 self.speed = 2
-                if (
-                    abs(
-                        (self.target[0] - self.pos[0])
-                        + (self.target[1] - self.pos[1])
-                    )
-                    < 5
-                ):
-                    self.start_pollinating()
-                    # self.callback()
+                if dist < 40:
+                    self.speed = 1
+                    if dist < 10 and not self.return_home:
+                        self.start_pollinating()
+                        self.speed = 0
+
+    def get_dist_abs(self, target):
+        return math.sqrt(
+            ((target[0] - self.pos[0])*(target[0] - self.pos[0]) +
+             (target[1] - self.pos[1])*(target[1] - self.pos[1])))
 
     def target_flower(self, flower_pos, target_flower_id, speed):
         self.target_flower_id = target_flower_id
         self.speed = speed
-        x_dist = flower_pos[0] - self.pos[0]
-        y_dist = flower_pos[1] - self.pos[1]
-        max_distance = max(x_dist, y_dist)
-        self.dir = (
-            x_dist / abs(max_distance),
-            -1 * y_dist / abs(max_distance),
-        )
         self.target = flower_pos
+        self.get_tagret_dir(flower_pos)
+
+    def get_tagret_dir(self, target):
+        x_dist = target[0] - self.pos[0]
+        y_dist = target[1] - self.pos[1]
+        max_distance = max(abs(x_dist), abs(y_dist))
+        self.dir = (
+            x_dist / max_distance,
+            -1 * y_dist / max_distance,
+        )
 
     def set_target_home(self):
         self.return_home = True
-        x_dist = self.hive_pos[0] - self.pos[0]
-        y_dist = self.hive_pos[1] - self.pos[1]
-        max_distance = max(x_dist, y_dist)
-        self.dir = (
-            x_dist / abs(max_distance),
-            -1 * y_dist / abs(max_distance),
-        )
+        self.get_tagret_dir(self.hive_pos)
 
     def check_boundaries(self):
         if self.pos[0] < self.bounding_rect[0]:
@@ -261,10 +256,14 @@ class Bee:
                 int(self.pos[1] - self.rect[3] / 2),
             ),
         )
-        if self.target is not None:
-            pygame.draw.line(
+        #if self.target is not None:
+        '''pygame.draw.line(
                 screen, config.WHITE, self.pos, self.target, width=3
-            )
+            )'''
+
+        '''pos_dir_speed = config.FONT.render("POS: ({:.2f} {:.2f}) DIR:  ({:.2f} {:.2f})  SPEED: {:.2f}".format(self.pos[0], self.pos[1], self.dir[0], self.dir[1], self.speed),True, config.BLACK)
+            pygame.draw.rect(screen, config.WHITE, (self.pos[0], self.pos[1], pos_dir_speed.get_width(), pos_dir_speed.get_height()))
+            screen.blit(pos_dir_speed, self.pos)'''
 
         if self.pollinating:
             pygame.draw.rect(

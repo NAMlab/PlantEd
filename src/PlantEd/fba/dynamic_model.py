@@ -85,7 +85,10 @@ water_concentration_at_temp = [
 
 logger = logging.getLogger(__name__)
 
-script_dir = Path(__file__).parent.absolute()
+#script_dir = Path(__file__).parent.absolute()
+fileDir = Path(__file__)
+script_dir = fileDir.parent
+print(script_dir)
 
 
 # interface and state holder of model --> dynamic wow
@@ -96,6 +99,9 @@ class DynamicModel:
         water_grid=None,
         log=None,
         plant_mass=None,
+        # normal
+        #model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
+        # build
         model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
     ):
         self.model = model.copy()

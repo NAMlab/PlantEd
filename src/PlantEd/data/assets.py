@@ -7,6 +7,7 @@ import pygame
 
 fileDir = Path(__file__)
 data_dir = fileDir.parent
+print(fileDir, data_dir)
 _image_library = {}
 _sound_library = {}
 _music_library = {}
