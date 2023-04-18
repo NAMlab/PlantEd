@@ -1,6 +1,8 @@
 import numpy as np
 import math
 import pygame
+
+from PlantEd.client import Water, Client
 from PlantEd.utils.gametime import GameTime
 import random
 
@@ -18,9 +20,10 @@ MAX_DRAIN_CELL = 100
 
 # falling down over time, into base water level -> lowest line of the grid
 class Water_Grid:
-    def __init__(self, model, pos=(0, 900), grid_size=(6, 20), max_water_cell=1000000):
+    def __init__(
+        self, pos=(0, 900), grid_size=(6, 20), max_water_cell=1000000
+    ):
         self.pos = pos
-        self.model = model
 
         self.water_grid = np.zeros(grid_size)
         self.available_water_grid = np.zeros(grid_size)
@@ -35,14 +38,16 @@ class Water_Grid:
         self.grid_screen = pygame.Surface((1920, 1080), pygame.SRCALPHA)
         self.gametime = GameTime.instance()
 
-    def update(self, dt):
+    def update(self, dt, water: Water, client: Client):
         if self.raining > 0:
-            self.water_grid[0, :] += self.raining * self.gametime.GAMESPEED * dt
+            self.water_grid[0, :] += (
+                self.raining * self.gametime.GAMESPEED * dt
+            )
             # self.water_grid[0, 0] < self.max_water_cell
         self.trickle(dt)
 
-        #self.set_max_drain_rate()
-        self.drain_grid(dt)
+        # self.set_max_drain_rate()
+        self.drain_grid(dt, water=water, client=client)
 
         for reservoir in self.reservoirs:
             reservoir.update(dt)
@@ -52,26 +57,27 @@ class Water_Grid:
     def set_root_grid(self, root_grid):
         self.root_grid = root_grid
 
-    def drain_grid(self, dt):
+    def drain_grid(self, dt, water: Water, client: Client):
         # drain water from plant
-        water_neded, transpiration = self.model.get_water_needed()
+        water_neded = water.water_intake
+        transpiration = water.transpiration
+
         transpiration *= 10
         # if not enough water in plant_pool
-        if self.model.water_pool - (water_neded + transpiration) < 0:
+        if water.water_pool - (water_neded + transpiration) < 0:
             # kill water intake
-            self.model.stop_water_intake()
+
+            client.stop_water_intake()
         else:
             # take water from pool and set bounds to max
-            self.model.water_pool -= (water_neded + transpiration)
-            self.model.enable_water_intake()
+            water.water_pool -= water_neded + transpiration
+            client.enable_water_intake()
         # calculate new plant pool intake
-        available_water_grid = np.multiply(
-            self.root_grid, self.water_grid
-        )
+        available_water_grid = np.multiply(self.root_grid, self.water_grid)
 
-        if self.model.water_pool < self.model.maximum_water_pool:
+        if water.water_pool < water.max_water_pool:
             # drain needed
-            delta_water_pool = (self.model.maximum_water_pool - self.model.water_pool)
+            delta_water_pool = water.max_water_pool - water.water_pool
             tries = 10
             while delta_water_pool > 0:
                 # ensure its not looping forever
@@ -82,11 +88,7 @@ class Water_Grid:
                     if available_water_grid[x, y] > 0:
                         # drainage per cell
 
-                        delta = (
-                                MAX_DRAIN_CELL
-                                * self.gametime.GAMESPEED
-                                * dt
-                        )
+                        delta = MAX_DRAIN_CELL * self.gametime.GAMESPEED * dt
                         # subtract from delta_water_pool preemtively
                         delta_water_pool -= delta
                         # check if was possible, then do so
@@ -97,8 +99,12 @@ class Water_Grid:
                             delta_water_pool += delta - self.water_grid[x, y]
                             self.water_grid[x, y] = 0
 
-                self.model.water_pool = self.model.maximum_water_pool - delta_water_pool
-            self.model.water_pool = self.model.maximum_water_pool if self.model.water_pool >= self.model.maximum_water_pool else self.model.water_pool
+                water.water_pool = water.max_water_pool - delta_water_pool
+
+            if water.water_pool >= water.max_water_pool:
+                water.water_pool = water.max_water_pool
+
+        client.set_water_pool(water=water)
 
     def pour(self, rate, dt, pos):
         if not self.water_grid[0, int(pos[0] / 100)] > self.max_water_cell:
@@ -122,7 +128,6 @@ class Water_Grid:
     def trickle(self, dt):
         for i in reversed(range(1, self.water_grid.shape[0])):
             for j in range(0, self.water_grid.shape[1]):
-
                 upper_cell = self.water_grid[i - 1, j]
                 if upper_cell > 0:
                     adjusted_trickle = (
@@ -135,7 +140,9 @@ class Water_Grid:
                         * dt
                     )
                     # check if zero in upper cell
-                    delta_trickle = self.water_grid[i - 1, j] - adjusted_trickle
+                    delta_trickle = (
+                        self.water_grid[i - 1, j] - adjusted_trickle
+                    )
                     if delta_trickle <= 0:
                         self.water_grid[i - 1, j] = 0
                         adjusted_trickle = adjusted_trickle - delta_trickle

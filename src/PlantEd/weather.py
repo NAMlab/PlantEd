@@ -141,7 +141,9 @@ class Environment:
             self.sunpos = self.sun_pos_spline[(int(day_time * 10000) - 1)]
             self.plant.organs[1].sunpos = self.sunpos
 
-    def calc_shadowmap(self, leaves, sun_dir=(0.5, 1), resolution=10, max_shadow=5):
+    def calc_shadowmap(
+        self, leaves, sun_dir=(0.5, 1), resolution=10, max_shadow=5
+    ):
         width = config.SCREEN_WIDTH
         height = config.SCREEN_HEIGHT
 
@@ -176,15 +178,17 @@ class Environment:
                     ):
                         # print(bottom_right,
                         # bottom_left, i * resolution, j * resolution)
-                        map[i, j] += 1 if map[i, j] < max_shadow else max_shadow
+                        map[i, j] += (
+                            1 if map[i, j] < max_shadow else max_shadow
+                        )
 
         self.shadow_map = map
         return map, resolution, max_shadow
 
     def draw_shadows(self, screen):
-        self.s.fill((0,0,0,0))
+        self.s.fill((0, 0, 0, 0))
         if self.shadow_map is not None:
-            #self.s.fill((0, 0, 0, 0))
+            # self.s.fill((0, 0, 0, 0))
 
             # draw polygon for each shadow
             # vs make polygon from all outer points
@@ -231,7 +235,6 @@ class Environment:
         self.nitrate.draw(screen)
         for animation in self.animations:
             animation.draw(screen)
-
 
     def update_weather(self):
         days, hours, minutes = self.get_day_time()

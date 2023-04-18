@@ -180,7 +180,6 @@ class UI:
         self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
 
-
         self.button_sprites.add(
             Arrow_Button(
                 config.SCREEN_WIDTH / 2 - 100,
@@ -196,15 +195,15 @@ class UI:
         self.button_sprites.add(
             ToggleButton(
                 80,
-                config.SCREEN_HEIGHT-100,
+                config.SCREEN_HEIGHT - 100,
                 50,
                 30,
                 [self.narrator.toggle_mute],
                 config.FONT,
                 "mute",
-                border_w=3)
+                border_w=3,
+            )
         )
-
 
         self.button_sprites.add(
             Arrow_Button(
@@ -276,7 +275,7 @@ class UI:
             5,
             self.set_stomata_automation,
             self.hover.set_message,
-            border_w=2
+            border_w=2,
         )
 
         self.presets = [preset for i in range(0, 3)]
@@ -284,7 +283,7 @@ class UI:
         # self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
-        #self.tool_tip_manager.deactivate_tooltipps()
+        # self.tool_tip_manager.deactivate_tooltipps()
         self.gametime.forward()
 
     def handle_event(self, e: pygame.event.Event):
@@ -296,7 +295,7 @@ class UI:
             button.handle_event(e)
         for slider in self.sliders:
             slider.handle_event(e)
-        #for tips in self.tool_tip_manager.tool_tips:
+        # for tips in self.tool_tip_manager.tool_tips:
         #    tips.handle_event(e)
 
     def update(self, dt):
@@ -316,7 +315,7 @@ class UI:
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
-        #self.tool_tip_manager.update()
+        # self.tool_tip_manager.update()
         for element in self.floating_elements:
             element.update(dt)
         for animation in self.animations:
@@ -362,7 +361,7 @@ class UI:
             screen.blit(animation.image, animation.pos)
         for system in self.particle_systems:
             system.draw(screen)
-        #self.tool_tip_manager.draw(screen)
+        # self.tool_tip_manager.draw(screen)
 
         # draw danger mode
         if self.danger_timer < 0.5:
@@ -1106,7 +1105,8 @@ class UI:
         # Is updated every second via Growth event.
         water = self.server_plant.water
 
-        water_percentage = water.water_pool / water.max_water_pool
+        water_percentage = self.server_plant.water.fill_percentage
+
         pygame.draw.rect(
             s,
             config.WHITE_TRANSPARENT,

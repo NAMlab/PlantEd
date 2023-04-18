@@ -9,7 +9,7 @@ from pygame.surface import Surface
 
 fileDir = Path(__file__)
 data_dir = fileDir.parent
-_image_library: dict[Tuple[str, Optional[Tuple[int,int]]],Surface] = {}
+_image_library: dict[Tuple[str, Optional[Tuple[int, int]]], Surface] = {}
 _sound_library = {}
 _music_library = {}
 
@@ -28,19 +28,16 @@ screen = pygame.display.set_mode(
 )
 
 
-def img(path, size: Optional[Tuple[int,int]] = None):
-
+def img(path, size: Optional[Tuple[int, int]] = None):
     # print(f"path: {path} scale: {size}")
 
     path = data_dir / "assets" / path
     global _image_library
-    image = _image_library.get((path,size))
-
+    image = _image_library.get((path, size))
 
     # scaled image was already loaded
     if image is not None:
         return image.copy()
-
 
     # image wasn't loaded => load unscaled version
     image = pygame.image.load(path).convert_alpha()

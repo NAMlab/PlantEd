@@ -172,7 +172,9 @@ class Plant:
         self.organs[1].update_growth_rate(growth_rates.stem_rate)
         self.organs[2].update_growth_rate(growth_rates.root_rate)
 
-        self.organ_starch.update_growth_rate(growth_rates.starch_rate, self.get_biomass())
+        self.organ_starch.update_growth_rate(
+            growth_rates.starch_rate, self.get_biomass()
+        )
         self.organ_starch.starch_intake = growth_rates.starch_intake
         self.organs[3].update_growth_rate(growth_rates.seed_rate)
 
@@ -191,9 +193,7 @@ class Plant:
     # Projected Leaf Area (PLA)
     def get_PLA(self):
         # 0.03152043208186226 as a factor to get are from dry mass
-        return (
-            self.organs[0].get_pla()
-        )  # m^2
+        return self.organs[0].get_pla()  # m^2
 
     def grow(self, dt):
         for organ in self.organs:
@@ -488,16 +488,22 @@ class Leaf(Organ):
             return None
 
     def get_pla(self):
-        return(
+        return (
             (self.mass + self.base_mass)
-            * 0.03152043208186226 * self.get_shadowscore()
+            * 0.03152043208186226
+            * self.get_shadowscore()
             if len(self.leaves) > 0
             else 0
         )
 
     def get_shadowscore(self):
         # shadow scores are 0 for no shadow to 1 for full shadow. 1 - to get a factor
-        return (sum([1-leaf["shadow_score"] for leaf in self.leaves])/len(self.leaves) if len(self.leaves) > 0 else 0)
+        return (
+            sum([1 - leaf["shadow_score"] for leaf in self.leaves])
+            / len(self.leaves)
+            if len(self.leaves) > 0
+            else 0
+        )
 
     def grow(self, dt):
         if self.growth_rate <= 0:
@@ -571,7 +577,7 @@ class Leaf(Organ):
             base_image_id=image_id,
         )
 
-        #self.client.create_leaf(client_leaf)
+        # self.client.create_leaf(client_leaf)
         self.update_leaf_image(leaf, init=True)
         self.particle_systems.append(
             ParticleSystem(
@@ -611,11 +617,17 @@ class Leaf(Organ):
         # apply shadow penalty to leaves
         if self.shadow_map is not None:
             for leaf in self.leaves:
-                x = int((leaf["x"] - leaf["offset_x"]) / self.shadow_resolution)
-                y = int((leaf["y"] - leaf["offset_y"]) / self.shadow_resolution)
+                x = int(
+                    (leaf["x"] - leaf["offset_x"]) / self.shadow_resolution
+                )
+                y = int(
+                    (leaf["y"] - leaf["offset_y"]) / self.shadow_resolution
+                )
 
                 width = int(leaf["image"].get_width() / self.shadow_resolution)
-                height = int(leaf["image"].get_height() / self.shadow_resolution)
+                height = int(
+                    leaf["image"].get_height() / self.shadow_resolution
+                )
 
                 # rect = pygame.Rect(x,y,width,height)
 
@@ -648,8 +660,6 @@ class Leaf(Organ):
                 self.particle_systems[i].activate()
             else:
                 self.particle_systems[i].deactivate()
-
-
 
     def update_image_size(self, factor=7, base=80):
         for leaf in self.leaves:
@@ -862,7 +872,9 @@ class Stem(Organ):
         self.flower = flower
         self.width = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
-        self.curve = Cubic_Tree([Cubic([[955, 900], [960, 820], [940, 750]])], plant.camera)
+        self.curve = Cubic_Tree(
+            [Cubic([[955, 900], [960, 820], [940, 750]])], plant.camera
+        )
         self.gametime = GameTime.instance()
         self.timer = 0
         self.floating_shop = None
@@ -1201,8 +1213,9 @@ class Flower(Organ):
                 int(
                     flower["mass"]
                     / flower["maximum_mass"]
-                    * (len(self.images) - 1)),
-                len(self.images)-1
+                    * (len(self.images) - 1)
+                ),
+                len(self.images) - 1,
             )
             flower["image"] = self.images[id]
             if flower["mass"] < flower["maximum_mass"]:
@@ -1211,7 +1224,10 @@ class Flower(Organ):
 
         if self.flowering:
             for flower in self.flowers:
-                if flower["pollinated"] and flower["seed_mass"] < flower["maximum_seed_mass"]:
+                if (
+                    flower["pollinated"]
+                    and flower["seed_mass"] < flower["maximum_seed_mass"]
+                ):
                     growable_flowers.append(flower)
 
         growth_per_flower = (
@@ -1269,7 +1285,10 @@ class Flower(Organ):
         # add all seed producing flowrs
         if self.flowering:
             for flower in self.flowers:
-                if flower["pollinated"] and flower["seed_mass"] < flower["maximum_seed_mass"]:
+                if (
+                    flower["pollinated"]
+                    and flower["seed_mass"] < flower["maximum_seed_mass"]
+                ):
                     flowering_flowers.append(flower)
 
         return flowering_flowers
@@ -1279,16 +1298,16 @@ class Flower(Organ):
         for flower in self.flowers:
             self.pop_seed_particles.append(
                 ParticleSystem(
-                    max_particles = (int(flower["mass"])),
-                    spawn_box = (flower["x"],flower["y"],0,0),
-                    lifetime = 10,
-                    color = config.WHITE,
-                    apply_gravity = 4,
-                    speed = [(random.random()-0.5)*20, -70],
-                    spread = [50,10],
-                    active = True,
-                    once = True,
-                    )
+                    max_particles=(int(flower["mass"])),
+                    spawn_box=(flower["x"], flower["y"], 0, 0),
+                    lifetime=10,
+                    color=config.WHITE,
+                    apply_gravity=4,
+                    speed=[(random.random() - 0.5) * 20, -70],
+                    spread=[50, 10],
+                    active=True,
+                    once=True,
+                )
             )
 
     def append_flower(self, highlight):

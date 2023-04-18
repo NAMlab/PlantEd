@@ -1464,7 +1464,15 @@ class Textbox:
 
 class ButtonArray:
     def __init__(
-        self, rect, amount, resolution, margin, callback, set_hover_message, border_w=5, pressed=False
+        self,
+        rect,
+        amount,
+        resolution,
+        margin,
+        callback,
+        set_hover_message,
+        border_w=5,
+        pressed=False,
     ):
         self.toggle_buttons = []
         self.callback = callback
@@ -1486,13 +1494,15 @@ class ButtonArray:
 
         self.set_all_button = Button(
             rect[0],
-            rect[1]+50,
-            set_all_width,30,
+            rect[1] + 50,
+            set_all_width,
+            30,
             [self.toggle_all],
             config.FONT,
             "All",
             hover_message="Activate/Deactivate all buttons",
-            border_w=border_w)
+            border_w=border_w,
+        )
 
         for i in range(0, amount):
             self.toggle_buttons.append(
@@ -1505,7 +1515,7 @@ class ButtonArray:
                     font=config.FONT,
                     text="{}".format(i * resolution),
                     pressed=pressed,
-                    border_w=border_w
+                    border_w=border_w,
                 )
             )
 
@@ -1536,7 +1546,7 @@ class ButtonArray:
             if bool:
                 sum_true += 1
                 print(sum_true)
-        if len(self.toggle_buttons)/2 > sum_true:
+        if len(self.toggle_buttons) / 2 > sum_true:
             for button in self.toggle_buttons:
                 button.activate()
             self.go_green()

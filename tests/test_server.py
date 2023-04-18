@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class TestServer(unittest.IsolatedAsyncioTestCase):
     semaphore: threading.Lock
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.semaphore = threading.Lock()

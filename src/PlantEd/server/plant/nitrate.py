@@ -4,10 +4,10 @@ from typing import Final
 
 from dataclasses_json import dataclass_json
 
+
 @dataclass_json
 @dataclass
 class Nitrate:
-
     nitrate_pool: int = 0
     nitrate_delta_amount: int = 0
     max_nitrate_pool_low: Final[int] = 12000  # mikromol
@@ -16,7 +16,6 @@ class Nitrate:
 
     # Michaelis–Menten equation: gDW(root) Vmax ~ 0.00336 mol g DW−1 day−1
     nitrate_intake: int = 0
-
 
     def __iter__(self):
         for field in dataclasses.fields(self):

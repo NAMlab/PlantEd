@@ -9,6 +9,7 @@ import websockets
 from websockets.legacy.server import WebSocketServerProtocol
 
 from PlantEd.client.growth_percentage import GrowthPercent
+from PlantEd.client.update import UpdateInfo
 from PlantEd.client.water import Water
 from PlantEd.fba.dynamic_model import DynamicModel
 from PlantEd.server.plant.leaf import Leaf
@@ -106,8 +107,6 @@ class Server:
 
         Args:
             ws: WebsocketServerProtocol object, of the connection to be closed.
-
-        Returns:
 
         """
         self.clients.remove(ws)
@@ -219,6 +218,18 @@ class Server:
     def create_leaf(self, leaf: Leaf):
         self.plant.create_leaf(leaf)
 
+    def stop_water_intake(self):
+        self.model.stop_water_intake()
+
+    def enable_water_intake(self):
+        self.model.enable_water_intake()
+
+    def set_water_pool(self, water: Water):
+        self.model.plant.set_water(water)
+
+    def update(self, update_info: UpdateInfo):
+        self.model.update(update_info=update_info)
+
     async def main_handler(self, ws: WebSocketServerProtocol):
         """
         Method that accepts all requests to the server
@@ -242,87 +253,132 @@ class Server:
             response = {}
 
             for command, payload in commands.items():
-                match command:
+                try:
+                    match command:
+                        case "growth_rate":
+                            # ToDo ensure doing this as last step
 
-                    case "growth_rate":
-                        logger.debug(
-                            "Received command identified as calculation "
-                            "of growth_rates."
-                        )
+                            logger.debug(
+                                "Received command identified as calculation "
+                                "of growth_rates."
+                            )
 
-                        growth_percent = GrowthPercent.from_json(
-                            payload["GrowthPercent"]
-                        )
+                            growth_percent = GrowthPercent.from_json(
+                                payload["GrowthPercent"]
+                            )
 
-                        response["growth_rate"] = self.calc_send_growth_rate(
-                            growth_percent=growth_percent
-                        )
-                    case "open_stomata":
-                        logger.debug(
-                            "Received command identified as open_stomata."
-                        )
+                            response[
+                                "growth_rate"
+                            ] = self.calc_send_growth_rate(
+                                growth_percent=growth_percent
+                            )
+                        case "open_stomata":
+                            logger.debug(
+                                "Received command identified as open_stomata."
+                            )
 
-                        self.open_stomata()
+                            self.open_stomata()
 
-                    case "close_stomata":
-                        logger.debug(
-                            "Received command identified as close_stomata."
-                        )
+                        case "close_stomata":
+                            logger.debug(
+                                "Received command identified as close_stomata."
+                            )
 
-                        self.close_stomata()
+                            self.close_stomata()
 
-                    case "deactivate_starch_resource":
-                        logger.debug(
-                            "Received command identified as "
-                            "deactivate_starch_resource."
-                        )
+                        case "deactivate_starch_resource":
+                            logger.debug(
+                                "Received command identified as "
+                                "deactivate_starch_resource."
+                            )
 
-                        self.deactivate_starch_resource()
+                            self.deactivate_starch_resource()
 
-                    case "activate_starch_resource":
-                        logger.debug(
-                            "Received command identified as "
-                            "activate_starch_resource."
-                        )
+                        case "activate_starch_resource":
+                            logger.debug(
+                                "Received command identified as "
+                                "activate_starch_resource."
+                            )
 
-                        self.activate_starch_resource()
+                            self.activate_starch_resource()
 
-                    case "get_water_pool":
-                        logger.debug(
-                            "Received command identified as get_water_pool."
-                        )
+                        case "get_water_pool":
+                            logger.debug(
+                                "Received command identified as get_water_pool."
+                            )
 
-                        response["get_water_pool"] = self.get_water_pool()
+                            response["get_water_pool"] = self.get_water_pool()
 
-                    case "increase_nitrate":
-                        logger.debug(
-                            "Received command identified as increase_nitrate."
-                        )
-                        self.model.increase_nitrate(amount=5000)
+                        case "increase_nitrate":
+                            logger.debug(
+                                "Received command identified as increase_nitrate."
+                            )
+                            self.model.increase_nitrate(amount=5000)
 
-                    case "get_nitrate_pool":
-                        logger.debug(
-                            "Received command identified as get_nitrate_pool."
-                        )
+                        case "get_nitrate_pool":
+                            logger.debug(
+                                "Received command identified as get_nitrate_pool."
+                            )
 
-                        response["get_nitrate_pool"] = self.get_nitrate_pool()
+                            response[
+                                "get_nitrate_pool"
+                            ] = self.get_nitrate_pool()
 
-                    case "create_leaf":
-                        logger.debug(
-                            "Received command identified as create_leaf."
-                        )
+                        case "create_leaf":
+                            logger.debug(
+                                "Received command identified as create_leaf."
+                            )
 
-                        leaf: Leaf = Leaf.from_json(payload["create_leaf"])
+                            leaf: Leaf = Leaf.from_json(payload["create_leaf"])
 
-                        self.create_leaf(leaf=leaf)
+                            self.create_leaf(leaf=leaf)
 
-                    case _:
-                        logger.error(
-                            f"Received command {command} could not "
-                            f"be identified"
-                        )
+                        case "stop_water_intake":
+                            logger.debug(
+                                "Received command identified as stop_water_intake."
+                            )
 
-                        continue
+                            self.stop_water_intake()
+
+                        case "enable_water_intake":
+                            logger.debug(
+                                "Received command identified as enable_water_intake."
+                            )
+
+                            self.enable_water_intake()
+
+                        case "set_water_pool":
+                            logger.debug(
+                                "Received command identified as set_water_pool."
+                            )
+
+                            water = Water.from_json(payload)
+
+                            self.set_water_pool(water=water)
+
+                        case "update":
+                            logger.debug(
+                                "Received command identified as update."
+                            )
+
+                            update_info = UpdateInfo.from_json(payload)
+
+                            self.update(update_info=update_info)
+
+                        case _:
+                            logger.error(
+                                f"Received command {command} could not "
+                                f"be identified"
+                            )
+
+                            continue
+                # ToDo change exception type
+                except Exception:
+                    logger.error(
+                        msg=f"Unable to handle {command}, "
+                        f"with payload {payload}",
+                        exc_info=True,
+                    )
 
             if response:
                 response = json.dumps(response)

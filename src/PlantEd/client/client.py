@@ -13,6 +13,7 @@ import websockets
 
 from PlantEd.client.leaf import Leaf
 from PlantEd.client import GrowthPercent, GrowthRates, Water
+from PlantEd.client.update import UpdateInfo
 from PlantEd.server import Nitrate
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class Client:
 
         self.__future: asyncio.Future = None
         self.loop: asyncio.AbstractEventLoop = None
-        self.expected_receive:dict[str,Future] = dict()
+        self.expected_receive: dict[str, Future] = dict()
 
         thread = threading.Thread(
             target=asyncio.run, daemon=True, args=(self.__start(),)
@@ -52,7 +53,9 @@ class Client:
         connect = self.__connect()
 
         await self.loop.create_task(connect, name="Connect")
-        self.loop.create_task(self.__receive_handler(), name = "get_nitrate_pool")
+        self.loop.create_task(
+            self.__receive_handler(), name="get_nitrate_pool"
+        )
         await self.__future
 
     def stop(self):
@@ -76,9 +79,7 @@ class Client:
         self.__future.set_result("")
 
     async def __receive_handler(self):
-
-        while(True):
-
+        while True:
             answer = await self.websocket.recv()
 
             logger.info(f"Received {answer}")
@@ -91,33 +92,42 @@ class Client:
                 logger.debug(f"Setting {future} as done with result {payload}")
                 future.set_result(payload)
 
-    def growth_rate(self, growth_percent: GrowthPercent, callback:Callable[[GrowthRates],None]):
+    def growth_rate(
+        self,
+        growth_percent: GrowthPercent,
+        callback: Callable[[GrowthRates], None],
+    ):
         task = self.__request_growth_rate(growth_percent=growth_percent)
         future_received = self.loop.create_future()
 
         self.expected_receive["growth_rate"] = future_received
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
-        task = self.__receive_growth_rate(future=future_received, callback= callback)
+        task = self.__receive_growth_rate(
+            future=future_received, callback=callback
+        )
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
-    async def __receive_growth_rate(self, future:Future, callback: Callable[[GrowthRates],None]):
-
+    async def __receive_growth_rate(
+        self, future: Future, callback: Callable[[GrowthRates], None]
+    ):
         await future
         growth_rate = GrowthRates.from_json(future.result())
 
         callback(growth_rate)
 
-    async def __request_growth_rate(
-        self, growth_percent: GrowthPercent
-    ):
+    async def __request_growth_rate(self, growth_percent: GrowthPercent):
         if growth_percent.starch < 0:
             growth_percent.starch = 0
 
-        message_dict = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
+        message_dict = {
+            "growth_rate": {"GrowthPercent": growth_percent.to_json()}
+        }
 
         logger.info(
-            "Sending Request for growth rates." f"Payload is :\n" f"{message_dict}"
+            "Sending Request for growth rates."
+            f"Payload is :\n"
+            f"{message_dict}"
         )
 
         message_str = json.dumps(message_dict)
@@ -170,7 +180,42 @@ class Client:
 
         await self.websocket.send(message)
 
-    def get_water_pool(self, callback: Callable[[Water],None]):
+    def set_water_pool(self, water: Water):
+        """ """
+        task = self.__set_water_pool(water=water)
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+
+    async def __set_water_pool(self, water: Water):
+        logger.debug(f"Sending request to set_water_pool with payload {water}")
+
+        message = {"set_water_pool": water.to_json()}
+        message = json.dumps(message)
+
+        await self.websocket.send(message)
+
+    def stop_water_intake(self):
+        task = self.__stop_water_intake()
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+
+    async def __stop_water_intake(self):
+        logger.debug("Sending request to stop_water_intake")
+
+        message = '{"stop_water_intake": "null"}'
+
+        await self.websocket.send(message)
+
+    def enable_water_intake(self):
+        task = self.__stop_water_intake()
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+
+    async def __enable_water_intake(self):
+        logger.debug("Sending request to enable_water_intake")
+
+        message = '{"enable_water_intake": "null"}'
+
+        await self.websocket.send(message)
+
+    def get_water_pool(self, callback: Callable[[Water], None]):
         """
         Method to obtain the WaterPool defined in the DynamicModel.
 
@@ -181,13 +226,17 @@ class Client:
 
         self.expected_receive["get_water_pool"] = future_received
 
-        task = self.__receive_get_water_pool(future=future_received, callback=callback)
+        task = self.__receive_get_water_pool(
+            future=future_received, callback=callback
+        )
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
         task = self.__request_get_water_pool()
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
-    async def __receive_get_water_pool(self,future:Future ,callback: Callable[[Water],None]):
+    async def __receive_get_water_pool(
+        self, future: Future, callback: Callable[[Water], None]
+    ):
         await future
 
         water = Water.from_json(future.result())
@@ -223,7 +272,7 @@ class Client:
         message = '{"increase_nitrate": "null"}'
         await self.websocket.send(message)
 
-    def get_nitrate_pool(self, callback: Callable[[Nitrate],None]):
+    def get_nitrate_pool(self, callback: Callable[[Nitrate], None]):
         """
         Method to request the NitratePool.
         Returns: The available nitrates.
@@ -232,7 +281,9 @@ class Client:
         future_received = self.loop.create_future()
         self.expected_receive["get_nitrate_pool"] = future_received
 
-        task = self.__receive_nitrate_pool(future = future_received, callback = callback)
+        task = self.__receive_nitrate_pool(
+            future=future_received, callback=callback
+        )
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
         task = self.__request_nitrate_pool()
@@ -247,14 +298,18 @@ class Client:
 
         return
 
-    async def __receive_nitrate_pool(self,future:Future, callback: Callable[[Nitrate],None]):
+    async def __receive_nitrate_pool(
+        self, future: Future, callback: Callable[[Nitrate], None]
+    ):
         await future
 
         nitrate = Nitrate.from_json(future.result())
         callback(nitrate)
 
     def create_leaf(self, leaf: Leaf):
-        future = asyncio.run_coroutine_threadsafe(self.self.__create_leaf(leaf=leaf), self.loop)
+        future = asyncio.run_coroutine_threadsafe(
+            self.self.__create_leaf(leaf=leaf), self.loop
+        )
         result = future.result()
         return result
 
@@ -263,4 +318,14 @@ class Client:
 
         data = leaf.strip2server_version()
         message = {"create_leaf": data.to_json()}
+        await self.websocket.send(message)
+
+    def update(self, update_info: UpdateInfo):
+        task = self.__update(update_info=update_info)
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+
+    async def __update(self, update_info: UpdateInfo):
+        logger.debug("Request update.")
+
+        message = {"update": update_info.to_json()}
         await self.websocket.send(message)
