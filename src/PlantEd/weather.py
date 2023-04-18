@@ -10,6 +10,7 @@ from PlantEd.utils.particle import StillParticles
 from PlantEd.utils.animation import Animation
 import numpy as np
 import random
+from PlantEd import config
 from PlantEd.data import assets
 from PlantEd.utils.spline import Beziere
 
@@ -58,7 +59,6 @@ class Environment:
         self.server_plant = server_plant
         self.wind_force = (0, 0)
         self.wind_duration = 0  # at 60fps
-        self.raining = False
         rain_images = [
             assets.img(
                 "gif_rain/frame_{index}_delay-0.05s.png".format(index=i)
@@ -66,16 +66,6 @@ class Environment:
             for i in range(0, 21)
         ]
         self.animations = [Animation(rain_images, 10, (480, 0), running=False)]
-        self.star_pos_size = [
-            (
-                (
-                    random.randint(0, SCREEN_WIDTH),
-                    random.randint(0, SCREEN_HEIGHT / 2),
-                ),
-                random.randint(0, 10),
-            )
-            for i in range(0, 50)
-        ]
         self.shadow_map = None
 
         # fixed for spring currently
@@ -85,16 +75,33 @@ class Environment:
         ).open()
 
         df_weather_spring = pd.read_csv(weather_spring)
-        self.weather_simulator = WeatherSimulator(df_weather_spring, seed = 0.7360593324276558)
+        self.weather_simulator = WeatherSimulator(df_weather_spring)
         start_temp = df_weather_spring["temp 2m avg"][0]
         start_hum = df_weather_spring["humidity"][0]
         start_precip = df_weather_spring["precipitation"][0]
         self.simulated_weather = self.weather_simulator.simulate(
             start_temp, start_hum, start_precip
         )
-        for i in range(len(self.simulated_weather)):
-            if self.simulated_weather[i][2] > 0:
-                print(self.simulated_weather[i][2], self.simulated_weather[i][3])
+        '''import matplotlib.pyplot as plt
+
+        temp = [row[0] for row in self.simulated_weather]
+        hum = [row[1] for row in self.simulated_weather]
+        preci = [row[2] for row in self.simulated_weather]
+        time = [row[3] for row in self.simulated_weather]
+        # plt.plot(time, preci)
+        """plt.xticks(np.arange(30, step=1))
+        for i in(np.arange(30)):
+            plt.axvline(i)"""
+        fig, axs = plt.subplots(3)
+        fig.suptitle("spring")
+        axs[0].plot(time, temp)
+        axs[1].plot(time, hum)
+        axs[2].plot(time, preci)
+
+        # plt.plot(temp)
+        # plt.plot(preci)
+        plt.xlabel = "days"
+        plt.savefig("src/PlantEd/data/weather/" + "spring" + ".svg")'''
 
         self.temperature = 0
         self.humidity = 0
@@ -106,17 +113,6 @@ class Environment:
         self.sun = assets.img("sun/sun.PNG", (256, 256))
         self.cloud = assets.img("clouds/cloud_0.PNG", (402, 230))
         self.cloud_dark = assets.img("clouds/cloud_dark_0.PNG", (402, 230))
-        """self.rain = ParticleSystem(50, spawn_box=Rect(SCREEN_WIDTH / 2-150, 100, 300, 30),
-                                    boundary_box=Rect(SCREEN_WIDTH/2-150,0,300,SCREEN_HEIGHT-250),
-                                    color=(0,0,100), apply_gravity=True, speed=[0, 180],
-                                    active=False, images=drops, despawn_images=splash, despawn_animation=self.add_animation)"""
-        """self.rain = ParticleSystem(100, spawn_box=Rect(SCREEN_WIDTH/2-110, 110,
-                                                      220, 20),
-                                   boundary_box=Rect(SCREEN_WIDTH/2-self.cloud.get_width()/2-80, 20,
-                                                     160,SCREEN_HEIGHT-250),
-                                size=8, color=config.BLUE, apply_gravity=False,
-                                   speed=[0, 150], spread=[0, 0], active=False, rectangle=True)"""
-
         self.nitrate = StillParticles(
             10,
             spawn_box=Rect(0, 950, 1920, 300),
@@ -186,8 +182,9 @@ class Environment:
         return map, resolution, max_shadow
 
     def draw_shadows(self, screen):
+        self.s.fill((0,0,0,0))
         if self.shadow_map is not None:
-            self.s.fill((0, 0, 0, 0))
+            #self.s.fill((0, 0, 0, 0))
 
             # draw polygon for each shadow
             # vs make polygon from all outer points
@@ -205,41 +202,22 @@ class Environment:
             screen.blit(self.s, (0, 0))
 
     def draw_background(self, screen):
+        self.s.fill((0, 0, 0, 0))
         sun_intensity = self.get_sun_intensity()
 
         if sun_intensity > 0:
             color = self.get_color(orange, blue, sun_intensity)
         else:
             color = self.get_color(orange, (0, 0, 0), abs(sun_intensity))
-
-            for pos in self.star_pos_size:
-                pygame.draw.circle(
-                    self.s,
-                    (255, 255, 255, abs(sun_intensity) * 128),
-                    pos[0],
-                    pos[1],
-                )
-                pygame.draw.circle(
-                    self.s,
-                    (255, 255, 255, abs(sun_intensity) * 180),
-                    pos[0],
-                    max(pos[1] - 5, 0),
-                )
         self.s.fill(color)
-
         day_time = self.get_day_time_t()
-        # self.sun_pos_spline.draw(s)
         if day_time > 0 and day_time < 1:
-            # sunpos = self.sun_pos_spline.get_point(day_time)
-
             offset_sunpos = (
                 self.sunpos[0] - self.sun.get_width() / 2,
                 self.sunpos[1] - self.sun.get_height() / 2,
             )
             self.s.blit(self.sun, offset_sunpos)
-
         screen.blit(self.s, (0, 0))
-
 
     def get_color(self, color0, color1, grad):
         return (
@@ -254,6 +232,7 @@ class Environment:
         for animation in self.animations:
             animation.draw(screen)
 
+
     def update_weather(self):
         days, hours, minutes = self.get_day_time()
         (
@@ -263,12 +242,10 @@ class Environment:
             hour,
         ) = self.simulated_weather[int(int(days) * 24 + int(hours))]
         if self.precipitation > 0:
-            self.raining = True
             self.animations[0].running = True
-            self.rain_rate = self.precipitation
-            self.water_grid.activate_rain(self.precipitation)
+            self.rain_rate = self.precipitation * 10
+            self.water_grid.activate_rain(self.rain_rate)
         else:
-            self.raining = False
             self.animations[0].running = False
             self.water_grid.deactivate_rain()
 
@@ -304,7 +281,7 @@ class Environment:
 
 class WeatherSimulator:
     def __init__(
-        self, data, temp_bins=50, hum_bins=50, precip_bins=100, seed=None
+        self, data, temp_bins=50, hum_bins=50, precip_bins=100, seed=15
     ):
         if not seed:
             seed = random.randint(0, 100)
@@ -382,12 +359,11 @@ class WeatherSimulator:
                 curr_temp = self.temp_min + curr_temp_bin * self.temp_step
                 curr_hum = curr_hum_bin * self.hum_step
                 curr_precip = curr_precip_bin * self.precip_step
-
                 simulated_hours.append(
                     [
                         int(curr_temp),
                         int(curr_hum),
-                        int(curr_precip),
+                        curr_precip,
                         day + (hour / 24),
                     ]
                 )

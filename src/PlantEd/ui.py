@@ -23,6 +23,7 @@ from PlantEd.utils.button import (
 from PlantEd.utils.tool_tip import ToolTip, ToolTipManager
 from PlantEd.utils.particle import ParticleSystem, Inwards_Particle_System
 from pygame import Rect
+from PlantEd.utils.narrator import Narrator
 from PlantEd.utils.hover_message import Hover_Message
 
 # constants in dynamic model, beter in config? dont think so
@@ -56,6 +57,7 @@ class UI:
         scale: float,  # ToDo Float?
         plant: Plant,
         server_plant: server.Plant,
+        narrator: Narrator,
         client: Client,
         growth_rates: GrowthRates,
         environment: Environment,
@@ -68,6 +70,7 @@ class UI:
         self.name = config.load_options()["name"]
         self.name_label = config.FONT.render(self.name, True, config.BLACK)
         self.plant = plant
+        self.narrator = narrator
 
         self.server_plant = server_plant
 
@@ -80,7 +83,7 @@ class UI:
         self.camera = camera
         self.dev_mode = dev_mode
 
-        self.stomata_hours = [True for i in range(12)]
+        self.stomata_hours = [False for i in range(12)]
 
         self.danger_timer = 1
 
@@ -177,33 +180,6 @@ class UI:
         self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
 
-        tipps = config.load_tooltipps()
-        tooltipps = [
-            ToolTip(
-                tip["x"],
-                tip["y"],
-                tip["lines"],
-                headfont=tip["headfont"],
-                mass=tip["mass"],
-                center=tip["center"],
-            )
-            for tip in tipps
-        ]
-        self.tool_tip_manager = ToolTipManager(
-            tooltipps, callback=self.plant.get_biomass
-        )
-        self.button_sprites.add(
-            ToggleButton(
-                260,
-                config.SCREEN_HEIGHT - 50,
-                64,
-                32,
-                [self.tool_tip_manager.toggle_activate],
-                config.FONT,
-                text="HINT",
-                pressed=True,
-            )
-        )
 
         self.button_sprites.add(
             Arrow_Button(
@@ -216,6 +192,20 @@ class UI:
                 border_w=3,
             )
         )
+
+        self.button_sprites.add(
+            ToggleButton(
+                80,
+                config.SCREEN_HEIGHT-100,
+                50,
+                30,
+                [self.narrator.toggle_mute],
+                config.FONT,
+                "mute",
+                border_w=3)
+        )
+
+
         self.button_sprites.add(
             Arrow_Button(
                 config.SCREEN_WIDTH / 2 - 100,
@@ -237,6 +227,7 @@ class UI:
                 32,
                 [self.gametime.play],
                 config.FONT,
+                border_w=2,
                 image=assets.img("normal_speed.PNG"),
             ),
             RadioButton(
@@ -246,6 +237,7 @@ class UI:
                 32,
                 [self.gametime.faster],
                 config.FONT,
+                border_w=2,
                 image=assets.img("fast_speed.PNG"),
             ),
             RadioButton(
@@ -255,6 +247,7 @@ class UI:
                 32,
                 [self.gametime.fastest],
                 config.FONT,
+                border_w=2,
                 image=assets.img("fastest_speed.PNG"),
             ),
         ]
@@ -272,7 +265,7 @@ class UI:
             [self.skip_intro_ui],
             config.FONT,
             "SKIP INTRO",
-            border_w=3,
+            border_w=2,
         )
         self.button_sprites.add(self.skip_intro)
 
@@ -283,6 +276,7 @@ class UI:
             5,
             self.set_stomata_automation,
             self.hover.set_message,
+            border_w=2
         )
 
         self.presets = [preset for i in range(0, 3)]
@@ -290,7 +284,7 @@ class UI:
         # self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
-        self.tool_tip_manager.deactivate_tooltipps()
+        #self.tool_tip_manager.deactivate_tooltipps()
         self.gametime.forward()
 
     def handle_event(self, e: pygame.event.Event):
@@ -302,8 +296,8 @@ class UI:
             button.handle_event(e)
         for slider in self.sliders:
             slider.handle_event(e)
-        for tips in self.tool_tip_manager.tool_tips:
-            tips.handle_event(e)
+        #for tips in self.tool_tip_manager.tool_tips:
+        #    tips.handle_event(e)
 
     def update(self, dt):
         self.hover.update(dt)
@@ -322,7 +316,7 @@ class UI:
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
-        self.tool_tip_manager.update()
+        #self.tool_tip_manager.update()
         for element in self.floating_elements:
             element.update(dt)
         for animation in self.animations:
@@ -368,8 +362,7 @@ class UI:
             screen.blit(animation.image, animation.pos)
         for system in self.particle_systems:
             system.draw(screen)
-        self.tool_tip_manager.draw(screen)
-        self.tool_tip_manager.draw(screen)
+        #self.tool_tip_manager.draw(screen)
 
         # draw danger mode
         if self.danger_timer < 0.5:
@@ -412,12 +405,6 @@ class UI:
         self.plant.stomata_open = False
         self.open_stomata_particle_in.deactivate()
         self.open_stomata_particle_out.deactivate()
-
-    def toggle_stomata(self):
-        if self.plant.stomata_open:
-            self.close_stomata()
-        else:
-            self.open_stomata()
 
     # ToDo unused code
     def toggle_starch_as_resource(self, percentage: float = 1):
@@ -732,7 +719,7 @@ class UI:
 
     def draw_clock(self, s):
         days, hours, minutes = self.get_day_time()
-        output_string = "Day {0} {1:02}:{2:02}".format(
+        output_string = "Day {0}/30 {1:02}:{2:02}".format(
             days, int(hours), int(minutes)
         )
         clock_text = config.FONT.render(output_string, True, config.BLACK)
@@ -751,7 +738,7 @@ class UI:
         T = self.environment.temperature
 
         RH_label = config.FONT.render(
-            "{:.0f} %".format(RH * 100), True, config.BLACK
+            "{:.0f} %".format(RH), True, config.BLACK
         )
         T_label = config.FONT.render("{:.0f} °C".format(T), True, config.BLACK)
 

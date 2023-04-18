@@ -5,6 +5,7 @@ import math
 import json
 
 from PlantEd import data
+from PlantEd.data import assets
 import os
 
 from PlantEd.data import assets

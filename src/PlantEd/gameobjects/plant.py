@@ -10,6 +10,7 @@ import numpy as np
 
 from PlantEd import client as c
 from PlantEd import config
+from PlantEd.camera import Camera
 from PlantEd.client import Client, GrowthRates
 from PlantEd.data import assets
 from PlantEd.gameobjects.water_reservoir import Water_Grid
@@ -73,7 +74,7 @@ class Plant:
         self.y = pos[1]
         self.client = client
         self.upgrade_points = upgrade_points
-        self.stomata_open = True
+        self.stomata_open = False
         self.use_starch = True
         self.camera = camera
         self.water_grid = water_grid
@@ -124,7 +125,7 @@ class Plant:
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
             plant=self,
-            mass=0.8,
+            mass=3,
             active=True,
             client=client,
         )
@@ -171,7 +172,7 @@ class Plant:
         self.organs[1].update_growth_rate(growth_rates.stem_rate)
         self.organs[2].update_growth_rate(growth_rates.root_rate)
 
-        self.organ_starch.update_growth_rate(growth_rates.starch_rate)
+        self.organ_starch.update_growth_rate(growth_rates.starch_rate, self.get_biomass())
         self.organ_starch.starch_intake = growth_rates.starch_intake
         self.organs[3].update_growth_rate(growth_rates.seed_rate)
 
@@ -191,10 +192,7 @@ class Plant:
     def get_PLA(self):
         # 0.03152043208186226 as a factor to get are from dry mass
         return (
-            (self.organs[0].get_mass() + self.organs[0].base_mass)
-            * 0.03152043208186226
-            if len(self.organs[0].leaves) > 0
-            else 0
+            self.organs[0].get_pla()
         )  # m^2
 
     def grow(self, dt):
@@ -219,7 +217,7 @@ class Plant:
         self.target_organ = self.organ_starch
 
     def update(self, dt, photon_intake):
-        # dirty Todo make beter
+        # dirty Todo make better
         self.grow(dt)
         if self.danger_mode:
             for organ in self.organs:
@@ -322,7 +320,7 @@ class Organ:
         self.percentage = percentage
 
     def update_growth_rate(self, growth_rate):
-        self.growth_rate = gram_mol * growth_rate
+        self.growth_rate = growth_rate * 2
 
     def yellow_leaf(self, image, alpha):
         ghost_image = image.copy()
@@ -489,8 +487,17 @@ class Leaf(Organ):
         else:
             return None
 
-    def update_growth_rate(self, growth_rate):
-        self.growth_rate = gram_mol * growth_rate
+    def get_pla(self):
+        return(
+            (self.mass + self.base_mass)
+            * 0.03152043208186226 * self.get_shadowscore()
+            if len(self.leaves) > 0
+            else 0
+        )
+
+    def get_shadowscore(self):
+        # shadow scores are 0 for no shadow to 1 for full shadow. 1 - to get a factor
+        return (sum([1-leaf["shadow_score"] for leaf in self.leaves])/len(self.leaves) if len(self.leaves) > 0 else 0)
 
     def grow(self, dt):
         if self.growth_rate <= 0:
@@ -540,7 +547,7 @@ class Leaf(Organ):
             "x": pos[0],
             "y": pos[1],
             "t": (highlight[1], highlight[2]),
-            "shadow_score": 1,
+            "shadow_score": 0,
             "image": image[0],
             "offset_x": offset[0],
             "offset_y": offset[1],
@@ -766,9 +773,6 @@ class Root(Organ):
             False  # if not tabroot, its fibroot -> why skill it then?
         )
 
-    def grow_roots(self):
-        pass
-
     def update_image_size(self, factor=5, base=25):
         super().update_image_size(factor, base)
 
@@ -858,7 +862,7 @@ class Stem(Organ):
         self.flower = flower
         self.width = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
-        self.curve = Cubic_Tree([Cubic([[955, 900], [960, 820], [940, 750]])])
+        self.curve = Cubic_Tree([Cubic([[955, 900], [960, 820], [940, 750]])], plant.camera)
         self.gametime = GameTime.instance()
         self.timer = 0
         self.floating_shop = None
@@ -1103,8 +1107,8 @@ class Starch(Organ):
         else:
             self.mass += delta
 
-    def update_growth_rate(self, growth_rate):
-        self.growth_rate = growth_rate
+    def update_growth_rate(self, growth_rate, plant_mass):
+        self.growth_rate = growth_rate * 2
 
     def update_starch_max(self, max_pool):
         self.thresholds = [max_pool]
@@ -1160,8 +1164,12 @@ class Flower(Organ):
         self.target_flower = 0
         self.can_add_flower = False
         self.flowering = False
+        self.seed_popped = False
+        self.pop_seed_particles = []
 
     def handle_event(self, event):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+            self.pop_seed()
         if event.type == pygame.MOUSEBUTTONUP:
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
@@ -1183,20 +1191,18 @@ class Flower(Organ):
     def pollinate(self, i):
         self.flowers[i]["pollinated"] = True
 
-    def update_growth_rate(self, growth_rate):
-        # Todo change gram_mol = flower mol
-        self.growth_rate = gram_mol * growth_rate
-
     def grow(self, dt):
         if self.growth_rate <= 0:
             return
         # get leaf age, if too old -> stop growth, then die later
         growable_flowers = []
         for flower in self.flowers:
-            id = int(
-                flower["mass"]
-                / flower["maximum_mass"]
-                * (len(self.images) - 1)
+            id = min(
+                int(
+                    flower["mass"]
+                    / flower["maximum_mass"]
+                    * (len(self.images) - 1)),
+                len(self.images)-1
             )
             flower["image"] = self.images[id]
             if flower["mass"] < flower["maximum_mass"]:
@@ -1205,7 +1211,7 @@ class Flower(Organ):
 
         if self.flowering:
             for flower in self.flowers:
-                if flower["pollinated"]:
+                if flower["pollinated"] and flower["seed_mass"] < flower["maximum_seed_mass"]:
                     growable_flowers.append(flower)
 
         growth_per_flower = (
@@ -1263,10 +1269,27 @@ class Flower(Organ):
         # add all seed producing flowrs
         if self.flowering:
             for flower in self.flowers:
-                if flower["pollinated"]:
+                if flower["pollinated"] and flower["seed_mass"] < flower["maximum_seed_mass"]:
                     flowering_flowers.append(flower)
 
         return flowering_flowers
+
+    def pop_seed(self):
+        self.seed_popped = True
+        for flower in self.flowers:
+            self.pop_seed_particles.append(
+                ParticleSystem(
+                    max_particles = (int(flower["mass"])),
+                    spawn_box = (flower["x"],flower["y"],0,0),
+                    lifetime = 10,
+                    color = config.WHITE,
+                    apply_gravity = 4,
+                    speed = [(random.random()-0.5)*20, -70],
+                    spread = [50,10],
+                    active = True,
+                    once = True,
+                    )
+            )
 
     def append_flower(self, highlight):
         pos = highlight[0]
@@ -1281,6 +1304,7 @@ class Flower(Organ):
             "image": image,
             "mass": 0.01,
             "seed_mass": 0,
+            "maximum_seed_mass": 10,
             "pollinated": False,
             "maximum_mass": self.thresholds[-1],
             "lifetime": 60 * 60 * 24 * 10,  # 10 days of liefetime to grow
@@ -1304,7 +1328,9 @@ class Flower(Organ):
         ]
 
     def update(self, dt):
-        pass
+        if self.seed_popped:
+            for particle in self.pop_seed_particles:
+                particle.update(dt)
 
     def update_image_size(self, factor=7, base=80):
         for flower in self.flowers:
@@ -1415,6 +1441,9 @@ class Flower(Organ):
                         flower["y"] - width / 4 - 10 - flower["offset_y"],
                     ),
                 )
+
+        for particle in self.pop_seed_particles:
+            particle.draw(screen)
 
     def get_outlines(self):
         outlines = []

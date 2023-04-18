@@ -191,7 +191,11 @@ class Server:
         """
         logger.info("Creating Water Object and sending it back")
 
-        water:Water = self.model.plant.water
+        water = Water(
+            water_pool=self.model.water_pool,
+            max_water_pool=self.model.maximum_water_pool,
+        )
+
         answer = water.to_json()
 
         logger.debug(f"Responding to a water request with {answer}")

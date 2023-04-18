@@ -19,7 +19,8 @@ shopitems have action and button and cost
 
 
 class FloatingShop:
-    def __init__(self, pos=(0, 0)):
+    def __init__(self, camera, pos=(0, 0)):
+        self.camera = camera
         self.pos = pos
         self.shop_items = []
         self.margin = 16
@@ -63,20 +64,21 @@ class FloatingShop:
             for item in self.shop_items:
                 item.handle_event(e, self.pos)
             if e.type == pygame.MOUSEMOTION:
+                print(self.get_rect(), mouse_pos)
                 if not self.get_rect().collidepoint(mouse_pos):
                     self.active = False
 
     def draw(self, screen):
         if self.active:
             pygame.draw.rect(
-                self.s, config.WHITE_TRANSPARENT, self.rect, border_radius=3
+                self.s, config.WHITE_TRANSPARENT, (0,0,self.rect[2],self.rect[3]), border_radius=3
             )
             pygame.draw.rect(
-                self.s, config.WHITE, self.rect, width=2, border_radius=3
+                self.s, config.WHITE, (0,0,self.rect[2],self.rect[3]), width=2, border_radius=3
             )
             for item in self.shop_items:
                 item.draw(self.s)
-            screen.blit(self.s, self.pos)
+            screen.blit(self.s, (self.pos[0], self.pos[1]-self.camera.offset_y))
 
 
 class FloatingShopItem:
@@ -125,7 +127,7 @@ class FloatingShopItem:
         if self.cost <= self.plant.upgrade_points:
             screen.blit(self.image, (self.rect[0], self.rect[1]))
             if self.hover:
-                pygame.draw.rect(screen, config.WHITE, self.rect, width=2)
+                pygame.draw.rect(screen, config.WHITE, (self.rect[0],self.rect[1],self.rect[2],self.rect[3]), width=2)
 
 
 class Shop:
