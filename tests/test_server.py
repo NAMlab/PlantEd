@@ -7,7 +7,7 @@ from unittest import TestCase
 import websockets
 
 from PlantEd.fba.dynamic_model import DynamicModel
-from PlantEd.server import Server
+from PlantEd.server.server import Server
 from PlantEd.utils.gametime import GameTime
 
 logging.basicConfig(
