@@ -34,7 +34,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
 
         gametime = GameTime.instance()
 
-        model = DynamicModel(gametime= gametime)
+        model = DynamicModel(gametime=gametime)
         self.server = Server(model)
 
         self.server.start()
@@ -222,9 +222,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             await websocket.send(msg)
             answer = await websocket.recv()
 
-            expected = (
-                '{"get_water_pool": "{\\"water_pool\\": 55508.43506179199, \\"water_intake\\": 0.0, \\"water_intake_pool\\": 0, \\"transpiration\\": 0, \\"max_water_pool\\": 55508.43506179199, \\"max_water_pool_consumption\\": 1}"}'
-            )
+            expected = '{"get_water_pool": "{\\"water_pool\\": 55508.43506179199, \\"water_intake\\": 0.0, \\"water_intake_pool\\": 0, \\"transpiration\\": 0, \\"max_water_pool\\": 55508.43506179199, \\"max_water_pool_consumption\\": 1}"}'
 
             self.assertEqual(expected, answer)
 
@@ -234,9 +232,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             await websocket.send(msg)
             answer = await websocket.recv()
 
-            expected = (
-                '{"get_nitrate_pool": "{\\"nitrate_pool\\": 100000, \\"nitrate_delta_amount\\": 0, \\"max_nitrate_pool_low\\": 12000, \\"max_nitrate_pool_high\\": 100000, \\"max_nitrate_pool\\": 100000, \\"nitrate_intake\\": 0.0}"}'
-            )
+            expected = '{"get_nitrate_pool": "{\\"nitrate_pool\\": 100000, \\"nitrate_delta_amount\\": 0, \\"max_nitrate_pool_low\\": 12000, \\"max_nitrate_pool_high\\": 100000, \\"max_nitrate_pool\\": 100000, \\"nitrate_intake\\": 0.0}"}'
 
             self.assertEqual(expected, answer)
 
