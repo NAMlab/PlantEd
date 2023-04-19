@@ -3,7 +3,6 @@ from typing import Tuple
 import pygame
 
 from PlantEd import config, server
-from PlantEd.client import Water
 from PlantEd.client.client import Client
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.camera import Camera

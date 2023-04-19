@@ -1,7 +1,7 @@
 import pygame
 
 from PlantEd import config
-from PlantEd.client import Client
+from PlantEd.client.client import Client
 from PlantEd.data import assets
 from PlantEd.gameobjects.blue_grain import Blue_grain
 from PlantEd.gameobjects.root_item import Root_Item

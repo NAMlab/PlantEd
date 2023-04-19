@@ -8,16 +8,17 @@ from pygame import Rect
 from pygame.locals import *
 import numpy as np
 
-from PlantEd import client as c
 from PlantEd import config
-from PlantEd.camera import Camera
-from PlantEd.client import Client, GrowthRates
+from PlantEd.client.client import Client
+from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.data import assets
 from PlantEd.gameobjects.water_reservoir import Water_Grid
 from PlantEd.utils.LSystem import LSystem
 from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.particle import ParticleSystem
 from PlantEd.utils.spline import Cubic_Tree, Cubic
+
+from PlantEd.client.leaf import Leaf as client_Leaf
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -565,7 +566,7 @@ class Leaf(Organ):
             "growth_index": self.active_threshold,
         }  # to get relative size, depending on current threshold - init threshold
 
-        client_leaf = c.Leaf(
+        client_leaf = client_Leaf(
             pos_x=pos[0],
             pos_y=pos[1],
             t=(highlight[1], highlight[2]),

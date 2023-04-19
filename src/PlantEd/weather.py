@@ -4,7 +4,6 @@ import pandas as pd
 import pygame
 from pygame.locals import Rect
 
-from PlantEd.client import Client
 from PlantEd import data, config, server
 from PlantEd.utils.particle import StillParticles
 from PlantEd.utils.animation import Animation

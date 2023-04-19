@@ -2,7 +2,8 @@ import numpy as np
 import math
 import pygame
 
-from PlantEd.client import Water, Client
+from PlantEd.client.client import Client
+from PlantEd.client.water import Water
 from PlantEd.utils.gametime import GameTime
 import random
 

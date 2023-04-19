@@ -7,13 +7,15 @@ import json
 import logging
 import threading
 from asyncio import Future
-from typing import Callable, Optional
+from typing import Callable
 
 import websockets
 
+from PlantEd.client.growth_percentage import GrowthPercent
+from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.leaf import Leaf
-from PlantEd.client import GrowthPercent, GrowthRates, Water
 from PlantEd.client.update import UpdateInfo
+from PlantEd.client.water import Water
 from PlantEd.server.plant.nitrate import Nitrate
 
 logger = logging.getLogger(__name__)
