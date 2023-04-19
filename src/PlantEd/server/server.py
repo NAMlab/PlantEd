@@ -190,10 +190,7 @@ class Server:
         """
         logger.info("Creating Water Object and sending it back")
 
-        water = Water(
-            water_pool=self.model.water_pool,
-            max_water_pool=self.model.maximum_water_pool,
-        )
+        water = self.model.plant.water
 
         answer = water.to_json()
 
@@ -216,7 +213,7 @@ class Server:
         return answer
 
     def create_leaf(self, leaf: Leaf):
-        self.plant.create_leaf(leaf)
+        self.model.plant.create_leaf(leaf)
 
     def stop_water_intake(self):
         self.model.stop_water_intake()
@@ -382,6 +379,6 @@ class Server:
 
             if response:
                 response = json.dumps(response)
-                await asyncio.wait(
-                    [client.send(response) for client in self.clients]
+                await asyncio.gather(
+                    *[client.send(response) for client in self.clients]
                 )

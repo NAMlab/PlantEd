@@ -2,11 +2,13 @@ import logging
 import threading
 import time
 import unittest
+from unittest import TestCase
 
 import websockets
 
 from PlantEd.fba.dynamic_model import DynamicModel
 from PlantEd.server import Server
+from PlantEd.utils.gametime import GameTime
 
 logging.basicConfig(
     level="DEBUG",
@@ -30,7 +32,9 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
         if self._testMethodName == "test_start":
             return
 
-        model = DynamicModel(1)
+        gametime = GameTime.instance()
+
+        model = DynamicModel(gametime= gametime)
         self.server = Server(model)
 
         self.server.start()
@@ -44,7 +48,8 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
     def test_start(self):
         logger.info("Run tests for the creation and start of the server.")
 
-        model = DynamicModel(1)
+        gametime = GameTime.instance()
+        model = DynamicModel(gametime)
         logger.debug("Dummy DynamicModell created.")
 
         server: Server = Server(model)
@@ -218,8 +223,19 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             answer = await websocket.recv()
 
             expected = (
-                '{"get_water_pool": '
-                '"{"water_pool": 1000000, "max_water_pool": 1000000}"}'
+                '{"get_water_pool": "{\\"water_pool\\": 55508.43506179199, \\"water_intake\\": 0.0, \\"water_intake_pool\\": 0, \\"transpiration\\": 0, \\"max_water_pool\\": 55508.43506179199, \\"max_water_pool_consumption\\": 1}"}'
+            )
+
+            self.assertEqual(expected, answer)
+
+    async def test_get_nitrate_pool(self):
+        async with websockets.connect("ws://localhost:4000") as websocket:
+            msg = '{"get_nitrate_pool": "null"}'
+            await websocket.send(msg)
+            answer = await websocket.recv()
+
+            expected = (
+                '{"get_nitrate_pool": "{\\"nitrate_pool\\": 100000, \\"nitrate_delta_amount\\": 0, \\"max_nitrate_pool_low\\": 12000, \\"max_nitrate_pool_high\\": 100000, \\"max_nitrate_pool\\": 100000, \\"nitrate_intake\\": 0.0}"}'
             )
 
             self.assertEqual(expected, answer)

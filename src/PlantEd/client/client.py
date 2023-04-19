@@ -14,7 +14,7 @@ import websockets
 from PlantEd.client.leaf import Leaf
 from PlantEd.client import GrowthPercent, GrowthRates, Water
 from PlantEd.client.update import UpdateInfo
-from PlantEd.server import Nitrate
+from PlantEd.server.plant.nitrate import Nitrate
 
 logger = logging.getLogger(__name__)
 

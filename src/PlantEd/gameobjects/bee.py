@@ -1,4 +1,5 @@
 import math
+from typing import List
 
 from PlantEd import config
 from PlantEd.utils.animation import Animation
@@ -17,7 +18,7 @@ class Hive:
         self.camera = camera
         self.spawn_rate = spawn_rate
 
-        self.bees = []
+        self.bees: List[Bee] = []
 
     def handle_event(self, e):
         for bee in self.bees:

@@ -3,14 +3,17 @@ from pathlib import Path
 
 import cobra
 
-from PlantEd import server
-from PlantEd.client import GrowthRates, GrowthPercent, Water
+
+from PlantEd.client.growth_rates import GrowthRates
+from PlantEd.client.growth_percentage import GrowthPercent
+
 from PlantEd.client.update import UpdateInfo
 from PlantEd.fba.helpers import (
     create_objective,
     update_objective,
     normalize,
 )
+from PlantEd.server.plant.plant import Plant
 
 # states for objective
 BIOMASS_ROOT = "Biomass_tx_root"
@@ -104,7 +107,7 @@ class DynamicModel:
     ):
         self.model = model.copy()
 
-        self.plant = server.Plant()
+        self.plant = Plant()
 
         self.gametime = gametime
         self.use_starch = False
