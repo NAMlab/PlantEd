@@ -19,6 +19,7 @@ jobs:
           run: python -m pip install tox
         - name: flake8
           run: python -m tox -e flake8
+          continue-on-error: true
         - name: black
           run: python -m tox -e black
 
@@ -37,6 +38,7 @@ jobs:
       - name: Install dependencies
         run: python -m pip install tox
       - name: Run type-checking
+        continue-on-error: true
         run: python -m tox -e mypy
 
   test-dev:

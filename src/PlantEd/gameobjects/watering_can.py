@@ -24,7 +24,7 @@ class Watering_can:
         self.pos = (pos[0] - 20, pos[1] - 120)
         self.water_grid = water_grid  # remove
         self.image = assets.img("watering_can.PNG", (214, 147))
-        self.default_amount = rate*2  # default gamespeed 3s
+        self.default_amount = rate * 2  # default gamespeed 3s
         self.amount = amount if amount else self.default_amount
         self.rate = rate
         self.cost = cost

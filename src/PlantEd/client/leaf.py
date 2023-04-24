@@ -1,15 +1,15 @@
 from dataclasses import dataclass
 
-from PlantEd import server
+from PlantEd.server.plant.leaf import Leaf as server_leaf
 
 
 @dataclass(kw_only=True)
-class Leaf(server.Leaf):
+class Leaf(server_leaf):
     image: object
     base_image_id: int
 
-    def strip2server_version(self) -> server.Leaf:
-        leaf = server.Leaf(
+    def strip2server_version(self) -> server_leaf:
+        leaf = server_leaf(
             pos_x=self.pos_x,
             pos_y=self.pos_y,
             t=self.t,

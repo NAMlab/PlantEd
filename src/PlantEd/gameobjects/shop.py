@@ -1,7 +1,7 @@
 import pygame
 
 from PlantEd import config
-from PlantEd.client import Client
+from PlantEd.client.client import Client
 from PlantEd.data import assets
 from PlantEd.gameobjects.blue_grain import Blue_grain
 from PlantEd.gameobjects.root_item import Root_Item
@@ -25,7 +25,12 @@ class FloatingShop:
         self.shop_items = []
         self.margin = 16
         self.rect = pygame.Rect(
-            (0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin)
+            (
+                0,
+                0,
+                len(self.shop_items) * (64 + self.margin) + self.margin,
+                64 + 2 * self.margin,
+            )
         )
         self.active = False
         self.s = pygame.Surface(
@@ -41,7 +46,12 @@ class FloatingShop:
         self.active = True
         self.pos = pos
         self.rect = pygame.Rect(
-            (0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin)
+            (
+                0,
+                0,
+                len(self.shop_items) * (64 + self.margin) + self.margin,
+                64 + 2 * self.margin,
+            )
         )
 
     def deactivate(self):
@@ -51,7 +61,14 @@ class FloatingShop:
         self.shop_items.append(shop_item)
         self.shop_items[-1].shop_items = self.shop_items
         self.shop_items[-1].floating_shop = self
-        self.rect = pygame.Rect((0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin))
+        self.rect = pygame.Rect(
+            (
+                0,
+                0,
+                len(self.shop_items) * (64 + self.margin) + self.margin,
+                64 + 2 * self.margin,
+            )
+        )
 
     def get_rect(self):
         return pygame.Rect(
@@ -71,14 +88,23 @@ class FloatingShop:
     def draw(self, screen):
         if self.active:
             pygame.draw.rect(
-                self.s, config.WHITE_TRANSPARENT, (0,0,self.rect[2],self.rect[3]), border_radius=3
+                self.s,
+                config.WHITE_TRANSPARENT,
+                (0, 0, self.rect[2], self.rect[3]),
+                border_radius=3,
             )
             pygame.draw.rect(
-                self.s, config.WHITE, (0,0,self.rect[2],self.rect[3]), width=2, border_radius=3
+                self.s,
+                config.WHITE,
+                (0, 0, self.rect[2], self.rect[3]),
+                width=2,
+                border_radius=3,
             )
             for item in self.shop_items:
                 item.draw(self.s)
-            screen.blit(self.s, (self.pos[0], self.pos[1]-self.camera.offset_y))
+            screen.blit(
+                self.s, (self.pos[0], self.pos[1] - self.camera.offset_y)
+            )
 
 
 class FloatingShopItem:
@@ -127,7 +153,12 @@ class FloatingShopItem:
         if self.cost <= self.plant.upgrade_points:
             screen.blit(self.image, (self.rect[0], self.rect[1]))
             if self.hover:
-                pygame.draw.rect(screen, config.WHITE, (self.rect[0],self.rect[1],self.rect[2],self.rect[3]), width=2)
+                pygame.draw.rect(
+                    screen,
+                    config.WHITE,
+                    (self.rect[0], self.rect[1], self.rect[2], self.rect[3]),
+                    width=2,
+                )
 
 
 class Shop:
