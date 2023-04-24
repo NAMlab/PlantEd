@@ -188,16 +188,39 @@ class UI:
             )
         )
 
+
+        sfx_mute_icon = assets.img("sfx.png",(35,35))
         self.button_sprites.add(
             ToggleButton(
-                80,
-                config.SCREEN_HEIGHT-100,
+                300,
+                config.SCREEN_HEIGHT-60,
                 50,
-                30,
+                50,
                 [self.narrator.toggle_mute],
                 config.FONT,
-                "mute",
-                border_w=3)
+                image=sfx_mute_icon,
+                border_w=3,
+                border_radius=25,
+                cross=True,
+                cross_size=(10,10,40,40)
+            )
+        )
+
+        sfx_mute_icon = assets.img("sfx.png", (35, 35))
+        self.button_sprites.add(
+            ToggleButton(
+                360,
+                config.SCREEN_HEIGHT - 60,
+                50,
+                50,
+                [self.narrator.toggle_mute],
+                config.FONT,
+                image=sfx_mute_icon,
+                border_w=3,
+                border_radius=25,
+                cross=True,
+                cross_size=(10, 10, 40, 40)
+            )
         )
 
 
@@ -253,7 +276,7 @@ class UI:
         speed_options[0].button_down = True
 
         self.skip_intro = Button_Once(
-            330,
+            440,
             config.SCREEN_HEIGHT - 50,
             140,
             32,
@@ -1099,7 +1122,6 @@ class UI:
         width = 140
 
         water = self.client.get_water_pool()
-        print(water.water_pool, water.max_water_pool)
         water_percentage = water.water_pool / water.max_water_pool
         pygame.draw.rect(
             s,
