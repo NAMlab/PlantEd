@@ -169,7 +169,7 @@ class Cubic:
 
     def handle_event(self, e, offset_y):
         pos = pygame.mouse.get_pos()
-        pos = (pos[0], pos[1] - offset_y)
+        pos = (pos[0],pos[1]-offset_y)
         if self.move_offset:
             point, min_dist, id = self.find_closest(pos)
             if min_dist <= 15:
@@ -199,10 +199,10 @@ class Cubic:
         y_lower = self.get_lower(id)
         if y_upper:
             print(pos[1], y_upper[1])
-            if pos[1] < y_upper[1] + 10:
+            if pos[1] < y_upper[1]+10:
                 return False
         if y_lower:
-            if pos[1] > y_lower[1] - 10:
+            if pos[1] > y_lower[1]-10:
                 return False
         else:
             if self.main:

@@ -4,7 +4,8 @@ import pandas as pd
 import pygame
 from pygame.locals import Rect
 
-from PlantEd import data, config, server
+from PlantEd.client import Client
+from PlantEd import data
 from PlantEd.utils.particle import StillParticles
 from PlantEd.utils.animation import Animation
 import numpy as np
@@ -39,7 +40,7 @@ class Environment:
     def __init__(
         self,
         plant,
-        server_plant: server.Plant,
+        client: Client,
         water_grid,
         nitrate,
         water,
@@ -55,7 +56,7 @@ class Environment:
         self.sunpos = (0, 0)
         self.rain_rate = 0.0003
         self.plant = plant
-        self.server_plant = server_plant
+        self.client = client
         self.wind_force = (0, 0)
         self.wind_duration = 0  # at 60fps
         rain_images = [
@@ -120,7 +121,7 @@ class Environment:
             images=[assets.img("nitrogen.PNG", (20, 20))],
             speed=[0, 0],
             # ToDo callback really needed scales only the particles?
-            callback=self.server_plant.nitrate.get_nitrate_percentage,
+            callback=self.client.get_nitrate_percentage,
             active=True,
             size=4,
             factor=100,
@@ -140,9 +141,7 @@ class Environment:
             self.sunpos = self.sun_pos_spline[(int(day_time * 10000) - 1)]
             self.plant.organs[1].sunpos = self.sunpos
 
-    def calc_shadowmap(
-        self, leaves, sun_dir=(0.5, 1), resolution=10, max_shadow=5
-    ):
+    def calc_shadowmap(self, leaves, sun_dir=(0.5, 1), resolution=10, max_shadow=5):
         width = config.SCREEN_WIDTH
         height = config.SCREEN_HEIGHT
 
@@ -177,17 +176,15 @@ class Environment:
                     ):
                         # print(bottom_right,
                         # bottom_left, i * resolution, j * resolution)
-                        map[i, j] += (
-                            1 if map[i, j] < max_shadow else max_shadow
-                        )
+                        map[i, j] += 1 if map[i, j] < max_shadow else max_shadow
 
         self.shadow_map = map
         return map, resolution, max_shadow
 
     def draw_shadows(self, screen):
-        self.s.fill((0, 0, 0, 0))
+        self.s.fill((0,0,0,0))
         if self.shadow_map is not None:
-            # self.s.fill((0, 0, 0, 0))
+            #self.s.fill((0, 0, 0, 0))
 
             # draw polygon for each shadow
             # vs make polygon from all outer points
@@ -234,6 +231,7 @@ class Environment:
         self.nitrate.draw(screen)
         for animation in self.animations:
             animation.draw(screen)
+
 
     def update_weather(self):
         days, hours, minutes = self.get_day_time()

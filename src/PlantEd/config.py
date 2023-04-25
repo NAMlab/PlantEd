@@ -8,8 +8,6 @@ from PlantEd import data
 from PlantEd.data import assets
 import os
 
-from PlantEd.data import assets
-
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
 # settings: HARD, INTERMEDIATE, EASY, Graphics - not yet
