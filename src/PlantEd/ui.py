@@ -2,7 +2,8 @@ from typing import Tuple
 
 import pygame
 
-from PlantEd import config, server
+from PlantEd import config
+from PlantEd.server.plant.plant import Plant as serverPlant
 from PlantEd.client.client import Client
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.camera import Camera
@@ -55,7 +56,7 @@ class UI:
         self,
         scale: float,  # ToDo Float?
         plant: Plant,
-        server_plant: server.Plant,
+        server_plant: serverPlant,
         narrator: Narrator,
         client: Client,
         growth_rates: GrowthRates,

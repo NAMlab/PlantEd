@@ -4,7 +4,8 @@ import pandas as pd
 import pygame
 from pygame.locals import Rect
 
-from PlantEd import data, config, server
+from PlantEd import data
+from PlantEd.server.plant.plant import Plant as server_plant
 from PlantEd.utils.particle import StillParticles
 from PlantEd.utils.animation import Animation
 import numpy as np
@@ -39,7 +40,7 @@ class Environment:
     def __init__(
         self,
         plant,
-        server_plant: server.Plant,
+        server_plant: server_plant,
         water_grid,
         nitrate,
         water,

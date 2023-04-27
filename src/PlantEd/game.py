@@ -7,7 +7,7 @@ from typing import List
 import pygame
 from pygame.locals import *
 
-from PlantEd import config, server
+from PlantEd import config
 from PlantEd.analysis import scoring
 from PlantEd.analysis.logger import Log
 from PlantEd.camera import Camera
@@ -31,6 +31,7 @@ from PlantEd.gameobjects.snail import Snail
 from PlantEd.gameobjects.tree import Tree
 from PlantEd.gameobjects.water_reservoir import Water_Grid, Base_water
 from PlantEd.server.server import Server
+from PlantEd.server.plant.plant import Plant as ServerPlant
 from PlantEd.ui import UI
 from PlantEd.utils.button import Button, Slider, ToggleButton, Textbox
 from PlantEd.utils.gametime import GameTime
@@ -330,7 +331,7 @@ class DefaultGameScene(object):
         logger.debug("Starting Client")
         self.client = Client()
 
-        self.server_plant = server.Plant()
+        self.server_plant = ServerPlant()
 
         self.plant = Plant(
             pos=(
