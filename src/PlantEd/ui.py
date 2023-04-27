@@ -3,6 +3,7 @@ from typing import Tuple
 import pygame
 
 from PlantEd import config
+from PlantEd.server.plant.plant import Plant as serverPlant
 from PlantEd.client.client import Client
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.camera import Camera
@@ -55,6 +56,7 @@ class UI:
         self,
         scale: float,  # ToDo Float?
         plant: Plant,
+        server_plant: serverPlant,
         narrator: Narrator,
         client: Client,
         growth_rates: GrowthRates,
@@ -69,6 +71,9 @@ class UI:
         self.name_label = config.FONT.render(self.name, True, config.BLACK)
         self.plant = plant
         self.narrator = narrator
+
+        self.server_plant = server_plant
+
         self.client = client
         self.growth_rates: GrowthRates = growth_rates
         self.environment = environment
@@ -174,7 +179,6 @@ class UI:
         self.particle_systems.append(self.drain_starch_particle)
         self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
-
 
         self.button_sprites.add(
             Arrow_Button(
@@ -294,7 +298,7 @@ class UI:
             5,
             self.set_stomata_automation,
             self.hover.set_message,
-            border_w=2
+            border_w=2,
         )
 
         self.presets = [preset for i in range(0, 3)]
@@ -302,7 +306,7 @@ class UI:
         # self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
-        #self.tool_tip_manager.deactivate_tooltipps()
+        # self.tool_tip_manager.deactivate_tooltipps()
         self.gametime.forward()
 
     def handle_event(self, e: pygame.event.Event):
@@ -314,7 +318,7 @@ class UI:
             button.handle_event(e)
         for slider in self.sliders:
             slider.handle_event(e)
-        #for tips in self.tool_tip_manager.tool_tips:
+        # for tips in self.tool_tip_manager.tool_tips:
         #    tips.handle_event(e)
 
     def update(self, dt):
@@ -334,7 +338,7 @@ class UI:
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
-        #self.tool_tip_manager.update()
+        # self.tool_tip_manager.update()
         for element in self.floating_elements:
             element.update(dt)
         for animation in self.animations:
@@ -380,7 +384,7 @@ class UI:
             screen.blit(animation.image, animation.pos)
         for system in self.particle_systems:
             system.draw(screen)
-        #self.tool_tip_manager.draw(screen)
+        # self.tool_tip_manager.draw(screen)
 
         # draw danger mode
         if self.danger_timer < 0.5:
@@ -1121,8 +1125,11 @@ class UI:
 
         width = 140
 
-        water = self.client.get_water_pool()
-        water_percentage = water.water_pool / water.max_water_pool
+        # Is updated every second via Growth event.
+        water = self.server_plant.water
+
+        water_percentage = self.server_plant.water.fill_percentage
+
         pygame.draw.rect(
             s,
             config.WHITE_TRANSPARENT,
