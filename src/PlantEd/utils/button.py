@@ -497,37 +497,63 @@ class ToggleButton(pygame.sprite.Sprite):
         text_color=BLACK,
         image=None,
         border_w=None,
+        border_radius=None,
         pressed=False,
         fixed=False,
         vertical=False,
         cross=False,
+        cross_size=None
     ):
         super().__init__()
         self.fixed = fixed
-        self.border_w = int(5) if not border_w else border_w
+        self.border_w = 5 if not border_w else border_w
+        self.border_radius = 0 if not border_radius else border_radius
         self.button_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
+
+        pygame.draw.rect(
+            self.button_image,
+            button_color,
+            self.button_image.get_rect(),
+            border_radius=self.border_radius
+        )
+        pygame.draw.rect(
+            self.hover_image,
+            button_color,
+            self.hover_image.get_rect(),
+            border_radius=self.border_radius
+        )
+        pygame.draw.rect(
+            self.clicked_image,
+            button_color,
+            self.clicked_image.get_rect(),
+            border_radius=self.border_radius
+        )
+
         if image:
-            self.button_image.blit(image.copy(), (0, 0))
-            self.hover_image.blit(image.copy(), (0, 0))
-            self.clicked_image.blit(image.copy(), (0, 0))
-        else:
-            self.button_image.fill(button_color)
-            self.hover_image.fill(button_color)
-            self.clicked_image.fill(button_color)
+            image_x = w/2-image.get_width()/2
+            image_y = h/2-image.get_height()/2
+            self.button_image.blit(image.copy(), (image_x, image_y))
+            self.hover_image.blit(image.copy(), (image_x, image_y))
+            self.clicked_image.blit(image.copy(), (image_x, image_y))
+
         pygame.draw.rect(
             self.hover_image,
             WHITE_TRANSPARENT,
             self.hover_image.get_rect(),
             self.border_w,
+            border_radius=self.border_radius
         )
         if cross:
+            if not cross_size:
+                cross_size = (0,0,w,h)
+
             pygame.draw.line(
-                self.clicked_image, WHITE, (0, 0), (w, h), self.border_w
+                self.clicked_image, WHITE, (cross_size[0], cross_size[1]), (cross_size[2], cross_size[3]), self.border_w
             )
             pygame.draw.line(
-                self.clicked_image, WHITE, (0, h), (w, 0), self.border_w
+                self.clicked_image, WHITE, (cross_size[0], cross_size[2]), (cross_size[2], cross_size[1]), self.border_w
             )
         else:
             pygame.draw.rect(
@@ -1540,13 +1566,11 @@ class ButtonArray:
                 self.set_hover_message(self.hover_message)
 
     def toggle_all(self):
-        print("all")
         sum_true = 0
         for bool in self.get_bool_list():
             if bool:
                 sum_true += 1
-                print(sum_true)
-        if len(self.toggle_buttons) / 2 > sum_true:
+        if len(self.toggle_buttons)/2 > sum_true:
             for button in self.toggle_buttons:
                 button.activate()
             self.go_green()
