@@ -365,7 +365,7 @@ class DefaultGameScene(object):
 
         self.narrator = Narrator(self.environment)
 
-        growth_rates = GrowthRates("grams", 0, 0, 0, 0, 0, 0)
+        growth_rates = GrowthRates("grams", 0, 0, 0, 0, 0, 0, 0)
         self.ui = UI(
             scale=1,
             plant=self.plant,
@@ -608,17 +608,13 @@ class DefaultGameScene(object):
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
+                    time_frame = self.gametime.get_time()  # ToDo correct ?
                 )
 
                 self.client.growth_rate(
                     growth_percent=growth_percent,
                     callback=self.update_growth_rates,
                 )
-
-                # update water
-                self.client.get_water_pool(self.server_plant.set_water)
-                # update nitrate
-                self.client.get_nitrate_pool(self.server_plant.set_nitrate)
 
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
@@ -647,14 +643,31 @@ class DefaultGameScene(object):
             self.narrator.handle_event(e)
             self.camera.handle_event(e)
 
-    def update_growth_rates(self, growth_rates: GrowthRates):
+    def update_growth_rates(self, plant: ServerPlant):
         """
         Callback function for the client to update the GrowthRates
             of the UI.
         Args:
-            growth_rates: The calculated GrowthRates.
+            plant: The new Plant object.
 
         """
+
+        logger.debug("Replacing the existing plant object of the UI with the "
+                     "new one.")
+
+        old_plant = self.server_plant
+        self.server_plant = plant
+
+        growth_rates: GrowthRates = GrowthRates(
+            unit = "mol",
+            leaf_rate = plant.leafs_biomass - old_plant.leafs_biomass,
+            stem_rate = plant.stem_biomass - old_plant.stem_biomass,
+            root_rate = plant.root_biomass - old_plant.root_biomass,
+            starch_rate = plant.starch_out - old_plant.starch_out,
+            starch_intake = plant.starch_in - old_plant.starch_in,
+            seed_rate = plant.seed_biomass - old_plant.seed_biomass,
+            time_frame = -1,
+        )
 
         self.ui.growth_rates = growth_rates
 

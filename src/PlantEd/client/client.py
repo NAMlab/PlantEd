@@ -17,6 +17,7 @@ from PlantEd.client.leaf import Leaf
 from PlantEd.client.update import UpdateInfo
 from PlantEd.client.water import Water
 from PlantEd.server.plant.nitrate import Nitrate
+from PlantEd.server.plant.plant import Plant
 
 logger = logging.getLogger(__name__)
 
@@ -97,13 +98,14 @@ class Client:
     def growth_rate(
         self,
         growth_percent: GrowthPercent,
-        callback: Callable[[GrowthRates], None],
+        callback: Callable[[Plant], None],
     ):
         task = self.__request_growth_rate(growth_percent=growth_percent)
         future_received = self.loop.create_future()
 
         self.expected_receive["growth_rate"] = future_received
         asyncio.run_coroutine_threadsafe(task, self.loop)
+        print("Bis hier hin")
 
         task = self.__receive_growth_rate(
             future=future_received, callback=callback
@@ -111,12 +113,19 @@ class Client:
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __receive_growth_rate(
-        self, future: Future, callback: Callable[[GrowthRates], None]
+        self, future: Future, callback: Callable[[Plant], None]
     ):
         await future
-        growth_rate = GrowthRates.from_json(future.result())
+        logger.debug("Results of the growth calculation obtained. "
+                     "Create Plant object and invoke callback.")
 
-        callback(growth_rate)
+        plant = Plant.from_json(future.result())
+
+        logger.debug("Plants object created. Execute callback..")
+
+        callback(plant)
+
+        logger.debug("Callback executed.")
 
     async def __request_growth_rate(self, growth_percent: GrowthPercent):
         if growth_percent.starch < 0:
