@@ -81,7 +81,7 @@ water_concentration_at_temp = [
     2.703,
 ]
 
-logger = logging.getLogger("PlantEd.server")
+logger = logging.getLogger(__name__)
 
 # script_dir = Path(__file__).parent.absolute()
 fileDir = Path(__file__)
@@ -167,6 +167,19 @@ class DynamicModel:
             seed=seed_biomass,
         )
 
+        # set limits from pools
+        # ToDo move in own function
+        starch_upper_bound = self.plant.starch_pool.calc_available_starch_in_mol_per_gram_and_time(
+            gram_of_organ= self.plant.stem_biomass_gram,
+            time_in_seconds= time_frame,
+        )
+        logger.debug(f"Upper Bound for starch is {starch_upper_bound}")
+
+        starch_bounds = (0, starch_upper_bound)
+        logger.debug(f"Bounds for starch are {starch_bounds}")
+        self.set_bounds(STARCH_IN, starch_bounds)
+
+
         solution = self.model.optimize()
 
         logger.debug(
@@ -174,13 +187,18 @@ class DynamicModel:
             f"{solution.objective_value:.4E}."
         )
 
-        # get flux with unit mol/(hour * organ_mass)
+        # get flux with unit micromol/(hour * organ_mass)
 
         # biomass
         root = solution.fluxes.get(BIOMASS_ROOT)
         stem = solution.fluxes.get(BIOMASS_STEM)
         leaf = solution.fluxes.get(BIOMASS_LEAF)
         seed = solution.fluxes.get(BIOMASS_SEED)
+
+        logger.debug(f"Flux of leaf biomass is {leaf}, "
+                     f"flux of stem biomass is {stem}, "
+                     f"flux of root biomass is {root}, "
+                     f"flux of seed biomass is {seed}")
 
         # via leaf
         co2 = solution.fluxes[CO2]
@@ -199,7 +217,7 @@ class DynamicModel:
 
         # Normalize
         # - multiply with time and mass resulting in mol as unit
-        # - mol/(seconds * organ_mass) * organ_mass[gram] * time_frame[s]
+        # - micromol/(seconds * organ_mass) * organ_mass[gram] * time_frame[s]
 
         # biomass
         root = root * root_biomass * time_frame
@@ -223,10 +241,10 @@ class DynamicModel:
         nitrate = nitrate * root_biomass * time_frame
 
         # set values
-        self.plant.root_biomass = root_biomass + root
-        self.plant.stem_biomass = stem_biomass + stem
-        self.plant.leafs_biomass = leaf_biomass + leaf
-        self.plant.seed_biomass = seed_biomass + seed
+        self.plant.root_biomass = self.plant.root_biomass + root
+        self.plant.stem_biomass = self.plant.stem_biomass + stem
+        self.plant.leafs_biomass = self.plant.leafs_biomass + leaf
+        self.plant.seed_biomass = self.plant.seed_biomass + seed
 
         self.plant.nitrate.nitrate_intake = nitrate
         self.plant.photon = photon
@@ -241,6 +259,9 @@ class DynamicModel:
         # update starch pool
         self.plant.starch_out = starch_out
         self.plant.starch_in = starch_in
+        self.plant.update_max_starch_pool()
+        self.plant.starch_pool.available_starch_pool = self.plant.starch_pool.available_starch_pool + (starch_out - starch_in)
+
         # ToDo remove growth_rates not needed anymore everything is in plant
         self.growth_rates.root_rate = root
         self.growth_rates.stem_rate = stem
@@ -254,7 +275,7 @@ class DynamicModel:
         self.co2_intake = co2
         self.photon_intake = photon
 
-        logger.debug(f"New Plant: {str(self.plant)}")
+        logger.debug(f"Updated Plant is as follows - {str(self.plant)}")
 
 
     def open_stomata(self):
@@ -345,30 +366,16 @@ class DynamicModel:
     def activate_starch_resource(self, percentage=1):
         logger.info("Activating starch resource")
 
-        self.use_starch = True
-
-        bounds = (0, self.starch_intake_max * (percentage / 100))
-        self.set_bounds(STARCH_IN, bounds)
-
-        logger.debug(
-            f"Set use_starch to {self.use_starch} "
-            f"and STARCH_IN to {bounds}"
-        )
+        self.plant.starch_pool.allowed_starch_pool_consumption = percentage
 
     def deactivate_starch_resource(self):
         logger.info("Deactivating starch resource")
+        self.plant.starch_pool.allowed_starch_pool_consumption = 0
 
-        self.use_starch = False
-        bounds = (0, 0)
-        self.set_bounds(STARCH_IN, bounds)
-        logger.debug(
-            f"Set use_starch to {self.use_starch} "
-            f"and STARCH_IN to {bounds}"
-        )
 
     def update(self, update_info=UpdateInfo):
         dt = update_info.delta_time
-        root_mass = update_info.root_mass
+        root_mass = self.plant.root_biomass_gram
         PLA = update_info.PLA
         sun_intensity = update_info.sun_intensity
         RH = update_info.humidity

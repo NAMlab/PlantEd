@@ -74,7 +74,7 @@ plant = None
 
 import logging
 
-logger = logging.getLogger("PlantEd.ui")
+logger = logging.getLogger(__name__)
 
 
 def shake():
@@ -333,6 +333,7 @@ class DefaultGameScene(object):
         self.client = Client()
 
         self.server_plant = ServerPlant()
+        self.hours_since_start_where_growth_last_computed = 0
 
         self.plant = Plant(
             pos=(
@@ -603,13 +604,17 @@ class DefaultGameScene(object):
                     flower_percent += 10
                     self.plant.organs[3].percentage = flower_percent
 
+                delta_time_in_h = \
+                    self.gametime.time_since_start_in_hours \
+                    - self.hours_since_start_where_growth_last_computed
+
                 growth_percent = GrowthPercent(
                     leaf=self.plant.organs[0].percentage,
                     stem=self.plant.organs[1].percentage,
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
-                    time_frame = self.gametime.get_time()  # ToDo correct ?
+                    time_frame=delta_time_in_h * 3600 # uses seconds
                 )
 
                 self.client.growth_rate(
@@ -659,19 +664,22 @@ class DefaultGameScene(object):
         old_plant = self.server_plant
         self.server_plant = plant
 
+        logger.debug("Calculating the delta of the growth in grams. ")
+
         growth_rates: GrowthRates = GrowthRates(
-            unit = "mol",
-            leaf_rate = plant.leafs_biomass - old_plant.leafs_biomass,
-            stem_rate = plant.stem_biomass - old_plant.stem_biomass,
-            root_rate = plant.root_biomass - old_plant.root_biomass,
-            starch_rate = plant.starch_out - old_plant.starch_out,
-            starch_intake = plant.starch_in - old_plant.starch_in,
-            seed_rate = plant.seed_biomass - old_plant.seed_biomass,
-            time_frame = -1,
+            unit="mol",
+            leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram) ,
+            stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram) ,
+            root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram) ,
+            starch_rate=(plant.starch_out - old_plant.starch_out) ,
+            starch_intake=(plant.starch_in - old_plant.starch_in) ,
+            seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram) ,
+            time_frame=-1,
         )
 
         self.ui.growth_rates = growth_rates
 
+        logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
 
     def check_game_end(self, days):

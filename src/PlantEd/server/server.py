@@ -15,7 +15,7 @@ from PlantEd.fba.dynamic_model import DynamicModel
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.nitrate import Nitrate
 
-logger = logging.getLogger("PlantEd.server")
+logger = logging.getLogger(__name__)
 
 
 class Server:

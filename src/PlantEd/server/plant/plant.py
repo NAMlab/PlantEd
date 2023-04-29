@@ -5,6 +5,7 @@ import json
 from PlantEd.client.water import Water
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.leaf import Leaf
+from PlantEd.server.plant.starch import Starch
 
 
 class Plant:
@@ -19,8 +20,9 @@ class Plant:
 
         co2 (float):
         photon (float):
-        starch_out (float):
-        starch_in (float):
+
+        starch_pool (float): Starch Object represents the starch pool of
+            the plant as well as starch production and consumption.
 
         water (Water):
         nitrate (Nitrate):
@@ -29,15 +31,16 @@ class Plant:
     """
     def __init__(self):
         self.leafs: list[Leaf] = []
-        self.leafs_biomass: float = 0.0000000000001
-        self.stem_biomass: float = 0.0000000000001
+        self.leafs_biomass: float = 1 / 0.00089947737
+        self.stem_biomass: float = 1 / 0.00089947737
         self.root_biomass: float = 4 / 0.00089947737  # Corresponds to a gram root biomass.
-        self.seed_biomass: float = 0.0000000000001
+        self.seed_biomass: float = 1 / 0.00089947737
 
         self.co2: float = 0
         self.photon: float = 0
-        self.starch_out: float = 0
-        self.starch_in: float = 0
+
+        self.starch_pool: Starch = Starch()
+        self.starch_pool.scale_pool_via_biomass(self.biomass_total_gram)
 
         self.water: Water = Water()
         self.nitrate: Nitrate = Nitrate()
@@ -103,6 +106,22 @@ class Plant:
         plant.photon_upper = dic["photon_upper"]
 
         return plant
+
+    @property
+    def starch_out(self):
+        return self.starch_pool.starch_out
+
+    @starch_out.setter
+    def starch_out(self, value):
+        self.starch_pool.starch_out = value
+
+    @property
+    def starch_in(self):
+        return self.starch_pool.starch_in
+
+    @starch_in.setter
+    def starch_in(self, value):
+        self.starch_pool.starch_in = value
 
     @property
     def leafs_biomass_gram(self):
