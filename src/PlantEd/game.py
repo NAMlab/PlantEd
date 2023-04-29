@@ -2,6 +2,7 @@ import argparse
 import random
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import List
 
 import pygame
@@ -73,7 +74,7 @@ plant = None
 
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("PlantEd.ui")
 
 
 def shake():
@@ -1110,10 +1111,24 @@ class SceneMananger(object):
         # self.camera.render(screen_high, screen)
 
 
-def main():
+def main(windowed: bool):
+    """
+
+    Args:
+        windowed: A boolean that determines whether the game starts
+        fullscreen or windowed.
+    """
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
-    pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
+    size = None
+    if windowed:
+        size = pygame.RESIZABLE
+    else:
+        size = pygame.FULLSCREEN
+
+    pygame.display.set_mode((0, 0), size)
+
     pygame.display.set_caption("PlantEd_0.1")
     timer = pygame.time.Clock()
     running = True
@@ -1158,26 +1173,66 @@ if __name__ == "__main__":
         type=str,
         default="",
         metavar="",
-        help="The file in which the log should be saved. "
-        "Attention this will be overwritten. "
-        "By default, no log file is created.",
+        help="The folder where all log files will be stored. "
+             "The log files inside this folder will be overwritten. "
+             "The Folder will be created automatically. "
+             "By default, no folders or logfiles are created.",
+    )
+
+    parser.add_argument(
+        "--windowed",
+        action='store_true',
+        help="Should start the PlantEd full screen or windowed. "
+             "Setting this flag results in a windowed start.",
     )
 
     args = parser.parse_args()
 
-    if args.logFile != "":
-        logging.basicConfig(
-            level=args.logLevel,
-            format="%(asctime)s %(name)s %(levelname)s:%(message)s",
-            datefmt="%H:%M:%S",
-            filename=args.logFile,
-            filemode="w+",
-        )
-    else:
-        logging.basicConfig(
-            level=args.logLevel,
-            format="%(asctime)s %(name)s %(levelname)s:%(message)s",
-            datefmt="%H:%M:%S",
-        )
+    logging.basicConfig(
+        level=args.logLevel,
+        format="%(asctime)s %(name)s %(levelname)s:%(message)s",
+        datefmt="%H:%M:%S",
+    )
 
-    main()
+    if args.logFile != "":
+        FORMAT = logging.Formatter("%(asctime)s %(name)s %(levelname)s:%(message)s")
+        path = Path(args.logFile)
+        if not path.exists():
+            path.mkdir()
+
+        logger_ui = logging.getLogger("PlantEd.ui")
+        handler_ui = logging.FileHandler(
+                filename=path / "ui.log",
+                mode="w+",
+                encoding="utf-8",
+                delay=False,
+                errors=None,
+            )
+        handler_ui.setFormatter(FORMAT)
+        logger_ui.addHandler(handler_ui)
+
+        logger_client = logging.getLogger("PlantEd.client")
+        handler_client = logging.FileHandler(
+                filename= path / "client.log",
+                mode= "w+",
+                encoding="utf-8",
+                delay= False,
+                errors= None,
+            )
+        handler_client.setFormatter(FORMAT)
+        logger_client.addHandler(handler_client)
+
+        logger_server = logging.getLogger("PlantEd.server")
+        handler_server = logging.FileHandler(
+                filename=path / "server.log",
+                mode="w+",
+                encoding="utf-8",
+                delay=False,
+                errors=None,
+            )
+        handler_server.setFormatter(FORMAT)
+        logger_server.addHandler(handler_server)
+
+    main(
+        windowed= args.windowed
+    )
