@@ -15,7 +15,7 @@ from PlantEd.fba.dynamic_model import DynamicModel
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.nitrate import Nitrate
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("PlantEd.server")
 
 
 class Server:
@@ -141,11 +141,11 @@ class Server:
 
         self.model.calc_growth_rate(growth_percent)
 
-        logger.info(f"Calculated growth rates: \n {self.model.growth_rates}")
+        logger.info(f"Calculated growth rates: {self.model.growth_rates}")
         message = self.model.plant.to_json()
 
         # send growth_rates as json
-        logger.info(f"Sending following answer for growth rates. \n {message}")
+        logger.info(f"Sending following answer for growth rates : {message}")
 
         return message
 

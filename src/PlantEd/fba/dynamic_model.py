@@ -38,8 +38,6 @@ MAX_STARCH_INTAKE = 0.9
 # gram to mikromol
 MAX_WATER_POOL_GRAMM = 0.05550843506179199 * 1000000
 
-FLUX_TO_GRAMM = 0.002299662183
-
 water_concentration_at_temp = [
     0.269,
     0.288,
@@ -83,13 +81,11 @@ water_concentration_at_temp = [
     2.703,
 ]
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("PlantEd.server")
 
 # script_dir = Path(__file__).parent.absolute()
 fileDir = Path(__file__)
 script_dir = fileDir.parent
-print(script_dir)
-
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
@@ -159,6 +155,10 @@ class DynamicModel:
         leaf_biomass = self.plant.leafs_biomass_gram
         seed_biomass = self.plant.seed_biomass_gram
 
+        logger.debug(
+            f"Simulating the growth of the plant for {time_frame} seconds."
+        )
+
         normalize(
             model=self.model,
             root=root_biomass,
@@ -168,6 +168,11 @@ class DynamicModel:
         )
 
         solution = self.model.optimize()
+
+        logger.debug(
+            f"Simulation resulted in an objective_value of "
+            f"{solution.objective_value:.4E}."
+        )
 
         # get flux with unit mol/(hour * organ_mass)
 
@@ -194,6 +199,7 @@ class DynamicModel:
 
         # Normalize
         # - multiply with time and mass resulting in mol as unit
+        # - mol/(seconds * organ_mass) * organ_mass[gram] * time_frame[s]
 
         # biomass
         root = root * root_biomass * time_frame
@@ -201,6 +207,7 @@ class DynamicModel:
         leaf = leaf * leaf_biomass * time_frame
         seed = seed * seed_biomass * time_frame
 
+        # Uptake and release
         # via leaf
         co2 = co2 * leaf_biomass * time_frame
         photon = photon * leaf_biomass * time_frame
@@ -209,28 +216,31 @@ class DynamicModel:
         # via stem
         starch_out = starch_out * stem_biomass * time_frame
         starch_in = starch_in * stem_biomass * time_frame
+        logger.debug(f"Starch_in is {starch_in} and starch_out is {starch_out}")
 
         # via root
         water = water * root_biomass * time_frame
         nitrate = nitrate * root_biomass * time_frame
 
         # set values
-
         self.plant.root_biomass = root_biomass + root
         self.plant.stem_biomass = stem_biomass + stem
         self.plant.leafs_biomass = leaf_biomass + leaf
         self.plant.seed_biomass = seed_biomass + seed
 
-        self.plant.water.water_intake = water
         self.plant.nitrate.nitrate_intake = nitrate
-
-        self.plant.starch_out = starch_out
-        self.plant.starch_in = starch_in
         self.plant.photon = photon
         self.plant.co2 = co2
 
         self.plant.photon_upper = photon_upper
 
+        # update water
+        self.plant.water.water_intake = water
+        self.plant.update_max_water_pool()
+
+        # update starch pool
+        self.plant.starch_out = starch_out
+        self.plant.starch_in = starch_in
         # ToDo remove growth_rates not needed anymore everything is in plant
         self.growth_rates.root_rate = root
         self.growth_rates.stem_rate = stem
@@ -244,7 +254,7 @@ class DynamicModel:
         self.co2_intake = co2
         self.photon_intake = photon
 
-        self.plant.update_max_water_pool()
+        logger.debug(f"New Plant: {str(self.plant)}")
 
 
     def open_stomata(self):

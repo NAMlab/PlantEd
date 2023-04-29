@@ -16,7 +16,7 @@ class GrowthPercent:
         root (float):
         starch (float):
         flower (float):
-        time_frame (int):
+        time_frame (int): Time in seconds
     """
 
     leaf: float

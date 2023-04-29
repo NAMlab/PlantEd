@@ -31,7 +31,7 @@ class Plant:
         self.leafs: list[Leaf] = []
         self.leafs_biomass: float = 0.0000000000001
         self.stem_biomass: float = 0.0000000000001
-        self.root_biomass: float = 1 / 899.477379  # Corresponds to a mole root biomass.
+        self.root_biomass: float = 4 / 0.00089947737  # Corresponds to a gram root biomass.
         self.seed_biomass: float = 0.0000000000001
 
         self.co2: float = 0
@@ -44,6 +44,23 @@ class Plant:
 
         self.photon_upper: float = 0
 
+    def __repr__(self):
+        string =f"Plant object with following biomass values:" \
+                f" Leafs {self.leafs_biomass:.4E} mol" \
+                f" Stem {self.stem_biomass:.4E} mol" \
+                f" Root {self.root_biomass:.4E} mol" \
+                f" Seed {self.seed_biomass:.4E} mol" \
+                f" - other values :" \
+                f" CO2 uptake is {self.co2:.4E} mol;" \
+                f" Photon uptake is {self.photon:.4E} mol with " \
+                f"an upper bound of {self.photon_upper:.4E} " \
+                f"mol/(g_leaf_biomass * seconds);" \
+                f" Starch uptake is {self.starch_in:.4E} mol;" \
+                f" Starch output is {self.starch_out:.4E} mol;" \
+                f" Water is {str(self.water)};" \
+                f" Nitrate is {str(self.nitrate)}" \
+
+        return string
     def to_json(self):
         dic = {}
 
@@ -89,19 +106,19 @@ class Plant:
 
     @property
     def leafs_biomass_gram(self):
-        return self.leafs_biomass * 899.477379
+        return self.leafs_biomass * 899.477379 / 1000000
 
     @property
     def stem_biomass_gram(self):
-        return self.stem_biomass * 916.2985939
+        return self.stem_biomass * 916.2985939 / 1000000
 
     @property
     def root_biomass_gram(self):
-        return self.root_biomass * 956.3297883
+        return self.root_biomass * 956.3297883 / 1000000
 
     @property
     def seed_biomass_gram(self):
-        return self.seed_biomass * 978.8487602
+        return self.seed_biomass * 978.8487602 / 1000000
 
     @property
     def biomass_total(self):
@@ -123,3 +140,6 @@ class Plant:
 
     def update_max_water_pool(self):
         self.water.update_max_water_pool(plant_biomass=self.biomass_total)
+
+    def update_max_starch_pool(self):
+        self.starch_pool.scale_pool_via_biomass(biomass_in_gram= self.biomass_total_gram)

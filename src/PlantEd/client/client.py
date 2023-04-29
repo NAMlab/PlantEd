@@ -7,6 +7,7 @@ import json
 import logging
 import threading
 from asyncio import Future
+from pathlib import Path
 from typing import Callable
 
 import websockets
@@ -19,8 +20,7 @@ from PlantEd.client.water import Water
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.plant import Plant
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger(name = "PlantEd.client")
 
 class Client:
     """
@@ -105,7 +105,6 @@ class Client:
 
         self.expected_receive["growth_rate"] = future_received
         asyncio.run_coroutine_threadsafe(task, self.loop)
-        print("Bis hier hin")
 
         task = self.__receive_growth_rate(
             future=future_received, callback=callback
@@ -137,7 +136,7 @@ class Client:
 
         logger.info(
             "Sending Request for growth rates."
-            f"Payload is :\n"
+            f"Payload is : "
             f"{message_dict}"
         )
 
@@ -216,7 +215,7 @@ class Client:
         await self.websocket.send(message)
 
     def enable_water_intake(self):
-        task = self.__stop_water_intake()
+        task = self.__enable_water_intake()
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __enable_water_intake(self):
