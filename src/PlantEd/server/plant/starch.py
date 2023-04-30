@@ -52,6 +52,14 @@ class Starch:
     @property
     def available_starch_pool_gram(self):
         return self.__available_starch_pool * gram_starch_per_micromol_starch
+
+    @property
+    def starch_usage_in_gram(self):
+        return self.starch_in * gram_starch_per_micromol_starch
+
+    @property
+    def starch_production_in_gram(self):
+        return self.starch_out * gram_starch_per_micromol_starch
     @property
     def max_starch_pool(self):
         """

@@ -31,10 +31,10 @@ class Plant:
     """
     def __init__(self):
         self.leafs: list[Leaf] = []
-        self.leafs_biomass: float = 1 / 0.00089947737
-        self.stem_biomass: float = 1 / 0.00089947737
-        self.root_biomass: float = 4 / 0.00089947737  # Corresponds to a gram root biomass.
-        self.seed_biomass: float = 1 / 0.00089947737
+        self.leafs_biomass: float = 0.0000001 / 0.00089947737
+        self.stem_biomass: float = 0.0000001 / 0.00089947737
+        self.root_biomass: float = 4 / 0.00089947737  # Corresponds to 4 gram root biomass.
+        self.seed_biomass: float = 0.0000001 / 0.00089947737
 
         self.co2: float = 0
         self.photon: float = 0
@@ -64,7 +64,31 @@ class Plant:
                 f" Nitrate is {str(self.nitrate)}" \
 
         return string
-    def to_json(self):
+
+    def to_json(self) -> str:
+        """
+        Function that returns the plant object encoded in json. Using the
+        from_json function a new plant object can be created whose instance
+        variables are identical to those of the original object.
+
+        Returns: A JSON string that contains all instance variables
+        of the Plant Object.
+
+        """
+
+        return json.dumps(self.to_dict())
+
+    def to_dict(self):
+        """
+        Function that returns the plant object encoded as :py:class:`dict`.
+        Using the :py:meth:`from_dict` method a new plant object can be
+        created whose instance variables are identical to those of the
+        original object.
+
+        Returns: The instance variables of the :py:class:`Plant` object
+        encoded as a :py:class:`dict`.
+
+        """
         dic = {}
 
         dic["leafs_biomass"] = self.leafs_biomass
@@ -82,12 +106,10 @@ class Plant:
 
         dic["photon_upper"] = self.photon_upper
 
-        return json.dumps(dic)
+        return dic
 
     @classmethod
-    def from_json(cls, string:str) -> Plant:
-        dic = json.loads(string)
-
+    def from_dic(cls, dic:dict) -> Plant:
         plant = Plant()
 
         plant.leafs_biomass = dic["leafs_biomass"]
@@ -106,6 +128,12 @@ class Plant:
         plant.photon_upper = dic["photon_upper"]
 
         return plant
+
+    @classmethod
+    def from_json(cls, string:str) -> Plant:
+        dic = json.loads(string)
+
+        return Plant.from_dic(dic = dic)
 
     @property
     def starch_out(self):

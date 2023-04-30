@@ -1,6 +1,7 @@
 import argparse
 import random
 import sys
+import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import List
@@ -671,8 +672,8 @@ class DefaultGameScene(object):
             leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram) ,
             stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram) ,
             root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram) ,
-            starch_rate=(plant.starch_out - old_plant.starch_out) ,
-            starch_intake=(plant.starch_in - old_plant.starch_in) ,
+            starch_rate=(plant.starch_pool.starch_production_in_gram - old_plant.starch_pool.starch_production_in_gram) ,
+            starch_intake=(plant.starch_pool.starch_usage_in_gram - old_plant.starch_pool.starch_usage_in_gram) ,
             seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram) ,
             time_frame=-1,
         )
@@ -1165,82 +1166,9 @@ def main(windowed: bool):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-v",
-        "--logLevel",
-        type=str,
-        default="WARNING",
-        metavar="",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Set the detail of the log events (default: %(default)s)",
-    )
-
-    parser.add_argument(
-        "--logFile",
-        type=str,
-        default="",
-        metavar="",
-        help="The folder where all log files will be stored. "
-             "The log files inside this folder will be overwritten. "
-             "The Folder will be created automatically. "
-             "By default, no folders or logfiles are created.",
-    )
-
-    parser.add_argument(
-        "--windowed",
-        action='store_true',
-        help="Should start the PlantEd full screen or windowed. "
-             "Setting this flag results in a windowed start.",
-    )
-
-    args = parser.parse_args()
-
-    logging.basicConfig(
-        level=args.logLevel,
-        format="%(asctime)s %(name)s %(levelname)s:%(message)s",
-        datefmt="%H:%M:%S",
-    )
-
-    if args.logFile != "":
-        FORMAT = logging.Formatter("%(asctime)s %(name)s %(levelname)s:%(message)s")
-        path = Path(args.logFile)
-        if not path.exists():
-            path.mkdir()
-
-        logger_ui = logging.getLogger("PlantEd.ui")
-        handler_ui = logging.FileHandler(
-                filename=path / "ui.log",
-                mode="w+",
-                encoding="utf-8",
-                delay=False,
-                errors=None,
-            )
-        handler_ui.setFormatter(FORMAT)
-        logger_ui.addHandler(handler_ui)
-
-        logger_client = logging.getLogger("PlantEd.client")
-        handler_client = logging.FileHandler(
-                filename= path / "client.log",
-                mode= "w+",
-                encoding="utf-8",
-                delay= False,
-                errors= None,
-            )
-        handler_client.setFormatter(FORMAT)
-        logger_client.addHandler(handler_client)
-
-        logger_server = logging.getLogger("PlantEd.server")
-        handler_server = logging.FileHandler(
-                filename=path / "server.log",
-                mode="w+",
-                encoding="utf-8",
-                delay=False,
-                errors=None,
-            )
-        handler_server.setFormatter(FORMAT)
-        logger_server.addHandler(handler_server)
-
-    main(
-        windowed= args.windowed
+    raise DeprecationWarning(
+      "To start the game please use 'PlantEd.start.py' "
+      "instead of 'PlantEd.game.py'. Starting via PlantEd.game.py "
+      "is not possible anymore. PlantEd.start.py "
+      "and PlantEd.game.py are identical in their usage."
     )

@@ -91,7 +91,13 @@ class GameTime:
         )
 
     @property
-    def time_since_start_in_hours(self):
+    def time_since_start_in_hours(self) -> float:
+        """
+        Method to get the number of hours elapsed in the game since the game was started.
+
+        Returns: The passed hours as :py:class:`float`.
+
+        """
         ticks = self.get_time()
         hour = 1000 * 60 * 60
         hours = ticks / hour
