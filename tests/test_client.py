@@ -2,6 +2,7 @@ import unittest
 
 
 class TestClient(unittest.IsolatedAsyncioTestCase):
+
     def test_growth(self):
         self.fail()
 
