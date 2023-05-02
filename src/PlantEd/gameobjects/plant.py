@@ -66,13 +66,13 @@ class Plant:
     FLOWER = 5
 
     def __init__(
-        self,
-        pos,
-        camera,
-        client: Client,
-        water_grid: Water_Grid,
-        growth_boost=1,
-        upgrade_points=10,
+            self,
+            pos,
+            camera,
+            client: Client,
+            water_grid: Water_Grid,
+            growth_boost=1,
+            upgrade_points=10,
     ):
         self.x = pos[0]
         self.y = pos[1]
@@ -159,11 +159,12 @@ class Plant:
     # convert flux/mikromol to gramm
     def update_growth_rates(self, growth_rates: GrowthRates):
         sum_rates = (
-            growth_rates.leaf_rate
-            + growth_rates.stem_rate
-            + growth_rates.root_rate
-            + growth_rates.starch_rate
-            + growth_rates.seed_rate
+                growth_rates.leaf_rate
+                + growth_rates.stem_rate
+                + growth_rates.root_rate
+                + growth_rates.starch_rate
+                + growth_rates.starch_rate
+                + growth_rates.seed_rate
         )
 
         logger.debug(f"Sum of GrowthRates is {sum_rates}")
@@ -200,6 +201,9 @@ class Plant:
         # 0.03152043208186226 as a factor to get are from dry mass
         return self.organs[0].get_pla()  # m^2
 
+    def eat_stem(self, rate, dt):
+        self.organs[1].mass -= rate*dt
+
     def grow(self, dt):
         for organ in self.organs:
             organ.grow(dt)
@@ -228,8 +232,8 @@ class Plant:
             for organ in self.organs:
                 organ.drain(0.00001, self.gametime.GAMESPEED, dt)
         if (
-            self.get_biomass() > self.seedling.max
-            and not self.organs[1].active
+                self.get_biomass() > self.seedling.max
+                and not self.organs[1].active
         ):
             self.organs[1].activate()
             self.organs[0].activate()
@@ -278,22 +282,22 @@ class Seedling:
 
 class Organ:
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        client: Client,
-        callback=None,
-        plant=None,
-        image=None,
-        pivot=None,
-        mass=1,
-        growth_rate=0,
-        thresholds=None,
-        rect=None,
-        active=False,
-        base_mass=1,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            client: Client,
+            callback=None,
+            plant=None,
+            image=None,
+            pivot=None,
+            mass=1,
+            growth_rate=0,
+            thresholds=None,
+            rect=None,
+            active=False,
+            base_mass=1,
     ):
         if thresholds is None:
             thresholds = [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
@@ -414,17 +418,17 @@ class Organ:
 
 class Leaf(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant,
-        images,
-        mass,
-        active,
-        client: Client,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant,
+            images,
+            mass,
+            active,
+            client: Client,
     ):
         self.leaves = []
         super().__init__(
@@ -539,7 +543,7 @@ class Leaf(Organ):
 
     def get_mass(self):
         return (
-            sum([leaf["mass"] for leaf in self.leaves]) + self.base_mass
+                sum([leaf["mass"] for leaf in self.leaves]) + self.base_mass
         )  # basemass for seedling leaves
 
     def append_leaf(self, highlight: Tuple[list[int], int, int]):
@@ -675,16 +679,16 @@ class Leaf(Organ):
         base_offset = leaves[leaf["base_image_id"]][1]
         ratio = base_image.get_height() / base_image.get_width()
         threshold = (
-            self.active_threshold - leaf["growth_index"]
+                self.active_threshold - leaf["growth_index"]
         )  # if not init else 0
         new_width = (threshold * factor) + base
         new_height = int(new_width * ratio)
         new_width = int(new_width)
         leaf["offset_x"] = base_offset[0] * (
-            new_width / base_image.get_width()
+                new_width / base_image.get_width()
         )
         leaf["offset_y"] = base_offset[1] * (
-            new_height / base_image.get_height()
+                new_height / base_image.get_height()
         )
         leaf["image"] = pygame.transform.scale(
             base_image, (new_width, new_height)
@@ -747,18 +751,18 @@ class Leaf(Organ):
 
 class Root(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant: Plant,
-        client: Client,
-        image=None,
-        pivot=None,
-        mass=0.0,
-        active=False,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant: Plant,
+            client: Client,
+            image=None,
+            pivot=None,
+            mass=0.0,
+            active=False,
     ):
         super().__init__(
             x=x,
@@ -858,20 +862,20 @@ class Root(Organ):
 
 class Stem(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant,
-        client: Client,
-        image=None,
-        pivot=None,
-        leaf=None,
-        flower=None,
-        mass=0.0,
-        active=False,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant,
+            client: Client,
+            image=None,
+            pivot=None,
+            leaf=None,
+            flower=None,
+            mass=0.0,
+            active=False,
     ):
         self.leaf = leaf
         self.flower = flower
@@ -959,7 +963,7 @@ class Stem(Organ):
             if not self.can_add_branch or self.leaf.can_add_leaf:
                 y -= self.plant.camera.offset_y
                 point, branch_id, point_id = self.curve.find_closest(
-                    (x, y), True
+                    (x, y), False
                 )
                 dist_to_stem = math.sqrt(
                     (x - point[0]) ** 2 + (y - point[1]) ** 2
@@ -973,24 +977,49 @@ class Stem(Organ):
                     self.add_branch(pygame.mouse.get_pos(), self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
-                    ] = False
+                    ] = config.BRANCH_SPOT
                     self.can_add_branch = False
             elif self.leaf.can_add_leaf and self.dist_to_stem < 50:
                 if self.highlight:
                     self.leaf.append_leaf(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
-                    ] = False
+                    ] = config.LEAF_SPOT
             elif self.flower.can_add_flower and self.dist_to_stem < 50:
                 if self.highlight:
                     self.flower.append_flower(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
-                    ] = False
+                    ] = config.FLOWER_SPOT
             else:
                 if self.gametime.get_time() - self.timer < 1000 * 120:
-                    if self.floating_shop is not None:
-                        self.floating_shop.activate(pygame.mouse.get_pos())
+                    x, y = pygame.mouse.get_pos()
+                    y -= self.plant.camera.offset_y
+                    # check how many free spots the stem hast, adapt shop accordingly
+                    # no spots -> if flower selected -> flower option
+                    # no spots, no flower -> nothing
+                    # 1 spot, flower -> all
+                    # 1 spot, no flower -> all but flower option
+
+                    show_items = False
+                    show_flower = False
+
+                    point, branch_id, point_id = self.curve.find_closest((x, y), False)
+                    if self.curve.branches[branch_id].free_spots[point_id] == config.FLOWER_SPOT:
+                        if len(self.flower.flowers) > 0:
+                            for flower in self.flower.flowers:
+                                if branch_id == (flower["t"][0]
+                                                 and point_id == flower["t"][1]
+                                                 and flower["pollinated"]
+                                                 and not flower["flowering"]):
+                                    show_flower = True
+
+                    else:
+                        free_spots = self.curve.get_free_spots()
+                        if free_spots > 0:
+                            show_items = True
+                    if self.floating_shop is not None and (show_flower or show_items):
+                        self.floating_shop.activate(pygame.mouse.get_pos(), show_items, show_flower)
 
         if event.type == KEYDOWN and event.key == K_SPACE:
             self.curve.grow_all()
@@ -1089,17 +1118,17 @@ class Stem(Organ):
 
 class Starch(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant,
-        image,
-        mass,
-        active,
-        client: Client,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant,
+            image,
+            mass,
+            active,
+            client: Client,
     ):
         super().__init__(
             x=x,
@@ -1151,17 +1180,17 @@ class Starch(Organ):
 
 class Flower(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant,
-        images,
-        mass,
-        active,
-        client: Client,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant,
+            images,
+            mass,
+            active,
+            client: Client,
     ):
         self.flowers = []
         super().__init__(
@@ -1202,6 +1231,26 @@ class Flower(Organ):
     def activate_add_flower(self):
         self.can_add_flower = True
 
+    def flower_flower(self, flower):
+        flower["flowering"] = True
+
+    def get_closest_flower(self, pos, flowering=False):
+        min_dist = 10000
+        closest_flower = None
+        for flower in self.flowers:
+            dist = math.sqrt(
+                (pos[0] - flower["x"]) * (pos[0] - flower["x"]) + (pos[1] - flower["y"]) * (pos[1] - flower["y"]))
+            if dist < min_dist and flower["flowering"] == flowering:
+                closest_flower = flower
+                min_dist = dist
+                print(min_dist)
+        return closest_flower
+
+    def start_flowering_closest(self, pos):
+        flower = self.get_closest_flower(pos)
+        if flower:
+            self.flower_flower(flower)
+
     def start_flowering(self):
         self.flowering = True
 
@@ -1227,13 +1276,13 @@ class Flower(Organ):
                 growable_flowers.append(flower)
             # if max age*2 -> kill leaf
 
-        if self.flowering:
-            for flower in self.flowers:
-                if (
-                    flower["pollinated"]
+        for flower in self.flowers:
+            print(flower)
+            if (
+                    flower["flowering"]
                     and flower["seed_mass"] < flower["maximum_seed_mass"]
-                ):
-                    growable_flowers.append(flower)
+            ):
+                growable_flowers.append(flower)
 
         growth_per_flower = (
             (self.growth_rate * dt) / len(growable_flowers)
@@ -1256,15 +1305,15 @@ class Flower(Organ):
 
     def get_mass(self):
         return (
-            sum([leaf["mass"] for leaf in self.flowers]) + self.base_mass
+                sum([leaf["mass"] for leaf in self.flowers]) + self.base_mass
         )  # basemass for seedling leaves
 
     def get_random_flower_pos(self):
         viable_flowers = []
         for flower in self.flowers:
             if (
-                not flower["pollinated"]
-                and flower["mass"] >= flower["maximum_mass"]
+                    not flower["pollinated"]
+                    and flower["mass"] >= flower["maximum_mass"]
             ):
                 viable_flowers.append(flower)
         if len(viable_flowers) > 0:
@@ -1288,14 +1337,12 @@ class Flower(Organ):
             if flower["mass"] < flower["maximum_mass"]:
                 flowering_flowers.append(flower)
         # add all seed producing flowrs
-        if self.flowering:
-            for flower in self.flowers:
-                if (
-                    flower["pollinated"]
+        for flower in self.flowers:
+            if (
+                    flower["flowering"]
                     and flower["seed_mass"] < flower["maximum_seed_mass"]
-                ):
-                    flowering_flowers.append(flower)
-
+            ):
+                flowering_flowers.append(flower)
         return flowering_flowers
 
     def pop_seed(self):
@@ -1330,6 +1377,7 @@ class Flower(Organ):
             "seed_mass": 0,
             "maximum_seed_mass": 10,
             "pollinated": False,
+            "flowering": False,
             "maximum_mass": self.thresholds[-1],
             "lifetime": 60 * 60 * 24 * 10,  # 10 days of liefetime to grow
             "growth_index": self.active_threshold,
@@ -1439,7 +1487,7 @@ class Flower(Organ):
                         flower["y"] - width / 4 - 10 - flower["offset_y"],
                     ),
                 )
-            if flower["pollinated"] and self.flowering:
+            if flower["flowering"]:
                 width = flower["image"].get_width()
                 pygame.draw.rect(
                     screen,

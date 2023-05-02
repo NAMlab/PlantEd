@@ -40,13 +40,13 @@ class Water:
         """
         percentage = self.water_pool / self.max_water_pool
 
-        if percentage > 1 or percentage < 0:
+        '''if percentage > 1 or percentage < 0:
             logger.warning(
                 f"The water pool is over 100% full or in the "
                 f"minus. It is {percentage}, where water_pool is "
                 f"{self.water_pool} and max_water_pool is "
                 f"{self.max_water_pool}."
-            )
+            )'''
 
         return percentage
 

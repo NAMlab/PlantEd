@@ -445,13 +445,14 @@ class DefaultGameScene(object):
                     pygame.Rect(0, 870, config.SCREEN_WIDTH, 240),
                     [
                         assets.img("snail/{}.png".format(i))
-                        for i in range(0, 3)
+                        for i in range(0, 1)
                     ],
                     [
                         assets.img("snail/{}.png".format(i))
-                        for i in range(3, 6)
+                        for i in range(4, 5)
                     ],
                     self.camera,
+                    eat_plant=self.plant.eat_stem
                 )
             )
 
@@ -506,17 +507,8 @@ class DefaultGameScene(object):
             )
         )
 
-        self.shop.shop_items.append(
-            Shop_Item(
-                assets.img("flowering.PNG", (64, 64)),
-                self.plant.organs[3].start_flowering,
-                condition_not_met_message="Level up any organ to get more green thumbs",
-                post_hover_message=self.ui.hover.set_message,
-                message="Start seed production for pollinated flowers",
-            )
-        )
-
         self.shop.add_shop_item(["watering", "blue_grain", "spraycan"])
+        self.shop.spraycan.callback = self.kill_snails
 
         self.floating_shop = FloatingShop(self.camera, (0, 0))
         add_leaf_item_floating = FloatingShopItem(
@@ -540,10 +532,20 @@ class DefaultGameScene(object):
             1,
             self.plant,
         )
+        start_flower_item_floating = FloatingShopItem(
+            (0, 0),
+            self.plant.organs[3].start_flowering_closest,
+            assets.img("flowering.PNG", (64, 64)),
+            1,
+            self.plant,
+            tag="flower",
+            return_pos=True
+        )
 
         self.floating_shop.add_item(add_leaf_item_floating)
         self.floating_shop.add_item(add_branch_item_floating)
         self.floating_shop.add_item(add_flower_item_floating)
+        self.floating_shop.add_item(start_flower_item_floating)
         self.plant.organs[0].floating_shop = self.floating_shop
         self.plant.organs[1].floating_shop = self.floating_shop
         self.plant.organs[2].floating_shop = self.floating_shop
@@ -625,9 +627,6 @@ class DefaultGameScene(object):
 
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
-            if e.type == KEYDOWN and e.key == K_k:
-                # self.ui.init_flowering_ui()
-                self.plant.organs[3].start_flowering()
 
             if e.type == WIN:
                 if self.log:
@@ -686,6 +685,10 @@ class DefaultGameScene(object):
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
             pygame.event.post(pygame.event.Event(WIN))
+
+    def kill_snails(self, rect):
+        for snail in self.snails:
+            snail.kill(rect)
 
     def update(self, dt):
         ticks = self.gametime.get_time()

@@ -11,6 +11,8 @@ from PlantEd import config
 from PlantEd.utils.gametime import GameTime
 
 
+
+
 class Cubic_Tree:
     def __init__(self, branches, camera):
         self.branches = branches
@@ -23,6 +25,23 @@ class Cubic_Tree:
     def grow_all(self):
         for branch in self.branches:
             branch.grow()
+
+    def get_free_spots(self):
+        spots = 0
+        for branch in self.branches:
+            for free_spot in branch.free_spots:
+                if free_spot == config.FREE_SPOT:
+                    spots += 1
+        return spots
+
+
+    def get_spots(self):
+        spots = []
+        for branch in self.branches:
+            for free_spot in branch.free_spots:
+                spots.append(free_spot)
+        return spots
+
 
     def add_branch(self, highlight, mouse_pos):
         point = highlight[0]
@@ -39,7 +58,7 @@ class Cubic_Tree:
                 [point[0] + 50, point[1] - 20],
                 [point[0] + 100, point[1] - 100],
             ]
-        self.branches[0].free_spots[highlight[2]] = False
+        self.branches[0].free_spots[highlight[2]] = config.BRANCH_SPOT
         self.branches.append(Cubic(points))
 
     def handle_event(self, e):
@@ -96,8 +115,8 @@ class Cubic:
         self.gametime = GameTime.instance()
         self.timer = 0
         # self.free_points = self.points # points, that can be built on
-        self.free_spots = [True for i in range(len(points))]
-        self.free_spots[0] = False
+        self.free_spots = [config.FREE_SPOT for i in range(len(points))]
+        self.free_spots[0] = config.BASE_SPOT
         self.color = color
         self.res = res
         self.width = width
@@ -131,7 +150,7 @@ class Cubic:
             ]
         self.points.append(point)
         self.offsets = self.points.copy()
-        self.free_spots.append(True)
+        self.free_spots.append(config.FREE_SPOT)
         self.new_curve = self.get_curve()
         self.growth_percentage = 0
         self.move_offset = False
@@ -286,12 +305,12 @@ class Cubic:
         min_dist = 10000
         point = self.points[0]
         id = 0
-        for i in range(0, len(self.points)):
+        for i in range(len(self.points)):
             dist_x = pos[0] - self.points[i][0]
             dist_y = pos[1] - self.points[i][1]
             dist = math.sqrt(dist_x * dist_x + dist_y * dist_y)
             if dist < min_dist:
-                if free_spots_only and not self.free_spots[i]:
+                if free_spots_only and self.free_spots[i] is not config.FREE_SPOT:
                     continue
                 if without_top and i == len(self.points) - 1:
                     continue
