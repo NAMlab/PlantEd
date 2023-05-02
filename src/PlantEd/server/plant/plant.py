@@ -101,7 +101,7 @@ class Plant:
         dic["starch_out"] = self.starch_out
         dic["starch_in"] = self.starch_in
 
-        dic["water"] = self.water.to_json()
+        dic["water"] = self.water.to_dict()
         dic["nitrate"] = self.nitrate.to_json()
 
         dic["photon_upper"] = self.photon_upper
@@ -122,7 +122,7 @@ class Plant:
         plant.starch_out = dic["starch_out"]
         plant.starch_in = dic["starch_in"]
 
-        plant.water = Water.from_json(dic["water"])
+        plant.water = Water.from_dic(dic["water"])
         plant.nitrate = Nitrate.from_json(dic["nitrate"])
 
         plant.photon_upper = dic["photon_upper"]

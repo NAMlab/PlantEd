@@ -3,10 +3,12 @@
 import asyncio
 import json
 import logging
+import socket
 import threading
+from typing import Optional
 
 import websockets
-from websockets.legacy.server import WebSocketServerProtocol
+from websockets.legacy.server import WebSocketServerProtocol, WebSocketServer
 
 from PlantEd.client.growth_percentage import GrowthPercent
 from PlantEd.client.update import UpdateInfo
@@ -23,12 +25,16 @@ class Server:
     A server that provides all necessary data for the user interface.
     """
 
-    def __init__(self, model: DynamicModel):
+    def __init__(self, model: DynamicModel, sock: Optional[socket.socket] = None, only_local = True):
         self.clients = set()
+        self.sock: Optional[socket.socket] = sock
         self.websocket: websockets.WebSocketServer = None
         self.model: DynamicModel = model
         self.__future: asyncio.Future = None
         self.loop: asyncio.AbstractEventLoop = None
+        self.only_local = only_local
+        self.port: Optional[int] = None
+        self.ip_address: Optional[str] = None
 
         thread = threading.Thread(
             target=asyncio.run, daemon=True, args=(self.__start(),)
@@ -71,6 +77,7 @@ class Server:
         """
         self.__future.set_result("")
 
+
     async def __start(self):
         """
         Internal function that creates the loop of the object, creates
@@ -79,15 +86,35 @@ class Server:
         """
         self.loop = asyncio.get_running_loop()
         self.__future = self.loop.create_future()
+        sock = self.sock
+
+        if sock is None:
+
+            if self.only_local is True:
+                addr = ("localhost", 0)
+            else:
+                addr = ("", 0)
+
+            if socket.has_dualstack_ipv6():
+                sock: socket.socket = socket.create_server(addr, family=socket.AF_INET6, dualstack_ipv6=True)
+            else:
+                sock: socket.socket = socket.create_server(addr)
+
+            self.sock = sock
+
+        websocket: WebSocketServer
 
         async with websockets.serve(
             self.main_handler,
-            "localhost",
-            4000,
+            sock = sock,
             ping_interval=10,
             ping_timeout=30,
         ) as websocket:
             self.websocket = websocket
+            sock_name = sock.getsockname()
+
+            self.ip_address = sock_name[0]
+            self.port = sock_name[1]
             await self.__future
 
     def open_connection(self, ws: WebSocketServerProtocol):

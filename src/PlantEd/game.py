@@ -1,6 +1,7 @@
 import argparse
 import random
 import sys
+import time
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -326,14 +327,19 @@ class DefaultGameScene(object):
 
         logger.info("Starting Server and client")
         logger.debug("Creating server")
-        self.server = Server(model=model)
+        self.server = Server(model=model, only_local= True)
         logger.debug("Starting server")
         self.server.start()
 
         logger.debug("Starting Client")
-        self.client = Client()
 
-        # Todo take initial masses for organs
+        # Wait till the server binds to a port
+        while self.server.port is None:
+            time.sleep(0.1)
+
+        assert self.server.port is not None
+        self.client = Client(port=self.server.port)
+
         self.server_plant = ServerPlant()
         self.hours_since_start_where_growth_last_computed = 0
 
@@ -608,7 +614,8 @@ class DefaultGameScene(object):
                     flower_percent += 10
                     self.plant.organs[3].percentage = flower_percent
 
-                game_time_now = self.gametime.time_since_start_in_hours
+
+                game_time_now =  self.gametime.time_since_start_in_hours
                 delta_time_in_h = \
                     game_time_now \
                     - self.hours_since_start_where_growth_last_computed

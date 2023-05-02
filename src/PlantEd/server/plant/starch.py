@@ -7,7 +7,10 @@ from dataclasses_json import dataclass_json
 from PlantEd.exceptions.pools import NegativePoolError
 
 # ↓ according to doi: 10.1073/pnas.021304198
-gram_starch_per_gram_fresh_weight: Final[float] = 0.001
+gram_starch_per_gram_fresh_weight: Final[float] = 0.0015
+
+# ↓ according to https://doi.org/10.1046/j.0028-646X.2001.00320.x
+gram_fresh_weight_per_gram_dry_weight = Final[float] = 5
 
 gram_starch_per_micromol_starch: Final[float] = 0.0001621406
 micromol_starch_per_gram_starch: Final[float] = (
@@ -115,14 +118,15 @@ class Starch:
             biomass_in_gram: The biomass of the whole plant in gram.
 
         """
-        max_starch_pool = biomass_in_gram * gram_starch_per_gram_fresh_weight
-        max_starch_pool = max_starch_pool * micromol_starch_per_gram_starch
+
+        max_starch_pool_in_gram = biomass_in_gram * gram_fresh_weight_per_gram_dry_weight * gram_starch_per_gram_fresh_weight
+        max_starch_pool_in_micromol = max_starch_pool_in_gram * micromol_starch_per_gram_starch
         logging.debug(
-            f"Setting max_starch_pool to {max_starch_pool}."
+            f"Setting max_starch_pool to {max_starch_pool_in_micromol} micromol."
             f"Based on a biomass of {biomass_in_gram} grams."
         )
 
-        self.__max_starch_pool = max_starch_pool
+        self.__max_starch_pool = max_starch_pool_in_micromol
 
     def calc_available_starch_in_mol_per_gram_and_time(
         self,

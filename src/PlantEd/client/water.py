@@ -1,29 +1,33 @@
+from __future__ import annotations
+
 import dataclasses
+import json
 import logging
 from dataclasses import dataclass
-from typing import Final, Annotated
+from typing import Final
 
-from dataclasses_json import dataclass_json
 from pydantic import confloat
+
+from PlantEd.exceptions.pools import NegativeBiomassError
 
 logger = logging.getLogger(__name__)
 
-MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000 * 0.8  # 80% of plant mass
+
+MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000 * 0.8
 
 
-@dataclass_json
 @dataclass
 class Water:
     """
-    Class, which contains all the information about the water reserve of
-    the plant.
+    This class represents the water pool of the plant. All values
+    are in micromol unless otherwise stated.
     """
 
     water_pool: int = 0
     water_intake: int = 0
     water_intake_pool: int = 0
     transpiration: float = 0
-    max_water_pool: float = MAX_WATER_POOL_PER_GRAMM
+    __max_water_pool: float = 4 * MAX_WATER_POOL_PER_GRAMM
     max_water_pool_consumption: Final[int] = 1
 
     def __iter__(self):
@@ -31,24 +35,73 @@ class Water:
             yield getattr(self, field.name)
 
     def get_water_drain(self) -> float:
-        return self.water_intake + self.max_water_pool
+        return self.water_intake + self.__max_water_pool
 
+    @property
+    def max_water_pool(self) -> float:
+        """
+        Provides the maximum water storage capacity of the plant in micromol.
+        """
+
+        return self.__max_water_pool
     @property
     def fill_percentage(self) -> confloat(ge=0, le=1):
         """
         Returns the percentage level of the water supply as float.
         """
-        percentage = self.water_pool / self.max_water_pool
+        percentage = self.water_pool / self.__max_water_pool
 
         '''if percentage > 1 or percentage < 0:
             logger.warning(
                 f"The water pool is over 100% full or in the "
                 f"minus. It is {percentage}, where water_pool is "
                 f"{self.water_pool} and max_water_pool is "
-                f"{self.max_water_pool}."
-            )'''
+                f"{self.__max_water_pool}."
+            )
 
         return percentage
+
+    def to_dict(self) -> dict:
+        """
+        A method that stores the variables of the instance in a
+        :py:class:`dict`. From this :py:class:`dict`, a :py:class:`Water`
+        object can be created with the same variables as the original.
+        """
+
+        dic =  {}
+        dic["water_pool"] = self.water_pool
+        dic["water_intake"] = self.water_intake
+        dic["water_intake_pool"] = self.water_intake_pool
+        dic["transpiration"] = self.transpiration
+        dic["max_water_pool"] = self.__max_water_pool
+        dic["max_water_pool_consumption"] = self.max_water_pool_consumption
+
+        return dic
+
+    @classmethod
+    def from_dict(cls, dic:dict) -> Water:
+
+        water = Water()
+
+        water.water_pool = dic["water_pool"]
+        water.water_intake = dic["water_intake"]
+        water.water_intake_pool = dic["water_intake_pool"]
+        water.transpiration = dic["transpiration"]
+        water.__max_water_pool = dic["max_water_pool"]
+        water.max_water_pool_consumption = dic["max_water_pool_consumption"]
+
+        return water
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict())
+
+    @classmethod
+    def from_json(cls, string:str) -> Water:
+        dic = json.loads(string)
+
+        return Water.from_dict(dic = dic)
+
+
 
     def update_max_water_pool(self, plant_biomass: float):
         """
@@ -59,4 +112,7 @@ class Water:
             plant_biomass: The current biomass of the plant in gram.
 
         """
-        self.max_water_pool = plant_biomass * MAX_WATER_POOL_PER_GRAMM
+        if plant_biomass < 0:
+            raise NegativeBiomassError("The given biomass of the plant is negative.")
+
+        self.__max_water_pool = plant_biomass * MAX_WATER_POOL_PER_GRAMM
