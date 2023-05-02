@@ -20,30 +20,26 @@ logger = logging.getLogger(__name__)
 
 
 class TestServer(unittest.IsolatedAsyncioTestCase):
-    semaphore: threading.Lock
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.semaphore = threading.Lock()
 
     def setUp(self):
-        self.semaphore.acquire()
-
         if self._testMethodName == "test_start":
             return
 
         gametime = GameTime.instance()
 
         model = DynamicModel(gametime=gametime)
-        self.server = Server(model)
+        self.server = Server(model, only_local= True)
 
         self.server.start()
+        while self.server.port == None:
+            time.sleep(0.1)
+
+        self.port = self.server.port
 
     def tearDown(self):
+
         if self._testMethodName != "test_start":
             self.server.stop()
-
-        self.semaphore.release()
 
     def test_start(self):
         logger.info("Run tests for the creation and start of the server.")
@@ -64,14 +60,15 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
         logger.debug("Starting the server.")
 
         server.start()
-        time.sleep(0.5)
+        while server.port is None:
+            time.sleep(0.1)
 
         logger.debug("Server started")
 
         server.stop()
 
     async def test_connect(self):
-        async with websockets.connect("ws://localhost:4000") as _:
+        async with websockets.connect(f"ws://localhost:{self.port}") as _:
             msg = "Single connection results in multiple registered clients"
             self.assertEqual(1, len(self.server.clients), msg)
 
@@ -89,7 +86,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
         self.fail()
 
     async def test_open_stomata(self):
-        async with websockets.connect("ws://localhost:4000") as websocket:
+        async with websockets.connect(f"ws://localhost:{self.port}") as websocket:
             self.server.model.stomata_open = False
             CO2 = self.server.model.model.reactions.get_by_id("CO2_tx_leaf")
             CO2.bounds = (0, 0)
@@ -119,7 +116,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_close_stomata(self):
-        async with websockets.connect("ws://localhost:4000") as websocket:
+        async with websockets.connect(f"ws://localhost:{self.port}") as websocket:
             self.server.model.stomata_open = True
             CO2 = self.server.model.model.reactions.get_by_id("CO2_tx_leaf")
             CO2.bounds = (0, 1000)
@@ -149,7 +146,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_deactivate_starch_resource(self):
-        async with websockets.connect("ws://localhost:4000") as websocket:
+        async with websockets.connect(f"ws://localhost:{self.port}") as websocket:
             self.server.model.use_starch = True
             starch_in = self.server.model.model.reactions.get_by_id(
                 "Starch_in_tx_stem"
@@ -184,7 +181,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(bounds_expected, bounds)
 
     async def test_activate_starch_resource(self):
-        async with websockets.connect("ws://localhost:4000") as websocket:
+        async with websockets.connect(f"ws://localhost:{self.port}") as websocket:
             self.server.model.use_starch = False
             starch_in = self.server.model.model.reactions.get_by_id(
                 "Starch_in_tx_stem"
@@ -216,7 +213,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(bounds_expected, bounds)
 
     async def test_get_water_pool(self):
-        async with websockets.connect("ws://localhost:4000") as websocket:
+        async with websockets.connect(f"ws://localhost:{self.port}") as websocket:
             msg = '{"get_water_pool": "null"}'
 
             await websocket.send(msg)
@@ -227,7 +224,7 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(expected, answer)
 
     async def test_get_nitrate_pool(self):
-        async with websockets.connect("ws://localhost:4000") as websocket:
+        async with websockets.connect(f"ws://localhost:{self.port}") as websocket:
             msg = '{"get_nitrate_pool": "null"}'
             await websocket.send(msg)
             answer = await websocket.recv()

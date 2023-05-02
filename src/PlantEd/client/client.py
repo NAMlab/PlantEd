@@ -29,8 +29,9 @@ class Client:
 
     """
 
-    def __init__(self):
-        self.url = "ws://localhost:4000"
+    def __init__(self, port:int = 4000):
+
+        self.url = f"ws://localhost:{port}"
 
         self.__future: asyncio.Future = None
         self.loop: asyncio.AbstractEventLoop = None
