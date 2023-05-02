@@ -333,6 +333,7 @@ class DefaultGameScene(object):
         logger.debug("Starting Client")
         self.client = Client()
 
+        # Todo take initial masses for organs
         self.server_plant = ServerPlant()
         self.hours_since_start_where_growth_last_computed = 0
 
@@ -607,9 +608,12 @@ class DefaultGameScene(object):
                     flower_percent += 10
                     self.plant.organs[3].percentage = flower_percent
 
+                game_time_now = self.gametime.time_since_start_in_hours
                 delta_time_in_h = \
-                    self.gametime.time_since_start_in_hours \
+                    game_time_now \
                     - self.hours_since_start_where_growth_last_computed
+                self.hours_since_start_where_growth_last_computed = game_time_now
+
 
                 growth_percent = GrowthPercent(
                     leaf=self.plant.organs[0].percentage,
@@ -617,7 +621,7 @@ class DefaultGameScene(object):
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
-                    time_frame=delta_time_in_h * 3600 # uses seconds
+                    time_frame= delta_time_in_h * 3600
                 )
 
                 self.client.growth_rate(
@@ -663,6 +667,9 @@ class DefaultGameScene(object):
 
         old_plant = self.server_plant
         self.server_plant = plant
+
+        # Todo max starch pool can be smaller in the beginning due to balancing
+        #plant.starch_pool.max_starch_pool
 
         logger.debug("Calculating the delta of the growth in grams. ")
 

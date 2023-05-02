@@ -217,7 +217,6 @@ class Cubic:
         y_upper = self.get_upper(id)
         y_lower = self.get_lower(id)
         if y_upper:
-            print(pos[1], y_upper[1])
             if pos[1] < y_upper[1] + 10:
                 return False
         if y_lower:

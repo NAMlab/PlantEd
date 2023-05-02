@@ -33,7 +33,7 @@ class Plant:
         self.leafs: list[Leaf] = []
         self.leafs_biomass: float = 0.0000001 / 0.00089947737
         self.stem_biomass: float = 0.0000001 / 0.00089947737
-        self.root_biomass: float = 4 / 0.00089947737  # Corresponds to 4 gram root biomass.
+        self.root_biomass: float = 1 / 0.00089947737  # Corresponds to 4 gram root biomass.
         self.seed_biomass: float = 0.0000001 / 0.00089947737
 
         self.co2: float = 0

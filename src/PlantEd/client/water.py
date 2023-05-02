@@ -8,7 +8,7 @@ from pydantic import confloat
 
 logger = logging.getLogger(__name__)
 
-MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000
+MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000 * 0.8  # 80% of plant mass
 
 
 @dataclass_json

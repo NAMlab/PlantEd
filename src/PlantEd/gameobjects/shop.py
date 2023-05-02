@@ -48,7 +48,6 @@ class FloatingShop:
             else:
                 if show_flower:
                     self.visible_shop_items.append(item)
-        print(len(self.visible_shop_items), len(self.shop_items))
         for i in range(len(self.visible_shop_items)):
             self.visible_shop_items[i].set_pos(
                 (self.margin + i * (64 + self.margin), self.margin)
@@ -92,7 +91,6 @@ class FloatingShop:
             for item in self.visible_shop_items:
                 item.handle_event(e, self.pos)
             if e.type == pygame.MOUSEMOTION:
-                #print(self.get_rect(), mouse_pos)
                 if not self.get_rect().collidepoint(mouse_pos):
                     self.active = False
 

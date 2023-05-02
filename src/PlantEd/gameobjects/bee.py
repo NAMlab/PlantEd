@@ -24,7 +24,6 @@ class Hive:
         for bee in self.bees:
             bee.handle_event(e)
         if e.type == pygame.MOUSEBUTTONDOWN:
-            # print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
             # if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
                 assets.sfx("bee/beehive_clicked.mp3").play()
@@ -172,7 +171,6 @@ class Bee:
 
     def handle_event(self, e):
         if e.type == pygame.MOUSEBUTTONDOWN:
-            # print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
             # if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
                 if not self.target:

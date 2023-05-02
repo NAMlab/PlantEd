@@ -129,7 +129,7 @@ class Plant:
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
             plant=self,
-            mass=3,
+            mass=1,
             active=True,
             client=client,
         )
@@ -174,15 +174,15 @@ class Plant:
         else:
             self.danger_mode = False
 
-        self.organs[0].update_growth_rate(growth_rates.leaf_rate)
-        self.organs[1].update_growth_rate(growth_rates.stem_rate)
-        self.organs[2].update_growth_rate(growth_rates.root_rate)
+        self.organs[0].update_growth_rate(growth_rates.leaf_rate*1000000000)
+        self.organs[1].update_growth_rate(growth_rates.stem_rate*1000000000)
+        self.organs[2].update_growth_rate(growth_rates.root_rate*1000000000)
 
         self.organ_starch.update_growth_rate(
-            growth_rates.starch_rate, self.get_biomass()
+            growth_rates.starch_rate*1000000000, self.get_biomass()
         )
         self.organ_starch.starch_intake = growth_rates.starch_intake
-        self.organs[3].update_growth_rate(growth_rates.seed_rate)
+        self.organs[3].update_growth_rate(growth_rates.seed_rate*1000000000)
 
     def get_biomass(self):
         biomass = 0
@@ -1164,7 +1164,6 @@ class Starch(Organ):
     def set_percentage(self, percentage):
         self.percentage = percentage
         if percentage < 0:
-            print(self.plant)
             self.client.activate_starch_resource(abs(percentage))
         else:
             self.client.deactivate_starch_resource()
@@ -1243,7 +1242,6 @@ class Flower(Organ):
             if dist < min_dist and flower["flowering"] == flowering:
                 closest_flower = flower
                 min_dist = dist
-                print(min_dist)
         return closest_flower
 
     def start_flowering_closest(self, pos):
@@ -1277,7 +1275,6 @@ class Flower(Organ):
             # if max age*2 -> kill leaf
 
         for flower in self.flowers:
-            print(flower)
             if (
                     flower["flowering"]
                     and flower["seed_mass"] < flower["maximum_seed_mass"]
