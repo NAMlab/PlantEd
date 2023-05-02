@@ -1490,15 +1490,7 @@ class Textbox:
 
 class ButtonArray:
     def __init__(
-        self,
-        rect,
-        amount,
-        resolution,
-        margin,
-        callback,
-        set_hover_message,
-        border_w=5,
-        pressed=False,
+        self, rect, amount, resolution, margin, callback, set_hover_message, border_w=5, pressed=False, start_color=None, end_color=None
     ):
         self.toggle_buttons = []
         self.callback = callback
@@ -1508,7 +1500,11 @@ class ButtonArray:
         self.border_w = border_w
         self.label = config.BIG_FONT.render("Stomata:", True, config.BLACK)
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
-
+        self.gradient = None
+        if start_color and end_color:
+            gradient_early = self.get_color_gradient(end_color, start_color, int(amount/2))
+            gradient_late = self.get_color_gradient(start_color, end_color, int((amount/2)+0.5))
+            self.gradient = gradient_early + gradient_late
         set_all_width = 50
 
         self.rect = pygame.Rect(
@@ -1531,6 +1527,9 @@ class ButtonArray:
         )
 
         for i in range(0, amount):
+            color = config.WHITE_TRANSPARENT
+            if self.gradient:
+                color = self.gradient[i]
             self.toggle_buttons.append(
                 ToggleButton(
                     rect[0] + i * (rect[2] + margin) + set_all_width + margin,
@@ -1539,6 +1538,7 @@ class ButtonArray:
                     rect[3],
                     [],
                     font=config.FONT,
+                    button_color=color,
                     text="{}".format(i * resolution),
                     pressed=pressed,
                     border_w=border_w,
@@ -1598,23 +1598,36 @@ class ButtonArray:
     def get_rect(self):
         return self.rect
 
+    def get_color_gradient(self, start_color, end_color, iterations):
+        r_delta = (start_color[0] - end_color[0])/iterations
+        g_delta = (start_color[1] - end_color[1])/iterations
+        b_delta = (start_color[2] - end_color[2])/iterations
+
+        gradient = []
+        for i in range(iterations):
+            gradient.append((
+                start_color[0]-r_delta*i,
+                start_color[1]-g_delta*i,
+                start_color[2]-b_delta*i))
+        return gradient
+
     def draw(self, screen):
         # pygame.draw.rect(screen, config.WHITE_TRANSPARENT, self.rect)
         pygame.draw.rect(
             screen,
             self.color,
             (
-                self.rect[2] / 24 * self.hours + self.rect[0] - 7,
+                (self.rect[2]-50) / 24 * self.hours + self.rect[0] + 50,
                 self.rect[1] + 32 + 50,
-                15,
-                5,
+                10,
+                10,
             ),
-            border_radius=2,
+            border_radius=5,
         )
         pygame.draw.rect(
             screen,
             config.WHITE,
-            (self.rect[0], self.rect[1], 465, 40),
+            (self.rect[0], self.rect[1], 470, 40),
             border_radius=3,
         )
         if self.color == config.GREEN:

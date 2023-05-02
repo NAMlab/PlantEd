@@ -43,6 +43,12 @@ class Narrator:
         # soil.mp3
         # self.voicelines.append(VoiceLine())
 
+    def check_plant_has_leaf(self):
+        if len(self.plant.organs[0].leaves) > 0:
+            return True
+        else:
+            return False
+
     def check_date(self, condition_day):
         day, hour, minute = self.environment.get_day_time()
         if condition_day <= day and hour > 8:

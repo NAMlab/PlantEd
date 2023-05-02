@@ -292,13 +292,15 @@ class UI:
         self.button_sprites.add(self.skip_intro)
 
         self.button_array = ButtonArray(
-            (1485, 10, 30, 30),
+            (1405, 10, 30, 30),
             12,
             2,
             5,
             self.set_stomata_automation,
             self.hover.set_message,
-            border_w=2,
+            start_color=(250, 250, 110),
+            end_color=(42, 72, 88),
+            border_w=2
         )
 
         self.presets = [preset for i in range(0, 3)]
