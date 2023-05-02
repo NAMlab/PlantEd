@@ -7,19 +7,19 @@ import json
 import logging
 import threading
 from asyncio import Future
+from pathlib import Path
 from typing import Callable
 
 import websockets
 
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.leaf import Leaf
 from PlantEd.client.update import UpdateInfo
 from PlantEd.client.water import Water
 from PlantEd.server.plant.nitrate import Nitrate
+from PlantEd.server.plant.plant import Plant
 
 logger = logging.getLogger(__name__)
-
 
 class Client:
     """
@@ -97,7 +97,7 @@ class Client:
     def growth_rate(
         self,
         growth_percent: GrowthPercent,
-        callback: Callable[[GrowthRates], None],
+        callback: Callable[[Plant], None],
     ):
         task = self.__request_growth_rate(growth_percent=growth_percent)
         future_received = self.loop.create_future()
@@ -111,12 +111,19 @@ class Client:
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __receive_growth_rate(
-        self, future: Future, callback: Callable[[GrowthRates], None]
+        self, future: Future, callback: Callable[[Plant], None]
     ):
         await future
-        growth_rate = GrowthRates.from_json(future.result())
+        logger.debug("Results of the growth calculation obtained. "
+                     "Create Plant object and invoke callback.")
 
-        callback(growth_rate)
+        plant = Plant.from_json(future.result())
+
+        logger.debug("Plants object created. Execute callback..")
+
+        callback(plant)
+
+        logger.debug("Callback executed.")
 
     async def __request_growth_rate(self, growth_percent: GrowthPercent):
         if growth_percent.starch < 0:
@@ -128,7 +135,7 @@ class Client:
 
         logger.info(
             "Sending Request for growth rates."
-            f"Payload is :\n"
+            f"Payload is : "
             f"{message_dict}"
         )
 
@@ -207,7 +214,7 @@ class Client:
         await self.websocket.send(message)
 
     def enable_water_intake(self):
-        task = self.__stop_water_intake()
+        task = self.__enable_water_intake()
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __enable_water_intake(self):

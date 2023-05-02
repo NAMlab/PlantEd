@@ -1,7 +1,9 @@
 import argparse
 import random
 import sys
+import warnings
 from datetime import datetime
+from pathlib import Path
 from typing import List
 
 import pygame
@@ -332,6 +334,7 @@ class DefaultGameScene(object):
         self.client = Client()
 
         self.server_plant = ServerPlant()
+        self.hours_since_start_where_growth_last_computed = 0
 
         self.plant = Plant(
             pos=(
@@ -365,7 +368,7 @@ class DefaultGameScene(object):
 
         self.narrator = Narrator(self.environment)
 
-        growth_rates = GrowthRates("grams", 0, 0, 0, 0, 0, 0)
+        growth_rates = GrowthRates("grams", 0, 0, 0, 0, 0, 0, 0)
         self.ui = UI(
             scale=1,
             plant=self.plant,
@@ -602,23 +605,23 @@ class DefaultGameScene(object):
                     flower_percent += 10
                     self.plant.organs[3].percentage = flower_percent
 
+                delta_time_in_h = \
+                    self.gametime.time_since_start_in_hours \
+                    - self.hours_since_start_where_growth_last_computed
+
                 growth_percent = GrowthPercent(
                     leaf=self.plant.organs[0].percentage,
                     stem=self.plant.organs[1].percentage,
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
+                    time_frame=delta_time_in_h * 3600 # uses seconds
                 )
 
                 self.client.growth_rate(
                     growth_percent=growth_percent,
                     callback=self.update_growth_rates,
                 )
-
-                # update water
-                self.client.get_water_pool(self.server_plant.set_water)
-                # update nitrate
-                self.client.get_nitrate_pool(self.server_plant.set_nitrate)
 
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
@@ -647,17 +650,37 @@ class DefaultGameScene(object):
             self.narrator.handle_event(e)
             self.camera.handle_event(e)
 
-    def update_growth_rates(self, growth_rates: GrowthRates):
+    def update_growth_rates(self, plant: ServerPlant):
         """
         Callback function for the client to update the GrowthRates
             of the UI.
         Args:
-            growth_rates: The calculated GrowthRates.
+            plant: The new Plant object.
 
         """
 
+        logger.debug("Replacing the existing plant object of the UI with the "
+                     "new one.")
+
+        old_plant = self.server_plant
+        self.server_plant = plant
+
+        logger.debug("Calculating the delta of the growth in grams. ")
+
+        growth_rates: GrowthRates = GrowthRates(
+            unit="mol",
+            leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram) ,
+            stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram) ,
+            root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram) ,
+            starch_rate=(plant.starch_pool.starch_production_in_gram - old_plant.starch_pool.starch_production_in_gram) ,
+            starch_intake=(plant.starch_pool.starch_usage_in_gram - old_plant.starch_pool.starch_usage_in_gram) ,
+            seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram) ,
+            time_frame=-1,
+        )
+
         self.ui.growth_rates = growth_rates
 
+        logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
 
     def check_game_end(self, days):
@@ -1097,10 +1120,24 @@ class SceneMananger(object):
         # self.camera.render(screen_high, screen)
 
 
-def main():
+def main(windowed: bool):
+    """
+
+    Args:
+        windowed: A boolean that determines whether the game starts
+        fullscreen or windowed.
+    """
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
-    pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
+    size = None
+    if windowed:
+        size = pygame.RESIZABLE
+    else:
+        size = pygame.FULLSCREEN
+
+    pygame.display.set_mode((0, 0), size)
+
     pygame.display.set_caption("PlantEd_0.1")
     timer = pygame.time.Clock()
     running = True
@@ -1129,42 +1166,9 @@ def main():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-v",
-        "--logLevel",
-        type=str,
-        default="WARNING",
-        metavar="",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Set the detail of the log events (default: %(default)s)",
+    raise DeprecationWarning(
+      "To start the game please use 'PlantEd.start.py' "
+      "instead of 'PlantEd.game.py'. Starting via PlantEd.game.py "
+      "is not possible anymore. PlantEd.start.py "
+      "and PlantEd.game.py are identical in their usage."
     )
-
-    parser.add_argument(
-        "--logFile",
-        type=str,
-        default="",
-        metavar="",
-        help="The file in which the log should be saved. "
-        "Attention this will be overwritten. "
-        "By default, no log file is created.",
-    )
-
-    args = parser.parse_args()
-
-    if args.logFile != "":
-        logging.basicConfig(
-            level=args.logLevel,
-            format="%(asctime)s %(name)s %(levelname)s:%(message)s",
-            datefmt="%H:%M:%S",
-            filename=args.logFile,
-            filemode="w+",
-        )
-    else:
-        logging.basicConfig(
-            level=args.logLevel,
-            format="%(asctime)s %(name)s %(levelname)s:%(message)s",
-            datefmt="%H:%M:%S",
-        )
-
-    main()

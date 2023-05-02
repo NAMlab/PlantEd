@@ -10,7 +10,7 @@ Functions that create Constraints are:
 from contextlib import suppress
 from itertools import product
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from cobra.core import Metabolite, Model, Reaction, Solution
 from cobra.core.dictlist import DictList
@@ -305,6 +305,11 @@ def _normalize_reactions(
         update_stoichiometry(reaction, LEFT, RIGHT)
 
 
+root_stem: Optional[DictList] = None
+stem_leaf: Optional[DictList] = None
+leaf_seed: Optional[DictList] = None
+
+
 def normalize(
     model: Model, root: float, stem: float, leaf: float, seed: float
 ):
@@ -312,10 +317,14 @@ def normalize(
     Main function to normalize PlantED model. The non-model argument are
     the values that represents the size of the organ.
     """
+    global root_stem
+    global stem_leaf
+    global leaf_seed
 
-    root_stem: DictList = model.reactions.query(r"\[root\|stem\]")
-    stem_leaf: DictList = model.reactions.query(r"\[stem\|leaf\]")
-    leaf_seed: DictList = model.reactions.query(r"\[leaf\|seed\]")
+    if None in (root_stem, stem_leaf, leaf_seed):
+        root_stem = model.reactions.query(r"\[root\|stem\]")
+        stem_leaf = model.reactions.query(r"\[stem\|leaf\]")
+        leaf_seed = model.reactions.query(r"\[leaf\|seed\]")
     # FIXME: seed
 
     assert len(root_stem) != 0, "No transfers from root to stem found!"
@@ -324,7 +333,7 @@ def normalize(
 
     _normalize_reactions(root_stem, root, stem)
     _normalize_reactions(stem_leaf, stem, leaf)
-    _normalize_reactions(leaf_seed, leaf, seed)
+    _normalize_reactions(leaf_seed, leaf, seed) # ToDo leaf to seed or stem to seed
 
 
 def create_objective(model: Model, direction: str = "max") -> Objective:

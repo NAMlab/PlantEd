@@ -4,14 +4,14 @@ from typing import Final
 
 from dataclasses_json import dataclass_json
 
+max_nitrate_pool_low: Final[int] = 12000  # mikromol
+max_nitrate_pool_high: Final[int] = 100000  # mikromol
 
 @dataclass_json
 @dataclass
 class Nitrate:
     nitrate_pool: int = 0
     nitrate_delta_amount: int = 0
-    max_nitrate_pool_low: Final[int] = 12000  # mikromol
-    max_nitrate_pool_high: Final[int] = 100000  # mikromol
     max_nitrate_pool: int = max_nitrate_pool_high
 
     # Michaelis–Menten equation: gDW(root) Vmax ~ 0.00336 mol g DW−1 day−1
@@ -22,7 +22,7 @@ class Nitrate:
             yield getattr(self, field.name)
 
     def set_pool_to_high(self):
-        self.nitrate_pool = self.max_nitrate_pool_high
+        self.nitrate_pool = max_nitrate_pool_high
 
     def get_nitrate_percentage(self) -> float:
         """
@@ -31,4 +31,4 @@ class Nitrate:
 
         """
 
-        return self.nitrate_pool / self.max_nitrate_pool_high
+        return self.nitrate_pool / max_nitrate_pool_high

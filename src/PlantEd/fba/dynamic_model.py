@@ -3,15 +3,13 @@ from pathlib import Path
 
 import cobra
 
-
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
 
 from PlantEd.client.update import UpdateInfo
 from PlantEd.fba.helpers import (
     create_objective,
-    update_objective,
-    normalize,
+    update_objective, normalize,
 )
 from PlantEd.server.plant.plant import Plant
 
@@ -39,8 +37,6 @@ MAX_STARCH_INTAKE = 0.9
 
 # gram to mikromol
 MAX_WATER_POOL_GRAMM = 0.05550843506179199 * 1000000
-
-FLUX_TO_GRAMM = 0.002299662183
 
 water_concentration_at_temp = [
     0.269,
@@ -90,20 +86,18 @@ logger = logging.getLogger(__name__)
 # script_dir = Path(__file__).parent.absolute()
 fileDir = Path(__file__)
 script_dir = fileDir.parent
-print(script_dir)
-
 
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
     def __init__(
-        self,
-        gametime,
-        water_grid=None,
-        plant_mass=None,
-        # normal
-        # model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
-        # build
-        model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
+            self,
+            gametime,
+            water_grid=None,
+            plant_mass=None,
+            # normal
+            # model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
+            # build
+            model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
     ):
         self.model = model.copy()
 
@@ -126,9 +120,9 @@ class DynamicModel:
         self.percentages_sum = 0
 
         # growth rates for each objective
-        self.growth_rates = GrowthRates("1flux/s", 0, 0, 0, 0, 0, 0)
+        self.growth_rates = GrowthRates("mol", 0, 0, 0, 0, 0, 0, 0)
 
-        self.percentages = GrowthPercent(0.1, 0.1, 1, 0.1, 0)
+        self.percentages: GrowthPercent = GrowthPercent(0.1, 0.1, 1, 0.1, 0, 1)
         self.init_constraints()
         self.calc_growth_rate(self.percentages)
 
@@ -143,39 +137,146 @@ class DynamicModel:
         self.set_bounds(STARCH_IN, (0, 0))
 
         # Literature ATP NADPH: 7.27 and 2.56 mmol gDW−1 day−1
-        atp = 0.00727 / 24
-        nadhp = 0.00256 / 24
 
     def calc_growth_rate(
-        self, new_growth_percentages: GrowthPercent
-    ) -> GrowthRates:
+            self, new_growth_percentages: GrowthPercent
+    ):
         if new_growth_percentages != self.percentages:
             logger.info("Updating the model objectives.")
             update_objective(
                 self.model, growth_percentages=new_growth_percentages
             )
             self.percentages = new_growth_percentages
+
+        time_frame = new_growth_percentages.time_frame
+
+        root_biomass = self.plant.root_biomass_gram
+        stem_biomass = self.plant.stem_biomass_gram
+        leaf_biomass = self.plant.leafs_biomass_gram
+        seed_biomass = self.plant.seed_biomass_gram
+
+        logger.debug(
+            f"Simulating the growth of the plant for {time_frame} seconds."
+        )
+
+        normalize(
+            model=self.model,
+            root=root_biomass,
+            stem=stem_biomass,
+            leaf=leaf_biomass,
+            seed=seed_biomass,
+        )
+
+        # set limits from pools
+        # ToDo move in own function
+        starch_upper_bound = self.plant.starch_pool.calc_available_starch_in_mol_per_gram_and_time(
+            gram_of_organ= self.plant.stem_biomass_gram,
+            time_in_seconds= time_frame,
+        )
+        logger.debug(f"Upper Bound for starch is {starch_upper_bound}")
+
+        starch_bounds = (0, starch_upper_bound)
+        logger.debug(f"Bounds for starch are {starch_bounds}")
+        self.set_bounds(STARCH_IN, starch_bounds)
+
+
         solution = self.model.optimize()
 
-        # calc_rates 1flux/s
-        self.growth_rates.root_rate = solution.fluxes.get(BIOMASS_ROOT)
-        self.growth_rates.stem_rate = solution.fluxes.get(BIOMASS_STEM)
-        self.growth_rates.leaf_rate = solution.fluxes.get(BIOMASS_LEAF)
-        self.growth_rates.starch_rate = solution.fluxes.get(STARCH_OUT)
-        self.growth_rates.seed_rate = solution.fluxes.get(BIOMASS_SEED)
+        logger.debug(
+            f"Simulation resulted in an objective_value of "
+            f"{solution.objective_value:.4E}."
+        )
 
-        # 1/s
-        self.plant.water.water_intake = solution.fluxes[WATER]
-        self.co2_intake = solution.fluxes[CO2]
-        self.plant.nitrate.nitrate_intake = solution.fluxes[NITRATE]
-        self.growth_rates.starch_intake = solution.fluxes[STARCH_IN]
-        self.photon_intake = solution.fluxes[PHOTON]
+        # get flux with unit micromol/(hour * organ_mass)
 
-        self.plant.photon_upper = self.model.reactions.get_by_id(
+        # biomass
+        root = solution.fluxes.get(BIOMASS_ROOT)
+        stem = solution.fluxes.get(BIOMASS_STEM)
+        leaf = solution.fluxes.get(BIOMASS_LEAF)
+        seed = solution.fluxes.get(BIOMASS_SEED)
+
+        logger.debug(f"Flux of leaf biomass is {leaf}, "
+                     f"flux of stem biomass is {stem}, "
+                     f"flux of root biomass is {root}, "
+                     f"flux of seed biomass is {seed}")
+
+        # via leaf
+        co2 = solution.fluxes[CO2]
+        photon = solution.fluxes[PHOTON]
+        photon_upper = self.model.reactions.get_by_id(
             PHOTON
         ).bounds[1]
 
-        return self.get_rates()
+        # via stem
+        starch_out = solution.fluxes.get(STARCH_OUT)
+        starch_in = solution.fluxes[STARCH_IN]
+
+        # via root
+        water = solution.fluxes[WATER]
+        nitrate = solution.fluxes[NITRATE]
+
+        # Normalize
+        # - multiply with time and mass resulting in mol as unit
+        # - micromol/(seconds * organ_mass) * organ_mass[gram] * time_frame[s]
+
+        # biomass
+        root = root * root_biomass * time_frame
+        stem = stem * stem_biomass * time_frame
+        leaf = leaf * leaf_biomass * time_frame
+        seed = seed * seed_biomass * time_frame
+
+        # Uptake and release
+        # via leaf
+        co2 = co2 * leaf_biomass * time_frame
+        photon = photon * leaf_biomass * time_frame
+        photon_upper = photon_upper * leaf_biomass * time_frame
+
+        # via stem
+        starch_out = starch_out * stem_biomass * time_frame
+        starch_in = starch_in * stem_biomass * time_frame
+        logger.debug(f"Starch_in is {starch_in} and starch_out is {starch_out}")
+
+        # via root
+        water = water * root_biomass * time_frame
+        nitrate = nitrate * root_biomass * time_frame
+
+        # set values
+        self.plant.root_biomass = self.plant.root_biomass + root
+        self.plant.stem_biomass = self.plant.stem_biomass + stem
+        self.plant.leafs_biomass = self.plant.leafs_biomass + leaf
+        self.plant.seed_biomass = self.plant.seed_biomass + seed
+
+        self.plant.nitrate.nitrate_intake = nitrate
+        self.plant.photon = photon
+        self.plant.co2 = co2
+
+        self.plant.photon_upper = photon_upper
+
+        # update water
+        self.plant.water.water_intake = water
+        self.plant.update_max_water_pool()
+
+        # update starch pool
+        self.plant.starch_out = starch_out
+        self.plant.starch_in = starch_in
+        self.plant.update_max_starch_pool()
+        self.plant.starch_pool.available_starch_pool = self.plant.starch_pool.available_starch_pool + (starch_out - starch_in)
+
+        # ToDo remove growth_rates not needed anymore everything is in plant
+        self.growth_rates.root_rate = root
+        self.growth_rates.stem_rate = stem
+        self.growth_rates.leaf_rate = leaf
+        self.growth_rates.starch_rate = starch_out
+        self.growth_rates.starch_intake = starch_in
+        self.growth_rates.seed_rate = seed
+        self.growth_rates.time_frame = time_frame
+
+        # ToDo remove old duplicates now in plant
+        self.co2_intake = co2
+        self.photon_intake = photon
+
+        logger.debug(f"Updated Plant is as follows - {str(self.plant)}")
+
 
     def open_stomata(self):
         """
@@ -194,13 +295,13 @@ class DynamicModel:
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
         hour = day / 24
-        hours = (ticks % day) / hour
+        (ticks % day) / hour
         # RH = config.get_y(hours, config.humidity)
         # T = config.get_y(hours, config.summer)
         In_Concentration = water_concentration_at_temp[int(T + 2)]
         Out_Concentration = water_concentration_at_temp[int(T)]
         self.transpiration_factor = K * (
-            In_Concentration - Out_Concentration * RH / 100
+                In_Concentration - Out_Concentration * RH / 100
         )
 
     def update_transpiration(self):
@@ -222,45 +323,6 @@ class DynamicModel:
         bounds = (-1000, 0)
         self.set_bounds(CO2, bounds)
         logger.debug(f"CO2 bounds set to {bounds}")
-
-    def get_rates(self) -> GrowthRates:
-        """
-        Method to obtain the GrowthRates in grams for the specified time period.
-        The time period corresponds to the variable GAMESPEED of the gametime object.
-
-        Returns: A GrowthRates object that describes the growth rates in grams.
-
-        """
-
-        growth_rates = self.growth_rates.flux2grams(self.gametime)
-
-        logger.info(
-            "Returning following growth rates:\n"
-            f"leaf: {growth_rates.root_rate}, "
-            f"stem {growth_rates.stem_rate}, "
-            f"root {growth_rates.root_rate}, "
-            f"starch: {growth_rates.starch_rate}, "
-            f"starch_intake {growth_rates.starch_intake}, "
-            f"seed {growth_rates.seed_rate}"
-        )
-
-        return growth_rates
-
-    def get_absolute_rates(self):
-        forced_ATP = (
-            0.0049
-            * self.model.reactions.get_by_id("Photon_tx_leaf").upper_bound
-            + 2.7851
-        )
-        return (
-            self.growth_rates.leaf_rate,
-            self.growth_rates.stem_rate,
-            self.growth_rates.root_rate,
-            self.growth_rates.seed_rate,
-            self.growth_rates.stem_rate,
-            self.growth_rates.starch_intake,
-            forced_ATP,
-        )
 
     def get_photon_upper(self):
         return self.model.reactions.get_by_id(PHOTON).bounds[1]
@@ -304,52 +366,32 @@ class DynamicModel:
     def activate_starch_resource(self, percentage=1):
         logger.info("Activating starch resource")
 
-        self.use_starch = True
-
-        bounds = (0, self.starch_intake_max * (percentage / 100))
-        self.set_bounds(STARCH_IN, bounds)
-
-        logger.debug(
-            f"Set use_starch to {self.use_starch} "
-            f"and STARCH_IN to {bounds}"
-        )
+        self.plant.starch_pool.allowed_starch_pool_consumption = percentage
 
     def deactivate_starch_resource(self):
         logger.info("Deactivating starch resource")
+        self.plant.starch_pool.allowed_starch_pool_consumption = 0
 
-        self.use_starch = False
-        bounds = (0, 0)
-        self.set_bounds(STARCH_IN, bounds)
-        logger.debug(
-            f"Set use_starch to {self.use_starch} "
-            f"and STARCH_IN to {bounds}"
-        )
 
     def update(self, update_info=UpdateInfo):
         dt = update_info.delta_time
-        leaf_mass = update_info.leaf_mass
-        stem_mass = update_info.stem_mass
-        root_mass = update_info.root_mass
+        root_mass = self.plant.root_biomass_gram
         PLA = update_info.PLA
         sun_intensity = update_info.sun_intensity
-        plant_mass = update_info.plant_mass
         RH = update_info.humidity
         T = update_info.temperature
 
-        # normalize(self.model, root_mass, stem_mass, leaf_mass, 1)
         self.update_bounds(root_mass, PLA * sun_intensity)
         self.update_pools(dt)
         self.update_transpiration_factor(RH, T)
         self.update_transpiration()
-
-        self.plant.water.update_max_water_pool(plant_biomass=plant_mass)
 
     def update_pools(self, dt):
         gamespeed = self.gametime.GAMESPEED
         # self.water_intake_pool = 0  # reset to not drain for no reason
 
         self.plant.nitrate.nitrate_pool -= (
-            self.plant.nitrate.nitrate_intake * dt * gamespeed
+                self.plant.nitrate.nitrate_intake * dt * gamespeed
         )
 
         if self.plant.nitrate.nitrate_pool < 0:
@@ -357,10 +399,10 @@ class DynamicModel:
         # slowly add nitrate after buying
         if self.plant.nitrate.nitrate_delta_amount > 0:
             self.plant.nitrate.nitrate_pool += (
-                self.plant.nitrate.max_nitrate_pool_high / 2 * dt
+                    self.plant.nitrate.max_nitrate_pool_high / 2 * dt
             )
             self.plant.nitrate.nitrate_delta_amount -= (
-                self.plant.nitrate.max_nitrate_pool_high / 2 * dt
+                    self.plant.nitrate.max_nitrate_pool_high / 2 * dt
             )
 
     def update_bounds(self, root_mass, photon_in):

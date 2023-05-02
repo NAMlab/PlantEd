@@ -13,6 +13,7 @@ from PlantEd.client.update import UpdateInfo
 from PlantEd.client.water import Water
 from PlantEd.fba.dynamic_model import DynamicModel
 from PlantEd.server.plant.leaf import Leaf
+from PlantEd.server.plant.nitrate import Nitrate
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +117,7 @@ class Server:
         """
         Function that queries the server-side growth_percent.
 
+        # ToDo needs to be the plant object complete
         Returns: A GrowthPercent object encoded in JSON.
 
         """
@@ -126,25 +128,24 @@ class Server:
 
     def calc_send_growth_rate(self, growth_percent: GrowthPercent) -> str:
         """
-        Function that calculates the grams per specified time step.
+        Function that calculates the growth per specified time step.
 
         Args:
             growth_percent: A GrowthPercent object that determines the
                 distribution of starch within the plant.
 
-        Returns: Returns a GrowthRates object encoded in JSON that describes
-            the grams in the specified time period.
+        Returns: Returns a Plant object encoded in JSON.
         """
 
         logger.info(f"Calculating growth rates from {growth_percent}")
 
-        growth_rates = self.model.calc_growth_rate(growth_percent)
+        self.model.calc_growth_rate(growth_percent)
 
-        logger.info(f"Calculated growth rates: \n {growth_rates}")
-        message = growth_rates.to_json()
+        logger.info(f"Calculated growth rates: {self.model.growth_rates}")
+        message = self.model.plant.to_json()
 
         # send growth_rates as json
-        logger.info(f"Sending following answer for growth rates. \n {message}")
+        logger.info(f"Sending following answer for growth rates : {message}")
 
         return message
 
@@ -190,7 +191,7 @@ class Server:
         """
         logger.info("Creating Water Object and sending it back")
 
-        water = self.model.plant.water
+        water: Water = self.model.plant.water
 
         answer = water.to_json()
 
@@ -207,7 +208,7 @@ class Server:
 
         """
 
-        nitrate = self.model.plant.nitrate
+        nitrate: Nitrate = self.model.plant.nitrate
         answer = nitrate.to_json()
 
         return answer

@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import Tuple, Optional
 
@@ -19,6 +20,8 @@ from PlantEd.utils.particle import ParticleSystem
 from PlantEd.utils.spline import Cubic_Tree, Cubic
 
 from PlantEd.client.leaf import Leaf as client_Leaf
+
+logger = logging.getLogger(__name__)
 
 pygame.init()
 gram_mol = 0.5124299411
@@ -160,9 +163,10 @@ class Plant:
             + growth_rates.stem_rate
             + growth_rates.root_rate
             + growth_rates.starch_rate
-            + growth_rates.starch_rate
             + growth_rates.seed_rate
         )
+
+        logger.debug(f"Sum of GrowthRates is {sum_rates}")
 
         if self.get_biomass() > 4 and sum_rates <= 0:
             self.danger_mode = True
