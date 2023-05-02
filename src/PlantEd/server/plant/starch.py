@@ -10,7 +10,7 @@ from PlantEd.exceptions.pools import NegativePoolError
 gram_starch_per_gram_fresh_weight: Final[float] = 0.0015
 
 # ↓ according to https://doi.org/10.1046/j.0028-646X.2001.00320.x
-gram_fresh_weight_per_gram_dry_weight = Final[float] = 5
+gram_fresh_weight_per_gram_dry_weight: Final[float] = 5.0
 
 gram_starch_per_micromol_starch: Final[float] = 0.0001621406
 micromol_starch_per_gram_starch: Final[float] = (
