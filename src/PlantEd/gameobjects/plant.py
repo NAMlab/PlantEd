@@ -1150,15 +1150,22 @@ class Starch(Organ):
             self.mass += delta
 
     def update_growth_rate(self, growth_rate):
+
         self.growth_rate = growth_rate * 2
+
+        logger.debug(f" Starch usage in UI set to {self.growth_rate}")
 
     def update_starch_max(self, max_pool):
         self.thresholds = [max_pool]
+        logger.debug(f" Starch max in UI set to {self.thresholds}")
+
         if self.mass > max_pool:
             self.mass = max_pool
 
     def set_percentage(self, percentage):
         self.percentage = percentage
+        logger.debug(f" Starch percentage in UI set to {self.percentage}")
+
         if percentage < 0:
             self.client.activate_starch_resource(abs(percentage))
         else:

@@ -125,3 +125,29 @@ class Water:
             raise NegativeBiomassError("The given biomass of the plant is negative.")
 
         self.__max_water_pool = plant_biomass * MAX_WATER_POOL_PER_GRAMM
+
+    def calc_available_water_in_mol_per_gram_and_time(
+        self,
+        gram_of_organ: float,
+        time_in_seconds: float,
+    ) -> float:
+
+        try:
+            value = self.water_pool / (
+                gram_of_organ * time_in_seconds
+            )
+        except ZeroDivisionError as e:
+            raise ValueError(
+                f"Either the given time ({time_in_seconds})or the organic "
+                f"mass ({gram_of_organ}) are 0. "
+                f"Therefore, the available micromole per time and "
+                f"gram cannot be calculated."
+            ) from e
+
+        logging.debug(
+            f"Within a time of {time_in_seconds} seconds, an organ "
+            f"with {gram_of_organ} grams of biomass has a "
+            f"maximum of {value} micromol/(second * gram) of water available."
+        )
+
+        return value

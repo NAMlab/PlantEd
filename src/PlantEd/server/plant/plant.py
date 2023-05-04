@@ -58,8 +58,7 @@ class Plant:
                 f" Photon uptake is {self.photon:.4E} mol with " \
                 f"an upper bound of {self.photon_upper:.4E} " \
                 f"mol/(g_leaf_biomass * seconds);" \
-                f" Starch uptake is {self.starch_in:.4E} mol;" \
-                f" Starch output is {self.starch_out:.4E} mol;" \
+                f" Starch is {self.starch_pool} mol;" \
                 f" Water is {str(self.water)};" \
                 f" Nitrate is {str(self.nitrate)}" \
 
