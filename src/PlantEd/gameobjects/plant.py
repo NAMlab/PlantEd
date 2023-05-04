@@ -163,7 +163,6 @@ class Plant:
                 + growth_rates.stem_rate
                 + growth_rates.root_rate
                 + growth_rates.starch_rate
-                + growth_rates.starch_rate
                 + growth_rates.seed_rate
         )
 
@@ -179,9 +178,9 @@ class Plant:
         self.organs[2].update_growth_rate(growth_rates.root_rate*1000000000)
 
         self.organ_starch.update_growth_rate(
-            growth_rates.starch_rate*1000000000, self.get_biomass()
+            growth_rates.starch_rate*1000000000
         )
-        self.organ_starch.starch_intake = growth_rates.starch_intake
+        self.organ_starch.starch_intake = growth_rates.starch_intake*1000000000
         self.organs[3].update_growth_rate(growth_rates.seed_rate*1000000000)
 
     def get_biomass(self):
@@ -241,10 +240,6 @@ class Plant:
         for organ in self.organs:
             organ.update(dt)
         self.organs[0].photon_intake = photon_intake
-
-        self.organ_starch.update_starch_max(
-            self.get_biomass() * 1000 + 1000000
-        )
 
     def handle_event(self, event: pygame.event.Event):
         for organ in self.organs:
@@ -330,6 +325,7 @@ class Organ:
 
     def update_growth_rate(self, growth_rate):
         self.growth_rate = growth_rate * 2
+        print("GROTH: ", self.growth_rate, self.type)
 
     def yellow_leaf(self, image, alpha):
         ghost_image = image.copy()
@@ -1153,7 +1149,7 @@ class Starch(Organ):
         else:
             self.mass += delta
 
-    def update_growth_rate(self, growth_rate, plant_mass):
+    def update_growth_rate(self, growth_rate):
         self.growth_rate = growth_rate * 2
 
     def update_starch_max(self, max_pool):
@@ -1326,21 +1322,20 @@ class Flower(Organ):
         else:
             return None, None
 
-    def get_flowering_flowers(self):
-        flowering_flowers = []
+    def get_growing_flowers(self):
+        growing_flowers = []
         # flowering can be central activated to enable all pollinated flowers to produce seeds
         # add all growing flowers
         for flower in self.flowers:
-            if flower["mass"] < flower["maximum_mass"]:
-                flowering_flowers.append(flower)
-        # add all seed producing flowrs
-        for flower in self.flowers:
             if (
-                    flower["flowering"]
-                    and flower["seed_mass"] < flower["maximum_seed_mass"]
+                    flower["mass"] < flower["maximum_mass"]
+                    or (flower["flowering"]
+                        and flower["seed_mass"] < flower["maximum_seed_mass"]
+                        )
             ):
-                flowering_flowers.append(flower)
-        return flowering_flowers
+                growing_flowers.append(flower)
+        # add all seed producing flowrs
+        return growing_flowers
 
     def pop_seed(self):
         self.seed_popped = True

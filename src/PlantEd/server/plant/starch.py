@@ -36,7 +36,7 @@ class Starch:
 
     def __init__(self):
         self.__available_starch_pool: float = (
-            4.0 * micromol_starch_per_gram_starch
+            10 #4.0 * micromol_starch_per_gram_starch
         )
         self.__max_starch_pool: float = 0.0
         self.starch_out: float = 0.0

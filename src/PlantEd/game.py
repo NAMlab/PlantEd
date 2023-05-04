@@ -391,35 +391,7 @@ class DefaultGameScene(object):
             growth_rates=growth_rates,
             server_plant=self.server_plant,
         )
-
-        """example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
-                                     callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
-        example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
-                                     post_hover_message=self.ui.post_hover_message, message="Skill Stem") for i in range(0,2)]
-        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
-                                     post_hover_message=self.ui.post_hover_message, message="Skill Root") for i in range(0,2)]
-        example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
-                                       post_hover_message=self.ui.post_hover_message, message="Skill Starch") for i in range(0,3)]
-        self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
-"""
-
         self.hive = Hive((1500, 600), 10, self.plant, self.camera, 10)
-
-        """for i in range(0, 5):
-            bee = Bee(
-                (190 * random.randint(0, 10), random.randint(0, 800)),
-                pygame.Rect(
-                    0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT - 200
-                ),
-                [
-                    assets.img("bee/{}.PNG".format(i), (64, 64))
-                    for i in range(6)
-                ],
-                self.camera,
-                self.plant.organs[3].pollinate,
-                hive_pos=(1500, 600),
-            )
-            self.entities.append(bee)"""
         self.bugs = []
         for i in range(0, 10):
             self.bugs.append(
@@ -617,14 +589,14 @@ class DefaultGameScene(object):
                 if starch_percent < 0:
                     starch_percent = 0
 
-                flowering_flowers = self.plant.organs[
+                growing_flowers = self.plant.organs[
                     3
-                ].get_flowering_flowers()
+                ].get_growing_flowers()
                 flower_percent = 0
                 # Todo fix percentages
-                for flower in flowering_flowers:
+                for flower in growing_flowers:
                     flower_percent += 10
-                    self.plant.organs[3].percentage = flower_percent
+                self.plant.organs[3].percentage = flower_percent
 
 
                 growth_percent = GrowthPercent(
@@ -635,7 +607,6 @@ class DefaultGameScene(object):
                     flower=self.plant.organs[3].percentage,
                     time_frame= delta_time_in_h * 3600
                 )
-
                 self.client.growth_rate(
                     growth_percent=growth_percent,
                     callback=self.update_growth_rates,
@@ -680,8 +651,13 @@ class DefaultGameScene(object):
         old_plant = self.server_plant
         self.server_plant = plant
 
-        # Todo max starch pool can be smaller in the beginning due to balancing
-        #plant.starch_pool.max_starch_pool
+        # max starch pool can be smaller in the beginning due to balancing
+        max_starch_pool = plant.starch_pool.max_starch_pool
+        if plant.starch_pool.max_starch_pool < plant.starch_pool.available_starch_pool:
+            max_starch_pool = plant.starch_pool.available_starch_pool
+        self.plant.organ_starch.update_starch_max(max_starch_pool)
+        # Todo, currently only pool is updated by server, not content?
+
 
         logger.debug("Calculating the delta of the growth in grams. ")
 
@@ -690,14 +666,13 @@ class DefaultGameScene(object):
             leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram) ,
             stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram) ,
             root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram) ,
-            starch_rate=(plant.starch_pool.starch_production_in_gram - old_plant.starch_pool.starch_production_in_gram) ,
-            starch_intake=(plant.starch_pool.starch_usage_in_gram - old_plant.starch_pool.starch_usage_in_gram) ,
+            starch_rate=plant.starch_pool.starch_out,
+            starch_intake=plant.starch_pool.starch_in,
             seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram) ,
             time_frame=-1,
         )
 
         self.ui.growth_rates = growth_rates
-
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
 
