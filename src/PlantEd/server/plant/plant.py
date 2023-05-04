@@ -33,7 +33,7 @@ class Plant:
         self.leafs: list[Leaf] = []
         self.leafs_biomass: float = 0.0000001 / 0.00089947737
         self.stem_biomass: float = 0.0000001 / 0.00089947737
-        self.root_biomass: float = 4 / 0.00089947737  # Corresponds to 4 gram root biomass.
+        self.root_biomass: float = 1 / 0.00089947737  # Corresponds to 1 gram root biomass.
         self.seed_biomass: float = 0.0000001 / 0.00089947737
 
         self.co2: float = 0
@@ -109,7 +109,7 @@ class Plant:
         return dic
 
     @classmethod
-    def from_dic(cls, dic:dict) -> Plant:
+    def from_dict(cls, dic:dict) -> Plant:
         plant = Plant()
 
         plant.leafs_biomass = dic["leafs_biomass"]
@@ -122,7 +122,7 @@ class Plant:
         plant.starch_out = dic["starch_out"]
         plant.starch_in = dic["starch_in"]
 
-        plant.water = Water.from_dic(dic["water"])
+        plant.water = Water.from_dict(dic["water"])
         plant.nitrate = Nitrate.from_json(dic["nitrate"])
 
         plant.photon_upper = dic["photon_upper"]
@@ -133,7 +133,7 @@ class Plant:
     def from_json(cls, string:str) -> Plant:
         dic = json.loads(string)
 
-        return Plant.from_dic(dic = dic)
+        return Plant.from_dict(dic = dic)
 
     @property
     def starch_out(self):

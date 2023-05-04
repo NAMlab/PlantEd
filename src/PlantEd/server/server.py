@@ -166,9 +166,13 @@ class Server:
 
         logger.info(f"Calculating growth rates from {growth_percent}")
 
-        self.model.calc_growth_rate(growth_percent)
+        if growth_percent.time_frame == 0:
+            logger.debug("The passed TimeFrame is 0. Returning plant objects without simulation.")
+            return self.model.plant.to_json()
 
+        self.model.calc_growth_rate(growth_percent)
         logger.info(f"Calculated growth rates: {self.model.growth_rates}")
+
         message = self.model.plant.to_json()
 
         # send growth_rates as json

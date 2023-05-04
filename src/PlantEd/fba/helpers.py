@@ -19,6 +19,7 @@ from optlang.interface import Constraint, Objective
 from sympy import Add
 
 from PlantEd.client.growth_percentage import GrowthPercent
+from PlantEd.server.plant.plant import Plant
 
 FILE = (
     Path(__file__)
@@ -406,6 +407,7 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
 def update_objective(
     model: Model,
     growth_percentages: GrowthPercent,
+    plant: Plant,
 ):
     """
     Updates the corresponding constraints for the multi objective in the model
