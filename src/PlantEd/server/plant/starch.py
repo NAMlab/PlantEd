@@ -36,12 +36,21 @@ class Starch:
 
     def __init__(self):
         self.__available_starch_pool: float = (
-            4.0 * micromol_starch_per_gram_starch
+            10 #4.0 * micromol_starch_per_gram_starch
         )
         self.__max_starch_pool: float = 0.0
         self.starch_out: float = 0.0
         self.starch_in: float = 0.0
         self.allowed_starch_pool_consumption: float = 100.0
+
+    def __repr__(self):
+        string = f"Starch object with following values:" \
+                 f" available starch pool is {self.__available_starch_pool} micromol," \
+                 f" __max_starch_pool is {self.__max_starch_pool}," \
+                 f" starch_out is {self.starch_out}, starch_in is {self.starch_in}," \
+                 f" allowed_starch_pool_consumption is {self.allowed_starch_pool_consumption}"
+
+        return string
 
     @property
     def available_starch_pool(self) -> float:

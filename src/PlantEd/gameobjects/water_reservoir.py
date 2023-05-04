@@ -63,11 +63,10 @@ class Water_Grid:
         water_neded = water.water_intake
         transpiration = water.transpiration
 
-        transpiration *= 10
+        # transpiration *= 10
         # if not enough water in plant_pool
         if water.water_pool - (water_neded + transpiration) < 0:
             # kill water intake
-
             client.stop_water_intake()
         else:
             # take water from pool and set bounds to max
@@ -75,7 +74,6 @@ class Water_Grid:
             client.enable_water_intake()
         # calculate new plant pool intake
         available_water_grid = np.multiply(self.root_grid, self.water_grid)
-
         if water.water_pool < water.max_water_pool:
             # drain needed
             delta_water_pool = water.max_water_pool - water.water_pool
@@ -100,8 +98,7 @@ class Water_Grid:
                             delta_water_pool += delta - self.water_grid[x, y]
                             self.water_grid[x, y] = 0
 
-                water.water_pool = water.max_water_pool - delta_water_pool
-
+            water.water_pool = water.max_water_pool - delta_water_pool
             if water.water_pool >= water.max_water_pool:
                 water.water_pool = water.max_water_pool
 

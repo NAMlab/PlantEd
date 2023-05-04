@@ -292,13 +292,15 @@ class UI:
         self.button_sprites.add(self.skip_intro)
 
         self.button_array = ButtonArray(
-            (1485, 10, 30, 30),
+            (1405, 10, 30, 30),
             12,
             2,
             5,
             self.set_stomata_automation,
             self.hover.set_message,
-            border_w=2,
+            start_color=(250, 250, 110),
+            end_color=(42, 72, 88),
+            border_w=2
         )
 
         self.presets = [preset for i in range(0, 3)]
@@ -1125,10 +1127,7 @@ class UI:
 
         width = 140
 
-        # Is updated every second via Growth event.
-        water = self.server_plant.water
-
-        water_percentage = self.server_plant.water.fill_percentage
+        # Water is updated every second via Growth event.
 
         pygame.draw.rect(
             s,
@@ -1139,11 +1138,11 @@ class UI:
         pygame.draw.rect(
             s,
             config.BLUE,
-            (topleft[0], topleft[1] + 40, int(width * water_percentage), 30),
+            (topleft[0], topleft[1] + 40, int(width * self.server_plant.water.fill_percentage), 30),
             border_radius=3,
         )  # exp
         text_water_pool = config.FONT.render(
-            "{:.0f} MMol".format(water.water_pool / 1000), True, (0, 0, 0)
+            "{:.0f} MMol".format(self.server_plant.water.water_pool / 1000), True, (0, 0, 0)
         )
         s.blit(
             text_water_pool,

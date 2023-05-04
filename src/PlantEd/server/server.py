@@ -255,6 +255,9 @@ class Server:
 
     def set_water_pool(self, water: Water):
         self.model.plant.set_water(water)
+        logger.debug(f"Water set to {self.model.plant.water}")
+
+
 
     def update(self, update_info: UpdateInfo):
         self.model.update(update_info=update_info)

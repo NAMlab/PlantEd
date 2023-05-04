@@ -1,5 +1,6 @@
 import argparse
 import random
+import socket
 import sys
 import time
 import warnings
@@ -322,12 +323,16 @@ class DefaultGameScene(object):
         # self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
         # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
 
-        model = DynamicModel(self.gametime)
+        model = DynamicModel()
         self.water_grid = Water_Grid(pos=(0, 900))
 
         logger.info("Starting Server and client")
         logger.debug("Creating server")
-        self.server = Server(model=model, only_local= True)
+
+        addr = ("", 4000)
+        sock = socket.create_server(addr)
+
+        self.server = Server(model=model, only_local= True, sock=sock)
         logger.debug("Starting server")
         self.server.start()
 
@@ -386,35 +391,7 @@ class DefaultGameScene(object):
             growth_rates=growth_rates,
             server_plant=self.server_plant,
         )
-
-        """example_skills_leaf = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
-                                     callback=self.plant.organs[2].set_root_tier,post_hover_message=self.ui.post_hover_message, message="Skill Leaf") for i in range(0,4)]
-        example_skills_stem = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
-                                     post_hover_message=self.ui.post_hover_message, message="Skill Stem") for i in range(0,2)]
-        example_skills_root = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
-                                     post_hover_message=self.ui.post_hover_message, message="Skill Root") for i in range(0,2)]
-        example_skills_starch = [Skill(assets.img("skills/leaf_not_skilled.png"),assets.img("skills/leaf_skilled.png"),
-                                       post_hover_message=self.ui.post_hover_message, message="Skill Starch") for i in range(0,3)]
-        self.skill_system = Skill_System((1700,420),self.plant, example_skills_leaf, example_skills_stem, example_skills_root, example_skills_starch)
-"""
-
         self.hive = Hive((1500, 600), 10, self.plant, self.camera, 10)
-
-        """for i in range(0, 5):
-            bee = Bee(
-                (190 * random.randint(0, 10), random.randint(0, 800)),
-                pygame.Rect(
-                    0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT - 200
-                ),
-                [
-                    assets.img("bee/{}.PNG".format(i), (64, 64))
-                    for i in range(6)
-                ],
-                self.camera,
-                self.plant.organs[3].pollinate,
-                hive_pos=(1500, 600),
-            )
-            self.entities.append(bee)"""
         self.bugs = []
         for i in range(0, 10):
             self.bugs.append(
@@ -452,13 +429,14 @@ class DefaultGameScene(object):
                     pygame.Rect(0, 870, config.SCREEN_WIDTH, 240),
                     [
                         assets.img("snail/{}.png".format(i))
-                        for i in range(0, 3)
+                        for i in range(0, 1)
                     ],
                     [
                         assets.img("snail/{}.png".format(i))
-                        for i in range(3, 6)
+                        for i in range(4, 5)
                     ],
                     self.camera,
+                    eat_plant=self.plant.eat_stem
                 )
             )
 
@@ -513,17 +491,8 @@ class DefaultGameScene(object):
             )
         )
 
-        self.shop.shop_items.append(
-            Shop_Item(
-                assets.img("flowering.PNG", (64, 64)),
-                self.plant.organs[3].start_flowering,
-                condition_not_met_message="Level up any organ to get more green thumbs",
-                post_hover_message=self.ui.hover.set_message,
-                message="Start seed production for pollinated flowers",
-            )
-        )
-
         self.shop.add_shop_item(["watering", "blue_grain", "spraycan"])
+        self.shop.spraycan.callback = self.kill_snails
 
         self.floating_shop = FloatingShop(self.camera, (0, 0))
         add_leaf_item_floating = FloatingShopItem(
@@ -547,10 +516,20 @@ class DefaultGameScene(object):
             1,
             self.plant,
         )
+        start_flower_item_floating = FloatingShopItem(
+            (0, 0),
+            self.plant.organs[3].start_flowering_closest,
+            assets.img("flowering.PNG", (64, 64)),
+            1,
+            self.plant,
+            tag="flower",
+            return_pos=True
+        )
 
         self.floating_shop.add_item(add_leaf_item_floating)
         self.floating_shop.add_item(add_branch_item_floating)
         self.floating_shop.add_item(add_flower_item_floating)
+        self.floating_shop.add_item(start_flower_item_floating)
         self.plant.organs[0].floating_shop = self.floating_shop
         self.plant.organs[1].floating_shop = self.floating_shop
         self.plant.organs[2].floating_shop = self.floating_shop
@@ -585,8 +564,15 @@ class DefaultGameScene(object):
                 self.pause_button_resume.handle_event(e)
                 self.pause_button_exit.handle_event(e)
             if e.type == GROWTH:
+
+                game_time_now = self.gametime.time_since_start_in_hours
+                delta_time_in_h = \
+                    game_time_now \
+                    - self.hours_since_start_where_growth_last_computed
+                self.hours_since_start_where_growth_last_computed = game_time_now
+
                 update_info = UpdateInfo(
-                    delta_time=dt,
+                    delta_time=delta_time_in_h*3600,
                     leaf_mass=self.plant.organs[0].mass,
                     stem_mass=self.plant.organs[1].mass,
                     root_mass=self.plant.organs[2].mass,
@@ -603,21 +589,15 @@ class DefaultGameScene(object):
                 if starch_percent < 0:
                     starch_percent = 0
 
-                flowering_flowers = self.plant.organs[
+                growing_flowers = self.plant.organs[
                     3
-                ].get_flowering_flowers()
+                ].get_growing_flowers()
                 flower_percent = 0
                 # Todo fix percentages
-                for flower in flowering_flowers:
+                for flower in growing_flowers:
                     flower_percent += 10
-                    self.plant.organs[3].percentage = flower_percent
+                self.plant.organs[3].percentage = flower_percent
 
-
-                game_time_now =  self.gametime.time_since_start_in_hours
-                delta_time_in_h = \
-                    game_time_now \
-                    - self.hours_since_start_where_growth_last_computed
-                self.hours_since_start_where_growth_last_computed = game_time_now
 
                 growth_percent = GrowthPercent(
                     leaf=self.plant.organs[0].percentage,
@@ -625,9 +605,8 @@ class DefaultGameScene(object):
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
-                    time_frame=delta_time_in_h * 3600 # uses seconds
+                    time_frame= delta_time_in_h * 3600
                 )
-
                 self.client.growth_rate(
                     growth_percent=growth_percent,
                     callback=self.update_growth_rates,
@@ -635,9 +614,6 @@ class DefaultGameScene(object):
 
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
-            if e.type == KEYDOWN and e.key == K_k:
-                # self.ui.init_flowering_ui()
-                self.plant.organs[3].start_flowering()
 
             if e.type == WIN:
                 if self.log:
@@ -670,10 +646,19 @@ class DefaultGameScene(object):
         """
 
         logger.debug("Replacing the existing plant object of the UI with the "
-                     "new one.")
+                     f"new one. NEW: {plant}")
 
         old_plant = self.server_plant
         self.server_plant = plant
+
+        # max starch pool can be smaller in the beginning due to balancing
+        max_starch_pool = plant.starch_pool.max_starch_pool
+        if plant.starch_pool.max_starch_pool < plant.starch_pool.available_starch_pool:
+            max_starch_pool = plant.starch_pool.available_starch_pool
+        self.plant.organ_starch.update_starch_max(max_starch_pool)
+        self.plant.organ_starch.mass = plant.starch_pool.available_starch_pool
+        # Todo, currently only pool is updated by server, not content?
+
 
         logger.debug("Calculating the delta of the growth in grams. ")
 
@@ -682,20 +667,30 @@ class DefaultGameScene(object):
             leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram) ,
             stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram) ,
             root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram) ,
-            starch_rate=(plant.starch_pool.starch_production_in_gram - old_plant.starch_pool.starch_production_in_gram) ,
-            starch_intake=(plant.starch_pool.starch_usage_in_gram - old_plant.starch_pool.starch_usage_in_gram) ,
+            starch_rate=plant.starch_pool.starch_out,
+            starch_intake=plant.starch_pool.starch_in,
             seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram) ,
             time_frame=-1,
         )
 
         self.ui.growth_rates = growth_rates
+        self.ui.server_plant = plant
 
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
 
+
+
+        self.nitrate = plant.nitrate.nitrate_pool
+
+
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
             pygame.event.post(pygame.event.Event(WIN))
+
+    def kill_snails(self, rect):
+        for snail in self.snails:
+            snail.kill(rect)
 
     def update(self, dt):
         ticks = self.gametime.get_time()
