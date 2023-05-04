@@ -141,6 +141,7 @@ class DynamicModel:
         if new_growth_percentages != self.percentages:
             logger.info("Updating the model objectives.")
             #self.update_constraints()
+            update_objective(self.model, new_growth_percentages, self.plant)
             self.percentages = new_growth_percentages
 
         time_frame = new_growth_percentages.time_frame
@@ -314,8 +315,8 @@ class DynamicModel:
     def update_transpiration(self):
         transpiration = 0
         if self.stomata_open:
-            if self.co2_intake > 0:
-                transpiration = self.co2_intake * self.transpiration_factor
+            if abs(self.plant.co2) > 0:
+                transpiration = self.plant.co2 * self.transpiration_factor
 
         # ToDo do not use Tuple
         self.plant.water.transpiration = transpiration

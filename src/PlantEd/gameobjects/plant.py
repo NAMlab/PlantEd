@@ -1143,6 +1143,7 @@ class Starch(Organ):
         self.starch_intake = 0
 
     def grow(self, dt):
+        return
         delta = self.growth_rate * dt
         if delta >= self.thresholds[self.active_threshold]:
             self.mass = self.thresholds[self.active_threshold]
@@ -1172,6 +1173,7 @@ class Starch(Organ):
             self.client.deactivate_starch_resource()
 
     def drain(self, dt):
+        return
         delta = self.starch_intake * dt
         if self.mass - delta < 0:
             self.mass = 0
