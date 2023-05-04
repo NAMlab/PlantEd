@@ -656,6 +656,7 @@ class DefaultGameScene(object):
         if plant.starch_pool.max_starch_pool < plant.starch_pool.available_starch_pool:
             max_starch_pool = plant.starch_pool.available_starch_pool
         self.plant.organ_starch.update_starch_max(max_starch_pool)
+        self.plant.organ_starch.mass = plant.starch_pool.available_starch_pool
         # Todo, currently only pool is updated by server, not content?
 
 
