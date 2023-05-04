@@ -30,6 +30,14 @@ class Water:
     __max_water_pool: float = 4 * MAX_WATER_POOL_PER_GRAMM
     max_water_pool_consumption: Final[int] = 1
 
+    def __repr__(self):
+        string = f"Water object with following values:" \
+                 f" water_pool is {self.water_pool}, water_intake is {self.water_intake}" \
+                 f" water_intake_pool is {self.water_intake_pool}, transpiration is {self.transpiration}" \
+                 f" max_water_pool is {self.max_water_pool}."
+
+        return string
+
     def __iter__(self):
         for field in dataclasses.fields(self):
             yield getattr(self, field.name)
@@ -59,6 +67,7 @@ class Water:
                 f"{self.__max_water_pool}."
             )
 
+        logger.debug(f"Calculated water percentage is {percentage} from {self}")
         return percentage
 
     def to_dict(self) -> dict:
