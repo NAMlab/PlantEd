@@ -646,7 +646,7 @@ class DefaultGameScene(object):
         """
 
         logger.debug("Replacing the existing plant object of the UI with the "
-                     "new one.")
+                     f"new one. NEW: {plant}")
 
         old_plant = self.server_plant
         self.server_plant = plant
@@ -673,8 +673,11 @@ class DefaultGameScene(object):
         )
 
         self.ui.growth_rates = growth_rates
+        self.ui.server_plant = plant
+
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
+
 
 
         self.nitrate = plant.nitrate.nitrate_pool

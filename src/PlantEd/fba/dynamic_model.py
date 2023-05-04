@@ -174,6 +174,13 @@ class DynamicModel:
         logger.debug(f"Bounds for starch are {starch_bounds}")
         self.set_bounds(STARCH_IN, starch_bounds)
 
+        water_upper_bounds = self.plant.water.calc_available_water_in_mol_per_gram_and_time(
+            gram_of_organ= self.plant.root_biomass_gram,
+            time_in_seconds= time_frame,
+        )
+        water_bounds = (-1000, water_upper_bounds)
+        logger.debug(f"Bounds for water are  {water_bounds}")
+        self.set_bounds(WATER, water_bounds)
 
         solution = self.model.optimize()
 
@@ -388,7 +395,7 @@ class DynamicModel:
 
     def update_pools(self, dt):
         gamespeed = self.gametime.GAMESPEED
-        # self.water_intake_pool = 0  # reset to not drain for no reason
+        self.plant.water.water_intake_pool = 0  # reset to not drain for no reason
 
         self.plant.nitrate.nitrate_pool -= (
                 self.plant.nitrate.nitrate_intake * dt * gamespeed
