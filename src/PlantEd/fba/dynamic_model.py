@@ -1,7 +1,11 @@
 import logging
 from pathlib import Path
+from typing import List
 
 import cobra
+from cobra import Reaction
+from optlang import Constraint, Variable
+from sympy import Add
 
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
@@ -91,19 +95,12 @@ script_dir = fileDir.parent
 class DynamicModel:
     def __init__(
             self,
-            gametime,
-            water_grid=None,
-            plant_mass=None,
-            # normal
-            # model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
-            # build
             model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
     ):
         self.model = model.copy()
 
         self.plant = Plant()
 
-        self.gametime = gametime
         self.use_starch = False
         objective = create_objective(self.model)
         self.model.objective = objective
@@ -143,9 +140,7 @@ class DynamicModel:
     ):
         if new_growth_percentages != self.percentages:
             logger.info("Updating the model objectives.")
-            update_objective(
-                self.model, growth_percentages=new_growth_percentages
-            )
+            #self.update_constraints()
             self.percentages = new_growth_percentages
 
         time_frame = new_growth_percentages.time_frame
@@ -216,7 +211,7 @@ class DynamicModel:
         nitrate = solution.fluxes[NITRATE]
 
         # Normalize
-        # - multiply with time and mass resulting in mol as unit
+        # - multiply with time and mass resulting in micromol as unit
         # - micromol/(seconds * organ_mass) * organ_mass[gram] * time_frame[s]
 
         # biomass
@@ -224,6 +219,11 @@ class DynamicModel:
         stem = stem * stem_biomass * time_frame
         leaf = leaf * leaf_biomass * time_frame
         seed = seed * seed_biomass * time_frame
+
+        logger.debug(f"Leaf biomass is {leaf} micromol, "
+                     f"stem biomass is {stem} micromol, "
+                     f"root biomass is {root} micromol, "
+                     f"seed biomass is {seed} micromol.")
 
         # Uptake and release
         # via leaf
@@ -409,3 +409,40 @@ class DynamicModel:
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(root_mass)))
         photon_in = photon_in * 300  # mikromol/m2/s
         self.set_bounds(PHOTON, (0, photon_in))
+
+    def update_constraints(self):
+
+        root_reaction:Variable = self.model.reactions.get_by_id(BIOMASS_ROOT).flux_expression
+        stem_reaction:Variable = self.model.reactions.get_by_id(BIOMASS_STEM).flux_expression
+        leaf_reaction:Variable = self.model.reactions.get_by_id(BIOMASS_LEAF).flux_expression
+        seed_reaction:Variable = self.model.reactions.get_by_id(BIOMASS_SEED).flux_expression
+        starch_out_reaction:Variable = self.model.reactions.get_by_id(STARCH_OUT).flux_expression
+
+        names = ["root", "stem", "leaf", "seed", "starch_out"]
+        reactions = [root_reaction, stem_reaction, leaf_reaction, seed_reaction, starch_out_reaction]
+        percentage = [self.percentages.root, self.percentages.stem, self.percentages.leaf, self.percentages.flower, self.percentages.starch]
+        mass = [self.plant.root_biomass_gram, self.plant.stem_biomass_gram, self.plant.seed_biomass_gram, self.plant.seed_biomass_gram, self.plant.starch_pool.starch_production_in_gram]
+
+        n_reactions = len(reactions)
+
+        for i in range(0, n_reactions):
+            for j in range(i+1, n_reactions):
+                name = f"{percentage[i]}_of_{names[i]}_=_{percentage[j]}_of_{names[j]}"
+
+                old_cons = self.model.constraints.get(name)
+
+                if old_cons is not None:
+                    logger.debug(f"Removing the constraint with name {name}")
+                    self.model.remove_cons_vars(old_cons)
+
+                if percentage[i] != 0 and percentage[j] != 0:
+                    constraint = self.model.problem.Constraint(
+                        (reactions[i] * mass[i] / percentage[i] - reactions[j] * mass[j] / percentage[j]),
+                        lb = 0,
+                        ub = 0,
+                        name = name,
+                    )
+
+                    logger.debug(f"Creating new Constraints {constraint}")
+
+                    self.model.add_cons_vars(constraint)

@@ -10,7 +10,7 @@ max_nitrate_pool_high: Final[int] = 100000  # mikromol
 @dataclass_json
 @dataclass
 class Nitrate:
-    nitrate_pool: int = 0
+    nitrate_pool: int = 100000
     nitrate_delta_amount: int = 0
     max_nitrate_pool: int = max_nitrate_pool_high
 

@@ -13,7 +13,7 @@ from PlantEd.exceptions.pools import NegativeBiomassError
 logger = logging.getLogger(__name__)
 
 
-MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000 * 0.8
+MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000 * 0.8
 
 
 @dataclass
@@ -50,8 +50,8 @@ class Water:
         Returns the percentage level of the water supply as float.
         """
         percentage = self.water_pool / self.__max_water_pool
-
-        '''if percentage > 1 or percentage < 0:
+        logger.debug(f"Water Percentage is: {percentage}, {self.water_pool}, {self.__max_water_pool}")
+        if percentage > 1 or percentage < 0:
             logger.warning(
                 f"The water pool is over 100% full or in the "
                 f"minus. It is {percentage}, where water_pool is "

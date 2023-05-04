@@ -1,5 +1,6 @@
 import argparse
 import random
+import socket
 import sys
 import time
 import warnings
@@ -322,12 +323,16 @@ class DefaultGameScene(object):
         # self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
         # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
 
-        model = DynamicModel(self.gametime)
+        model = DynamicModel()
         self.water_grid = Water_Grid(pos=(0, 900))
 
         logger.info("Starting Server and client")
         logger.debug("Creating server")
-        self.server = Server(model=model, only_local= True)
+
+        addr = ("", 4000)
+        sock = socket.create_server(addr)
+
+        self.server = Server(model=model, only_local= True, sock=sock)
         logger.debug("Starting server")
         self.server.start()
 
@@ -587,8 +592,15 @@ class DefaultGameScene(object):
                 self.pause_button_resume.handle_event(e)
                 self.pause_button_exit.handle_event(e)
             if e.type == GROWTH:
+
+                game_time_now = self.gametime.time_since_start_in_hours
+                delta_time_in_h = \
+                    game_time_now \
+                    - self.hours_since_start_where_growth_last_computed
+                self.hours_since_start_where_growth_last_computed = game_time_now
+
                 update_info = UpdateInfo(
-                    delta_time=dt,
+                    delta_time=delta_time_in_h*3600,
                     leaf_mass=self.plant.organs[0].mass,
                     stem_mass=self.plant.organs[1].mass,
                     root_mass=self.plant.organs[2].mass,
@@ -613,13 +625,6 @@ class DefaultGameScene(object):
                 for flower in flowering_flowers:
                     flower_percent += 10
                     self.plant.organs[3].percentage = flower_percent
-
-
-                game_time_now =  self.gametime.time_since_start_in_hours
-                delta_time_in_h = \
-                    game_time_now \
-                    - self.hours_since_start_where_growth_last_computed
-                self.hours_since_start_where_growth_last_computed = game_time_now
 
 
                 growth_percent = GrowthPercent(
@@ -695,6 +700,10 @@ class DefaultGameScene(object):
 
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
+
+
+        self.nitrate = plant.nitrate.nitrate_pool
+
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
