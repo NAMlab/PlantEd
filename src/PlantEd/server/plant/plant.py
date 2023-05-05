@@ -1,24 +1,14 @@
 from __future__ import annotations
 
 import json
-from typing import Final
 
 from PlantEd.client.water import Water
+from PlantEd.constants import LEAF_BIOMASS_GRAM_PER_MICROMOL, STEM_BIOMASS_GRAM_PER_MICROMOL, \
+    ROOT_BIOMASS_GRAM_PER_MICROMOL, SEED_BIOMASS_GRAM_PER_MICROMOL, START_LEAF_BIOMASS_GRAM, START_STEM_BIOMASS_GRAM, \
+    START_ROOT_BIOMASS_GRAM, START_SEED_BIOMASS_GRAM, SLA_IN_SQUARE_METER_PER_GRAM
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.starch import Starch
-
-# ↓ value according to https://doi.org/10.1007/s13595-019-0911-2
-# ↓ Leaf Mass per Area (LMA)
-LMA_IN_GRAM_PER_SQUARE_METER: Final[float] = 40
-
-# ↓ Specific leaf Area (SLA)
-SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1/LMA_IN_GRAM_PER_SQUARE_METER
-
-LEAF_BIOMASS_GRAM_PER_MICROMOL = 899.477379 / 1000000
-STEM_BIOMASS_GRAM_PER_MICROMOL = 916.2985939 / 1000000
-ROOT_BIOMASS_GRAM_PER_MICROMOL = 956.3297883 / 1000000
-SEED_BIOMASS_GRAM_PER_MICROMOL = 978.8487602 / 1000000
 
 class Plant:
     """
@@ -43,39 +33,50 @@ class Plant:
     """
     def __init__(self):
         self.leafs: list[Leaf] = []
-        self.leafs_biomass: float = 0.1/ LEAF_BIOMASS_GRAM_PER_MICROMOL
-        self.stem_biomass: float = 0.1 / STEM_BIOMASS_GRAM_PER_MICROMOL
-        self.root_biomass: float = 1 / ROOT_BIOMASS_GRAM_PER_MICROMOL  # Corresponds to 1 gram root biomass.
-        self.seed_biomass: float = 0.1 / SEED_BIOMASS_GRAM_PER_MICROMOL
+        self.leafs_biomass: float = START_LEAF_BIOMASS_GRAM/ LEAF_BIOMASS_GRAM_PER_MICROMOL
+        self.stem_biomass: float = START_STEM_BIOMASS_GRAM / STEM_BIOMASS_GRAM_PER_MICROMOL
+        self.root_biomass: float = START_ROOT_BIOMASS_GRAM / ROOT_BIOMASS_GRAM_PER_MICROMOL
+        self.seed_biomass: float = START_SEED_BIOMASS_GRAM / SEED_BIOMASS_GRAM_PER_MICROMOL
 
         self.co2: float = 0
         self.photon: float = 0
 
-        self.starch_pool: Starch = Starch()
-        self.starch_pool.scale_pool_via_biomass(self.biomass_total_gram)
+        biomass = self.biomass_total_gram
+        self.starch_pool: Starch = Starch(plant_weight_gram= biomass)
+        self.water: Water = Water(plant_weight_gram= biomass)
+        self.nitrate: Nitrate = Nitrate(plant_weight_gram= biomass)
 
-        self.water: Water = Water()
-        self.nitrate: Nitrate = Nitrate()
-
-        self.photon_upper: float = 0
         self.stomata_open:bool = False
 
     def __repr__(self):
         string =f"Plant object with following biomass values:" \
-                f" Leafs {self.leafs_biomass:.4E} mol" \
-                f" Stem {self.stem_biomass:.4E} mol" \
-                f" Root {self.root_biomass:.4E} mol" \
-                f" Seed {self.seed_biomass:.4E} mol" \
+                f" Leafs {self.leafs_biomass:.4E} µmol" \
+                f" Stem {self.stem_biomass:.4E} µmol" \
+                f" Root {self.root_biomass:.4E} µmol" \
+                f" Seed {self.seed_biomass:.4E} µmol" \
                 f" - other values :" \
-                f" CO2 uptake is {self.co2:.4E} mol;" \
-                f" Photon uptake is {self.photon:.4E} mol with " \
-                f"an upper bound of {self.photon_upper:.4E} " \
-                f"mol/(g_leaf_biomass * seconds);" \
-                f" Starch is {self.starch_pool} mol;" \
+                f" CO2 uptake is {self.co2:.4E} µmol;" \
+                f" Photon uptake is {self.photon:.4E} µmol;" \
+                f" Starch is {str(self.starch_pool)};" \
                 f" Water is {str(self.water)};" \
                 f" Nitrate is {str(self.nitrate)}" \
 
         return string
+
+    def __eq__(self, other):
+        if not isinstance(other, Plant):
+            return False
+
+        own_vars = vars(self)
+        other_vars = vars(other)
+
+        for key in own_vars:
+            if own_vars[key] != other_vars[key]:
+                print(key)
+                return False
+
+        return True
+
 
     def to_json(self) -> str:
         """
@@ -110,13 +111,12 @@ class Plant:
 
         dic["co2"] = self.co2
         dic["photon"] = self.photon
-        dic["starch_out"] = self.starch_out
-        dic["starch_in"] = self.starch_in
+
+        dic["stomata_open"] = self.stomata_open
 
         dic["water"] = self.water.to_dict()
-        dic["nitrate"] = self.nitrate.to_json()
-
-        dic["photon_upper"] = self.photon_upper
+        dic["nitrate"] = self.nitrate.to_dict()
+        dic["starch"] = self.starch_pool.to_dict()
 
         return dic
 
@@ -131,13 +131,12 @@ class Plant:
 
         plant.co2 = dic["co2"]
         plant.photon = dic["photon"]
-        plant.starch_out = dic["starch_out"]
-        plant.starch_in = dic["starch_in"]
+
+        plant.stomata_open = dic["stomata_open"]
 
         plant.water = Water.from_dict(dic["water"])
-        plant.nitrate = Nitrate.from_json(dic["nitrate"])
-
-        plant.photon_upper = dic["photon_upper"]
+        plant.nitrate = Nitrate.from_dict(dic["nitrate"])
+        plant.starch_pool = Starch.from_dict(dic["starch"])
 
         return plant
 

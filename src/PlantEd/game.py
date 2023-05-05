@@ -535,7 +535,7 @@ class DefaultGameScene(object):
         self.plant.organs[2].floating_shop = self.floating_shop
 
         # start plant growth timer
-        pygame.time.set_timer(GROWTH, 1000)
+        pygame.time.set_timer(GROWTH, 2000)
 
     def activate_add_leaf(self):
         # if there are funds, buy a leave will enable leave @ mouse pos until clicked again
@@ -673,13 +673,13 @@ class DefaultGameScene(object):
             time_frame=-1,
         )
 
+        logger.debug(f"Delta is as follows: {str(growth_rates)}")
+
         self.ui.growth_rates = growth_rates
         self.ui.server_plant = plant
 
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
-
-
 
         self.nitrate = plant.nitrate.nitrate_pool
 
@@ -740,7 +740,7 @@ class DefaultGameScene(object):
         self.narrator.update(dt)
 
         # self.skill_system.update(dt)
-        self.plant.update(dt, self.server_plant.photon_upper)
+        self.plant.update(dt, self.server_plant.photon)
 
         if self.plant.seedling.max < self.plant.get_biomass():
             self.shop.active = True

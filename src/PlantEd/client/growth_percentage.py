@@ -25,7 +25,7 @@ class GrowthPercent:
     root: float
     starch: float
     flower: float
-    time_frame: float
+    time_frame: int
 
     @classmethod
     def from_json(self, string:str) -> GrowthPercent:

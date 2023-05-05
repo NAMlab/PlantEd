@@ -1142,7 +1142,7 @@ class UI:
             border_radius=3,
         )  # exp
         text_water_pool = config.FONT.render(
-            "{:.0f} MMol".format(self.server_plant.water.water_pool / 1000), True, (0, 0, 0)
+            "{:.0f} µMol".format(self.server_plant.water.water_pool), True, (0, 0, 0)
         )
         s.blit(
             text_water_pool,

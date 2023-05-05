@@ -8,34 +8,41 @@ from typing import Final
 
 from pydantic import confloat
 
+from PlantEd.constants import MAX_WATER_POOL_PER_GRAMM, START_WATER_POOL_IN_MICROMOL, \
+    PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP, PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP
 from PlantEd.exceptions.pools import NegativeBiomassError
 
 logger = logging.getLogger(__name__)
 
-
-MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000 * 0.8
 
 
 @dataclass
 class Water:
     """
     This class represents the water pool of the plant. All values
-    are in micromol unless otherwise stated.
+    are in µmol unless otherwise stated.
     """
 
-    __max_water_pool: float = 1 * MAX_WATER_POOL_PER_GRAMM
-    max_water_pool_consumption: Final[int] = 1
+    def __init__(self, plant_weight_gram: float):
 
-    water_pool: int = __max_water_pool
-    water_intake: int = 0
-    water_intake_pool: int = 0
-    transpiration: float = 0
+        self.__max_water_pool: float = 0
+        self.update_max_water_pool(plant_biomass= plant_weight_gram)
+
+        if START_WATER_POOL_IN_MICROMOL > 0:
+            water_pool = START_WATER_POOL_IN_MICROMOL
+        else:
+            water_pool = abs(START_WATER_POOL_IN_MICROMOL) * self.__max_water_pool
+
+        self.__water_pool: float = water_pool
+        self.water_intake: int = 0
+        self.water_intake_pool: int = 0
+        self.transpiration: float = 0
 
     def __repr__(self):
         string = f"Water object with following values:" \
-                 f" water_pool is {self.water_pool}, water_intake is {self.water_intake}" \
-                 f" water_intake_pool is {self.water_intake_pool}, transpiration is {self.transpiration}" \
-                 f" max_water_pool is {self.max_water_pool}."
+                 f" water_pool is {self.water_pool} µmol, water_intake is {self.water_intake} µmol" \
+                 f" water_intake_pool is {self.water_intake_pool} µmol, transpiration is {self.transpiration} µmol" \
+                 f" max_water_pool is {self.max_water_pool} µmol."
 
         return string
 
@@ -43,13 +50,22 @@ class Water:
         for field in dataclasses.fields(self):
             yield getattr(self, field.name)
 
+    @property
+    def water_pool(self):
+        return self.__water_pool
+
+    @water_pool.setter
+    def water_pool(self, value: float):
+        self.__water_pool = min(self.__max_water_pool, value)
+
+
     def get_water_drain(self) -> float:
         return self.water_intake + self.__max_water_pool
 
     @property
     def max_water_pool(self) -> float:
         """
-        Provides the maximum water storage capacity of the plant in micromol.
+        Provides the maximum water storage capacity of the plant in µmol.
         """
 
         return self.__max_water_pool
@@ -63,8 +79,8 @@ class Water:
             logger.warning(
                 f"The water pool is over 100% full or in the "
                 f"minus. It is {percentage}, where water_pool is "
-                f"{self.water_pool} and max_water_pool is "
-                f"{self.__max_water_pool}."
+                f"{self.water_pool} µmol and max_water_pool is "
+                f"{self.__max_water_pool} µmol."
             )
 
         logger.debug(f"Calculated water percentage is {percentage} from {self}")
@@ -83,21 +99,19 @@ class Water:
         dic["water_intake_pool"] = self.water_intake_pool
         dic["transpiration"] = self.transpiration
         dic["max_water_pool"] = self.__max_water_pool
-        dic["max_water_pool_consumption"] = self.max_water_pool_consumption
 
         return dic
 
     @classmethod
     def from_dict(cls, dic:dict) -> Water:
 
-        water = Water()
+        water = Water(plant_weight_gram=0)
 
-        water.water_pool = dic["water_pool"]
+        water.__water_pool = dic["water_pool"]
         water.water_intake = dic["water_intake"]
         water.water_intake_pool = dic["water_intake_pool"]
         water.transpiration = dic["transpiration"]
         water.__max_water_pool = dic["max_water_pool"]
-        water.max_water_pool_consumption = dic["max_water_pool_consumption"]
 
         return water
 
@@ -126,7 +140,7 @@ class Water:
 
         new_max_water_pool = plant_biomass * MAX_WATER_POOL_PER_GRAMM
 
-        logger.debug(f"Setting new_max_water_pool to {new_max_water_pool} micromol.Based on a biomass of {plant_biomass} grams.")
+        logger.debug(f"Setting new_max_water_pool to {new_max_water_pool} µmol.Based on a biomass of {plant_biomass} grams.")
 
         self.__max_water_pool = new_max_water_pool
 
@@ -136,22 +150,26 @@ class Water:
         time_in_seconds: float,
     ) -> float:
 
+        # Pool usage factors (see constants.py)
+        value = min(self.water_pool * PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
+                    self.__max_water_pool * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP)
+
         try:
-            value = self.water_pool / (
+            value = value / (
                 gram_of_organ * time_in_seconds
             )
         except ZeroDivisionError as e:
             raise ValueError(
                 f"Either the given time ({time_in_seconds})or the organic "
                 f"mass ({gram_of_organ}) are 0. "
-                f"Therefore, the available micromole per time and "
+                f"Therefore, the available µmole per time and "
                 f"gram cannot be calculated."
             ) from e
 
         logger.debug(
             f"Within a time of {time_in_seconds} seconds, an organ "
             f"with {gram_of_organ} grams of biomass has a "
-            f"maximum of {value} micromol/(second * gram) of water available."
+            f"maximum of {value} µmol/(second * gram) of water available."
         )
 
         return value

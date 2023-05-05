@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # WS client example
 
@@ -92,7 +93,7 @@ class Client:
             for id_string, payload in data.items():
                 future = self.expected_receive[id_string]
 
-                logger.debug(f"Setting {future} as done with result {payload}")
+                logger.debug(f"Setting future for {id_string} as done with result {payload}")
                 future.set_result(payload)
 
     def growth_rate(
@@ -120,7 +121,7 @@ class Client:
 
         plant = Plant.from_json(future.result())
 
-        logger.debug("Plants object created. Execute callback..")
+        logger.debug("Plants object created. Execute callback.")
 
         callback(plant)
 
@@ -266,20 +267,20 @@ class Client:
 
         await self.websocket.send(message)
 
-    def increase_nitrate(self):
+    def increase_nitrate(self, µmol_nitrate: float):
         """
         Method that realizes the increase of the nitrate pool
         through the store.
 
         """
 
-        task = self.__increase_nitrate()
+        task = self.__increase_nitrate(µmol_nitrate = µmol_nitrate)
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
-    async def __increase_nitrate(self):
+    async def __increase_nitrate(self, µmol_nitrate: float):
         logger.debug("Sending request for nitrate increase.")
 
-        message = '{"increase_nitrate": "null"}'
+        message = f'{{"increase_nitrate": "{µmol_nitrate}"}}'
         await self.websocket.send(message)
 
     def get_nitrate_pool(self, callback: Callable[[Nitrate], None]):

@@ -105,7 +105,7 @@ class TestDynamicModel(TestCase):
             root=0.5,
             starch=0,
             flower=0,
-            time_frame=6000,
+            time_frame=10,
         )
 
         leaf_old = dyn_model.plant.leafs_biomass_gram
@@ -141,7 +141,6 @@ class TestDynamicModel(TestCase):
         stem_old = dyn_model.plant.stem_biomass_gram
         root_old = dyn_model.plant.root_biomass_gram
         seed_old = dyn_model.plant.seed_biomass_gram
-        starch_out_old = dyn_model.plant.starch_pool.starch_production_in_gram
 
         growth_percent = GrowthPercent(
             leaf=0.25,
@@ -157,16 +156,93 @@ class TestDynamicModel(TestCase):
         stem_new = dyn_model.plant.stem_biomass_gram
         root_new = dyn_model.plant.root_biomass_gram
         seed_new = dyn_model.plant.seed_biomass_gram
-        starch_out_new = dyn_model.plant.starch_pool.starch_production_in_gram
 
         leaf_diff = leaf_new - leaf_old
         stem_diff = stem_new - stem_old
         root_diff = root_new - root_old
         seed_diff = seed_new - seed_old
-        starch_diff = starch_out_new - starch_out_old
+        starch = dyn_model.plant.starch_pool.starch_production_in_gram
 
-        msg = f"Growth of leaf ({leaf_diff}), stem ({stem_diff}), root ({root_diff}) and starch ({starch_diff}) is unequal"
+        msg = f"Growth of leaf ({leaf_diff}), stem ({stem_diff}), root ({root_diff}) and starch ({starch}) is unequal"
         self.assertEqual(0, seed_diff)
         self.assertAlmostEqual(leaf_diff, stem_diff, msg=msg)
         self.assertAlmostEqual(stem_diff, root_diff, msg=msg)
-        self.assertAlmostEqual(root_diff, starch_diff, msg=msg)
+        self.assertAlmostEqual(root_diff, starch, msg=msg)
+
+
+    def test_photosynthesis(self):
+        dyn_model = DynamicModel()
+
+        dyn_model.plant.root_biomass = 100
+        dyn_model.plant.stem_biomass = 100
+        dyn_model.plant.leafs_biomass = 100
+        dyn_model.plant.seed_biomass = 100
+
+        # Case 1
+        dyn_model.plant.update_max_water_pool()
+        dyn_model.plant.update_max_starch_pool()
+        dyn_model.plant.update_max_nitrate_pool()
+        dyn_model.open_stomata()
+
+        dyn_model.plant.starch_pool.available_starch_pool = 0
+        dyn_model.plant.water.water_pool = dyn_model.plant.water.max_water_pool
+        dyn_model.plant.nitrate.nitrate_pool = dyn_model.plant.nitrate.max_nitrate_pool
+
+        leaf_old = dyn_model.plant.leafs_biomass_gram
+        stem_old = dyn_model.plant.stem_biomass_gram
+        root_old = dyn_model.plant.root_biomass_gram
+        seed_old = dyn_model.plant.seed_biomass_gram
+
+        growth_percent = GrowthPercent(
+            leaf=0.25,
+            stem=0.25,
+            root=0.25,
+            starch=0.25,
+            flower=0,
+            time_frame=1,
+        )
+        dyn_model.calc_growth_rate(new_growth_percentages=growth_percent)
+
+        leaf_new = dyn_model.plant.leafs_biomass_gram
+        stem_new = dyn_model.plant.stem_biomass_gram
+        root_new = dyn_model.plant.root_biomass_gram
+        seed_new = dyn_model.plant.seed_biomass_gram
+
+        leaf_diff = leaf_new - leaf_old
+        stem_diff = stem_new - stem_old
+        root_diff = root_new - root_old
+        seed_diff = seed_new - seed_old
+        starch = dyn_model.plant.starch_pool.starch_production_in_gram
+
+        msg = f"Growth of leaf ({leaf_diff}), stem ({stem_diff}), root ({root_diff}) and starch ({starch}) is unequal"
+        self.assertEqual(0, seed_diff)
+        self.assertAlmostEqual(leaf_diff, stem_diff, msg=msg)
+        self.assertAlmostEqual(stem_diff, root_diff, msg=msg)
+        self.assertAlmostEqual(root_diff, starch, msg=msg)
+
+        # Case 2
+        # increase leaf mass => higher photon limit
+        dyn_model.plant.leafs_biomass = 500
+
+        growth_percent = GrowthPercent(
+            leaf=0,
+            stem=0,
+            root=0,
+            starch=1,
+            flower=0,
+            time_frame=10,
+        )
+        dyn_model.plant.starch_pool.available_starch_pool = 0
+
+        dyn_model.calc_growth_rate(new_growth_percentages=growth_percent)
+        growth_rate = dyn_model.growth_rates
+
+        self.assertEqual(0, growth_rate.leaf_rate)
+        self.assertEqual(0, growth_rate.stem_rate)
+        self.assertEqual(0, growth_rate.root_rate)
+        self.assertEqual(0, growth_rate.seed_rate)
+
+        self.assertTrue(dyn_model._objective_value > 0)
+        self.assertTrue(dyn_model.plant.starch_pool.starch_production_in_gram > 0)
+        self.assertTrue(dyn_model.plant.co2 > 0)
+        self.assertTrue(dyn_model.plant.photon > 0)

@@ -105,6 +105,7 @@ class DynamicModel:
     ):
         self.model = model.copy()
         self.set_objective()
+        self._objective_value: float = 0
 
         self.plant = Plant()
 
@@ -159,7 +160,6 @@ class DynamicModel:
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
-        self.plant.nitrate.set_pool_to_high()
         self.plant.water.water_pool = self.plant.water.max_water_pool
         self.set_bounds(NITRATE, (0, 1000))
         self.set_bounds(PHOTON, (0, 0))
@@ -239,7 +239,7 @@ class DynamicModel:
             )
         )
         nitrate_bounds = (-1000, nitrate_upper_bounds)
-        logger.debug(f"Bounds for water are  {nitrate_bounds}")
+        logger.debug(f"Bounds for nitrate are  {nitrate_bounds}")
         self.set_bounds(NITRATE, nitrate_bounds)
 
         solution = self.model.optimize()
@@ -248,6 +248,8 @@ class DynamicModel:
             f"Simulation resulted in an objective_value of "
             f"{solution.objective_value:.4E}."
         )
+
+        self._objective_value = solution.objective_value
 
         # get flux with unit micromol/(hour * organ_mass)
 
@@ -267,7 +269,6 @@ class DynamicModel:
         # via leaf
         co2 = solution.fluxes[CO2]
         photon = solution.fluxes[PHOTON]
-        photon_upper = self.model.reactions.get_by_id(PHOTON).bounds[1]
 
         # via stem
         starch_out = solution.fluxes.get(STARCH_OUT)
@@ -298,7 +299,6 @@ class DynamicModel:
         # via leaf
         co2 = co2 * leaf_biomass * time_frame
         photon = photon * leaf_biomass * time_frame
-        photon_upper = photon_upper * leaf_biomass * time_frame
 
         # via stem
         starch_out = starch_out * stem_biomass * time_frame
@@ -320,7 +320,6 @@ class DynamicModel:
         self.plant.photon = photon
         self.plant.co2 = co2
 
-        self.plant.photon_upper = photon_upper
 
         # update water
         self.plant.water.water_intake = water
@@ -401,11 +400,6 @@ class DynamicModel:
         self.set_bounds(CO2, bounds)
         logger.debug(f"CO2 bounds set to {bounds}")
 
-
-
-    def get_photon_upper(self):
-        return self.model.reactions.get_by_id(PHOTON).bounds[1]
-
     def get_nitrate_pool(self):
         return self.plant.nitrate.nitrate_pool
 
@@ -437,7 +431,7 @@ class DynamicModel:
         return self.model.reactions.get_by_id(reaction).bounds
 
     def increase_nitrate(self, amount):
-        self.plant.nitrate.nitrate_delta_amount = amount
+        self.plant.nitrate.nitrate_pool += amount
 
     def activate_starch_resource(self, percentage: float=1):
         logger.info("Activating starch resource")
@@ -464,21 +458,6 @@ class DynamicModel:
         self.plant.water.water_intake_pool = (
             0  # reset to not drain for no reason
         )
-
-        self.plant.nitrate.nitrate_pool -= (
-            self.plant.nitrate.nitrate_intake * dt * gamespeed
-        )
-
-        if self.plant.nitrate.nitrate_pool < 0:
-            self.plant.nitrate.nitrate_pool = 0
-        # slowly add nitrate after buying
-        if self.plant.nitrate.nitrate_delta_amount > 0:
-            self.plant.nitrate.nitrate_pool += (
-                self.plant.nitrate.max_nitrate_pool_high / 2 * dt
-            )
-            self.plant.nitrate.nitrate_delta_amount -= (
-                self.plant.nitrate.max_nitrate_pool_high / 2 * dt
-            )
 
     def update_bounds(self, root_mass, photon_in):
         self.set_bounds(NITRATE, (0, self.get_nitrate_intake(root_mass)))

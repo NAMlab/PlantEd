@@ -173,15 +173,15 @@ class Plant:
         else:
             self.danger_mode = False
 
-        self.organs[0].update_growth_rate(growth_rates.leaf_rate*1000000000)
-        self.organs[1].update_growth_rate(growth_rates.stem_rate*1000000000)
-        self.organs[2].update_growth_rate(growth_rates.root_rate*1000000000)
+        self.organs[0].update_growth_rate(growth_rates.leaf_rate*100)
+        self.organs[1].update_growth_rate(growth_rates.stem_rate*100)
+        self.organs[2].update_growth_rate(growth_rates.root_rate*100)
 
         self.organ_starch.update_growth_rate(
-            growth_rates.starch_rate*1000000000
+            growth_rates.starch_rate*100
         )
-        self.organ_starch.starch_intake = growth_rates.starch_intake*1000000000
-        self.organs[3].update_growth_rate(growth_rates.seed_rate*1000000000)
+        self.organ_starch.starch_intake = growth_rates.starch_intake*100
+        self.organs[3].update_growth_rate(growth_rates.seed_rate*100)
 
     def get_biomass(self):
         biomass = 0
@@ -325,7 +325,6 @@ class Organ:
 
     def update_growth_rate(self, growth_rate):
         self.growth_rate = growth_rate * 2
-        print("GROTH: ", self.growth_rate, self.type)
 
     def yellow_leaf(self, image, alpha):
         ghost_image = image.copy()

@@ -20,6 +20,7 @@ from PlantEd.server.plant.nitrate import Nitrate
 logger = logging.getLogger(__name__)
 
 
+
 class Server:
     """
     A server that provides all necessary data for the user interface.
@@ -254,6 +255,8 @@ class Server:
         self.model.enable_water_intake()
 
     def set_water_pool(self, water: Water):
+        water.transpiration = self.model.plant.water.transpiration
+
         self.model.plant.set_water(water)
         logger.debug(f"Water set to {self.model.plant.water}")
 
@@ -345,7 +348,9 @@ class Server:
                             logger.debug(
                                 "Received command identified as increase_nitrate."
                             )
-                            self.model.increase_nitrate(amount=5000)
+                            amount = payload["increase_nitrate"]
+
+                            self.model.increase_nitrate(amount=amount)
 
                         case "get_nitrate_pool":
                             logger.debug(
