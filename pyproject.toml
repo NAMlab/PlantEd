@@ -18,7 +18,9 @@ dependencies = [
   "cobra",
   "websockets",
   "dataclasses-json",
-  "pygame"
+  "pygame",
+  "requests",
+  "scipy",
 ]
 
 [project.optional-dependencies]

@@ -1,12 +1,24 @@
 from __future__ import annotations
 
 import json
+from typing import Final
 
 from PlantEd.client.water import Water
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.starch import Starch
 
+# ↓ value according to https://doi.org/10.1007/s13595-019-0911-2
+# ↓ Leaf Mass per Area (LMA)
+LMA_IN_GRAM_PER_SQUARE_METER: Final[float] = 40
+
+# ↓ Specific leaf Area (SLA)
+SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1/LMA_IN_GRAM_PER_SQUARE_METER
+
+LEAF_BIOMASS_GRAM_PER_MICROMOL = 899.477379 / 1000000
+STEM_BIOMASS_GRAM_PER_MICROMOL = 916.2985939 / 1000000
+ROOT_BIOMASS_GRAM_PER_MICROMOL = 956.3297883 / 1000000
+SEED_BIOMASS_GRAM_PER_MICROMOL = 978.8487602 / 1000000
 
 class Plant:
     """
@@ -31,10 +43,10 @@ class Plant:
     """
     def __init__(self):
         self.leafs: list[Leaf] = []
-        self.leafs_biomass: float = 0.0000001 / 0.00089947737
-        self.stem_biomass: float = 0.0000001 / 0.00089947737
-        self.root_biomass: float = 1 / 0.00089947737  # Corresponds to 1 gram root biomass.
-        self.seed_biomass: float = 0.0000001 / 0.00089947737
+        self.leafs_biomass: float = 0.1/ LEAF_BIOMASS_GRAM_PER_MICROMOL
+        self.stem_biomass: float = 0.1 / STEM_BIOMASS_GRAM_PER_MICROMOL
+        self.root_biomass: float = 1 / ROOT_BIOMASS_GRAM_PER_MICROMOL  # Corresponds to 1 gram root biomass.
+        self.seed_biomass: float = 0.1 / SEED_BIOMASS_GRAM_PER_MICROMOL
 
         self.co2: float = 0
         self.photon: float = 0
@@ -46,6 +58,7 @@ class Plant:
         self.nitrate: Nitrate = Nitrate()
 
         self.photon_upper: float = 0
+        self.stomata_open:bool = False
 
     def __repr__(self):
         string =f"Plant object with following biomass values:" \
@@ -152,19 +165,19 @@ class Plant:
 
     @property
     def leafs_biomass_gram(self):
-        return self.leafs_biomass * 899.477379 / 1000000
+        return self.leafs_biomass * LEAF_BIOMASS_GRAM_PER_MICROMOL
 
     @property
     def stem_biomass_gram(self):
-        return self.stem_biomass * 916.2985939 / 1000000
+        return self.stem_biomass * STEM_BIOMASS_GRAM_PER_MICROMOL
 
     @property
     def root_biomass_gram(self):
-        return self.root_biomass * 956.3297883 / 1000000
+        return self.root_biomass * ROOT_BIOMASS_GRAM_PER_MICROMOL
 
     @property
     def seed_biomass_gram(self):
-        return self.seed_biomass * 978.8487602 / 1000000
+        return self.seed_biomass * SEED_BIOMASS_GRAM_PER_MICROMOL
 
     @property
     def biomass_total(self):
@@ -173,6 +186,10 @@ class Plant:
     @property
     def biomass_total_gram(self):
         return self.leafs_biomass_gram + self.stem_biomass_gram + self.root_biomass_gram + self.seed_biomass_gram
+
+    @property
+    def specific_leaf_area_in_square_meter(self):
+        return SLA_IN_SQUARE_METER_PER_GRAM * self.leafs_biomass_gram
 
 
     def set_water(self, water: Water):
@@ -185,7 +202,25 @@ class Plant:
         self.leafs.append(leaf)
 
     def update_max_water_pool(self):
-        self.water.update_max_water_pool(plant_biomass=self.biomass_total)
+        self.water.update_max_water_pool(plant_biomass=self.biomass_total_gram)
 
     def update_max_starch_pool(self):
         self.starch_pool.scale_pool_via_biomass(biomass_in_gram= self.biomass_total_gram)
+
+    def update_transpiration(self, transpiration_factor: float):
+        self.water.update_transpiration(
+            stomata_open= self.stomata_open,
+            co2_uptake_in_micromol= self.co2,
+            transpiration_factor = transpiration_factor,
+        )
+
+    def update_nitrate_pool_intake(self, seconds:int):
+        self.nitrate.update_nitrate_pool_based_on_root_weight(
+            root_weight_in_gram= self.root_biomass_gram,
+            time_in_seconds= seconds
+        )
+
+    def update_max_nitrate_pool(self):
+        self.nitrate.update_nitrate_pool_based_on_plant_weight(
+            plant_weight_gram= self.biomass_total_gram
+        )

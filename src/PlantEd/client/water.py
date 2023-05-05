@@ -23,12 +23,13 @@ class Water:
     are in micromol unless otherwise stated.
     """
 
-    water_pool: int = 0
+    __max_water_pool: float = 1 * MAX_WATER_POOL_PER_GRAMM
+    max_water_pool_consumption: Final[int] = 1
+
+    water_pool: int = __max_water_pool
     water_intake: int = 0
     water_intake_pool: int = 0
     transpiration: float = 0
-    __max_water_pool: float = 4 * MAX_WATER_POOL_PER_GRAMM
-    max_water_pool_consumption: Final[int] = 1
 
     def __repr__(self):
         string = f"Water object with following values:" \
@@ -58,7 +59,6 @@ class Water:
         Returns the percentage level of the water supply as float.
         """
         percentage = self.water_pool / self.__max_water_pool
-        logger.debug(f"Water Percentage is: {percentage}, {self.water_pool}, {self.__max_water_pool}")
         if percentage > 1 or percentage < 0:
             logger.warning(
                 f"The water pool is over 100% full or in the "
@@ -124,7 +124,11 @@ class Water:
         if plant_biomass < 0:
             raise NegativeBiomassError("The given biomass of the plant is negative.")
 
-        self.__max_water_pool = plant_biomass * MAX_WATER_POOL_PER_GRAMM
+        new_max_water_pool = plant_biomass * MAX_WATER_POOL_PER_GRAMM
+
+        logger.debug(f"Setting new_max_water_pool to {new_max_water_pool} micromol.Based on a biomass of {plant_biomass} grams.")
+
+        self.__max_water_pool = new_max_water_pool
 
     def calc_available_water_in_mol_per_gram_and_time(
         self,
@@ -144,10 +148,19 @@ class Water:
                 f"gram cannot be calculated."
             ) from e
 
-        logging.debug(
+        logger.debug(
             f"Within a time of {time_in_seconds} seconds, an organ "
             f"with {gram_of_organ} grams of biomass has a "
             f"maximum of {value} micromol/(second * gram) of water available."
         )
 
         return value
+
+    def update_transpiration(self, stomata_open: bool, co2_uptake_in_micromol: float, transpiration_factor:float):
+        transpiration = 0
+        if stomata_open:
+            if co2_uptake_in_micromol > 0:
+                transpiration = co2_uptake_in_micromol * transpiration_factor
+
+        logger.debug(f"Setting transpiration to {transpiration}. Based on CO2 intake of {co2_uptake_in_micromol} and a transpiration_factor of {transpiration_factor}" )
+        self.transpiration = transpiration

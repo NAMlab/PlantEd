@@ -12,9 +12,9 @@ gram_starch_per_gram_fresh_weight: Final[float] = 0.0015
 # ↓ according to https://doi.org/10.1046/j.0028-646X.2001.00320.x
 gram_fresh_weight_per_gram_dry_weight: Final[float] = 5.0
 
-gram_starch_per_micromol_starch: Final[float] = 0.0001621406
+GRAM_STARCH_PER_MICROMOL_STARCH: Final[float] = 0.0001621406
 micromol_starch_per_gram_starch: Final[float] = (
-    1 / gram_starch_per_micromol_starch
+    1 / GRAM_STARCH_PER_MICROMOL_STARCH
 )
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class Starch:
     Attributes:
         allowed_starch_pool_consumption (float): Percentage of the starch pool
             that the plant is allowed to consume during the next simulation
-            step.
+            step. 50% corresponds to an allowed_starch_pool_consumption of 0.5.
     """
 
     def __init__(self):
@@ -41,7 +41,7 @@ class Starch:
         self.__max_starch_pool: float = 0.0
         self.starch_out: float = 0.0
         self.starch_in: float = 0.0
-        self.allowed_starch_pool_consumption: float = 100.0
+        self.allowed_starch_pool_consumption: float = 1.0
 
     def __repr__(self):
         string = f"Starch object with following values:" \
@@ -69,9 +69,9 @@ class Starch:
     def available_starch_pool(self, value: float):
         if value < 0:
             raise NegativePoolError(
-                "The Starch Pool is to be set below zero."
-                " This should not happen and indicates "
-                "a calculation error."
+                f"The Starch Pool is to be set below zero ({value})."
+                f" This should not happen and indicates "
+                f"a calculation error."
             )
 
         pool_change = value - self.__available_starch_pool
@@ -91,21 +91,21 @@ class Starch:
         """
         float: The stored strength converted to grams.
         """
-        return self.__available_starch_pool * gram_starch_per_micromol_starch
+        return self.__available_starch_pool * GRAM_STARCH_PER_MICROMOL_STARCH
 
     @property
     def starch_usage_in_gram(self) -> float:
         """
         float: The used starch of the model in gram in the last simulation.
         """
-        return self.starch_in * gram_starch_per_micromol_starch
+        return self.starch_in * GRAM_STARCH_PER_MICROMOL_STARCH
 
     @property
     def starch_production_in_gram(self) -> float:
         """
         float: The produced starch of the model in gram in the last simulation.
         """
-        return self.starch_out * gram_starch_per_micromol_starch
+        return self.starch_out * GRAM_STARCH_PER_MICROMOL_STARCH
 
     @property
     def max_starch_pool(self) -> float:
