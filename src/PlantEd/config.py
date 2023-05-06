@@ -13,7 +13,8 @@ from PlantEd.data import assets
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
 # settings: HARD, INTERMEDIATE, EASY, Graphics - not yet
-# pygame.init()
+pygame.font.init()
+pygame.mixer.init()
 
 # ugly, no config -> see enums
 SUN = 0

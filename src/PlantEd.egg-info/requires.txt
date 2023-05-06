@@ -1,5 +1,0 @@
-cobra
-
-[test]
-pytest<5.0.0
-pytest-cov[all]

@@ -11,6 +11,7 @@ from typing import List
 import pygame
 from pygame.locals import *
 
+import PlantEd
 from PlantEd import config
 from PlantEd.analysis import scoring
 from PlantEd.analysis.logger import Log
@@ -45,15 +46,11 @@ from PlantEd.weather import Environment
 # currentdir = os.path.abspath('../..')
 # parentdir = os.path.dirname(currentdir)
 # sys.path.insert(0, parentdir)
-pygame.init()
 # ctypes.windll.user32.SetProcessDPIAware()
 true_res = (
     1920,
     1080,
 )  # (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
-screen = pygame.display.set_mode(
-    true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16
-)
 
 temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 # screen_high = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.SRCALPHA)
@@ -323,27 +320,9 @@ class DefaultGameScene(object):
         # self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
         # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
 
-        model = DynamicModel()
         self.water_grid = Water_Grid(pos=(0, 900))
 
-        logger.info("Starting Server and client")
-        logger.debug("Creating server")
-
-        addr = ("", 4000)
-        sock = socket.create_server(addr)
-
-        self.server = Server(model=model, only_local= True, sock=sock)
-        logger.debug("Starting server")
-        self.server.start()
-
-        logger.debug("Starting Client")
-
-        # Wait till the server binds to a port
-        while self.server.port is None:
-            time.sleep(0.1)
-
-        assert self.server.port is not None
-        self.client = Client(port=self.server.port)
+        self.client = Client(port=client_port)
 
         self.server_plant = ServerPlant()
         self.hours_since_start_where_growth_last_computed = 0
@@ -545,7 +524,7 @@ class DefaultGameScene(object):
         self.log.close_file()
         self.log.close_model_file()
         pygame.quit()
-        sys.exit()
+        # sys.exit()
 
     def resume(self):
         self.pause = False
@@ -571,24 +550,6 @@ class DefaultGameScene(object):
                     - self.hours_since_start_where_growth_last_computed
                 self.hours_since_start_where_growth_last_computed = game_time_now
 
-                update_info = UpdateInfo(
-                    delta_time=delta_time_in_h*3600,
-                    leaf_mass=self.plant.organs[0].mass,
-                    stem_mass=self.plant.organs[1].mass,
-                    root_mass=self.plant.organs[2].mass,
-                    PLA=self.plant.get_PLA(),
-                    sun_intensity=max(self.environment.get_sun_intensity(), 0),
-                    plant_mass=self.plant.get_biomass(),
-                    humidity=self.environment.humidity,
-                    temperature=self.environment.temperature,
-                )
-
-                self.client.update(update_info=update_info)
-
-                starch_percent = self.plant.organ_starch.percentage
-                if starch_percent < 0:
-                    starch_percent = 0
-
                 growing_flowers = self.plant.organs[
                     3
                 ].get_growing_flowers()
@@ -598,19 +559,21 @@ class DefaultGameScene(object):
                     flower_percent += 10
                 self.plant.organs[3].percentage = flower_percent
 
-
                 growth_percent = GrowthPercent(
                     leaf=self.plant.organs[0].percentage,
                     stem=self.plant.organs[1].percentage,
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
-                    time_frame= delta_time_in_h * 3600
+                    time_frame=delta_time_in_h * 3600
                 )
+
                 self.client.growth_rate(
                     growth_percent=growth_percent,
                     callback=self.update_growth_rates,
                 )
+
+                self.plant.get_PLA()
 
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.toggle_pause()
@@ -659,17 +622,16 @@ class DefaultGameScene(object):
         self.plant.organ_starch.mass = plant.starch_pool.available_starch_pool
         # Todo, currently only pool is updated by server, not content?
 
-
         logger.debug("Calculating the delta of the growth in grams. ")
 
         growth_rates: GrowthRates = GrowthRates(
             unit="mol",
-            leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram) ,
-            stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram) ,
-            root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram) ,
+            leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram),
+            stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram),
+            root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram),
             starch_rate=plant.starch_pool.starch_out,
             starch_intake=plant.starch_pool.starch_in,
-            seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram) ,
+            seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram),
             time_frame=-1,
         )
 
@@ -682,7 +644,6 @@ class DefaultGameScene(object):
         self.plant.update_growth_rates(growth_rates)
 
         self.nitrate = plant.nitrate.nitrate_pool
-
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
@@ -873,7 +834,6 @@ class TitleScene(object):
 
     def quit(self):
         pygame.quit()
-        sys.exit()
 
     def go_to_options(self):
         self.manager.go_to(OptionsScene())
@@ -958,7 +918,7 @@ class CustomScene(object):
 
     def return_to_menu(self):
         pygame.quit()
-        sys.exit()
+        # sys.exit()
         # self.manager.go_to(TitleScene(self.manager))
 
     def get_day_time(self, ticks):
@@ -1125,13 +1085,16 @@ class SceneMananger(object):
         # self.camera.render(screen_high, screen)
 
 
-def main(windowed: bool):
+def main(windowed: bool, port: int):
     """
 
     Args:
         windowed: A boolean that determines whether the game starts
         fullscreen or windowed.
     """
+    global client_port
+    client_port = port
+
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 
@@ -1143,7 +1106,8 @@ def main(windowed: bool):
 
     pygame.display.set_mode((0, 0), size)
 
-    pygame.display.set_caption("PlantEd_0.1")
+    version = PlantEd.__version__
+    pygame.display.set_caption(f"PlantEd_{version}")
     timer = pygame.time.Clock()
     running = True
     # camera = Camera()
@@ -1152,6 +1116,10 @@ def main(windowed: bool):
     pause = False
     pause_label = config.BIGGER_FONT.render("PAUSE", True, (255, 255, 255))
 
+    screen = pygame.display.set_mode(
+        true_res, pygame.DOUBLEBUF, 16
+    )
+
     while running:
         dt = timer.tick(60) / 1000.0
         fps = str(int(timer.get_fps()))
@@ -1159,7 +1127,8 @@ def main(windowed: bool):
 
         if pygame.event.get(QUIT):
             running = False
-            return
+            print("pygame.event.get(QUIT):")
+            break
 
         # manager handles the current scene
         manager.scene.handle_events(pygame.event.get(), dt)
@@ -1172,8 +1141,8 @@ def main(windowed: bool):
 
 if __name__ == "__main__":
     raise DeprecationWarning(
-      "To start the game please use 'PlantEd.start.py' "
-      "instead of 'PlantEd.game.py'. Starting via PlantEd.game.py "
-      "is not possible anymore. PlantEd.start.py "
-      "and PlantEd.game.py are identical in their usage."
+        "To start the game please use 'PlantEd.start.py' "
+        "instead of 'PlantEd.game.py'. Starting via PlantEd.game.py "
+        "is not possible anymore. PlantEd.start.py "
+        "and PlantEd.game.py are identical in their usage."
     )

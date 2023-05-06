@@ -23,7 +23,7 @@ from PlantEd.client.leaf import Leaf as client_Leaf
 
 logger = logging.getLogger(__name__)
 
-pygame.init()
+# pygame.init()
 gram_mol = 0.5124299411
 WIN = pygame.USEREVENT + 1
 # pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]

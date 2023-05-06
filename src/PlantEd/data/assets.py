@@ -13,7 +13,7 @@ _image_library: dict[Tuple[str, Optional[Tuple[int, int]]], Surface] = {}
 _sound_library = {}
 _music_library = {}
 
-pygame.init()
+# pygame.init()
 
 
 true_res = (
@@ -23,10 +23,7 @@ true_res = (
 # (ctypes.windll.user32.GetSystemMetrics(0),
 # ctypes.windll.user32.GetSystemMetrics(1))
 
-screen = pygame.display.set_mode(
-    true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16
-)
-
+pygame.display.set_mode((1,1), pygame.NOFRAME)
 
 def img(path, size: Optional[Tuple[int, int]] = None):
     # print(f"path: {path} scale: {size}")

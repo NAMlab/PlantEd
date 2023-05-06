@@ -1,11 +1,21 @@
 import argparse
+import atexit
 import logging
+import multiprocessing
+import signal
 import sys
+import time
 from pathlib import Path
 
-from PlantEd.game import main
+from PlantEd import game
+from PlantEd.server.server import Server
 
-if __name__ == "__main__":
+logger = logging.getLogger(__name__)
+
+global server
+server:Server
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-v",
@@ -33,6 +43,13 @@ if __name__ == "__main__":
         action='store_true',
         help="Should start the PlantEd full screen or windowed. "
              "Setting this flag results in a windowed start.",
+    )
+
+    parser.add_argument(
+        "--noUI",
+        action='store_true',
+        help="noUI flag ensures that only the server is started. Please "
+             "refer to the console for the port and interface used.",
     )
 
     args = parser.parse_args()
@@ -96,6 +113,44 @@ if __name__ == "__main__":
         handler_server.setFormatter(FORMAT)
         logger_server.addHandler(handler_server)
 
-    main(
-        windowed= args.windowed
-    )
+    logger.debug("Creating server")
+
+    global server
+    server = Server(only_local=False)
+    logger.debug("Starting server")
+    server.start()
+
+    # Wait till the server binds to a port
+    while server.port is None:
+        time.sleep(0.1)
+
+
+    ui_process = multiprocessing.Process(
+        target=game.main,
+        kwargs={
+            "windowed": args.windowed,
+            "port": server.port
+        })
+    #ui_process.start()
+    #ui_process.join()
+
+    if args.noUI:
+        signal.signal(signal.SIGINT, lambda *args: __stop_server_process)
+        signal.signal(signal.SIGTERM, lambda *args: __stop_server_process)
+    else:
+        try:
+            game.main(
+                windowed= args.windowed,
+                port= server.port
+            )
+        finally:
+            # make sure that the server stops whether the ui has an error or not
+            server.stop()
+
+
+def __stop_server_process():
+    server.stop()
+
+
+if __name__ == "__main__":
+    main()

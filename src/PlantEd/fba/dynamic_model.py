@@ -450,19 +450,7 @@ class DynamicModel:
         RH = update_info.humidity
         T = update_info.temperature
 
-        self.update_bounds(root_mass, PLA * sun_intensity)
-        self.update_pools(dt)
-
-    def update_pools(self, dt):
-        gamespeed = self.gametime.GAMESPEED
-        self.plant.water.water_intake_pool = (
-            0  # reset to not drain for no reason
-        )
-
-    def update_bounds(self, root_mass, photon_in):
-        self.set_bounds(NITRATE, (0, self.get_nitrate_intake(root_mass)))
-        # photon_in = photon_in * 300  # mikromol/m2/s
-        # self.set_bounds(PHOTON, (0, photon_in))
+        # sun intensity old = PLA * sun_intensity
 
     def update_constraints(self):
         root_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_ROOT)

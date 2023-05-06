@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# WS client example
-
 import asyncio
 import json
 import logging
@@ -22,6 +20,7 @@ from PlantEd.server.plant.plant import Plant
 
 logger = logging.getLogger(__name__)
 
+
 class Client:
     """
     A client that serves as an interface between the UI and the server.
@@ -30,9 +29,9 @@ class Client:
 
     """
 
-    def __init__(self, port:int = 4000):
-
+    def __init__(self, port: int = 4000):
         self.url = f"ws://localhost:{port}"
+        logger.debug(f"Connecting to server {self.url}")
 
         self.__future: asyncio.Future = None
         self.loop: asyncio.AbstractEventLoop = None
@@ -93,7 +92,9 @@ class Client:
             for id_string, payload in data.items():
                 future = self.expected_receive[id_string]
 
-                logger.debug(f"Setting future for {id_string} as done with result {payload}")
+                logger.debug(
+                    f"Setting future for {id_string} as done with result {payload}"
+                )
                 future.set_result(payload)
 
     def growth_rate(
@@ -116,15 +117,16 @@ class Client:
         self, future: Future, callback: Callable[[Plant], None]
     ):
         await future
-        logger.debug("Results of the growth calculation obtained. "
-                     "Create Plant object and invoke callback.")
+        logger.debug(
+            "Results of the growth calculation obtained. "
+            "Create Plant object and invoke callback."
+        )
 
         plant = Plant.from_json(future.result())
 
         logger.debug("Plants object created. Execute callback.")
 
         callback(plant)
-
         logger.debug("Callback executed.")
 
     async def __request_growth_rate(self, growth_percent: GrowthPercent):
@@ -274,7 +276,7 @@ class Client:
 
         """
 
-        task = self.__increase_nitrate(µmol_nitrate = µmol_nitrate)
+        task = self.__increase_nitrate(µmol_nitrate=µmol_nitrate)
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __increase_nitrate(self, µmol_nitrate: float):

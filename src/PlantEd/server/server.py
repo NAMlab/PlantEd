@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
 import asyncio
+import concurrent.futures
 import json
 import logging
+import multiprocessing
+import signal
 import socket
-import threading
+from multiprocessing import Manager, Event
 from typing import Optional
 
 import websockets
@@ -26,21 +29,44 @@ class Server:
     A server that provides all necessary data for the user interface.
     """
 
-    def __init__(self, model: DynamicModel, sock: Optional[socket.socket] = None, only_local = True):
+    def __init__(self,sock: Optional[socket.socket] = None, only_local = True):
         self.clients = set()
         self.sock: Optional[socket.socket] = sock
         self.websocket: websockets.WebSocketServer = None
-        self.model: DynamicModel = model
+        self.model: DynamicModel = DynamicModel()
         self.__future: asyncio.Future = None
         self.loop: asyncio.AbstractEventLoop = None
         self.only_local = only_local
-        self.port: Optional[int] = None
-        self.ip_address: Optional[str] = None
+        self.shutdown_signal: Event = multiprocessing.Event()
 
-        thread = threading.Thread(
-            target=asyncio.run, daemon=True, args=(self.__start(),)
+        self.manager: Manager = multiprocessing.Manager()
+        #self.manager.start()
+
+        self.__port: Optional[int] = self.manager.Value(Optional[int], None)
+        self.__ip_address: Optional[str] = self.manager.Value(Optional[str], None)
+
+        process = multiprocessing.Process(
+            target=self.__start,
         )
-        self.thread: threading.Thread = thread
+
+        self.process = process
+
+    @property
+    def port(self):
+        return self.__port.value
+
+    @port.setter
+    def port(self, value):
+        self.__port.value = value
+
+    @property
+    def ip_address(self):
+        return self.__ip_address.value
+
+    @ip_address.setter
+    def ip_address(self, value):
+        self.__ip_address.value = value
+
 
     def start(self):
         """
@@ -48,38 +74,26 @@ class Server:
         """
 
         logger.info("Starting the server.")
-        self.thread.start()
-
-    def kill(self):
-        """
-        Method to kill the server.
-        """
-
-        self.loop.stop()
-
-        self.thread.join()
+        self.process.start()
 
     def stop(self):
         """
         Method to shut down the local server.
         Does not need to run inside the same thread or process as the server.
         """
-        # self.__future.set_result("")
-        asyncio.run_coroutine_threadsafe(self.__stop_server(), self.loop)
+        self.shutdown_signal.set()
 
-        self.thread.join()
-        logger.debug("Thread closed")
+        self.process.join()
+        logger.debug("Process closed")
 
-    async def __stop_server(self):
-        """
-        Internal function that stops the websocket by assigning a result
-        to the future object.
+    def __start(self):
+        loop = asyncio.get_event_loop()
+        signal.signal(signal.SIGINT, lambda *args: self.shutdown_signal.set)
+        signal.signal(signal.SIGTERM, lambda *args: self.shutdown_signal.set)
 
-        """
-        self.__future.set_result("")
+        loop.run_until_complete(self.__start_loop())
 
-
-    async def __start(self):
+    async def __start_loop(self):
         """
         Internal function that creates the loop of the object, creates
         a future object that is used as a stop signal and starts the websocket.
@@ -116,7 +130,11 @@ class Server:
 
             self.ip_address = sock_name[0]
             self.port = sock_name[1]
-            await self.__future
+
+            executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=1,
+            )
+            await self.loop.run_in_executor(executor= executor, func = self.shutdown_signal.wait)
 
     def open_connection(self, ws: WebSocketServerProtocol):
         """
