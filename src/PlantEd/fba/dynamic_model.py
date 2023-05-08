@@ -156,6 +156,7 @@ class DynamicModel:
         # ToDo better scaling over day (no light at 'night')
 
         # ↓ 150 according to https://doi.org/10.3389/fpls.2017.00681
+        # up to 1230 mikromol/s/m² max -> sine function to simulate?
         return 150 * self.percentages.time_frame
 
     # set atp constraints, constrain nitrate intake to low/high
@@ -287,6 +288,7 @@ class DynamicModel:
         stem = stem * stem_biomass * time_frame
         leaf = leaf * leaf_biomass * time_frame
         seed = seed * seed_biomass * time_frame
+
 
         logger.debug(
             f"Leaf biomass is {leaf} micromol, "

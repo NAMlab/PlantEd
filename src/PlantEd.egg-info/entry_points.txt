@@ -1,0 +1,2 @@
+[console_scripts]
+PlantEd = PlantEd.start:main

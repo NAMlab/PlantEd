@@ -32,7 +32,7 @@ from PlantEd.gameobjects.shop import (
     FloatingShopItem,
     FloatingShop,
 )
-from PlantEd.gameobjects.snail import Snail
+from PlantEd.gameobjects.snail import Snail, SnailSpawner
 from PlantEd.gameobjects.tree import Tree
 from PlantEd.gameobjects.water_reservoir import Water_Grid, Base_water
 from PlantEd.server.server import Server
@@ -399,25 +399,17 @@ class DefaultGameScene(object):
         # self.tree = Tree((1100,20),[assets.img("tree/1.PNG", (1024,1024))], self.environment)
         # self.tree = Tree((1100,20),[assets.img("tree/2.PNG", (1024,1024))], self.environment)
         # self.tree = Tree((1100,20),[assets.img("tree/3.PNG", (1024,1024))], self.environment)
-        self.snails = []
 
-        for i in range(0, 3):
-            self.snails.append(
-                Snail(
-                    (190 * random.randint(0, 10), 870 + random.randint(0, 10)),
-                    pygame.Rect(0, 870, config.SCREEN_WIDTH, 240),
-                    [
-                        assets.img("snail/{}.png".format(i))
-                        for i in range(0, 1)
-                    ],
-                    [
-                        assets.img("snail/{}.png".format(i))
-                        for i in range(4, 5)
-                    ],
-                    self.camera,
-                    eat_plant=self.plant.eat_stem
-                )
-            )
+        self.snail_spawner = SnailSpawner(
+            images_left=[assets.img("snail/0.png")],
+            images_right=[assets.img("snail/4.png")],
+            camera=self.camera,
+            callback=self.plant.eat_stem,
+            bounds=pygame.Rect(0,870,1920,20),
+            max_amount=100,
+            speed=3,
+            snails=[]
+        )
 
         # shop items are to be defined by the level
         add_leaf_item = Shop_Item(
@@ -471,7 +463,7 @@ class DefaultGameScene(object):
         )
 
         self.shop.add_shop_item(["watering", "blue_grain", "spraycan"])
-        self.shop.spraycan.callback = self.kill_snails
+        self.shop.spraycan.callback = self.snail_spawner.spray_snails
 
         self.floating_shop = FloatingShop(self.camera, (0, 0))
         add_leaf_item_floating = FloatingShopItem(
@@ -591,8 +583,7 @@ class DefaultGameScene(object):
             self.floating_shop.handle_event(e)
 
             self.plant.handle_event(e)
-            for snail in self.snails:
-                snail.handle_event(e)
+            self.snail_spawner.handle_event(e)
             for bug in self.bugs:
                 bug.handle_event(e)
             self.hive.handle_event(e)
@@ -649,10 +640,6 @@ class DefaultGameScene(object):
         if days > config.MAX_DAYS:
             pygame.event.post(pygame.event.Event(WIN))
 
-    def kill_snails(self, rect):
-        for snail in self.snails:
-            snail.kill(rect)
-
     def update(self, dt):
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
@@ -688,8 +675,7 @@ class DefaultGameScene(object):
         self.water_grid.update(
             dt=dt, water=self.server_plant.water, client=self.client
         )
-        for snail in self.snails:
-            snail.update(dt)
+        self.snail_spawner.update(dt)
         for bug in self.bugs:
             bug.update(dt)
         self.hive.update(dt)
@@ -720,8 +706,7 @@ class DefaultGameScene(object):
         self.hive.draw(temp_surface)
         self.tree.draw(temp_surface)
         self.environment.draw_foreground(temp_surface)
-        for snail in self.snails:
-            snail.draw(temp_surface)
+        self.snail_spawner.draw(temp_surface)
         for bug in self.bugs:
             bug.draw(temp_surface)
 
@@ -1098,16 +1083,20 @@ def main(windowed: bool, port: int):
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 
+    screen = pygame.display.set_mode(
+        true_res, pygame.NOFRAME | pygame.FULLSCREEN | pygame.DOUBLEBUF, 16
+    )
+
     size = None
     if windowed:
         size = pygame.RESIZABLE
     else:
         size = pygame.FULLSCREEN
 
-    pygame.display.set_mode((0, 0), size)
+    #pygame.display.set_mode((0, 0), size)
 
     version = PlantEd.__version__
-    pygame.display.set_caption(f"PlantEd_{version}")
+    #pygame.display.set_caption(f"PlantEd_{version}")
     timer = pygame.time.Clock()
     running = True
     # camera = Camera()
@@ -1116,9 +1105,7 @@ def main(windowed: bool, port: int):
     pause = False
     pause_label = config.BIGGER_FONT.render("PAUSE", True, (255, 255, 255))
 
-    screen = pygame.display.set_mode(
-        true_res, pygame.DOUBLEBUF, 16
-    )
+
 
     while running:
         dt = timer.tick(60) / 1000.0
