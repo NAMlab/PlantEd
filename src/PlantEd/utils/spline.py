@@ -222,9 +222,10 @@ class Cubic:
         if y_lower:
             if pos[1] > y_lower[1] - 10:
                 return False
-        else:
-            if self.main:
-                return False
+        if self.free_spots[id] == config.BASE_SPOT:
+            return False
+        if self.free_spots[id] == config.BRANCH_SPOT:
+            return False
 
         x_dist = (
             self.points[id][0]

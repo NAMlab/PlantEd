@@ -2,6 +2,7 @@ import importlib.resources
 
 import pandas as pd
 import pygame
+import scipy.integrate as integrate
 from pygame.locals import Rect
 
 from PlantEd import data
@@ -120,7 +121,6 @@ class Environment:
             color=(0, 0, 0),
             images=[assets.img("nitrogen.PNG", (20, 20))],
             speed=[0, 0],
-            # ToDo callback really needed scales only the particles?
             callback=self.server_plant.nitrate.get_nitrate_percentage,
             active=True,
             size=4,
@@ -129,11 +129,9 @@ class Environment:
         )
 
     def update(self, dt):
-        # self.sun_pos_spline.update(dt)
         for animation in self.animations:
             animation.update(dt)
         self.update_weather()
-        # self.rain.update(dt)
         self.nitrate.update(dt)
 
         day_time = self.get_day_time_t()
@@ -176,8 +174,6 @@ class Environment:
                         and i * resolution < bottom_right[0] + delta_x
                         and j * resolution > bottom_left[1]
                     ):
-                        # print(bottom_right,
-                        # bottom_left, i * resolution, j * resolution)
                         map[i, j] += (
                             1 if map[i, j] < max_shadow else max_shadow
                         )
@@ -263,18 +259,21 @@ class Environment:
         return days, hours, minutes
 
     def get_sun_intensity(self):
-        return -(
-            np.sin(
-                np.pi / 2
-                - np.pi / 5
-                + (
+        return (
+            np.sin((2*np.pi)*((self.gametime.get_time() / (1000 * 60 * 60 * 24))-(8/24)))
+        )  # get time since start, convert to 0..1, 6 min interval
+
+    '''return -(
+        np.sin(
+            np.pi / 2
+            - np.pi / 5
+            + (
                     (self.gametime.get_time() / (1000 * 60 * 60 * 24))
                     * np.pi
                     * 2
-                )
             )
-        )  # get time since start, convert to 0..1, 6 min interval
-
+        )
+    )'''
     def get_day_time_t(self):
         return (
             ((self.gametime.get_time() / (1000 * 60 * 60 * 24)) + 0.5 - 0.333)
@@ -307,7 +306,6 @@ class WeatherSimulator:
             next_hum = data["humidity"][i + 1]
             next_precip = data["precipitation"][i + 1]
 
-            # print(i, curr_temp, curr_hum, curr_precip, next_temp,
             # next_hum, next_precip, self.temp_step,
             # self.hum_step, self.precip_step, next_precip / self.precip_step)
 
@@ -370,13 +368,11 @@ class WeatherSimulator:
                         day + (hour / 24),
                     ]
                 )
-                # print(f"Day {day}, Hour {hour}:",
                 # f"Temperature: {curr_temp}°C",
                 # f"Humidity: {curr_hum}%",
                 # f"Precipitation: {curr_precip} mm/h")
 
                 next_state_probs = self.transitions.get(curr_state, {})
-                # print(next_state_probs)
                 next_state_probs = {
                     k: v for k, v in next_state_probs.items() if v > 0
                 }  # remove zero-probability states

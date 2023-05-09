@@ -1573,11 +1573,12 @@ class ButtonArray:
         if len(self.toggle_buttons)/2 > sum_true:
             for button in self.toggle_buttons:
                 button.activate()
-            self.go_green()
+            #self.go_green()
         else:
             for button in self.toggle_buttons:
                 button.deactivate()
-            self.go_red()
+            #self.go_red()
+        self.callback(self.get_bool_list())
 
     def get_bool_list(self):
         return [

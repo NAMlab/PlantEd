@@ -543,7 +543,6 @@ class DefaultGameScene(object):
                 self.pause_button_resume.handle_event(e)
                 self.pause_button_exit.handle_event(e)
             if e.type == GROWTH:
-
                 game_time_now = self.gametime.time_since_start_in_hours
                 delta_time_in_h = \
                     game_time_now \
@@ -565,7 +564,7 @@ class DefaultGameScene(object):
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
-                    time_frame=delta_time_in_h * 3600
+                    time_frame=delta_time_in_h*3600,
                 )
 
                 self.client.growth_rate(

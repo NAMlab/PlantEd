@@ -4,6 +4,8 @@ from pathlib import Path
 import cobra
 from cobra import Reaction
 from sympy import Add
+import numpy as np
+import scipy.integrate as integrate
 
 from PlantEd import config
 from PlantEd.client.growth_rates import GrowthRates
@@ -157,7 +159,7 @@ class DynamicModel:
 
         # ↓ 150 according to https://doi.org/10.3389/fpls.2017.00681
         # up to 1230 mikromol/s/m² max -> sine function to simulate?
-        return 150 * self.percentages.time_frame
+        return 1200 * self.get_sun_intensity_for_duration(self.seconds_passed-self.percentages.time_frame, self.seconds_passed) #* self.percentages.time_frame
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
@@ -443,6 +445,15 @@ class DynamicModel:
     def deactivate_starch_resource(self):
         logger.info("Deactivating starch resource")
         self.plant.starch_pool.allowed_starch_pool_consumption = 0
+
+    def get_sun_intensity_for_duration(self, start, end):
+        print(start, end)
+        start = start / (3600*24)
+        end = end / (3600*24)
+        f = lambda x: np.sin((2 * np.pi) * ((x) - (8 / 24)))
+        i = integrate.quad(f, start, end)
+        return max(i[0]/(end-start),0)
+
 
     def update(self, update_info=UpdateInfo):
         dt = update_info.delta_time

@@ -557,8 +557,9 @@ class DefaultGameScene(object):
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
-                    time_frame=delta_time_in_h * 3600
+                    time_frame= delta_time_in_h*3600
                 )
+
 
                 self.client.growth_rate(
                     growth_percent=growth_percent,
@@ -610,6 +611,7 @@ class DefaultGameScene(object):
         if plant.starch_pool.max_starch_pool < plant.starch_pool.available_starch_pool:
             max_starch_pool = plant.starch_pool.available_starch_pool
         self.plant.organ_starch.update_starch_max(max_starch_pool)
+
         self.plant.organ_starch.mass = plant.starch_pool.available_starch_pool
         # Todo, currently only pool is updated by server, not content?
 
@@ -634,7 +636,8 @@ class DefaultGameScene(object):
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
 
-        self.nitrate = plant.nitrate.nitrate_pool
+        #self.nitrate = plant.nitrate.nitrate_pool
+        #print(self.nitrate)
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
@@ -1095,7 +1098,7 @@ def main(windowed: bool, port: int):
 
     #pygame.display.set_mode((0, 0), size)
 
-    version = PlantEd.__version__
+    #version = PlantEd.__version__
     #pygame.display.set_caption(f"PlantEd_{version}")
     timer = pygame.time.Clock()
     running = True
