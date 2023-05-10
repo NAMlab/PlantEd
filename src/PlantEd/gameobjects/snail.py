@@ -61,7 +61,7 @@ class SnailSpawner:
         for snail in self.snails:
             snail.update(dt)
         #self.remove_dead_snails()
-        if random.random() > 0.9 and len(self.snails) < self.max_amount:
+        if random.random() > 0.999 and len(self.snails) < self.max_amount:
             self.spawn_snail()
 
     def handle_event(self, e):
@@ -171,7 +171,7 @@ class Snail:
     def scare_away(self):
         self.target = None
         self.set_random_direction()
-        self.speed = 5
+        self.speed = 3
 
     def kill(self, rect):
         if rect.collidepoint(self.pos):

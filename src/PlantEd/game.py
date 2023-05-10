@@ -406,8 +406,8 @@ class DefaultGameScene(object):
             camera=self.camera,
             callback=self.plant.eat_stem,
             bounds=pygame.Rect(0,870,1920,20),
-            max_amount=100,
-            speed=3,
+            max_amount=2,
+            speed=1,
             snails=[]
         )
 

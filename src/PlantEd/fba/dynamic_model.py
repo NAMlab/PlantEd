@@ -447,7 +447,6 @@ class DynamicModel:
         self.plant.starch_pool.allowed_starch_pool_consumption = 0
 
     def get_sun_intensity_for_duration(self, start, end):
-        print(start, end)
         start = start / (3600*24)
         end = end / (3600*24)
         f = lambda x: np.sin((2 * np.pi) * ((x) - (8 / 24)))

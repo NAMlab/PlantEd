@@ -181,7 +181,7 @@ class Plant:
             growth_rates.starch_rate*100
         )
         self.organ_starch.starch_intake = growth_rates.starch_intake*100
-        self.organs[3].update_growth_rate(growth_rates.seed_rate*100)
+        self.organs[3].update_growth_rate(growth_rates.seed_rate*1000)
 
     def get_biomass(self):
         biomass = 0
@@ -1375,7 +1375,7 @@ class Flower(Organ):
             "image": image,
             "mass": 0.01,
             "seed_mass": 0,
-            "maximum_seed_mass": 10,
+            "maximum_seed_mass": 1,
             "pollinated": False,
             "flowering": False,
             "maximum_mass": self.thresholds[-1],
