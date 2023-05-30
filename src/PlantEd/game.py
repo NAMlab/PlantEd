@@ -352,9 +352,7 @@ class DefaultGameScene(object):
             plant=self.plant,
             server_plant=self.server_plant,
             water_grid=self.water_grid,
-            nitrate=0,
-            water=0,
-            gametime=self.gametime,
+            gametime=self.gametime      # T
         )
 
         self.narrator = Narrator(self.environment)

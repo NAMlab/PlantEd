@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import ndarray
 import math
 import pygame
 
@@ -9,37 +10,44 @@ import random
 
 
 # normal plant intake 83 (flux)
-# Grid 6*20 = 120 * 0.75 = 80 -> /60/60*240 to convert from hourly to each second -> 5.3 = 120 * 0.05, double to enable more growth
-DRAIN_DEFAULT = 0.005  # *3600/240 to adjust to hourly
+DRAIN_DEFAULT: float = 0.005  # *3600/240 to adjust to hourly
+RAIN_RATE: int = 8
+TRICKLE_AMOUNT: float = 0.001
+MAX_DRAIN_CELL: int = 100
+MINIMUM_CELL_AMOUNT_TO_DRAW: int = 20
+MAX_DROPS_TO_DRAW: int = 20
 
-# rain should be much more than consumption
-RAIN_RATE = 8
-TRICKLE_AMOUNT = 0.001
-
-MAX_DRAIN_CELL = 100
-
-
-# falling down over time, into base water level -> lowest line of the grid
 class Water_Grid:
+    """
+    The soil is split into a grid of cells. Each cell holds water, can be drained and filled.
+    Drainers are the plant and trickle
+    Fillers are rain and the watering_can
+
+    The grid shape defines the resolution of the grid. The root_grid must be of the same shape as water_grid.
+    """
     def __init__(
-        self, pos=(0, 900), grid_size=(6, 20), max_water_cell=1000000
+        self, pos: tuple[int, int] = (0, 900),
+            grid_size: tuple[int, int] = (6, 20),
+            max_water_cell: int = 1000000
     ):
         self.pos = pos
-
-        self.water_grid = np.zeros(grid_size)
-        self.available_water_grid = np.zeros(grid_size)
-        self.root_grid = None
-
-        self.raining = 0
+        self.water_grid: ndarray = np.zeros(grid_size)
+        self.available_water_grid: ndarray = np.zeros(grid_size)
+        self.root_grid: ndarray
+        self.raining: float = 0
         self.trickle_amount = TRICKLE_AMOUNT
-        self.reservoirs = []
-        self.base_waters = []
+        self.base_waters: list[Base_water] = []
         self.max_water_cell = max_water_cell
-        self.offset_grid = np.random.randint(0, 90, (2, 25, 10, 20))
+        # offset_grid shape: ((x,y), n_drops, width, height)
+        self.offset_grid: ndarray = np.random.randint(0, 90, (2, MAX_DROPS_TO_DRAW, grid_size[0], grid_size[1]))
         self.grid_screen = pygame.Surface((1920, 1080), pygame.SRCALPHA)
         self.gametime = GameTime.instance()
 
     def update(self, dt, water: Water, client: Client):
+        """
+        Update trickle and drain_grid
+        Depending on raining, apply water to upper row
+        """
         if self.raining > 0:
             self.water_grid[0, :] += (
                 self.raining * self.gametime.GAMESPEED * dt
@@ -49,16 +57,28 @@ class Water_Grid:
 
         # self.set_max_drain_rate()
         self.drain_grid(dt, water=water, client=client)
-
-        for reservoir in self.reservoirs:
-            reservoir.update(dt)
         for base_water in self.base_waters:
             base_water.update(dt)
 
-    def set_root_grid(self, root_grid):
+    def set_root_grid(self, root_grid: ndarray):
+        """
+        Set the root grid to update current root structure
+        """
         self.root_grid = root_grid
 
     def drain_grid(self, dt, water: Water, client: Client):
+        """
+        Drain the water_grid based on root structure and water location.
+        Tries to drain across available cells equally. After 10 iterations it stops
+        to save performance.
+
+        transpiration and water_intake of the plant set the amount to drain
+        MAX_DRAIN_CELL defines the maximum drainable amount of each cell
+
+        First it drains the plant depending on water needed.
+        Then it fills the internal water pool of the plant if possible.
+        If there is not enough water in the plant, it disables the water intake of the plant.
+        """
         # drain water from plant
         water_neded = water.water_intake
         transpiration = water.transpiration
@@ -79,7 +99,7 @@ class Water_Grid:
             delta_water_pool = water.max_water_pool - water.water_pool
             tries = 10
             while delta_water_pool > 0:
-                # ensure its not looping forever
+                # ensure it is not looping forever
                 tries -= 1
                 if tries <= 0:
                     break
@@ -104,26 +124,55 @@ class Water_Grid:
 
         client.set_water_pool(water=water)
 
-    def pour(self, rate, dt, pos):
+    def pour(self, rate: int, dt: float, pos: tuple[int, int]):
+        """
+        Fill one cell of the upper row of the water grid with water until max_water_cell.
+
+        Args:
+            rate (int): precipitation micromol per second
+            dt (float): ticks between last call
+            pos (tuple[int, int]): position of watering can
+        """
         if not self.water_grid[0, int(pos[0] / 100)] > self.max_water_cell:
             self.water_grid[0, int(pos[0] / 100)] += rate * dt
 
-    def add_reservoir(self, reservoir):
-        self.reservoirs.append(reservoir)
-
     def add_base_water(self, base_water):
+        """
+        Add a row of base_water. Mainly for show, currently no function.
+        """
         self.base_waters.append(base_water)
 
-    def activate_rain(self, precipitation=RAIN_RATE):
+    def activate_rain(self, precipitation: float = RAIN_RATE):
+        """
+        Activate raining and set the raining amount per cell
+
+        Args:
+            precipitation (float): water fill amount per m² and second
+        """
         self.raining = precipitation
 
     def deactivate_rain(self):
+        """
+        Deactivate rain by setting raining to 0
+        """
         self.raining = 0
 
     def get_shape(self):
+        """
+        Return the shape of the water_grid
+        """
         return self.water_grid.shape
 
     def trickle(self, dt):
+        """
+        Simulate the transpiration of water in the soil.
+        Over time water travels from the upper rows to the base.
+        Drain starts at the bottom row. Water from above get reduced and added
+        below.
+        The more water there is, the faster it trickles. Randomness makes it look less uniform.
+
+        Depending on gamespeed and TRICKLE_AMOUNT
+        """
         for i in reversed(range(1, self.water_grid.shape[0])):
             for j in range(0, self.water_grid.shape[1]):
                 upper_cell = self.water_grid[i - 1, j]
@@ -148,10 +197,12 @@ class Water_Grid:
                         self.water_grid[i - 1, j] -= adjusted_trickle
                     self.water_grid[i, j] += adjusted_trickle
 
-    def print_grid(self):
-        print(self.water_grid)
-
     def draw(self, screen):
+        """
+            draws a grid of size width i : shape(0)-1, height j : shape(1)
+            each cell contains k drops that vary in color
+            the offset_grid provides random offsets for size: i,j and k drops in x and y dimensions
+            """
         for base_water in self.base_waters:
             base_water.draw(screen)
         # self.grid_screen.fill((0,0,0,0))
@@ -159,20 +210,21 @@ class Water_Grid:
             for j in range(0, self.water_grid.shape[1]):
                 cell = self.water_grid[i, j]
 
-                if cell > 20:
+                if cell > MINIMUM_CELL_AMOUNT_TO_DRAW:
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]
                     pygame.draw.circle(
-                        screen,
-                        (0, 10 + offset_y, 255 - offset_x),
-                        (
+                        surface=screen,
+                        # color variations
+                        color=(0, 10 + offset_y, 255 - offset_x),
+                        center=(
                             self.pos[0] + j * 100 + offset_x,
                             self.pos[1] + i * 100 + offset_y,
                         ),
-                        int(cell / (self.max_water_cell / 5) + 5),
+                        radius=int(cell / (self.max_water_cell / 5) + 5),
                     )
 
-                    n_drops = min(24, int(cell / (self.max_water_cell / 20)))
+                    n_drops = min(MAX_DROPS_TO_DRAW, int(cell / (self.max_water_cell / 20)))
                     for k in range(0, n_drops):
                         offset_x = self.offset_grid[0, k, i, j]
                         offset_y = self.offset_grid[1, k, i, j]
@@ -185,22 +237,21 @@ class Water_Grid:
                             ),
                             5,
                         )
-                # number = config.FONT.render("{:.2f}".format(cell),True,config.BLACK,config.WHITE)
-                # screen.blit(number, (j * 100, 900 + i * 100))
-        for reservoir in self.reservoirs:
-            reservoir.draw(screen)
 
 
 class Base_water:
+    """
+    Base_water has no functionality. It visualizes a waving bottom layer of water.
+    """
     def __init__(
         self,
-        n_dots,
-        base_height,
-        width,
-        y,
-        color,
-        line_color=None,
-        line_width=5,
+        n_dots: int,
+        base_height: int,
+        width: int,
+        y: int,
+        color: tuple[int, int, int],
+        line_color: tuple[int, int, int] = None,
+        line_width: int = 5,
     ):
         self.gametime = GameTime.instance()
         self.width = width
@@ -214,6 +265,9 @@ class Base_water:
         self.init_dots()
 
     def init_dots(self):
+        """
+        Initialise a chain of dots to draw the water surface
+        """
         self.dots.append([0, self.y])
         for i in range(0, self.n_dots + 1):
             delta_x = self.width / self.n_dots
@@ -221,6 +275,9 @@ class Base_water:
         self.dots.append([self.width, self.y])
 
     def update(self, dt):
+        """
+        Adjust the hight of each dot to move according to a sine wave, depending on the current time.
+        """
         if self.n_dots > 0:
             ticks = self.gametime.get_time()
             day = 1000 * 60 * 60 * 24
@@ -247,61 +304,3 @@ class Base_water:
                 self.dots[1:-1],
                 self.line_width,
             )
-
-
-class Water_Reservoir:
-    def __init__(self, pos, n_verticies, length):
-        self.pos = pos
-        self.verticies = np.empty(n_verticies)
-        self.base_length = length
-        self.gametime = GameTime.instance()
-
-    def update(self, dt):
-        ticks = self.gametime.get_time()
-        day = 1000 * 60 * 60 * 24
-        hour = day / 24
-        hours = (ticks % day) / hour
-        deg = hours / 24 * 360
-        angle_offset = 360 / len(self.verticies)
-
-        for i in range(0, len(self.verticies)):
-            self.verticies[
-                i
-            ] = self.base_length + self.base_length * 0.1 * math.sin(
-                math.radians(10 * deg + angle_offset * i)
-            )  # if math.sin(math.radians(deg+angle_offset*i)) > 0 else base_length
-            self.verticies[i] = self.verticies[
-                i
-            ] + self.base_length * 0.02 * math.cos(
-                3 * math.radians(10 * deg + angle_offset * i * 2)
-            )
-
-    def draw(self, screen):
-        offset_x, offset_y = self.pos
-        angle_offset = 360 / len(self.verticies)
-
-        points = []
-        for i in range(0, len(self.verticies)):
-            x, y = (
-                math.sin(math.radians(angle_offset * i)) * self.verticies[i]
-                + offset_x,
-                math.cos(math.radians(angle_offset * i)) * self.verticies[i]
-                + offset_y,
-            )
-            points.append((x, y))
-        pygame.draw.polygon(screen, (10, 40, 190), points)
-
-        points = []
-        for i in range(0, len(self.verticies)):
-            x, y = (
-                math.cos(math.radians(angle_offset * i))
-                * self.verticies[i]
-                * 0.5
-                + offset_x,
-                math.sin(math.radians(angle_offset * i))
-                * self.verticies[i]
-                * 0.5
-                + offset_y,
-            )
-            points.append((x, y))
-        pygame.draw.polygon(screen, (25, 30, 255), points)

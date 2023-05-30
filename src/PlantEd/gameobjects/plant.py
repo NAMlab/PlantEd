@@ -777,8 +777,8 @@ class Root(Organ):
         # positions = [(x,y+45)]
         # directions = [(0,1)]
 
-        root_grid = np.zeros(plant.water_grid.get_shape())
-        water_grid_pos = plant.water_grid.pos
+        root_grid: np.array = np.zeros(plant.water_grid.get_shape())
+        water_grid_pos: np.array = plant.water_grid.pos
 
         self.ls = LSystem(root_grid, water_grid_pos)
         self.create_new_root(dir=(0, 1))

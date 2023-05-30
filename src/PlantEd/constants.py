@@ -73,7 +73,7 @@ START_SEED_BIOMASS_GRAM = 0.5
 # ↓ --------------------------------------------------------------------
 # ↓ since plant can consume up to its pools in one simulation -2 results
 # ↓ in metabolites for a minimum of 2 simulations
-START_STARCH_POOL_IN_MICROMOL = -10
+START_STARCH_POOL_IN_MICROMOL = -2
 START_WATER_POOL_IN_MICROMOL = -10
 START_NITRATE_POOL_IN_MICROMOL = -10
 
@@ -91,4 +91,4 @@ PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP = 1
 # ↓ simulation step. This scales based on the maximum of the pool therefore
 # ↓ a value of 0.05 limits the uptake of the plant per step to 5%
 # ↓ of the max pool.
-PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.05
+PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.02

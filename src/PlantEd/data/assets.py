@@ -23,9 +23,10 @@ true_res = (
 # (ctypes.windll.user32.GetSystemMetrics(0),
 # ctypes.windll.user32.GetSystemMetrics(1))
 
-pygame.display.set_mode((1,1), pygame.NOFRAME)
+pygame.display.set_mode((1, 1), pygame.NOFRAME)
 
-def img(path, size: Optional[Tuple[int, int]] = None):
+
+def img(path, size: Optional[Tuple[int, int]] = None) -> Surface:
     # print(f"path: {path} scale: {size}")
 
     path = data_dir / "assets" / path
