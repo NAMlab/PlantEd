@@ -82,7 +82,7 @@ class Environment:
         self.cloud: pygame.Surface = assets.img("clouds/cloud_0.PNG", (402, 230))
         self.cloud_dark: pygame.Surface = assets.img("clouds/cloud_dark_0.PNG", (402, 230))
         self.nitrate: StillParticles = StillParticles(
-            max_particles=10,
+            max_particles=1,
             spawn_box=Rect(0, 950, 1920, 300),
             boundary_box=Rect(0, 950, 1920, 300),
             color=config.BLACK,
@@ -91,7 +91,7 @@ class Environment:
             callback=self.server_plant.nitrate.get_nitrate_percentage,
             active=True,
             size=4,
-            factor=100,
+            factor=10,
             once=True,
         )
 

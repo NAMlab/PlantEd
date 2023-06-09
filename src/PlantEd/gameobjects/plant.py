@@ -170,15 +170,13 @@ class Plant:
 
         logger.debug(f"Delta is as follows IN PLANT RATES ARE: {str(growth_rates)}")
 
-        growth_boost = 100
-
+        growth_boost = 200
         if self.get_biomass() > 4:
-            #growth_boost = 10
-            if self.sum_rates <= 0:
+            growth_boost = 100
+            if sum_rates <= 0:
                 self.danger_mode = True
-        else:
-            #growth_boost = 500
-            self.danger_mode = False
+            else:
+                self.danger_mode = False
 
         self.organs[0].update_growth_rate(growth_rates.leaf_rate*growth_boost)
         self.organs[1].update_growth_rate(growth_rates.stem_rate*growth_boost)
@@ -331,7 +329,6 @@ class Organ:
         self.percentage = percentage
 
     def update_growth_rate(self, growth_rate):
-        print(self.type, growth_rate)
         self.growth_rate = growth_rate * 2
 
     def yellow_leaf(self, image, alpha):

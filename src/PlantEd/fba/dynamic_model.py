@@ -275,6 +275,8 @@ class DynamicModel:
 
         # via stem
         starch_out = solution.fluxes.get(STARCH_OUT)
+        if starch_out > 0:
+            starch_out *= 3
         starch_in = solution.fluxes[STARCH_IN]
 
         # via root
