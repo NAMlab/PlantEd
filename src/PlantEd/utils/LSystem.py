@@ -35,34 +35,34 @@ root_classes = [short_root, medium_root, long_root]
 class Letter:
     def __init__(
         self,
-        id,
-        root_class,
-        tier,
-        dir,
-        max_length,
-        mass_start,
-        mass_end,
-        max_branches=None,
-        branches=[],
-        t=None,
+        id: int,
+        root_class: dict,
+        tier: int,
+        dir: tuple[float,float],
+        max_length: int,
+        mass_start: float,
+        mass_end: float,
+        max_branches: int = None,
+        branches: list = [],
+        t: float = None,
     ):
-        self.id = id
-        self.tier = tier
-        self.root_class = root_class
-        self.dir = dir
-        self.branching_t = (
+        self.id: int = id
+        self.tier: int = tier
+        self.root_class: dict = root_class
+        self.dir: tuple[float, float] = dir
+        self.branching_t: float = (
             np.random.random(max_branches).tolist()
             if max_branches is not None
             else None
         )  # branching dist
-        self.t = t
-        self.max_length = max_length
-        self.mass_start = mass_start
-        self.mass_end = mass_end
-        self.max_branches = max_branches
-        self.branches = branches
-        self.length = 0
-        self.pos = (0, 0)
+        self.t: float = t
+        self.max_length: int = max_length
+        self.mass_start: float = mass_start
+        self.mass_end: float = mass_end
+        self.max_branches: int = max_branches
+        self.branches: list[Letter] = branches
+        self.length: float = 0
+        self.pos: tuple[float, float] = (0, 0)
 
     def draw(self, screen, start_pos):
         if self.id == 300:
@@ -106,6 +106,25 @@ class Letter:
             # get t of branch, calc length
             branch.draw_highlighted(screen, next_start_pos)
 
+    def to_dict(self) -> dict:
+        dic = {}
+
+        dic["id"] = self.id
+        dic["tier"] = self.tier,
+        dic["root_class"] = self.root_class
+        dic["length"] = self.length,
+        dic["max_length"] = self.max_length,
+        dic["mass_start"] = self.mass_start,
+        dic["mass_end"] = self.mass_end,
+        dic["branching_t"] = self.branching_t,
+        dic["branches"] = [branch.to_dict() for branch in self.branches]
+        dic["max_branches"] = self.max_branches
+        dic["t"] = self.t
+        dic["pos"] = self.pos
+        dic["dir"] = self.dir
+
+        return dic
+
     def print(self, offset=""):
         print(
             offset,
@@ -128,22 +147,33 @@ class Letter:
 class LSystem:
     def __init__(
         self,
-        root_grid,
-        water_grid_pos,
-        directions=[],
-        positions=[],
-        first_letter=None,
-        mass=0,
+        root_grid: np.ndarray,
+        water_grid_pos: tuple[float, float],
+        directions: tuple[float, float] = [],
+        positions: list[tuple[float, float]] = None,
+        mass: float = 0,
     ):
-        self.root_grid = root_grid
-        self.water_grid_pos = water_grid_pos
-        self.positions = positions  # if positions else [(0,0)]
-        self.first_letters = []
-        self.apexes = []
-        self.directions = directions
+        self.root_grid: np.ndarray = root_grid
+        self.water_grid_pos: tuple[float, float] = water_grid_pos
+        self.positions: list[tuple[float, float]] = positions if positions is not None else []
+        self.first_letters: list[Letter] = []
+        self.apexes: list[Letter] = []
+        self.directions = directions # if directions is not None else []
         self.root_classes = root_classes
         for dir in directions:
             self.first_letters.append(self.create_root(dir, mass))
+
+    def to_dict(self) -> dict:
+        dic = {}
+        dic["root_grid"] = self.root_grid
+        dic["water_grid_pos"] = self.water_grid_pos
+        dic["positions"] = self.positions
+        dic["apexes"] = self.apexes
+        dic["directions"] = self.directions
+        dic["root_classes"] = self.root_classes
+        dic["first_letters"] = [first_letter.to_dict() for first_letter in self.first_letters]
+
+        return dic
 
     def create_root(self, dir=None, mass=0, root_class=0, tier=None, t=None):
         dir = dir if dir is not None else (0, 1)

@@ -961,6 +961,8 @@ class UI:
         self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
 
+
+
         # test_slider = NegativeSlider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
         #                             organ=self.plant.organ_starch,
         #                             plant=self.plant, active=True)

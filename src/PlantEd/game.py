@@ -630,12 +630,9 @@ class DefaultGameScene(object):
 
         self.ui.growth_rates = growth_rates
         self.ui.server_plant = plant
-
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
 
-        #self.nitrate = plant.nitrate.nitrate_pool
-        #print(self.nitrate)
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
@@ -718,8 +715,9 @@ class DefaultGameScene(object):
         self.floating_shop.draw(temp_surface)
 
         screen.blit(temp_surface, (0, self.camera.offset_y))
-        self.ui.draw(screen)
         self.shop.draw(screen)
+        self.ui.draw(screen)
+
         self.narrator.draw(screen)
         # screen.blit(temp_surface, (0, 0))
 

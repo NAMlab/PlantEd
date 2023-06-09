@@ -341,9 +341,12 @@ src/PlantEd/utils/stem_mass.svg
 src/PlantEd/utils/stem_rate.svg
 src/PlantEd/utils/tool_tip.py
 src/PlantEd/utils/water_pool.svg
+tests/temp_client.py
+tests/temp_server.py
 tests/test_client.py
 tests/test_dynamic_model.py
 tests/test_plant.py
 tests/test_server.py
+tests/test_slider.py
 tests/test_starch.py
 tests/test_water.py

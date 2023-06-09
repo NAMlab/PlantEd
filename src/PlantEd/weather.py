@@ -175,8 +175,6 @@ class Environment:
         self.s.fill((0, 0, 0, 0))
         sun_intensity = self.get_sun_intensity()
 
-        print(self.get_day_time_t(), self.get_sun_intensity())
-
         if sun_intensity > 0:
             color = self.get_color_mixed(config.BACKGROUND_ORANGE, config.BACKGROUND_BLUE, sun_intensity)
         else:

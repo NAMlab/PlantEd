@@ -168,20 +168,27 @@ class Plant:
 
         logger.debug(f"Sum of GrowthRates is {sum_rates}")
 
-        if self.get_biomass() > 4 and sum_rates <= 0:
-            self.danger_mode = True
+        logger.debug(f"Delta is as follows IN PLANT RATES ARE: {str(growth_rates)}")
+
+        growth_boost = 100
+
+        if self.get_biomass() > 4:
+            #growth_boost = 10
+            if self.sum_rates <= 0:
+                self.danger_mode = True
         else:
+            #growth_boost = 500
             self.danger_mode = False
 
-        self.organs[0].update_growth_rate(growth_rates.leaf_rate*100)
-        self.organs[1].update_growth_rate(growth_rates.stem_rate*100)
-        self.organs[2].update_growth_rate(growth_rates.root_rate*100)
+        self.organs[0].update_growth_rate(growth_rates.leaf_rate*growth_boost)
+        self.organs[1].update_growth_rate(growth_rates.stem_rate*growth_boost)
+        self.organs[2].update_growth_rate(growth_rates.root_rate*growth_boost)
 
         self.organ_starch.update_growth_rate(
-            growth_rates.starch_rate*100
+            growth_rates.starch_rate*growth_boost
         )
-        self.organ_starch.starch_intake = growth_rates.starch_intake*100
-        self.organs[3].update_growth_rate(growth_rates.seed_rate*1000)
+        self.organ_starch.starch_intake = growth_rates.starch_intake*growth_boost
+        self.organs[3].update_growth_rate(growth_rates.seed_rate*growth_boost*10)
 
     def get_biomass(self):
         biomass = 0
@@ -324,6 +331,7 @@ class Organ:
         self.percentage = percentage
 
     def update_growth_rate(self, growth_rate):
+        print(self.type, growth_rate)
         self.growth_rate = growth_rate * 2
 
     def yellow_leaf(self, image, alpha):
@@ -778,7 +786,7 @@ class Root(Organ):
         # directions = [(0,1)]
 
         root_grid: np.array = np.zeros(plant.water_grid.get_shape())
-        water_grid_pos: np.array = plant.water_grid.pos
+        water_grid_pos: tuple[float, float] = plant.water_grid.pos
 
         self.ls = LSystem(root_grid, water_grid_pos)
         self.create_new_root(dir=(0, 1))
