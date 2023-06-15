@@ -121,7 +121,6 @@ seasons = [spring, summer, fall]
 def main(seed=None):
     if not seed:
         seed = random.random()
-    print(seed)
     for i in range(3):
         season_data = (
             importlib.resources.files(data) / "weather" / (seasons[i] + ".csv")

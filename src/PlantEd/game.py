@@ -314,6 +314,7 @@ class DefaultGameScene(object):
         )
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
+        self.gametime.faster()
         self.log = Log()  # can be turned off
 
         # self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
@@ -352,9 +353,7 @@ class DefaultGameScene(object):
             plant=self.plant,
             server_plant=self.server_plant,
             water_grid=self.water_grid,
-            nitrate=0,
-            water=0,
-            gametime=self.gametime,
+            gametime=self.gametime      # T
         )
 
         self.narrator = Narrator(self.environment)
@@ -560,7 +559,7 @@ class DefaultGameScene(object):
                     time_frame= delta_time_in_h*3600
                 )
 
-
+                print("CALL GROWTH CLIENT GET SHIT")
                 self.client.growth_rate(
                     growth_percent=growth_percent,
                     callback=self.update_growth_rates,
@@ -632,12 +631,9 @@ class DefaultGameScene(object):
 
         self.ui.growth_rates = growth_rates
         self.ui.server_plant = plant
-
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
 
-        #self.nitrate = plant.nitrate.nitrate_pool
-        #print(self.nitrate)
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
@@ -720,8 +716,9 @@ class DefaultGameScene(object):
         self.floating_shop.draw(temp_surface)
 
         screen.blit(temp_surface, (0, self.camera.offset_y))
-        self.ui.draw(screen)
         self.shop.draw(screen)
+        self.ui.draw(screen)
+
         self.narrator.draw(screen)
         # screen.blit(temp_surface, (0, 0))
 
@@ -1112,8 +1109,8 @@ def main(windowed: bool, port: int):
 
     while running:
         dt = timer.tick(60) / 1000.0
-        fps = str(int(timer.get_fps()))
-        fps_text = config.FONT.render(fps, False, (255, 255, 255))
+        #fps = str(int(timer.get_fps()))
+        #fps_text = config.FONT.render(fps, False, (255, 255, 255))
 
         if pygame.event.get(QUIT):
             running = False
@@ -1124,7 +1121,7 @@ def main(windowed: bool, port: int):
         manager.scene.handle_events(pygame.event.get(), dt)
         manager.scene.update(dt)
         manager.scene.render(screen)
-        screen.blit(fps_text, (500, 500))
+        #screen.blit(fps_text, (500, 500))
         # camera.render(screen)
         pygame.display.update()
 

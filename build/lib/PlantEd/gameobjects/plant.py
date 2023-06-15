@@ -780,7 +780,7 @@ class Root(Organ):
         root_grid = np.zeros(plant.water_grid.get_shape())
         water_grid_pos = plant.water_grid.pos
 
-        self.ls = LSystem(root_grid, water_grid_pos)
+        self.ls = LSystem(root_grid=root_grid, water_grid_pos=water_grid_pos)
         self.create_new_root(dir=(0, 1))
 
         self.tabroot = (

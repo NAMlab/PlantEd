@@ -193,6 +193,7 @@ class Snail:
         if self.pos[0] < self.bounding_rect[0]:
             self.dir = (self.dir[0] * -1, self.dir[1])
             self.state = RIGHT
+            self.speed = self.base_speed
         if self.pos[0] > self.bounding_rect[0] + self.bounding_rect[2]:
             self.dir = (self.dir[0] * -1, self.dir[1])
             self.state = LEFT

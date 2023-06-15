@@ -196,7 +196,7 @@ class UI:
         sfx_mute_icon = assets.img("sfx.png",(35,35))
         self.button_sprites.add(
             ToggleButton(
-                300,
+                30,
                 config.SCREEN_HEIGHT-60,
                 50,
                 50,
@@ -210,6 +210,7 @@ class UI:
             )
         )
 
+        '''
         sfx_mute_icon = assets.img("sfx.png", (35, 35))
         self.button_sprites.add(
             ToggleButton(
@@ -226,7 +227,7 @@ class UI:
                 cross_size=(10, 10, 40, 40)
             )
         )
-
+        '''
 
         self.button_sprites.add(
             Arrow_Button(
@@ -239,7 +240,7 @@ class UI:
                 border_w=3,
             )
         )
-
+        '''
         # init speed control
         speed_options = [
             RadioButton(
@@ -273,11 +274,11 @@ class UI:
                 image=assets.img("fastest_speed.PNG"),
             ),
         ]
-
-        for rb in speed_options:
+         for rb in speed_options:
             rb.setRadioButtons(speed_options)
             self.button_sprites.add(rb)
         speed_options[0].button_down = True
+
 
         self.skip_intro = Button_Once(
             440,
@@ -290,6 +291,7 @@ class UI:
             border_w=2,
         )
         self.button_sprites.add(self.skip_intro)
+'''
 
         self.button_array = ButtonArray(
             (1405, 10, 30, 30),
@@ -325,11 +327,11 @@ class UI:
 
     def update(self, dt):
         self.hover.update(dt)
-        if self.plant.get_biomass() >= 4:
+        '''if self.plant.get_biomass() >= 4:
             if self.skip_intro is not None:
                 self.button_sprites.remove(self.skip_intro)
                 self.gametime.play()
-                self.skip_intro = None
+                self.skip_intro = None'''
         if self.plant.danger_mode:
             self.danger_timer -= dt
             if self.danger_timer <= 0:
@@ -347,7 +349,8 @@ class UI:
             animation.update()
         self.update_stomata_automation()
 
-    def apply_preset(self, id=0):
+        '''         
+        def apply_preset(self, id=0):
         preset = self.presets[id]
         self.leaf_slider.set_percentage(preset["leaf_slider"])
         self.stem_slider.set_percentage(preset["stem_slider"])
@@ -357,9 +360,9 @@ class UI:
             preset["consume_starch"]
             and not self.plant.organs[2].toggle_button.button_down
         ):
-            self.plant.organ_starch.toggle_button.activate()
+            self.plant.organ_starch.toggle_button.activate()'''
 
-    def generate_preset(self, id=0):
+    '''def generate_preset(self, id=0):
         active_consumption = False
         """if self.plant.organs[2].toggle_button is not None:
             active_consumption = self.plant.organs[2].toggle_button.active"""
@@ -371,7 +374,7 @@ class UI:
             "consume_starch": active_consumption,
         }
         self.presets[id] = preset
-        return preset
+        return preset'''
 
     def draw(self, screen):
         # screen.blit(self.gradient,(0,0))
@@ -961,13 +964,15 @@ class UI:
         self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
 
+
+
         # test_slider = NegativeSlider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
         #                             organ=self.plant.organ_starch,
         #                             plant=self.plant, active=True)
         # self.sliders.append(test_slider)
 
-        preset = self.generate_preset()
-
+        #preset = self.generate_preset()
+        '''
         radioButtons = [
             DoubleRadioButton(
                 topleft[0] + 500,
@@ -1005,6 +1010,8 @@ class UI:
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
         # weird to have extra method for one element
+        '''
+
 
     def draw_organ_detail_temp(
         self, s, organ, pos, label, show_level=True, factor=1
