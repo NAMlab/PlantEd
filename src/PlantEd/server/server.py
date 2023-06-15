@@ -132,9 +132,21 @@ class Server:
         return self.__ip_address.value
 
     def start(self):
-        loop = asyncio.get_event_loop()
-        signal.signal(signal.SIGINT, lambda *args: self.shutdown_signal.set)
-        signal.signal(signal.SIGTERM, lambda *args: self.shutdown_signal.set)
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError as e:
+            if "There is no current event loop in thread" in str(e):
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+        try:
+            signal.signal(signal.SIGINT, lambda *args: self.shutdown_signal.set)
+            signal.signal(signal.SIGTERM, lambda *args: self.shutdown_signal.set)
+        except ValueError as e:
+            if "signal only works in main thread of the main interpreter" == str(e):
+                pass
+            else:
+                raise e
 
         loop.run_until_complete(self.__start_loop())
 

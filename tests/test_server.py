@@ -1,7 +1,10 @@
 import logging
+import multiprocessing
 import threading
 import time
 import unittest
+from multiprocessing import Event, Manager
+from typing import Optional
 from unittest import TestCase
 
 import websockets
@@ -24,36 +27,45 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
         if self._testMethodName == "test_start":
             return
 
-        self.server = ServerContainer(only_local= True)
+        self.shutdown_signal: Event = multiprocessing.Event()
+        self.manager: Manager = multiprocessing.Manager()
+        self.port: Optional[int] = self.manager.Value(Optional[int], None)
+        self.ip_address: Optional[str] = self.manager.Value(Optional[str], None)
+        self.ready: Event = multiprocessing.Event()
 
-        self.server.start()
 
-        self.port = self.server.port
+        self.server = Server(
+            shutdown_signal = self.shutdown_signal,
+            ready= self.ready,
+            sock= None,
+            only_local= True,
+            port = self.port,
+            ip_adress= self.ip_address,
+        )
+
+        self.thread = threading.Thread(target=self.server.start)
+        self.thread.start()
+        self.ready.wait()
 
     def tearDown(self):
 
         if self._testMethodName != "test_start":
-            self.server.stop()
-
-    def test_start(self):
-        logger.info("Run tests for the creation and start of the server.")
-
-        server: ServerContainer = ServerContainer()
-
-        logger.debug("Server successfully created.")
-
-        self.assertIsInstance(server, ServerContainer)
-
-        logger.debug("Starting the server.")
-
-        server.start()
-
-        logger.debug("Server started")
-
-        server.stop()
-
+            self.shutdown_signal.set()
+            self.thread.join()
     async def test_connect(self):
-        self.fail()
+
+        async with websockets.connect(f"ws://localhost:{self.port.value}") as _:
+            msg = "Single connection results in multiple registered clients"
+            self.assertEqual(1, len(self.server.clients), msg)
+
+            # get single connection itself
+            [connection] = self.server.clients
+            host, port, *_ = connection.local_address
+
+            self.assertEqual(self.port.value, port)
+            self.assertIn(host, ["localhost", "127.0.0.1", "::1"])
+            self.assertEqual(self.ip_address.value, host)
+
 
     def test_send_growth(self):
         self.fail()

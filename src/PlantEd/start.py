@@ -1,19 +1,15 @@
 import argparse
-import atexit
 import logging
-import multiprocessing
 import signal
 import sys
-import time
 from pathlib import Path
 
-from PlantEd import game
-from PlantEd.server.server import Server
+from PlantEd.server.server import ServerContainer
 
 logger = logging.getLogger(__name__)
 
 global server
-server:Server
+server:ServerContainer
 
 def main():
     parser = argparse.ArgumentParser()
@@ -116,29 +112,17 @@ def main():
     logger.debug("Creating server")
 
     global server
-    server = Server(only_local=False)
+
+    server = ServerContainer(only_local=False)
     logger.debug("Starting server")
     server.start()
-
-    # Wait till the server binds to a port
-    while server.port is None:
-        time.sleep(0.1)
-
-
-    ui_process = multiprocessing.Process(
-        target=game.main,
-        kwargs={
-            "windowed": args.windowed,
-            "port": server.port
-        })
-    #ui_process.start()
-    #ui_process.join()
 
     if args.noUI:
         signal.signal(signal.SIGINT, lambda *args: __stop_server_process)
         signal.signal(signal.SIGTERM, lambda *args: __stop_server_process)
     else:
         try:
+            from PlantEd import game
             game.main(
                 windowed= args.windowed,
                 port= server.port

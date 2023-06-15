@@ -1,4 +1,5 @@
 import logging
+import math
 from pathlib import Path
 
 import cobra
@@ -7,7 +8,6 @@ from sympy import Add
 import numpy as np
 import scipy.integrate as integrate
 
-from PlantEd import config
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
 
@@ -48,6 +48,15 @@ MAX_STARCH_INTAKE = 0.9
 
 # gram to mikromol
 MAX_WATER_POOL_GRAMM = 0.05550843506179199 * 1000000
+
+summer = {"Min_T": 15, "Max_T": 30, "shift": 10, "skew": 3.2}
+
+fall = {"Min_T": 1, "Max_T": 18, "shift": 10, "skew": 3.2}
+
+winter = {"Min_T": -5, "Max_T": 10, "shift": 10, "skew": 3.2}
+
+# HUMIDITY
+humidity = {"Min_T": 0.4, "Max_T": 1, "shift": -20.8, "skew": 3.2}
 
 water_concentration_at_temp = [
     0.269,
@@ -91,6 +100,25 @@ water_concentration_at_temp = [
     2.569,
     2.703,
 ]
+
+def get_y(x, dict):
+    M = (dict["Min_T"] + dict["Max_T"]) / 2  # mean
+    A = (dict["Max_T"] - dict["Min_T"]) / 2  # amplitude
+    F = (2 * math.pi) / 24  # based on a 24 hour cycle
+    P = dict["shift"]  # shift
+    d = dict["skew"]  # skewness
+    temp = M + A * math.sin(F * ((x - P) + d * (math.sin(F * (x - P)) / 2)))
+    # print(temp)
+
+    mean_temperature = (dict["Min_T"] + dict["Max_T"]) / 2
+    amplitude = (dict["Max_T"] - dict["Min_T"]) / 2
+    F = (2 * math.pi) / 24
+    shift = dict["shift"]
+    skew = dict["skew"]
+    temp = mean_temperature + amplitude * math.sin(
+        F * ((x - shift) + skew * (math.sin(F * (x - shift)) / 2))
+    )
+    return temp
 
 logger = logging.getLogger(__name__)
 
@@ -371,8 +399,8 @@ class DynamicModel:
         hour = day / 24
         current_hour = (self.seconds_passed % day) / hour
 
-        RH = config.get_y(current_hour, config.humidity)
-        T = config.get_y(current_hour, config.summer)
+        RH = get_y(current_hour, humidity)
+        T = get_y(current_hour, summer)
         In_Concentration = water_concentration_at_temp[int(T + 2)]
         Out_Concentration = water_concentration_at_temp[int(T)]
         new_transpiration_factor = K * (
