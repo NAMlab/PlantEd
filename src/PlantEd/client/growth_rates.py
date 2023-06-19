@@ -19,8 +19,7 @@ FLUX_TO_GRAMM: Final[float] = 0.002299662183
 @dataclass
 class GrowthRates:
     """
-    The unit of the data contained. Internally, either 1flux/s is used
-    or grams within a specified context.
+    The unit of the data contained. Internally, as mol.
 
     Attributes:
         unit (str):
@@ -30,15 +29,17 @@ class GrowthRates:
         starch_rate (float):
         starch_intake (float): actual starch consumption
         seed_rate (float):
+        time_frame (float): The Timeframe
     """
 
-    unit: Literal["1flux/s", "grams"]
+    unit: Literal["mol"]
     leaf_rate: float
     stem_rate: float
     root_rate: float
     starch_rate: float
     starch_intake: float
     seed_rate: float
+    time_frame: float
 
     def __iter__(self):
         for field in dataclasses.fields(self):
@@ -58,6 +59,7 @@ class GrowthRates:
         specified time.
 
         """
+        raise Exception("Dont use this anymore we work with mol! [flux2gramm]")
         gamespeed = gametime.GAMESPEED
 
         logger.debug(

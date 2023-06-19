@@ -4,7 +4,7 @@
 block_cipher = None
 
 
-a = Analysis(['game.py'],
+a = Analysis(['start.py'],
              pathex=[],
              binaries=[],
              datas=[('data/assets', 'PlantEd/data/assets'),('fba/PlantEd_model.sbml','PlantEd/fba'),('options.json','PlantEd'),('tooltipps.json','PlantEd'), ('data/weather','PlantEd/data/weather')],

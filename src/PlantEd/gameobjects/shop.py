@@ -1,7 +1,7 @@
 import pygame
 
 from PlantEd import config
-from PlantEd.client import Client
+from PlantEd.client.client import Client
 from PlantEd.data import assets
 from PlantEd.gameobjects.blue_grain import Blue_grain
 from PlantEd.gameobjects.root_item import Root_Item
@@ -23,9 +23,15 @@ class FloatingShop:
         self.camera = camera
         self.pos = pos
         self.shop_items = []
+        self.visible_shop_items = []
         self.margin = 16
         self.rect = pygame.Rect(
-            (0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin)
+            (
+                0,
+                0,
+                len(self.shop_items) * (64 + self.margin) + self.margin,
+                64 + 2 * self.margin,
+            )
         )
         self.active = False
         self.s = pygame.Surface(
@@ -33,25 +39,46 @@ class FloatingShop:
             pygame.SRCALPHA,
         )
 
-    def activate(self, pos):
-        for i in range(len(self.shop_items)):
-            self.shop_items[i].set_pos(
+    def activate(self, pos, show_items=True, show_flower=False):
+        self.visible_shop_items = []
+        for item in self.shop_items:
+            if item.tag is None:
+                if show_items:
+                    self.visible_shop_items.append(item)
+            else:
+                if show_flower:
+                    self.visible_shop_items.append(item)
+        for i in range(len(self.visible_shop_items)):
+            self.visible_shop_items[i].set_pos(
                 (self.margin + i * (64 + self.margin), self.margin)
             )
         self.active = True
         self.pos = pos
         self.rect = pygame.Rect(
-            (0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin)
+            (
+                0,
+                0,
+                len(self.visible_shop_items) * (64 + self.margin) + self.margin,
+                64 + 2 * self.margin,
+            )
         )
 
     def deactivate(self):
+        self.visible_shop_items = []
         self.active = False
 
     def add_item(self, shop_item):
         self.shop_items.append(shop_item)
         self.shop_items[-1].shop_items = self.shop_items
         self.shop_items[-1].floating_shop = self
-        self.rect = pygame.Rect((0, 0, len(self.shop_items) * (64 + self.margin)+self.margin, 64 + 2*self.margin))
+        self.rect = pygame.Rect(
+            (
+                0,
+                0,
+                len(self.shop_items) * (64 + self.margin) + self.margin,
+                64 + 2 * self.margin,
+            )
+        )
 
     def get_rect(self):
         return pygame.Rect(
@@ -61,28 +88,38 @@ class FloatingShop:
     def handle_event(self, e: pygame.event.Event):
         if self.active:
             mouse_pos = pygame.mouse.get_pos()
-            for item in self.shop_items:
+            for item in self.visible_shop_items:
                 item.handle_event(e, self.pos)
             if e.type == pygame.MOUSEMOTION:
-                print(self.get_rect(), mouse_pos)
                 if not self.get_rect().collidepoint(mouse_pos):
                     self.active = False
 
     def draw(self, screen):
         if self.active:
+            self.s.fill((0,0,0,0))
             pygame.draw.rect(
-                self.s, config.WHITE_TRANSPARENT, (0,0,self.rect[2],self.rect[3]), border_radius=3
+                self.s,
+                config.WHITE_TRANSPARENT,
+                (0, 0, self.rect[2], self.rect[3]),
+                border_radius=3,
             )
             pygame.draw.rect(
-                self.s, config.WHITE, (0,0,self.rect[2],self.rect[3]), width=2, border_radius=3
+                self.s,
+                config.WHITE,
+                (0, 0, self.rect[2], self.rect[3]),
+                width=2,
+                border_radius=3,
             )
-            for item in self.shop_items:
+            for item in self.visible_shop_items:
                 item.draw(self.s)
-            screen.blit(self.s, (self.pos[0], self.pos[1]-self.camera.offset_y))
+            screen.blit(
+                self.s, (self.pos[0], self.pos[1] - self.camera.offset_y)
+            )
 
 
 class FloatingShopItem:
-    def __init__(self, pos, callback, image, cost, plant):
+    def __init__(self, pos, callback, image, cost, plant, tag=None, return_pos=False):
+        self.tag = tag
         self.pos = pos
         self.rect = pygame.Rect(
             pos[0], pos[1], image.get_width(), image.get_height()
@@ -91,6 +128,7 @@ class FloatingShopItem:
         self.image = image
         self.cost = cost
         self.plant = plant
+        self.return_pos = return_pos
         self.shop_items = []
         self.floating_shop = None
         self.hover = False
@@ -119,7 +157,10 @@ class FloatingShopItem:
                     (mouse_pos[0] - shop_pos[0], mouse_pos[1] - shop_pos[1])
                 ):
                     self.plant.upgrade_points -= self.cost
-                    self.callback()
+                    if self.return_pos:
+                        self.callback(mouse_pos)
+                    else:
+                        self.callback()
                     self.hover = False
                     self.floating_shop.deactivate()
 
@@ -127,7 +168,12 @@ class FloatingShopItem:
         if self.cost <= self.plant.upgrade_points:
             screen.blit(self.image, (self.rect[0], self.rect[1]))
             if self.hover:
-                pygame.draw.rect(screen, config.WHITE, (self.rect[0],self.rect[1],self.rect[2],self.rect[3]), width=2)
+                pygame.draw.rect(
+                    screen,
+                    config.WHITE,
+                    (self.rect[0], self.rect[1], self.rect[2], self.rect[3]),
+                    width=2,
+                )
 
 
 class Shop:

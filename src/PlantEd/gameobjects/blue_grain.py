@@ -1,7 +1,7 @@
 import pygame
 
 from PlantEd import config
-from PlantEd.client import Client
+from PlantEd.client.client import Client
 from PlantEd.data import assets
 from PlantEd.utils.particle import ParticleSystem
 from pygame import Rect
@@ -65,7 +65,9 @@ class Blue_grain:
                 self.pos[0], self.pos[1], 20, 20
             )
             self.particle_system.activate()
-            self.client.increase_nitrate()
+            self.client.increase_nitrate(
+                µmol_nitrate= 1000
+            )
             self.deactivate()
 
     def draw(self, screen):

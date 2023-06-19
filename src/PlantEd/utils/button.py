@@ -1083,12 +1083,13 @@ class Slider:
             self.organ.percentage = self.get_percentage()
 
     def sub_percentage(self, percent):
-        if self.get_percentage() < 0:
-            return 0
         delta = self.get_percentage() - percent
         if delta < 0:
             self.set_percentage(0)
             return delta
+        elif delta > 100:
+            self.set_percentage(100)
+            return delta - 100
         else:
             self.set_percentage(delta)
             return 0
@@ -1131,7 +1132,6 @@ class Slider:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if hover and event.button == 1:
-                # print(event.type, "Hopefully a slider move", hover, self.drag)
                 self.drag = True
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.drag:
@@ -1152,7 +1152,7 @@ class Slider:
                     - self.y
                 )
 
-
+'''
 class SliderGroup:
     def __init__(self, sliders, max_sum):
         self.sliders = sliders
@@ -1167,6 +1167,7 @@ class SliderGroup:
         return sum([slider.get_percentage() for slider in self.sliders])
 
     def change_percentage(self, slider):
+        print("changing percentage of: ", slider.get_percentage())
         # @slider: slider that changed
         while (
             self.max_sum < self.slider_sum() - 0.1
@@ -1188,7 +1189,7 @@ class SliderGroup:
                     extra = s.sub_percentage(delta)
                     if extra > 0:
                         self.sliders_zero.append(s)
-
+'''
 
 class NegativeSlider:
     def __init__(
@@ -1230,12 +1231,6 @@ class NegativeSlider:
         if self.plant is not None:
             if self.plant.get_biomass() > self.plant.seedling.max:
                 self.active = True
-        """if self.organ is not None:
-            if self.organ.active:
-                self.active = True
-        #whats that?
-        if not self.active:
-            return"""
 
     def get_percentage(self):
         line_height = self.h - self.slider_h
@@ -1258,14 +1253,23 @@ class NegativeSlider:
         if self.organ:
             self.organ.set_percentage(self.get_percentage())
 
+    # can subtract negative numbers -> add
     def sub_percentage(self, percent):
+        if self.get_percentage() < 0:
+            return - percent
+        # slider is in positive area
         delta = self.get_percentage() - percent
         if delta < 0:
-            self.set_percentage(0)
+            self.set_percentage(50)
             return delta
+        elif delta > 100:
+            self.set_percentage(100)
+            return delta - 100
         else:
-            self.set_percentage(delta)
+            # delta 0 .. 100 -> 50 .. 100
+            self.set_percentage((delta/2)+50)
             return 0
+
 
     def draw(self, screen):
         if not self.visible:
@@ -1314,7 +1318,6 @@ class NegativeSlider:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if hover and event.button == 1:
-                # print(event.type, "Hopefully a slider move", hover, self.drag)
                 self.drag = True
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.drag:
@@ -1334,7 +1337,6 @@ class NegativeSlider:
                     )
                     - self.y
                 )
-                # print("Get: ", self.get_percentage())
 
 
 class SliderGroup:
@@ -1351,12 +1353,37 @@ class SliderGroup:
         sum = 0
         for slider in self.sliders:
             percent = slider.get_percentage()
+            #percent = percent if percent > 0 else 0
             percent = 0 if percent < 0 else percent
             sum += percent
         return sum
         # return sum([slider.get_percentage() for slider in self.sliders])
 
-    def change_percentage(self, slider):
+    def change_percentage(self, slider_changed: Slider):
+        tries: int = 100
+        delta: float = self.max_sum - self.slider_sum()
+        # negative delta -> one slider has gone up, others must be lowered
+        available_sliders: list[Slider] = [slider for slider in self.sliders]
+        available_sliders.remove(slider_changed)
+
+        while not -0.1 < delta < 0.1:
+            if len(available_sliders) <= 0:
+                break
+            if tries <= 0:
+                break
+            delta_each_slider = delta / len(available_sliders)
+            for slider in available_sliders:
+                # excess will be negative
+                # weird to sub a negative negative -> add?
+                excess = slider.sub_percentage(-delta_each_slider)
+                delta -= (delta_each_slider - excess)
+                if excess != 0:
+                    available_sliders.remove(slider)
+            tries = tries -1
+
+'''
+
+
         # @slider: slider that changed
         while (
             self.max_sum < self.slider_sum() - 0.1
@@ -1378,7 +1405,7 @@ class SliderGroup:
                     extra = s.sub_percentage(delta)
                     if extra > 0:
                         self.sliders_zero.append(s)
-
+'''
 
 class Textbox:
     def __init__(
@@ -1420,7 +1447,6 @@ class Textbox:
         if e.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(e.pos):
                 self.active = True
-                # print(self.active)
             else:
                 self.active = False
         if not self.active:
@@ -1490,7 +1516,7 @@ class Textbox:
 
 class ButtonArray:
     def __init__(
-        self, rect, amount, resolution, margin, callback, set_hover_message, border_w=5, pressed=False
+        self, rect, amount, resolution, margin, callback, set_hover_message, border_w=5, pressed=False, start_color=None, end_color=None
     ):
         self.toggle_buttons = []
         self.callback = callback
@@ -1500,7 +1526,11 @@ class ButtonArray:
         self.border_w = border_w
         self.label = config.BIG_FONT.render("Stomata:", True, config.BLACK)
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
-
+        self.gradient = None
+        if start_color and end_color:
+            gradient_early = self.get_color_gradient(end_color, start_color, int(amount/2))
+            gradient_late = self.get_color_gradient(start_color, end_color, int((amount/2)+0.5))
+            self.gradient = gradient_early + gradient_late
         set_all_width = 50
 
         self.rect = pygame.Rect(
@@ -1512,15 +1542,20 @@ class ButtonArray:
 
         self.set_all_button = Button(
             rect[0],
-            rect[1]+50,
-            set_all_width,30,
+            rect[1] + 50,
+            set_all_width,
+            30,
             [self.toggle_all],
             config.FONT,
             "All",
             hover_message="Activate/Deactivate all buttons",
-            border_w=border_w)
+            border_w=border_w,
+        )
 
         for i in range(0, amount):
+            color = config.WHITE_TRANSPARENT
+            if self.gradient:
+                color = self.gradient[i]
             self.toggle_buttons.append(
                 ToggleButton(
                     rect[0] + i * (rect[2] + margin) + set_all_width + margin,
@@ -1529,9 +1564,10 @@ class ButtonArray:
                     rect[3],
                     [],
                     font=config.FONT,
+                    button_color=color,
                     text="{}".format(i * resolution),
                     pressed=pressed,
-                    border_w=border_w
+                    border_w=border_w,
                 )
             )
 
@@ -1563,11 +1599,12 @@ class ButtonArray:
         if len(self.toggle_buttons)/2 > sum_true:
             for button in self.toggle_buttons:
                 button.activate()
-            self.go_green()
+            #self.go_green()
         else:
             for button in self.toggle_buttons:
                 button.deactivate()
-            self.go_red()
+            #self.go_red()
+        self.callback(self.get_bool_list())
 
     def get_bool_list(self):
         return [
@@ -1588,23 +1625,36 @@ class ButtonArray:
     def get_rect(self):
         return self.rect
 
+    def get_color_gradient(self, start_color, end_color, iterations):
+        r_delta = (start_color[0] - end_color[0])/iterations
+        g_delta = (start_color[1] - end_color[1])/iterations
+        b_delta = (start_color[2] - end_color[2])/iterations
+
+        gradient = []
+        for i in range(iterations):
+            gradient.append((
+                start_color[0]-r_delta*i,
+                start_color[1]-g_delta*i,
+                start_color[2]-b_delta*i))
+        return gradient
+
     def draw(self, screen):
         # pygame.draw.rect(screen, config.WHITE_TRANSPARENT, self.rect)
         pygame.draw.rect(
             screen,
             self.color,
             (
-                self.rect[2] / 24 * self.hours + self.rect[0] - 7,
+                (self.rect[2]-50) / 24 * self.hours + self.rect[0] + 50,
                 self.rect[1] + 32 + 50,
-                15,
-                5,
+                10,
+                10,
             ),
-            border_radius=2,
+            border_radius=5,
         )
         pygame.draw.rect(
             screen,
             config.WHITE,
-            (self.rect[0], self.rect[1], 465, 40),
+            (self.rect[0], self.rect[1], 470, 40),
             border_radius=3,
         )
         if self.color == config.GREEN:

@@ -4,14 +4,15 @@ import pygame
 import math
 import json
 
-from PlantEd import data
-from PlantEd.data import assets
 import os
+
+from PlantEd.data import assets
 
 # this file is for configurations, options, rates, gamespeed
 # is this the playce to get gametime from?
 # settings: HARD, INTERMEDIATE, EASY, Graphics - not yet
-# pygame.init()
+pygame.font.init()
+pygame.mixer.init()
 
 # ugly, no config -> see enums
 SUN = 0
@@ -20,10 +21,12 @@ CLOUD = 2
 WIND = 3
 HAWK = 4
 
-SPRING = 10
-SUMMER = 20
-FALL = 30
-WINTER = 40
+FREE_SPOT = 00
+BASE_SPOT = 10
+LEAF_SPOT = 20
+BRANCH_SPOT = 30
+ROOT_SPOT = 40
+FLOWER_SPOT = 50
 
 MAX_DAYS = 27
 
@@ -50,6 +53,10 @@ GREEN = (150, 168, 96)
 TRANSPARENT = (0, 0, 0, 255)
 BLACK = (0, 0, 0)
 BLUE = (75, 75, 200)
+
+BACKGROUND_ORANGE = (137, 77, 0)
+BACKGROUND_BLUE = (118, 231, 255)
+
 DARK_BLUE = (10, 40, 190)
 LIGHT_BLUE = (25, 30, 255)
 SKY_BLUE = (169, 247, 252)
@@ -217,39 +224,3 @@ def write_tooltipps(tooltipps):
 
     with open(fileDir, "w") as convert_file:
         convert_file.write(json.dumps(tooltipps))
-
-
-# PARTICLE SYSTEMS
-
-# BUTTONS
-
-# EVENTS
-# change to seed and chances --> endless
-day = 1000 * 60 * 60 * 24
-e = [
-    {"type": CLOUD, "start_time": 1000 * 60},
-    {"type": RAIN, "start_time": day / 5},
-    {"type": SUN, "start_time": day * 2},
-    {"type": CLOUD, "start_time": day * 4},
-    {"type": RAIN, "start_time": day * 5},
-    {"type": SUN, "start_time": day * 6},
-    {"type": RAIN, "start_time": day * 9},
-    {"type": CLOUD, "start_time": day * 11},
-    {"type": SUN, "start_time": day * 15},
-    {"type": CLOUD, "start_time": day * 16},
-    {"type": RAIN, "start_time": day * 17 + day * 0.5},
-    {"type": SUN, "start_time": day * 18},
-    {"type": CLOUD, "start_time": day * 25},
-    {"type": SUN, "start_time": day * 27},
-    {"type": CLOUD, "start_time": day * 30},
-    {"type": RAIN, "start_time": day * 33},
-    {"type": SUN, "start_time": day * 35},
-    {"type": CLOUD, "start_time": day * 40},
-    {"type": SUN, "start_time": day * 45},
-    {"type": HAWK, "start_time": day * 8},
-    {"type": HAWK, "start_time": day * 12},
-    {"type": HAWK, "start_time": day * 18},
-    {"type": HAWK, "start_time": day * 25},
-    {"type": HAWK, "start_time": day * 30},
-    {"type": HAWK, "start_time": day * 35},
-]

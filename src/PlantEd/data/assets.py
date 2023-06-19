@@ -1,18 +1,19 @@
 from pathlib import Path
+from typing import Tuple, Optional
 
 import pygame
+from pygame.surface import Surface
 
 # assets is supposed to allow access to images, sounds
 # assets also handles options like volume, lists of songs to play or
 
 fileDir = Path(__file__)
 data_dir = fileDir.parent
-print(fileDir, data_dir)
-_image_library = {}
+_image_library: dict[Tuple[str, Optional[Tuple[int, int]]], Surface] = {}
 _sound_library = {}
 _music_library = {}
 
-pygame.init()
+# pygame.init()
 
 
 true_res = (
@@ -22,24 +23,31 @@ true_res = (
 # (ctypes.windll.user32.GetSystemMetrics(0),
 # ctypes.windll.user32.GetSystemMetrics(1))
 
-screen = pygame.display.set_mode(
-    true_res, pygame.FULLSCREEN | pygame.DOUBLEBUF, 16
-)
+pygame.display.set_mode((1, 1), pygame.NOFRAME)
 
 
-def img(path, size=None):
+def img(path, size: Optional[Tuple[int, int]] = None) -> Surface:
+    # print(f"path: {path} scale: {size}")
+
     path = data_dir / "assets" / path
     global _image_library
-    image = _image_library.get(path)
-    if image is None:
-        # canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
-        image = pygame.image.load(path).convert_alpha()
-        _image_library[path] = image
-    if size is not None:
-        if not (
-            image.get_width() == size[0] and image.get_height() == size[1]
-        ):
-            return pygame.transform.scale(image, size).convert_alpha()
+    image = _image_library.get((path, size))
+
+    # scaled image was already loaded
+    if image is not None:
+        return image.copy()
+
+    # image wasn't loaded => load unscaled version
+    image = pygame.image.load(path).convert_alpha()
+    _image_library[(path, None)] = image.copy()
+
+    # if unscaled was requested return
+    if size is None:
+        return image
+
+    # scale image and return
+    image = pygame.transform.scale(image, size).convert_alpha()
+    _image_library[(path, size)] = image.copy()
     return image
 
 

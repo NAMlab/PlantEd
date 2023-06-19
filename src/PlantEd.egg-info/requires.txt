@@ -1,4 +1,9 @@
 cobra
+websockets
+dataclasses-json
+pygame
+requests
+scipy
 
 [test]
 pytest<5.0.0

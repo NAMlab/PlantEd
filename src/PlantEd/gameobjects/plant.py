@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import Tuple, Optional
 
@@ -8,10 +9,9 @@ from pygame import Rect
 from pygame.locals import *
 import numpy as np
 
-from PlantEd import client as c
 from PlantEd import config
-from PlantEd.camera import Camera
-from PlantEd.client import Client, GrowthRates
+from PlantEd.client.client import Client
+from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.data import assets
 from PlantEd.gameobjects.water_reservoir import Water_Grid
 from PlantEd.utils.LSystem import LSystem
@@ -19,7 +19,11 @@ from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.particle import ParticleSystem
 from PlantEd.utils.spline import Cubic_Tree, Cubic
 
-pygame.init()
+from PlantEd.client.leaf import Leaf as client_Leaf
+
+logger = logging.getLogger(__name__)
+
+# pygame.init()
 gram_mol = 0.5124299411
 WIN = pygame.USEREVENT + 1
 # pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
@@ -62,13 +66,13 @@ class Plant:
     FLOWER = 5
 
     def __init__(
-        self,
-        pos,
-        camera,
-        client: Client,
-        water_grid: Water_Grid,
-        growth_boost=1,
-        upgrade_points=10,
+            self,
+            pos,
+            camera,
+            client: Client,
+            water_grid: Water_Grid,
+            growth_boost=1,
+            upgrade_points=10,
     ):
         self.x = pos[0]
         self.y = pos[1]
@@ -125,7 +129,7 @@ class Plant:
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
             plant=self,
-            mass=3,
+            mass=1,
             active=True,
             client=client,
         )
@@ -155,26 +159,34 @@ class Plant:
     # convert flux/mikromol to gramm
     def update_growth_rates(self, growth_rates: GrowthRates):
         sum_rates = (
-            growth_rates.leaf_rate
-            + growth_rates.stem_rate
-            + growth_rates.root_rate
-            + growth_rates.starch_rate
-            + growth_rates.starch_rate
-            + growth_rates.seed_rate
+                growth_rates.leaf_rate
+                + growth_rates.stem_rate
+                + growth_rates.root_rate
+                + growth_rates.starch_rate
+                + growth_rates.seed_rate
         )
 
-        if self.get_biomass() > 4 and sum_rates <= 0:
-            self.danger_mode = True
-        else:
-            self.danger_mode = False
+        logger.debug(f"Sum of GrowthRates is {sum_rates}")
 
-        self.organs[0].update_growth_rate(growth_rates.leaf_rate)
-        self.organs[1].update_growth_rate(growth_rates.stem_rate)
-        self.organs[2].update_growth_rate(growth_rates.root_rate)
+        logger.debug(f"Delta is as follows IN PLANT RATES ARE: {str(growth_rates)}")
 
-        self.organ_starch.update_growth_rate(growth_rates.starch_rate, self.get_biomass())
-        self.organ_starch.starch_intake = growth_rates.starch_intake
-        self.organs[3].update_growth_rate(growth_rates.seed_rate)
+        growth_boost = 200
+        if self.get_biomass() > 4:
+            growth_boost = 100
+            if sum_rates <= 0:
+                self.danger_mode = True
+            else:
+                self.danger_mode = False
+
+        self.organs[0].update_growth_rate(growth_rates.leaf_rate*growth_boost)
+        self.organs[1].update_growth_rate(growth_rates.stem_rate*growth_boost)
+        self.organs[2].update_growth_rate(growth_rates.root_rate*growth_boost)
+
+        self.organ_starch.update_growth_rate(
+            growth_rates.starch_rate*growth_boost
+        )
+        self.organ_starch.starch_intake = growth_rates.starch_intake*growth_boost
+        self.organs[3].update_growth_rate(growth_rates.seed_rate*growth_boost*10)
 
     def get_biomass(self):
         biomass = 0
@@ -191,9 +203,10 @@ class Plant:
     # Projected Leaf Area (PLA)
     def get_PLA(self):
         # 0.03152043208186226 as a factor to get are from dry mass
-        return (
-            self.organs[0].get_pla()
-        )  # m^2
+        return self.organs[0].get_pla()  # m^2
+
+    def eat_stem(self, rate, dt):
+        self.organs[1].mass -= rate*dt
 
     def grow(self, dt):
         for organ in self.organs:
@@ -223,8 +236,8 @@ class Plant:
             for organ in self.organs:
                 organ.drain(0.00001, self.gametime.GAMESPEED, dt)
         if (
-            self.get_biomass() > self.seedling.max
-            and not self.organs[1].active
+                self.get_biomass() > self.seedling.max
+                and not self.organs[1].active
         ):
             self.organs[1].activate()
             self.organs[0].activate()
@@ -232,10 +245,6 @@ class Plant:
         for organ in self.organs:
             organ.update(dt)
         self.organs[0].photon_intake = photon_intake
-
-        self.organ_starch.update_starch_max(
-            self.get_biomass() * 1000 + 1000000
-        )
 
     def handle_event(self, event: pygame.event.Event):
         for organ in self.organs:
@@ -273,22 +282,22 @@ class Seedling:
 
 class Organ:
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        client: Client,
-        callback=None,
-        plant=None,
-        image=None,
-        pivot=None,
-        mass=1,
-        growth_rate=0,
-        thresholds=None,
-        rect=None,
-        active=False,
-        base_mass=1,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            client: Client,
+            callback=None,
+            plant=None,
+            image=None,
+            pivot=None,
+            mass=1,
+            growth_rate=0,
+            thresholds=None,
+            rect=None,
+            active=False,
+            base_mass=1,
     ):
         if thresholds is None:
             thresholds = [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
@@ -409,17 +418,17 @@ class Organ:
 
 class Leaf(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant,
-        images,
-        mass,
-        active,
-        client: Client,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant,
+            images,
+            mass,
+            active,
+            client: Client,
     ):
         self.leaves = []
         super().__init__(
@@ -488,16 +497,22 @@ class Leaf(Organ):
             return None
 
     def get_pla(self):
-        return(
+        return (
             (self.mass + self.base_mass)
-            * 0.03152043208186226 * self.get_shadowscore()
+            * 0.03152043208186226
+            * self.get_shadowscore()
             if len(self.leaves) > 0
             else 0
         )
 
     def get_shadowscore(self):
         # shadow scores are 0 for no shadow to 1 for full shadow. 1 - to get a factor
-        return (sum([1-leaf["shadow_score"] for leaf in self.leaves])/len(self.leaves) if len(self.leaves) > 0 else 0)
+        return (
+            sum([1 - leaf["shadow_score"] for leaf in self.leaves])
+            / len(self.leaves)
+            if len(self.leaves) > 0
+            else 0
+        )
 
     def grow(self, dt):
         if self.growth_rate <= 0:
@@ -528,7 +543,7 @@ class Leaf(Organ):
 
     def get_mass(self):
         return (
-            sum([leaf["mass"] for leaf in self.leaves]) + self.base_mass
+                sum([leaf["mass"] for leaf in self.leaves]) + self.base_mass
         )  # basemass for seedling leaves
 
     def append_leaf(self, highlight: Tuple[list[int], int, int]):
@@ -559,7 +574,7 @@ class Leaf(Organ):
             "growth_index": self.active_threshold,
         }  # to get relative size, depending on current threshold - init threshold
 
-        client_leaf = c.Leaf(
+        client_leaf = client_Leaf(
             pos_x=pos[0],
             pos_y=pos[1],
             t=(highlight[1], highlight[2]),
@@ -571,7 +586,7 @@ class Leaf(Organ):
             base_image_id=image_id,
         )
 
-        #self.client.create_leaf(client_leaf)
+        # self.client.create_leaf(client_leaf)
         self.update_leaf_image(leaf, init=True)
         self.particle_systems.append(
             ParticleSystem(
@@ -611,11 +626,17 @@ class Leaf(Organ):
         # apply shadow penalty to leaves
         if self.shadow_map is not None:
             for leaf in self.leaves:
-                x = int((leaf["x"] - leaf["offset_x"]) / self.shadow_resolution)
-                y = int((leaf["y"] - leaf["offset_y"]) / self.shadow_resolution)
+                x = int(
+                    (leaf["x"] - leaf["offset_x"]) / self.shadow_resolution
+                )
+                y = int(
+                    (leaf["y"] - leaf["offset_y"]) / self.shadow_resolution
+                )
 
                 width = int(leaf["image"].get_width() / self.shadow_resolution)
-                height = int(leaf["image"].get_height() / self.shadow_resolution)
+                height = int(
+                    leaf["image"].get_height() / self.shadow_resolution
+                )
 
                 # rect = pygame.Rect(x,y,width,height)
 
@@ -649,8 +670,6 @@ class Leaf(Organ):
             else:
                 self.particle_systems[i].deactivate()
 
-
-
     def update_image_size(self, factor=7, base=80):
         for leaf in self.leaves:
             self.update_leaf_image(leaf, factor, base)
@@ -660,16 +679,16 @@ class Leaf(Organ):
         base_offset = leaves[leaf["base_image_id"]][1]
         ratio = base_image.get_height() / base_image.get_width()
         threshold = (
-            self.active_threshold - leaf["growth_index"]
+                self.active_threshold - leaf["growth_index"]
         )  # if not init else 0
         new_width = (threshold * factor) + base
         new_height = int(new_width * ratio)
         new_width = int(new_width)
         leaf["offset_x"] = base_offset[0] * (
-            new_width / base_image.get_width()
+                new_width / base_image.get_width()
         )
         leaf["offset_y"] = base_offset[1] * (
-            new_height / base_image.get_height()
+                new_height / base_image.get_height()
         )
         leaf["image"] = pygame.transform.scale(
             base_image, (new_width, new_height)
@@ -732,18 +751,18 @@ class Leaf(Organ):
 
 class Root(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant: Plant,
-        client: Client,
-        image=None,
-        pivot=None,
-        mass=0.0,
-        active=False,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant: Plant,
+            client: Client,
+            image=None,
+            pivot=None,
+            mass=0.0,
+            active=False,
     ):
         super().__init__(
             x=x,
@@ -763,8 +782,8 @@ class Root(Organ):
         # positions = [(x,y+45)]
         # directions = [(0,1)]
 
-        root_grid = np.zeros(plant.water_grid.get_shape())
-        water_grid_pos = plant.water_grid.pos
+        root_grid: np.array = np.zeros(plant.water_grid.get_shape())
+        water_grid_pos: tuple[float, float] = plant.water_grid.pos
 
         self.ls = LSystem(root_grid, water_grid_pos)
         self.create_new_root(dir=(0, 1))
@@ -843,26 +862,28 @@ class Root(Organ):
 
 class Stem(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant,
-        client: Client,
-        image=None,
-        pivot=None,
-        leaf=None,
-        flower=None,
-        mass=0.0,
-        active=False,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant,
+            client: Client,
+            image=None,
+            pivot=None,
+            leaf=None,
+            flower=None,
+            mass=0.0,
+            active=False,
     ):
         self.leaf = leaf
         self.flower = flower
         self.width = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
-        self.curve = Cubic_Tree([Cubic([[955, 900], [960, 820], [940, 750]])], plant.camera)
+        self.curve = Cubic_Tree(
+            [Cubic([[955, 900], [960, 820], [940, 750]])], plant.camera
+        )
         self.gametime = GameTime.instance()
         self.timer = 0
         self.floating_shop = None
@@ -942,7 +963,7 @@ class Stem(Organ):
             if not self.can_add_branch or self.leaf.can_add_leaf:
                 y -= self.plant.camera.offset_y
                 point, branch_id, point_id = self.curve.find_closest(
-                    (x, y), True
+                    (x, y), False
                 )
                 dist_to_stem = math.sqrt(
                     (x - point[0]) ** 2 + (y - point[1]) ** 2
@@ -956,24 +977,49 @@ class Stem(Organ):
                     self.add_branch(pygame.mouse.get_pos(), self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
-                    ] = False
+                    ] = config.BRANCH_SPOT
                     self.can_add_branch = False
             elif self.leaf.can_add_leaf and self.dist_to_stem < 50:
                 if self.highlight:
                     self.leaf.append_leaf(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
-                    ] = False
+                    ] = config.LEAF_SPOT
             elif self.flower.can_add_flower and self.dist_to_stem < 50:
                 if self.highlight:
                     self.flower.append_flower(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
-                    ] = False
+                    ] = config.FLOWER_SPOT
             else:
                 if self.gametime.get_time() - self.timer < 1000 * 120:
-                    if self.floating_shop is not None:
-                        self.floating_shop.activate(pygame.mouse.get_pos())
+                    x, y = pygame.mouse.get_pos()
+                    y -= self.plant.camera.offset_y
+                    # check how many free spots the stem hast, adapt shop accordingly
+                    # no spots -> if flower selected -> flower option
+                    # no spots, no flower -> nothing
+                    # 1 spot, flower -> all
+                    # 1 spot, no flower -> all but flower option
+
+                    show_items = False
+                    show_flower = False
+
+                    point, branch_id, point_id = self.curve.find_closest((x, y), False)
+                    if self.curve.branches[branch_id].free_spots[point_id] == config.FLOWER_SPOT:
+                        if len(self.flower.flowers) > 0:
+                            for flower in self.flower.flowers:
+                                if branch_id == (flower["t"][0]
+                                                 and point_id == flower["t"][1]
+                                                 and flower["pollinated"]
+                                                 and not flower["flowering"]):
+                                    show_flower = True
+
+                    else:
+                        free_spots = self.curve.get_free_spots()
+                        if free_spots > 0:
+                            show_items = True
+                    if self.floating_shop is not None and (show_flower or show_items):
+                        self.floating_shop.activate(pygame.mouse.get_pos(), show_items, show_flower)
 
         if event.type == KEYDOWN and event.key == K_SPACE:
             self.curve.grow_all()
@@ -1072,17 +1118,17 @@ class Stem(Organ):
 
 class Starch(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant,
-        image,
-        mass,
-        active,
-        client: Client,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant,
+            image,
+            mass,
+            active,
+            client: Client,
     ):
         super().__init__(
             x=x,
@@ -1101,29 +1147,37 @@ class Starch(Organ):
         self.starch_intake = 0
 
     def grow(self, dt):
+        return
         delta = self.growth_rate * dt
         if delta >= self.thresholds[self.active_threshold]:
             self.mass = self.thresholds[self.active_threshold]
         else:
             self.mass += delta
 
-    def update_growth_rate(self, growth_rate, plant_mass):
+    def update_growth_rate(self, growth_rate):
+
         self.growth_rate = growth_rate * 2
+
+        logger.debug(f" Starch usage in UI set to {self.growth_rate}")
 
     def update_starch_max(self, max_pool):
         self.thresholds = [max_pool]
+        logger.debug(f" Starch max in UI set to {self.thresholds}")
+
         if self.mass > max_pool:
             self.mass = max_pool
 
     def set_percentage(self, percentage):
         self.percentage = percentage
+        logger.debug(f" Starch percentage in UI set to {self.percentage}")
+
         if percentage < 0:
-            print(self.plant)
             self.client.activate_starch_resource(abs(percentage))
         else:
             self.client.deactivate_starch_resource()
 
     def drain(self, dt):
+        return
         delta = self.starch_intake * dt
         if self.mass - delta < 0:
             self.mass = 0
@@ -1134,17 +1188,17 @@ class Starch(Organ):
 
 class Flower(Organ):
     def __init__(
-        self,
-        x,
-        y,
-        name,
-        organ_type,
-        callback,
-        plant,
-        images,
-        mass,
-        active,
-        client: Client,
+            self,
+            x,
+            y,
+            name,
+            organ_type,
+            callback,
+            plant,
+            images,
+            mass,
+            active,
+            client: Client,
     ):
         self.flowers = []
         super().__init__(
@@ -1185,6 +1239,25 @@ class Flower(Organ):
     def activate_add_flower(self):
         self.can_add_flower = True
 
+    def flower_flower(self, flower):
+        flower["flowering"] = True
+
+    def get_closest_flower(self, pos, flowering=False):
+        min_dist = 10000
+        closest_flower = None
+        for flower in self.flowers:
+            dist = math.sqrt(
+                (pos[0] - flower["x"]) * (pos[0] - flower["x"]) + (pos[1] - flower["y"]) * (pos[1] - flower["y"]))
+            if dist < min_dist and flower["flowering"] == flowering:
+                closest_flower = flower
+                min_dist = dist
+        return closest_flower
+
+    def start_flowering_closest(self, pos):
+        flower = self.get_closest_flower(pos)
+        if flower:
+            self.flower_flower(flower)
+
     def start_flowering(self):
         self.flowering = True
 
@@ -1201,18 +1274,21 @@ class Flower(Organ):
                 int(
                     flower["mass"]
                     / flower["maximum_mass"]
-                    * (len(self.images) - 1)),
-                len(self.images)-1
+                    * (len(self.images) - 1)
+                ),
+                len(self.images) - 1,
             )
             flower["image"] = self.images[id]
             if flower["mass"] < flower["maximum_mass"]:
                 growable_flowers.append(flower)
             # if max age*2 -> kill leaf
 
-        if self.flowering:
-            for flower in self.flowers:
-                if flower["pollinated"] and flower["seed_mass"] < flower["maximum_seed_mass"]:
-                    growable_flowers.append(flower)
+        for flower in self.flowers:
+            if (
+                    flower["flowering"]
+                    and flower["seed_mass"] < flower["maximum_seed_mass"]
+            ):
+                growable_flowers.append(flower)
 
         growth_per_flower = (
             (self.growth_rate * dt) / len(growable_flowers)
@@ -1235,15 +1311,15 @@ class Flower(Organ):
 
     def get_mass(self):
         return (
-            sum([leaf["mass"] for leaf in self.flowers]) + self.base_mass
+                sum([leaf["mass"] for leaf in self.flowers]) + self.base_mass
         )  # basemass for seedling leaves
 
     def get_random_flower_pos(self):
         viable_flowers = []
         for flower in self.flowers:
             if (
-                not flower["pollinated"]
-                and flower["mass"] >= flower["maximum_mass"]
+                    not flower["pollinated"]
+                    and flower["mass"] >= flower["maximum_mass"]
             ):
                 viable_flowers.append(flower)
         if len(viable_flowers) > 0:
@@ -1259,36 +1335,36 @@ class Flower(Organ):
         else:
             return None, None
 
-    def get_flowering_flowers(self):
-        flowering_flowers = []
+    def get_growing_flowers(self):
+        growing_flowers = []
         # flowering can be central activated to enable all pollinated flowers to produce seeds
         # add all growing flowers
         for flower in self.flowers:
-            if flower["mass"] < flower["maximum_mass"]:
-                flowering_flowers.append(flower)
+            if (
+                    flower["mass"] < flower["maximum_mass"]
+                    or (flower["flowering"]
+                        and flower["seed_mass"] < flower["maximum_seed_mass"]
+                        )
+            ):
+                growing_flowers.append(flower)
         # add all seed producing flowrs
-        if self.flowering:
-            for flower in self.flowers:
-                if flower["pollinated"] and flower["seed_mass"] < flower["maximum_seed_mass"]:
-                    flowering_flowers.append(flower)
-
-        return flowering_flowers
+        return growing_flowers
 
     def pop_seed(self):
         self.seed_popped = True
         for flower in self.flowers:
             self.pop_seed_particles.append(
                 ParticleSystem(
-                    max_particles = (int(flower["mass"])),
-                    spawn_box = (flower["x"],flower["y"],0,0),
-                    lifetime = 10,
-                    color = config.WHITE,
-                    apply_gravity = 4,
-                    speed = [(random.random()-0.5)*20, -70],
-                    spread = [50,10],
-                    active = True,
-                    once = True,
-                    )
+                    max_particles=(int(flower["mass"])),
+                    spawn_box=(flower["x"], flower["y"], 0, 0),
+                    lifetime=10,
+                    color=config.WHITE,
+                    apply_gravity=4,
+                    speed=[(random.random() - 0.5) * 20, -70],
+                    spread=[50, 10],
+                    active=True,
+                    once=True,
+                )
             )
 
     def append_flower(self, highlight):
@@ -1304,8 +1380,9 @@ class Flower(Organ):
             "image": image,
             "mass": 0.01,
             "seed_mass": 0,
-            "maximum_seed_mass": 10,
+            "maximum_seed_mass": 1,
             "pollinated": False,
+            "flowering": False,
             "maximum_mass": self.thresholds[-1],
             "lifetime": 60 * 60 * 24 * 10,  # 10 days of liefetime to grow
             "growth_index": self.active_threshold,
@@ -1415,7 +1492,7 @@ class Flower(Organ):
                         flower["y"] - width / 4 - 10 - flower["offset_y"],
                     ),
                 )
-            if flower["pollinated"] and self.flowering:
+            if flower["flowering"]:
                 width = flower["image"].get_width()
                 pygame.draw.rect(
                     screen,

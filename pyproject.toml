@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PlantEd"
-version = "0.1.0"
+version = "0.2.1"
 description = "Lovely Spam! Wonderful Spam!"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,6 +16,11 @@ classifiers = [
 
 dependencies = [
   "cobra",
+  "websockets",
+  "dataclasses-json",
+  "pygame",
+  "requests",
+  "scipy",
 ]
 
 [project.optional-dependencies]
@@ -29,7 +34,7 @@ homepage = "https://github.com/NAMlab/PlantEd"
 repository = "https://github.com/NAMlab/PlantEd"
 
 [project.scripts]
-PlantEd = "PlantEd.game:main"
+PlantEd = "PlantEd.start:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

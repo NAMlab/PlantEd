@@ -1,4 +1,5 @@
 import math
+from typing import List
 
 from PlantEd import config
 from PlantEd.utils.animation import Animation
@@ -17,13 +18,12 @@ class Hive:
         self.camera = camera
         self.spawn_rate = spawn_rate
 
-        self.bees = []
+        self.bees: List[Bee] = []
 
     def handle_event(self, e):
         for bee in self.bees:
             bee.handle_event(e)
         if e.type == pygame.MOUSEBUTTONDOWN:
-            # print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
             # if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
                 assets.sfx("bee/beehive_clicked.mp3").play()
@@ -38,7 +38,7 @@ class Hive:
     def get_rect(self):
         return pygame.Rect(
             self.pos[0],
-            self.pos[1]+self.camera.offset_y,
+            self.pos[1] + self.camera.offset_y,
             self.image.get_width(),
             self.image.get_height(),
         )
@@ -145,7 +145,11 @@ class Bee:
         self.set_random_direction()
 
     def update(self, dt):
-        if self.lifetime <= 0 and not self.return_home and not self.pollinating:
+        if (
+            self.lifetime <= 0
+            and not self.return_home
+            and not self.pollinating
+        ):
             self.set_target_home()
         else:
             self.lifetime -= dt
@@ -167,7 +171,6 @@ class Bee:
 
     def handle_event(self, e):
         if e.type == pygame.MOUSEBUTTONDOWN:
-            # print(self.get_rect(),pygame.mouse.get_pos(),self.camera.offset_y)
             # if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
                 if not self.target:
@@ -215,8 +218,11 @@ class Bee:
 
     def get_dist_abs(self, target):
         return math.sqrt(
-            ((target[0] - self.pos[0])*(target[0] - self.pos[0]) +
-             (target[1] - self.pos[1])*(target[1] - self.pos[1])))
+            (
+                (target[0] - self.pos[0]) * (target[0] - self.pos[0])
+                + (target[1] - self.pos[1]) * (target[1] - self.pos[1])
+            )
+        )
 
     def target_flower(self, flower_pos, target_flower_id, speed):
         self.target_flower_id = target_flower_id
@@ -256,14 +262,14 @@ class Bee:
                 int(self.pos[1] - self.rect[3] / 2),
             ),
         )
-        #if self.target is not None:
-        '''pygame.draw.line(
+        # if self.target is not None:
+        """pygame.draw.line(
                 screen, config.WHITE, self.pos, self.target, width=3
-            )'''
+            )"""
 
-        '''pos_dir_speed = config.FONT.render("POS: ({:.2f} {:.2f}) DIR:  ({:.2f} {:.2f})  SPEED: {:.2f}".format(self.pos[0], self.pos[1], self.dir[0], self.dir[1], self.speed),True, config.BLACK)
+        """pos_dir_speed = config.FONT.render("POS: ({:.2f} {:.2f}) DIR:  ({:.2f} {:.2f})  SPEED: {:.2f}".format(self.pos[0], self.pos[1], self.dir[0], self.dir[1], self.speed),True, config.BLACK)
             pygame.draw.rect(screen, config.WHITE, (self.pos[0], self.pos[1], pos_dir_speed.get_width(), pos_dir_speed.get_height()))
-            screen.blit(pos_dir_speed, self.pos)'''
+            screen.blit(pos_dir_speed, self.pos)"""
 
         if self.pollinating:
             pygame.draw.rect(

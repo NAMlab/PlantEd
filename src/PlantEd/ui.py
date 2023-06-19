@@ -3,6 +3,7 @@ from typing import Tuple
 import pygame
 
 from PlantEd import config
+from PlantEd.server.plant.plant import Plant as serverPlant
 from PlantEd.client.client import Client
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.camera import Camera
@@ -55,6 +56,7 @@ class UI:
         self,
         scale: float,  # ToDo Float?
         plant: Plant,
+        server_plant: serverPlant,
         narrator: Narrator,
         client: Client,
         growth_rates: GrowthRates,
@@ -69,6 +71,9 @@ class UI:
         self.name_label = config.FONT.render(self.name, True, config.BLACK)
         self.plant = plant
         self.narrator = narrator
+
+        self.server_plant = server_plant
+
         self.client = client
         self.growth_rates: GrowthRates = growth_rates
         self.environment = environment
@@ -175,7 +180,6 @@ class UI:
         self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
 
-
         self.button_sprites.add(
             Arrow_Button(
                 config.SCREEN_WIDTH / 2 - 100,
@@ -192,7 +196,7 @@ class UI:
         sfx_mute_icon = assets.img("sfx.png",(35,35))
         self.button_sprites.add(
             ToggleButton(
-                300,
+                30,
                 config.SCREEN_HEIGHT-60,
                 50,
                 50,
@@ -206,6 +210,7 @@ class UI:
             )
         )
 
+        '''
         sfx_mute_icon = assets.img("sfx.png", (35, 35))
         self.button_sprites.add(
             ToggleButton(
@@ -222,7 +227,7 @@ class UI:
                 cross_size=(10, 10, 40, 40)
             )
         )
-
+        '''
 
         self.button_sprites.add(
             Arrow_Button(
@@ -235,7 +240,7 @@ class UI:
                 border_w=3,
             )
         )
-
+        '''
         # init speed control
         speed_options = [
             RadioButton(
@@ -269,11 +274,11 @@ class UI:
                 image=assets.img("fastest_speed.PNG"),
             ),
         ]
-
-        for rb in speed_options:
+         for rb in speed_options:
             rb.setRadioButtons(speed_options)
             self.button_sprites.add(rb)
         speed_options[0].button_down = True
+
 
         self.skip_intro = Button_Once(
             440,
@@ -286,14 +291,17 @@ class UI:
             border_w=2,
         )
         self.button_sprites.add(self.skip_intro)
+'''
 
         self.button_array = ButtonArray(
-            (1485, 10, 30, 30),
+            (1405, 10, 30, 30),
             12,
             2,
             5,
             self.set_stomata_automation,
             self.hover.set_message,
+            start_color=(250, 250, 110),
+            end_color=(42, 72, 88),
             border_w=2
         )
 
@@ -302,7 +310,7 @@ class UI:
         # self.gradient = self.init_gradient()
 
     def skip_intro_ui(self):
-        #self.tool_tip_manager.deactivate_tooltipps()
+        # self.tool_tip_manager.deactivate_tooltipps()
         self.gametime.forward()
 
     def handle_event(self, e: pygame.event.Event):
@@ -314,16 +322,16 @@ class UI:
             button.handle_event(e)
         for slider in self.sliders:
             slider.handle_event(e)
-        #for tips in self.tool_tip_manager.tool_tips:
+        # for tips in self.tool_tip_manager.tool_tips:
         #    tips.handle_event(e)
 
     def update(self, dt):
         self.hover.update(dt)
-        if self.plant.get_biomass() >= 4:
+        '''if self.plant.get_biomass() >= 4:
             if self.skip_intro is not None:
                 self.button_sprites.remove(self.skip_intro)
                 self.gametime.play()
-                self.skip_intro = None
+                self.skip_intro = None'''
         if self.plant.danger_mode:
             self.danger_timer -= dt
             if self.danger_timer <= 0:
@@ -334,14 +342,15 @@ class UI:
             slider.update()
         for system in self.particle_systems:
             system.update(dt)
-        #self.tool_tip_manager.update()
+        # self.tool_tip_manager.update()
         for element in self.floating_elements:
             element.update(dt)
         for animation in self.animations:
             animation.update()
         self.update_stomata_automation()
 
-    def apply_preset(self, id=0):
+        '''         
+        def apply_preset(self, id=0):
         preset = self.presets[id]
         self.leaf_slider.set_percentage(preset["leaf_slider"])
         self.stem_slider.set_percentage(preset["stem_slider"])
@@ -351,9 +360,9 @@ class UI:
             preset["consume_starch"]
             and not self.plant.organs[2].toggle_button.button_down
         ):
-            self.plant.organ_starch.toggle_button.activate()
+            self.plant.organ_starch.toggle_button.activate()'''
 
-    def generate_preset(self, id=0):
+    '''def generate_preset(self, id=0):
         active_consumption = False
         """if self.plant.organs[2].toggle_button is not None:
             active_consumption = self.plant.organs[2].toggle_button.active"""
@@ -365,7 +374,7 @@ class UI:
             "consume_starch": active_consumption,
         }
         self.presets[id] = preset
-        return preset
+        return preset'''
 
     def draw(self, screen):
         # screen.blit(self.gradient,(0,0))
@@ -380,7 +389,7 @@ class UI:
             screen.blit(animation.image, animation.pos)
         for system in self.particle_systems:
             system.draw(screen)
-        #self.tool_tip_manager.draw(screen)
+        # self.tool_tip_manager.draw(screen)
 
         # draw danger mode
         if self.danger_timer < 0.5:
@@ -955,13 +964,15 @@ class UI:
         self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
 
+
+
         # test_slider = NegativeSlider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
         #                             organ=self.plant.organ_starch,
         #                             plant=self.plant, active=True)
         # self.sliders.append(test_slider)
 
-        preset = self.generate_preset()
-
+        #preset = self.generate_preset()
+        '''
         radioButtons = [
             DoubleRadioButton(
                 topleft[0] + 500,
@@ -999,6 +1010,8 @@ class UI:
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
         # weird to have extra method for one element
+        '''
+
 
     def draw_organ_detail_temp(
         self, s, organ, pos, label, show_level=True, factor=1
@@ -1121,8 +1134,8 @@ class UI:
 
         width = 140
 
-        water = self.client.get_water_pool()
-        water_percentage = water.water_pool / water.max_water_pool
+        # Water is updated every second via Growth event.
+
         pygame.draw.rect(
             s,
             config.WHITE_TRANSPARENT,
@@ -1132,11 +1145,11 @@ class UI:
         pygame.draw.rect(
             s,
             config.BLUE,
-            (topleft[0], topleft[1] + 40, int(width * water_percentage), 30),
+            (topleft[0], topleft[1] + 40, int(width * self.server_plant.water.fill_percentage), 30),
             border_radius=3,
         )  # exp
         text_water_pool = config.FONT.render(
-            "{:.0f} MMol".format(water.water_pool / 1000), True, (0, 0, 0)
+            "{:.0f} µMol".format(self.server_plant.water.water_pool), True, (0, 0, 0)
         )
         s.blit(
             text_water_pool,
