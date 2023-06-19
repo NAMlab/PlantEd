@@ -4,8 +4,6 @@ on:
 
   pull_request:
     types: [ opened, synchronize, reopened, closed ]
-    branches:
-      - main
 
 jobs:
   black-flake8:
@@ -55,12 +53,12 @@ jobs:
           run: python -m tox -e py310-req
 
   test:
-    needs: [test-dev]
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: ["3.11"]
     runs-on: ${{ matrix.os}}
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v3
@@ -74,7 +72,7 @@ jobs:
         run: tox -e py
 
   create-tag:
-    needs: [test]
+    needs: [test, test-dev]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

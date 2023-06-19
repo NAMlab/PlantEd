@@ -22,31 +22,24 @@ from PlantEd.server.plant.nitrate import Nitrate
 
 logger = logging.getLogger(__name__)
 
-
-
-class Server:
-    """
-    A server that provides all necessary data for the user interface.
-    """
-
-    def __init__(self,sock: Optional[socket.socket] = None, only_local = True):
-        self.clients = set()
-        self.sock: Optional[socket.socket] = sock
-        self.websocket: websockets.WebSocketServer = None
-        self.model: DynamicModel = DynamicModel()
-        self.__future: asyncio.Future = None
-        self.loop: asyncio.AbstractEventLoop = None
-        self.only_local = only_local
+class ServerContainer:
+    def __init__(self, sock: Optional[socket.socket] = None, only_local=True):
         self.shutdown_signal: Event = multiprocessing.Event()
-
         self.manager: Manager = multiprocessing.Manager()
-        #self.manager.start()
-
         self.__port: Optional[int] = self.manager.Value(Optional[int], None)
         self.__ip_address: Optional[str] = self.manager.Value(Optional[str], None)
+        self.__ready: Event = multiprocessing.Event()
 
         process = multiprocessing.Process(
-            target=self.__start,
+            target=start_server,
+            kwargs={
+                "shutdown_signal": self.shutdown_signal,
+                "ready": self.__ready,
+                "sock": sock,
+                "only_local": only_local,
+                "port": self.__port,
+                "ip_adress": self.__ip_address,
+            }
         )
 
         self.process = process
@@ -55,18 +48,9 @@ class Server:
     def port(self):
         return self.__port.value
 
-    @port.setter
-    def port(self, value):
-        self.__port.value = value
-
     @property
     def ip_address(self):
         return self.__ip_address.value
-
-    @ip_address.setter
-    def ip_address(self, value):
-        self.__ip_address.value = value
-
 
     def start(self):
         """
@@ -75,6 +59,11 @@ class Server:
 
         logger.info("Starting the server.")
         self.process.start()
+
+        # wait till server is up
+        logger.info("Waiting for the server to be fully started.")
+        self.__ready.wait()
+        logger.info("Server is ready")
 
     def stop(self):
         """
@@ -86,10 +75,78 @@ class Server:
         self.process.join()
         logger.debug("Process closed")
 
-    def __start(self):
-        loop = asyncio.get_event_loop()
-        signal.signal(signal.SIGINT, lambda *args: self.shutdown_signal.set)
-        signal.signal(signal.SIGTERM, lambda *args: self.shutdown_signal.set)
+def start_server(
+        shutdown_signal: Event,
+        ready: Event,
+        sock: Optional[socket.socket] = None,
+        only_local=True,
+        port: Optional[int] = None,
+        ip_adress: Optional[int] = None,
+):
+
+    server = Server(
+        shutdown_signal = shutdown_signal,
+        ready= ready,
+        sock= sock,
+        only_local= only_local,
+        port = port,
+        ip_adress= ip_adress,
+    )
+    server.start()
+
+
+class Server:
+    """
+    A server that provides all necessary data for the user interface.
+    """
+
+    def __init__(
+            self,
+            shutdown_signal: Event,
+            ready: Event,
+            sock: Optional[socket.socket] = None,
+            only_local = True,
+            port: Optional[int] = None,
+            ip_adress: Optional[int] = None,
+    ):
+        self.shutdown_signal: Event = shutdown_signal
+        self.ready: Event = ready
+        self.clients = set()
+        self.sock: Optional[socket.socket] = sock
+        self.websocket: websockets.WebSocketServer = None
+        self.model: DynamicModel = DynamicModel()
+        self.__future: asyncio.Future = None
+        self.loop: asyncio.AbstractEventLoop = None
+        self.only_local = only_local
+
+        self.__port: Optional[int] = port
+        self.__ip_address: Optional[str] = ip_adress
+
+
+    @property
+    def port(self):
+        return self.__port.value
+
+    @property
+    def ip_address(self):
+        return self.__ip_address.value
+
+    def start(self):
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError as e:
+            if "There is no current event loop in thread" in str(e):
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+        try:
+            signal.signal(signal.SIGINT, lambda *args: self.shutdown_signal.set)
+            signal.signal(signal.SIGTERM, lambda *args: self.shutdown_signal.set)
+        except ValueError as e:
+            if "signal only works in main thread of the main interpreter" == str(e):
+                pass
+            else:
+                raise e
 
         loop.run_until_complete(self.__start_loop())
 
@@ -128,12 +185,13 @@ class Server:
             self.websocket = websocket
             sock_name = sock.getsockname()
 
-            self.ip_address = sock_name[0]
-            self.port = sock_name[1]
+            self.__ip_address.value = sock_name[0]
+            self.__port.value = sock_name[1]
 
             executor = concurrent.futures.ThreadPoolExecutor(
                 max_workers=1,
             )
+            self.ready.set()
             await self.loop.run_in_executor(executor= executor, func = self.shutdown_signal.wait)
 
     def open_connection(self, ws: WebSocketServerProtocol):
