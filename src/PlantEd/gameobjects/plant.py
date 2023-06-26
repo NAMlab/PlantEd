@@ -14,7 +14,7 @@ from PlantEd.client.client import Client
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.data import assets
 from PlantEd.gameobjects.water_reservoir import Water_Grid
-from PlantEd.utils.LSystem import LSystem
+from PlantEd.utils.LSystem import LSystem, DictToRoot
 from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.particle import ParticleSystem
 from PlantEd.utils.spline import Cubic_Tree, Cubic
@@ -785,7 +785,8 @@ class Root(Organ):
         root_grid: np.array = np.zeros(plant.water_grid.get_shape())
         water_grid_pos: tuple[float, float] = plant.water_grid.pos
 
-        self.ls = LSystem(root_grid, water_grid_pos)
+
+        self.ls = DictToRoot().create_root_system() #LSystem(root_grid, water_grid_pos)
         self.create_new_root(dir=(0, 1))
 
         self.tabroot = (
@@ -1038,7 +1039,6 @@ class Stem(Organ):
 
     def add_branch(self, highlight, mouse_pos):
         self.curve.add_branch(mouse_pos, highlight)
-
     """def update_sunflower_position(self):
         if self.flower:
             pos = self.curve.get_point(1)
