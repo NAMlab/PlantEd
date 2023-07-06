@@ -14,7 +14,7 @@ from PlantEd.client.client import Client
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.data import assets
 from PlantEd.gameobjects.water_reservoir import Water_Grid
-from PlantEd.utils.LSystem import LSystem, DictToRoot
+from PlantEd.utils.LSystem import DictToRoot, LSystem
 from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.particle import ParticleSystem
 from PlantEd.utils.spline import Cubic_Tree, Cubic
@@ -23,10 +23,8 @@ from PlantEd.client.leaf import Leaf as client_Leaf
 
 logger = logging.getLogger(__name__)
 
-# pygame.init()
 gram_mol = 0.5124299411
 WIN = pygame.USEREVENT + 1
-# pivot_pos = [(666, 299), (9, 358), (690, 222), (17, 592), (389, 553), (20, 891), (283, 767), (39, 931)]
 pivot_pos = [
     (286, 113),
     (76, 171),
@@ -43,17 +41,11 @@ flowers = [
     (assets.img("sunflowers/{index}.PNG".format(index=i), (64, 64)))
     for i in range(0, 3)
 ]
-# flowers = [assets.img("flowers/flower.PNG",(64,64))]
-# stem = (assets.img("stem.png"), (15, 1063))
-# roots = (assets.img("roots.png"), (387, 36))
 
 beans = [
     assets.img("bean_growth/{}.PNG".format(index), (150, 150))
     for index in range(0, 6)
 ]
-# beans = []
-# for bean in beans_big:
-#    beans.append(pygame.transform.scale(bean, (int(bean.get_width()/4), int(bean.get_height()/4))))
 plopp = assets.sfx("plopp.wav")
 plopp.set_volume(0.4)
 
@@ -786,12 +778,8 @@ class Root(Organ):
         water_grid_pos: tuple[float, float] = plant.water_grid.pos
 
 
-        self.ls = DictToRoot().create_root_system() #LSystem(root_grid, water_grid_pos)
+        self.ls = LSystem(root_grid, water_grid_pos)
         self.create_new_root(dir=(0, 1))
-
-        self.tabroot = (
-            False  # if not tabroot, its fibroot -> why skill it then?
-        )
 
     def update_image_size(self, factor=5, base=25):
         super().update_image_size(factor, base)
@@ -813,6 +801,7 @@ class Root(Organ):
         #    curve.update(dt)
 
     def create_new_root(self, mouse_pos=None, dir=None):
+        print(self.ls.to_dict())
         dist = None
         if mouse_pos:
             dist = math.sqrt(
@@ -830,7 +819,7 @@ class Root(Organ):
         return self.ls.root_grid
 
     def handle_event(self, event):
-        self.ls.handle_event(event)
+        pass
 
         # if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
         #    self.ls.create_new_first_letter((-1,0),pygame.mouse.get_pos(), self.mass)

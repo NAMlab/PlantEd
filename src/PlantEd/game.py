@@ -549,7 +549,6 @@ class DefaultGameScene(object):
                     time_frame= delta_time_in_h*3600
                 )
 
-                print("CALL GROWTH CLIENT GET SHIT")
                 self.client.growth_rate(
                     growth_percent=growth_percent,
                     callback=self.update_growth_rates,
