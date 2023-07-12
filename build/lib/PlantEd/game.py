@@ -251,8 +251,11 @@ class OptionsScene:
             if e.type == KEYDOWN:
                 if e.key == K_ESCAPE:
                     self.manager.go_to(TitleScene(self.manager))
+            self.ambience_slider.handle_event(e)
             self.music_slider.handle_event(e)
-            self.effect_slider.handle_event(e)
+            self.sfx_slider.handle_event(e)
+            self.narator_slider.handle_event(e)
+
             # self.upload_score_button.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
@@ -260,8 +263,10 @@ class OptionsScene:
 
     def get_options(self):
         options = {
-            "music": self.music_slider.get_percentage() / 100,
-            "effects": self.effect_slider.get_percentage() / 100,
+            "ambience_volumne": self.ambience_slider.get_percentage() / 100,
+            "music_volumne": self.music_slider.get_percentage() / 100,
+            "sfx_volumne": self.sfx_slider.get_percentage() / 100,
+            "narator_volumne": self.effect_slider.get_percentage() / 100,
             "upload_score": self.upload_score_button.button_down,
             "name": self.textbox.text,
         }

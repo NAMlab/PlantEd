@@ -13,6 +13,7 @@ from PlantEd.client.client import Client
 from PlantEd.client.growth_percentage import GrowthPercent
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.data import assets
+from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.bee import Hive
 from PlantEd.gameobjects.bug import Bug
 from PlantEd.gameobjects.level_card import Card
@@ -99,8 +100,11 @@ class OptionsScene:
         self.music_label = config.BIGGER_FONT.render(
             "Music", True, config.WHITE
         )
-        self.efects_label = config.BIGGER_FONT.render(
-            "Effects", True, config.WHITE
+        self.sfx_label = config.BIGGER_FONT.render(
+            "SFX", True, config.WHITE
+        )
+        self.narator_label = config.BIGGER_FONT.render(
+            "Narator", True, config.WHITE
         )
         self.network_label = config.MENU_SUBTITLE.render(
             "Network", True, config.WHITE
@@ -122,14 +126,21 @@ class OptionsScene:
             (center_w - 475, 450, 15, 200),
             config.FONT,
             (50, 20),
-            percent=self.options["music"] * 100,
+            percent=self.options["music_volume"] * 100,
             active=True,
         )
-        self.effect_slider = Slider(
+        self.sfx_slider = Slider(
+            (center_w - 325, 450, 15, 200),
+            config.FONT,
+            (50, 20),
+            percent=self.options["sfx_volume"] * 100,
+            active=True,
+        )
+        self.narator_slider = Slider(
             (center_w - 175, 450, 15, 200),
             config.FONT,
             (50, 20),
-            percent=self.options["effects"] * 100,
+            percent=self.options["narator_volume"] * 100,
             active=True,
         )
         self.upload_score_button = ToggleButton(
@@ -213,8 +224,12 @@ class OptionsScene:
             (center_w - 450 - self.music_label.get_width() / 2, 400),
         )
         self.label_surface.blit(
-            self.efects_label,
-            (center_w - 150 - self.efects_label.get_width() / 2, 400),
+            self.sfx_label,
+            (center_w - 300 - self.sfx_label.get_width() / 2, 400),
+        )
+        self.label_surface.blit(
+            self.narator_label,
+            (center_w - 150 - self.narator_label.get_width() / 2, 400),
         )
         self.label_surface.blit(
             self.network_label,
@@ -242,7 +257,8 @@ class OptionsScene:
                 if e.key == K_ESCAPE:
                     self.manager.go_to(TitleScene(self.manager))
             self.music_slider.handle_event(e)
-            self.effect_slider.handle_event(e)
+            self.sfx_slider.handle_event(e)
+            self.narator_slider.handle_event(e)
             # self.upload_score_button.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
@@ -250,8 +266,9 @@ class OptionsScene:
 
     def get_options(self):
         options = {
-            "music": self.music_slider.get_percentage() / 100,
-            "effects": self.effect_slider.get_percentage() / 100,
+            "music_volume": self.music_slider.get_percentage() / 100,
+            "sfx_volume": self.sfx_slider.get_percentage() / 100,
+            "narator_volume": self.narator_slider.get_percentage() / 100,
             "upload_score": self.upload_score_button.button_down,
             "name": self.textbox.text,
         }
@@ -261,63 +278,29 @@ class OptionsScene:
         screen.fill(config.LIGHT_GRAY)
         screen.blit(self.label_surface, (0, 0))
         self.music_slider.draw(screen)
-        self.effect_slider.draw(screen)
+        self.sfx_slider.draw(screen)
+        self.narator_slider.draw(screen)
         self.button_sprites.draw(screen)
         self.textbox.draw(screen)
 
 
 class DefaultGameScene(object):
     def __init__(self):
-        options = config.load_options()
-
+        self.end_initiated = False
         global plant
-
-        # pygame.mixer.music.load('../assets/background_music.mp3')
-        assets.song("background_music.mp3", options["music"])
-
-        # pygame.mixer.music.set_volume(options["music"]/10)
-        pygame.mixer.music.play(-1, 0)
+        self.sound_control = SoundControl()
+        self.sound_control.play_music()
+        self.sound_control.play_start_sfx()
         pygame.mouse.set_visible(True)
-        self.pause = False
-        self.pause_label = config.MENU_TITLE.render(
-            "Game Paused", True, config.WHITE
-        )
-        self.pause_button_resume = Button(
-            700,
-            560,
-            200,
-            50,
-            [self.resume],
-            config.BIG_FONT,
-            "RESUME",
-            border_w=2,
-        )
-        self.pause_button_exit = Button(
-            1020,
-            560,
-            200,
-            50,
-            [self.quit],
-            config.BIG_FONT,
-            "QUIT GAME",
-            border_w=2,
-        )
+
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
         self.gametime.faster()
         self.log = Log()  # can be turned off
-
-        # self.water_grid.add_reservoir(Water_Reservoir((500, 1290), 36, 30))
-        # self.water_grid.add_reservoir(Water_Reservoir((900, 1190), 36, 25))
-        # self.water_grid.add_reservoir(Water_Reservoir((1660, 1310), 36, 40))
-
         self.water_grid = Water_Grid(pos=(0, 900))
-
         self.client = Client(port=client_port)
-
         self.server_plant = ServerPlant()
         self.hours_since_start_where_growth_last_computed = 0
-
         self.plant = Plant(
             pos=(
                 config.SCREEN_WIDTH / 2,
@@ -356,24 +339,30 @@ class DefaultGameScene(object):
             client=self.client,
             environment=self.environment,
             camera=self.camera,
+            sound_control=self.sound_control,
             growth_rates=growth_rates,
             server_plant=self.server_plant,
+            quit=self.quit
         )
-        self.hive = Hive((1500, 600), 10, self.plant, self.camera, 10)
+        self.hive = Hive((1500, 600),
+                         10,
+                         self.plant,
+                         self.camera,
+                         10,
+                         self.sound_control.play_hive_clicked_sfx,
+                         self.sound_control.play_bee_sfx)
         self.bugs = []
         for i in range(0, 10):
             self.bugs.append(
                 Bug(
-                    (
+                    pos=(
                         190 * random.randint(0, 10),
                         900 + random.randint(0, 200),
                     ),
-                    pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
-                    [
-                        assets.img("bug_purple/bug_purple_{}.png".format(i))
-                        for i in range(0, 3)
-                    ],
-                    self.camera,
+                    bounding_rect=pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
+                    images=[assets.img("bug_purple/bug_purple_{}.png".format(i))for i in range(0, 3)],
+                    camera=self.camera,
+                    play_clicked=self.sound_control.play_bug_sfx
                 )
             )
 
@@ -397,7 +386,8 @@ class DefaultGameScene(object):
             bounds=pygame.Rect(0,870,1920,20),
             max_amount=2,
             speed=1,
-            snails=[]
+            snails=[],
+            snail_clicked=self.sound_control.play_snail_sfx
         )
 
         # shop items are to be defined by the level
@@ -408,6 +398,7 @@ class DefaultGameScene(object):
             condition_not_met_message="Level up your stem to buy more leaves",
             post_hover_message=self.ui.hover.set_message,
             message="Leaves enable your plant to produce energy.",
+            play_selected=self.sound_control.play_select_sfx
         )
 
         self.shop = Shop(
@@ -418,6 +409,7 @@ class DefaultGameScene(object):
             plant=self.plant,
             post_hover_message=self.ui.hover.set_message,
             active=False,
+            sound_control=self.sound_control
         )
 
         self.shop.shop_items.append(
@@ -428,6 +420,7 @@ class DefaultGameScene(object):
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Roots are grown to improve water and nitrate intake.",
+                play_selected=self.sound_control.play_select_sfx
             )
         )
 
@@ -438,6 +431,7 @@ class DefaultGameScene(object):
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Branches will provide more spots for leaves or flowers.",
+                play_selected=self.sound_control.play_select_sfx
             )
         )
 
@@ -448,6 +442,7 @@ class DefaultGameScene(object):
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Flowers will enable you to start seed production.",
+                play_selected=self.sound_control.play_select_sfx
             )
         )
 
@@ -461,6 +456,7 @@ class DefaultGameScene(object):
             assets.img("leaf_small.PNG", (64, 64)),
             1,
             self.plant,
+            play_buy=self.sound_control.play_buy_sfx
         )
         add_branch_item_floating = FloatingShopItem(
             (0, 0),
@@ -468,6 +464,7 @@ class DefaultGameScene(object):
             assets.img("branch.PNG", (64, 64)),
             1,
             self.plant,
+            play_buy=self.sound_control.play_buy_sfx
         )
         add_flower_item_floating = FloatingShopItem(
             (0, 0),
@@ -475,6 +472,7 @@ class DefaultGameScene(object):
             assets.img("sunflowers/1.PNG", (64, 64)),
             1,
             self.plant,
+            play_buy=self.sound_control.play_buy_sfx
         )
         start_flower_item_floating = FloatingShopItem(
             (0, 0),
@@ -483,7 +481,8 @@ class DefaultGameScene(object):
             1,
             self.plant,
             tag="flower",
-            return_pos=True
+            return_pos=True,
+            play_buy=self.sound_control.play_buy_sfx
         )
 
         self.floating_shop.add_item(add_leaf_item_floating)
@@ -505,24 +504,12 @@ class DefaultGameScene(object):
         self.log.close_file()
         self.log.close_model_file()
         pygame.quit()
-        # sys.exit()
-
-    def resume(self):
-        self.pause = False
-        self.gametime.unpause()
-
-    def toggle_pause(self):
-        self.pause = not self.pause
-        if self.pause:
-            self.gametime.pause()
-        else:
-            self.gametime.unpause()
 
     def handle_events(self, events: List[pygame.event.Event], dt):
         for e in events:
-            if self.pause:
-                self.pause_button_resume.handle_event(e)
-                self.pause_button_exit.handle_event(e)
+            self.ui.handle_event(e)
+            if self.ui.pause:
+                continue
             if e.type == GROWTH:
 
                 game_time_now = self.gametime.time_since_start_in_hours
@@ -555,9 +542,9 @@ class DefaultGameScene(object):
                 )
 
                 self.plant.get_PLA()
-
-            if e.type == KEYDOWN and e.key == K_ESCAPE:
-                self.toggle_pause()
+            if e.type == KEYDOWN and e.key == K_e:
+                self.end_initiated = not self.end_initiated
+                self.plant.organs[5].pop_all_seeds(timeframe=2000)
 
             if e.type == WIN:
                 if self.log:
@@ -567,7 +554,7 @@ class DefaultGameScene(object):
                     self.ui.name, self.plant.organs[3].get_mass()
                 )
                 self.manager.go_to(CustomScene())
-            self.ui.handle_event(e)
+
             self.shop.handle_event(e)
             self.floating_shop.handle_event(e)
 
@@ -629,6 +616,7 @@ class DefaultGameScene(object):
             pygame.event.post(pygame.event.Event(WIN))
 
     def update(self, dt):
+        #if self.ui.pause
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
         hour = day / 24
@@ -648,16 +636,11 @@ class DefaultGameScene(object):
             self.plant.organs[0].shadow_map = shadow_map
             self.plant.organs[0].shadow_resolution = resolution
             self.plant.organs[0].max_shadow = max_shadow
-            # print(leaf["x"], leaf["y"], dots, shadow_dots, shadow_dots/(dots*3))
-            # print((-(20/12)*hours)+23.33)
         else:
             self.environment.shadow_map = None
             self.plant.organs[0].shadow_map = None
         # get root grid, water grid
         self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
-        # self.water_grid.actual_drain_rate = (
-        #    self.client.get_actual_water_drain()
-        # )
 
         # ToDo Does the Watergrid need that many updates? (sends everytime one request)
         self.water_grid.update(
@@ -673,8 +656,6 @@ class DefaultGameScene(object):
         self.shop.update(dt)
         self.ui.update(dt)
         self.narrator.update(dt)
-
-        # self.skill_system.update(dt)
         self.plant.update(dt, self.server_plant.photon)
 
         if self.plant.seedling.max < self.plant.get_biomass():
@@ -682,12 +663,13 @@ class DefaultGameScene(object):
 
     def render(self, screen):
         screen.fill((0, 0, 0))
-        if self.pause:
-            screen.blit(
-                self.pause_label, (960 - self.pause_label.get_width() / 2, 300)
-            )
-            self.pause_button_resume.draw(screen)
-            self.pause_button_exit.draw(screen)
+        temp_surface.fill((0, 0, 0))
+        if self.ui.pause:
+            self.ui.draw(screen)
+            return
+        if self.end_initiated:
+            self.plant.draw(temp_surface)
+            screen.blit(temp_surface, (0, self.camera.offset_y))
             return
 
         self.environment.draw_background(temp_surface)
@@ -709,7 +691,6 @@ class DefaultGameScene(object):
         self.ui.draw(screen)
 
         self.narrator.draw(screen)
-        # screen.blit(temp_surface, (0, 0))
 
 
 class TitleScene(object):
@@ -726,10 +707,6 @@ class TitleScene(object):
             callback_var=DefaultGameScene,
             keywords="Beginner, Medium Temperatures",
         )
-        # self.card_1 = Card((self.center_w,self.center_h-100),assets.img("menu/tutorial.JPG",(512,512)), "Tutorial",
-        #                   callback=manager.go_to, callback_var=DevScene,keywords="Beginner, Easy")
-        # self.card_2 = Card((self.center_w+260,self.center_h-100),assets.img("menu/dev.jpg",(512,512)), "Dev ",
-        #                   callback=manager.go_to, callback_var=DevScene,keywords="Test Stuff")
 
         self.credit_button = Button(
             self.center_w - 450,

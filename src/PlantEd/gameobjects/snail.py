@@ -20,13 +20,15 @@ class SnailSpawner:
             bounds=pygame.Rect(0,0,0,0),
             max_amount=0,
             speed=3,
-            snails=[]
+            snails=[],
+            snail_clicked=None
     ):
         self.bounds = bounds
         self.max_amount = max_amount
         self.snails = snails
         self.camera = camera
         self.speed = speed
+        self.snail_clicked = snail_clicked
         self.callback = callback
         self.images_left = images_left
         self.images_right = images_right
@@ -42,7 +44,8 @@ class SnailSpawner:
                 camera=self.camera,
                 callback=self.callback,
                 eat_rate=0.0001,
-                speed=self.speed
+                speed=self.speed,
+                snail_clicked=self.snail_clicked
             )
         )
 
@@ -83,7 +86,8 @@ class Snail:
             callback,
             image=None,
             eat_rate=0.00001,
-            speed=3
+            speed=3,
+            snail_clicked=None
     ):
         self.state = LEFT
         self.pos = pos
@@ -94,6 +98,7 @@ class Snail:
         self.animation_left = Animation(self.images_left, 0.5)
         self.animation_right = Animation(self.images_right, 0.5)
         self.speed = speed
+        self.snail_clicked = snail_clicked
         self.base_speed = speed
         self.callback = callback
         self.rect = self.images_left[0].get_rect()
@@ -138,11 +143,7 @@ class Snail:
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
                 self.scare_away()
                 self.speed = 5
-                assets.sfx(
-                    "bug_click_sound/bug_squeek_{}.mp3".format(
-                        random.randint(0, 2)
-                    )
-                ).play()
+                self.snail_clicked()
 
     def set_random_direction(self):
         self.dir = ((random.randint(0, 1) - 0.5)*2, 0)

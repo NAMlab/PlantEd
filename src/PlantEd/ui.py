@@ -3,6 +3,7 @@ from typing import Tuple
 import pygame
 
 from PlantEd import config
+from PlantEd.data.sound_control import SoundControl
 from PlantEd.server.plant.plant import Plant as serverPlant
 from PlantEd.client.client import Client
 from PlantEd.client.growth_rates import GrowthRates
@@ -18,11 +19,11 @@ from PlantEd.utils.button import (
     Arrow_Button,
     Button_Once,
     ButtonArray,
-    NegativeSlider,
+    NegativeSlider, Button, Textbox,
 )
 from PlantEd.utils.tool_tip import ToolTip, ToolTipManager
 from PlantEd.utils.particle import ParticleSystem, Inwards_Particle_System
-from pygame import Rect
+from pygame import Rect, KEYDOWN, K_ESCAPE
 from PlantEd.utils.narrator import Narrator
 from PlantEd.utils.hover_message import Hover_Message
 
@@ -62,10 +63,12 @@ class UI:
         growth_rates: GrowthRates,
         environment: Environment,
         camera: Camera,
+        sound_control: SoundControl,
         production_topleft: Tuple[int, int] = (10, 100),
         plant_details_topleft: Tuple[int, int] = (10, 10),
         organ_details_topleft: Tuple[int, int] = (10, 430),
         dev_mode: bool = False,
+        quit=None
     ):
         self.name = config.load_options()["name"]
         self.name_label = config.FONT.render(self.name, True, config.BLACK)
@@ -81,10 +84,12 @@ class UI:
 
         self.hover = Hover_Message(config.FONT, 30, 5)
         self.camera = camera
+        self.sound_control = sound_control
         self.dev_mode = dev_mode
+        self.quit = quit
 
         self.stomata_hours = [False for i in range(12)]
-
+        self.pause = False
         self.danger_timer = 1
 
         self.danger_box = self.init_danger_box()
@@ -126,9 +131,6 @@ class UI:
         self.particle_systems = []
         self.floating_elements = []
         self.animations = []
-
-        # put somewhere
-        topleft = self.organ_details_topleft
 
         self.drain_starch_particle = ParticleSystem(
             20,
@@ -186,7 +188,7 @@ class UI:
                 60,
                 200,
                 50,
-                [self.camera.move_up],
+                [self.sound_control.play_select_sfx, self.camera.move_up],
                 0,
                 border_w=3,
             )
@@ -200,7 +202,7 @@ class UI:
                 config.SCREEN_HEIGHT-60,
                 50,
                 50,
-                [self.narrator.toggle_mute],
+                [self.sound_control.play_toggle_sfx, self.narrator.toggle_mute],
                 config.FONT,
                 image=sfx_mute_icon,
                 border_w=3,
@@ -235,7 +237,7 @@ class UI:
                 config.SCREEN_HEIGHT - 60,
                 200,
                 40,
-                [self.camera.move_down],
+                [self.sound_control.play_select_sfx, self.camera.move_down],
                 2,
                 border_w=3,
             )
@@ -302,18 +304,38 @@ class UI:
             self.hover.set_message,
             start_color=(250, 250, 110),
             end_color=(42, 72, 88),
-            border_w=2
+            border_w=2,
+            select_sound=self.sound_control.play_select_sfx
         )
 
         self.presets = [preset for i in range(0, 3)]
         self.init_production_ui()
+        self.init_pause_ui()
         # self.gradient = self.init_gradient()
+
+    def toggle_pause(self):
+        self.pause = not self.pause
+        if self.pause:
+            self.gametime.pause()
+        else:
+            self.gametime.unpause()
 
     def skip_intro_ui(self):
         # self.tool_tip_manager.deactivate_tooltipps()
         self.gametime.forward()
 
     def handle_event(self, e: pygame.event.Event):
+        if e.type == KEYDOWN and e.key == K_ESCAPE:
+            self.toggle_pause()
+        if self.pause:
+            self.pause_button_exit.handle_event(e)
+            self.pause_button_resume.handle_event(e)
+            self.narator_slider.handle_event(e)
+            self.sfx_slider.handle_event(e)
+            self.music_slider.handle_event(e)
+            self.textbox.handle_event(e)
+            self.apply_button.handle_event(e)
+            return
         self.hover.handle_event(e)
         self.button_array.handle_event(e)
 
@@ -326,6 +348,8 @@ class UI:
         #    tips.handle_event(e)
 
     def update(self, dt):
+        if self.pause:
+            return
         self.hover.update(dt)
         '''if self.plant.get_biomass() >= 4:
             if self.skip_intro is not None:
@@ -377,6 +401,9 @@ class UI:
         return preset'''
 
     def draw(self, screen):
+        if self.pause:
+            self.draw_pause_menu(screen)
+            return
         # screen.blit(self.gradient,(0,0))
         self.button_array.draw(screen)
         self.button_sprites.draw(screen)
@@ -873,6 +900,93 @@ class UI:
         )
         self.sliders.append(self.flower_slider)
 
+    def init_pause_ui(self):
+        self.options = config.load_options()
+        self.pause_label = config.MENU_TITLE.render(
+            "Game Paused", True, config.WHITE
+        )
+        self.pause_button_resume = Button(
+            700,
+            760,
+            200,
+            50,
+            [self.sound_control.play_select_sfx, self.resume],
+            config.BIG_FONT,
+            "RESUME",
+            border_w=2
+        )
+        self.pause_button_exit = Button(
+            1020,
+            760,
+            200,
+            50,
+            [self.quit],
+            config.BIG_FONT,
+            "QUIT GAME",
+            border_w=2,
+        )
+
+        self.music_slider = Slider(
+            (250, 500, 15, 200),
+            config.FONT,
+            (50, 20),
+            percent=self.options["music_volume"] * 100,
+            active=True,
+        )
+        self.sfx_slider = Slider(
+            (400, 500, 15, 200),
+            config.FONT,
+            (50, 20),
+            percent=self.options["sfx_volume"] * 100,
+            active=True,
+        )
+        self.narator_slider = Slider(
+            (550, 500, 15, 200),
+            config.FONT,
+            (50, 20),
+            percent=self.options["narator_volume"] * 100,
+            active=True,
+        )
+
+        self.textbox = Textbox(
+            800,
+            600,
+            280,
+            50,
+            config.BIGGER_FONT,
+            self.options["name"],
+            background_color=config.LIGHT_GRAY,
+            textcolor=config.WHITE,
+            highlight_color=config.WHITE,
+        )
+
+        self.apply_button = Button(
+            300,
+            760,
+            200,
+            50,
+            [self.apply_options, self.sound_control.reload_options],
+            config.BIG_FONT,
+            "APPLY",
+            border_w=2,
+        )
+
+    def apply_options(self):
+        config.write_options(self.get_options())
+
+    def get_options(self):
+        options = {
+            "music_volume": self.music_slider.get_percentage() / 100,
+            "sfx_volume": self.sfx_slider.get_percentage() / 100,
+            "narator_volume": self.narator_slider.get_percentage() / 100,
+            "name": self.textbox.text,
+        }
+        return options
+
+    def resume(self):
+        self.pause = False
+        self.gametime.unpause()
+
     def init_production_ui(self):
         topleft = self.production_topleft
         # init organs
@@ -882,7 +996,7 @@ class UI:
                 topleft[1] + 40,
                 100,
                 100,
-                [self.plant.set_target_organ_leaf],
+                [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_leaf],
                 config.FONT,
                 image=assets.img("leaf_small.PNG", (100, 100)),
             ),
@@ -891,7 +1005,7 @@ class UI:
                 topleft[1] + 40,
                 100,
                 100,
-                [self.plant.set_target_organ_stem],
+                [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_stem],
                 config.FONT,
                 image=assets.img("stem_small.PNG", (100, 100)),
             ),
@@ -900,7 +1014,7 @@ class UI:
                 topleft[1] + 40,
                 100,
                 100,
-                [self.plant.set_target_organ_root],
+                [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_root],
                 config.FONT,
                 image=assets.img("root_deep.PNG", (100, 100)),
             ),
@@ -1011,7 +1125,14 @@ class UI:
         radioButtons[2].button_down = True
         # weird to have extra method for one element
         '''
-
+    def draw_pause_menu(self, s):
+        self.pause_button_exit.draw(s)
+        self.pause_button_resume.draw(s)
+        self.narator_slider.draw(s)
+        self.sfx_slider.draw(s)
+        self.music_slider.draw(s)
+        self.textbox.draw(s)
+        self.apply_button.draw(s)
 
     def draw_organ_detail_temp(
         self, s, organ, pos, label, show_level=True, factor=1

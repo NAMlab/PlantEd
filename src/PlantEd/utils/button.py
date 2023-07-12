@@ -33,6 +33,7 @@ class Button(pygame.sprite.Sprite):
         active=True,
         offset=(0, 0),
         callback_var=None,
+        play_confirm=None,
     ):
         super().__init__()
         self.posted = False
@@ -45,6 +46,7 @@ class Button(pygame.sprite.Sprite):
         self.hover_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.offset = offset
+        self.play_confirm = play_confirm
         if image:
             self.button_image.blit(image.copy(), (0, 0))
             self.hover_image.blit(image.copy(), (0, 0))
@@ -115,12 +117,17 @@ class Button(pygame.sprite.Sprite):
                 event.pos[1] - self.offset[1],
             )
             # If the rect collides with the mouse pos.
+            print("Mouse up:", pos, self.rect)
             if self.rect.collidepoint(pos) and self.button_down:
+                print("Mouse up:", pos, self.rect, "COLLIDEEEEE")
                 for callback in self.callbacks:
+                    print("CALBACKK")
                     if self.callback_var:
                         callback(self.callback_var)
                     else:
                         callback()
+                if len(self.callbacks) > 0 and self.play_confirm is not None:
+                    self.play_confirm()
                 self.image = self.hover_image
             self.button_down = False
         elif event.type == pygame.MOUSEMOTION:
@@ -1516,7 +1523,18 @@ class Textbox:
 
 class ButtonArray:
     def __init__(
-        self, rect, amount, resolution, margin, callback, set_hover_message, border_w=5, pressed=False, start_color=None, end_color=None
+            self,
+            rect,
+            amount,
+            resolution,
+            margin,
+            callback,
+            set_hover_message,
+            border_w=5,
+            pressed=False,
+            start_color=None,
+            end_color=None,
+            select_sound=None,
     ):
         self.toggle_buttons = []
         self.callback = callback
@@ -1545,7 +1563,7 @@ class ButtonArray:
             rect[1] + 50,
             set_all_width,
             30,
-            [self.toggle_all],
+            [select_sound, self.toggle_all],
             config.FONT,
             "All",
             hover_message="Activate/Deactivate all buttons",

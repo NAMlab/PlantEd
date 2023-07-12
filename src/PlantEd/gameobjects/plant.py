@@ -121,7 +121,7 @@ class Plant:
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
             plant=self,
-            mass=1,
+            mass=3,
             active=True,
             client=client,
         )
@@ -170,15 +170,15 @@ class Plant:
             else:
                 self.danger_mode = False
 
-        self.organs[0].update_growth_rate(growth_rates.leaf_rate*growth_boost)
-        self.organs[1].update_growth_rate(growth_rates.stem_rate*growth_boost)
-        self.organs[2].update_growth_rate(growth_rates.root_rate*growth_boost)
+        self.organs[0].update_growth_rate(growth_rates.leaf_rate * growth_boost)
+        self.organs[1].update_growth_rate(growth_rates.stem_rate * growth_boost)
+        self.organs[2].update_growth_rate(growth_rates.root_rate * growth_boost)
 
         self.organ_starch.update_growth_rate(
-            growth_rates.starch_rate*growth_boost
+            growth_rates.starch_rate * growth_boost
         )
-        self.organ_starch.starch_intake = growth_rates.starch_intake*growth_boost
-        self.organs[3].update_growth_rate(growth_rates.seed_rate*growth_boost*10)
+        self.organ_starch.starch_intake = growth_rates.starch_intake * growth_boost
+        self.organs[3].update_growth_rate(growth_rates.seed_rate * growth_boost * 10)
 
     def get_biomass(self):
         biomass = 0
@@ -198,7 +198,7 @@ class Plant:
         return self.organs[0].get_pla()  # m^2
 
     def eat_stem(self, rate, dt):
-        self.organs[1].mass -= rate*dt
+        self.organs[1].mass -= rate * dt
 
     def grow(self, dt):
         for organ in self.organs:
@@ -777,7 +777,6 @@ class Root(Organ):
         root_grid: np.array = np.zeros(plant.water_grid.get_shape())
         water_grid_pos: tuple[float, float] = plant.water_grid.pos
 
-
         self.ls = LSystem(root_grid, water_grid_pos)
         self.create_new_root(dir=(0, 1))
 
@@ -801,7 +800,7 @@ class Root(Organ):
         #    curve.update(dt)
 
     def create_new_root(self, mouse_pos=None, dir=None):
-        print(self.ls.to_dict())
+        # print(self.ls.to_dict())
         dist = None
         if mouse_pos:
             dist = math.sqrt(
@@ -1028,6 +1027,7 @@ class Stem(Organ):
 
     def add_branch(self, highlight, mouse_pos):
         self.curve.add_branch(mouse_pos, highlight)
+
     """def update_sunflower_position(self):
         if self.flower:
             pos = self.curve.get_point(1)
@@ -1209,6 +1209,8 @@ class Flower(Organ):
         self.flowering = False
         self.seed_popped = False
         self.pop_seed_particles = []
+        self.pop_all_seeds_timer = 0
+        self.interval = 0
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
@@ -1333,28 +1335,40 @@ class Flower(Organ):
                     flower["mass"] < flower["maximum_mass"]
                     or (flower["flowering"]
                         and flower["seed_mass"] < flower["maximum_seed_mass"]
-                        )
+            )
             ):
                 growing_flowers.append(flower)
         # add all seed producing flowrs
         return growing_flowers
 
-    def pop_seed(self):
+    """
+    Pop all seeds one after another
+    given a timeframe, calculate the intervals to pop each seed
+    
+    Args:
+        timeframe
+    """
+    def pop_all_seeds(self, timeframe):
+        self.pop_all_seeds_timer = timeframe
+        self.interval = timeframe / len(self.flowers)
+
+    def pop_seed(self, flower):
         self.seed_popped = True
-        for flower in self.flowers:
-            self.pop_seed_particles.append(
-                ParticleSystem(
-                    max_particles=(int(flower["mass"])),
-                    spawn_box=(flower["x"], flower["y"], 0, 0),
-                    lifetime=10,
-                    color=config.WHITE,
-                    apply_gravity=4,
-                    speed=[(random.random() - 0.5) * 20, -70],
-                    spread=[50, 10],
-                    active=True,
-                    once=True,
-                )
+        self.pop_seed_particles.append(
+            ParticleSystem(
+                max_particles=(30 + int(flower["mass"]) * 10),
+                spawn_box=(flower["x"], flower["y"], 0, 0),
+                lifetime=15,
+                color=(int(255 * random.random()), int(255 * random.random()), int(255 * random.random())),
+                apply_gravity=2,
+                speed=[(random.random() - 0.5) * 20, -80 * random.random()],
+                spread=[50, 30],
+                active=True,
+                size_over_lifetime=True,
+                size=10,
+                once=True,
             )
+        )
 
     def append_flower(self, highlight):
         pos = highlight[0]
@@ -1397,6 +1411,9 @@ class Flower(Organ):
         if self.seed_popped:
             for particle in self.pop_seed_particles:
                 particle.update(dt)
+        if self.pop_all_seeds_timer > 0:
+            self.timeframe -= dt
+            len(self.flowers)
 
     def update_image_size(self, factor=7, base=80):
         for flower in self.flowers:

@@ -30,15 +30,39 @@ FLOWER_SPOT = 50
 
 MAX_DAYS = 27
 
+###############################################################################
+# PATHS
+###############################################################################
 current_dir = os.path.abspath(os.getcwd())
 OPTIONS_PATH = "options.json"
 
-# OPTIONS_PATH = OPTIONS_PATH.replace('/', os.sep).replace('\\', os.sep)
+#ambience_volume
+#music_volume
+#sfx_volume
+#naration_volume
+
+START_PATH = "sound/start"
+AMBIENCE_PATH = "sound/ambience"
+MUSIC_PATH = "sound/music"
+BEE_SFX_PATH = "sound/bee"
+SNAIL_SFX_PATH = "sound/bee"
+BUG_SFX_PATH = "sound/bug"
+SELECT_SFX_PATH = "sound/select"
+CONFIRM_SFX_PATH = "sound/confirm"
+BUY_SFX_PATH = "sound/buy"
+ALERT_SFX_PATH = "sound/alert"
+ERROR_SFX_PATH = "sound/error"
+TOGGLE_SFX_PATH = "sound/toggle"
+LOOSE_SFX_PATH = "sound/loose"
+ORGANS_SFX_PATH = "sound/select_organs"
+HIVE_SFX_PATH = "sound/hive_clicked"
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
+###############################################################################
 # COLORS
+###############################################################################
 WHITE = (255, 255, 255)
 DARK_WHITE = (180, 170, 148)
 GRAY = (145, 145, 145)
