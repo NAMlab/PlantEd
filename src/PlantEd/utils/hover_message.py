@@ -52,8 +52,11 @@ class Hover_Message:
             )
 
     def handle_event(self, e):
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            self.timer = 1.5
+            #self.hover_surface.fill((0, 0, 0, 0))
         if e.type == pygame.MOUSEMOTION:
-            self.timer = 1
+            self.timer = 1.5
             self.hover_surface.fill((0, 0, 0, 0))
 
     def draw(self, screen):

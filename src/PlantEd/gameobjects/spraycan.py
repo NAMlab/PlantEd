@@ -8,7 +8,13 @@ from pygame.locals import *
 
 
 class Spraycan:
-    def __init__(self, pos, amount, cost=1, callback=None):  # take from config
+    def __init__(self,
+                 pos,
+                 amount,
+                 cost=1,
+                 callback=None,
+                 play_sound=None
+                 ):  # take from config
         self.pos = pos
         self.image_active = assets.img("spraycan_active.PNG", (128, 128))
         self.image_inactive = assets.img("spraycan.PNG", (128, 128))
@@ -18,6 +24,7 @@ class Spraycan:
         self.hitbox = pygame.Rect(self.pos[0]-100,self.pos[1],100,100)
         self.max_amount = amount
         self.callback = callback
+        self.play_sound = play_sound
         self.cost = cost
         self.active = False
         self.can_particle_system = ParticleSystem(
@@ -47,7 +54,6 @@ class Spraycan:
         self.image = self.image_inactive
         self.amount = 0
         self.active = False
-        pygame.mixer.Sound.stop(assets.sfx("water_can.mp3"))
         pygame.mouse.set_visible(True)
 
     def update(self, dt):
@@ -63,7 +69,7 @@ class Spraycan:
         if e.type == MOUSEBUTTONDOWN:
             self.image = self.image_active
             self.can_particle_system.activate()
-            pygame.mixer.Sound.play(assets.sfx("spraycan.mp3", 0.3))
+            self.play_sound()
             if self.callback:
                 self.callback(self.hitbox)
         if e.type == MOUSEBUTTONUP:

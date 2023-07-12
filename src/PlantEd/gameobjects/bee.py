@@ -132,7 +132,7 @@ class Bee:
         self.camera = camera
         self.callback = callback
         self.hive_pos = hive_pos
-        self.animation = Animation(self.images, 0.5)
+        self.animation = Animation(self.images, 0.1)
         self.speed = speed
         self.lifetime = lifetime
         self.play_bee_clicked=play_bee_clicked

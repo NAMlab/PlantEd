@@ -17,6 +17,7 @@ class Card:
         keywords="",
         frames=15,
         margin=10,
+        play_select_sfx=None
     ):
         self.pos = pos
         # images should be 24 iterations to increase an image
@@ -27,6 +28,7 @@ class Card:
         self.score = score
         self.keywords = keywords
         self.margin = margin
+        self.play_select_sfx = play_select_sfx
 
         self.name_label = config.BIGGER_FONT.render(
             "{}".format(name), True, config.WHITE
@@ -71,6 +73,7 @@ class Card:
             if self.get_rect().collidepoint(pos):
                 if not self.focus:
                     self.focus = True
+                    self.play_select_sfx()
                     self.focus_timer = self.focus_duration
             else:
                 self.focus = False

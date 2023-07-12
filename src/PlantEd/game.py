@@ -90,7 +90,7 @@ def shake():
 class OptionsScene:
     def __init__(self):
         self.options = config.load_options()
-
+        self.sound_control = SoundControl()
         self.option_label = config.MENU_TITLE.render(
             "Options", True, config.WHITE
         )
@@ -164,6 +164,7 @@ class OptionsScene:
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
+            play_confirm=self.sound_control.play_toggle_sfx
         )
         self.apply = Button(
             center_w + 50,
@@ -310,6 +311,8 @@ class DefaultGameScene(object):
             client=self.client,
             water_grid=self.water_grid,
             growth_boost=1,
+            play_level_up=self.sound_control.play_level_up_sfx,
+            play_reward=self.sound_control.play_reward_sfx
         )
 
         self.water_grid.add_base_water(
@@ -456,7 +459,7 @@ class DefaultGameScene(object):
             assets.img("leaf_small.PNG", (64, 64)),
             1,
             self.plant,
-            play_buy=self.sound_control.play_buy_sfx
+            play_buy_sfx=self.sound_control.play_buy_sfx
         )
         add_branch_item_floating = FloatingShopItem(
             (0, 0),
@@ -464,7 +467,7 @@ class DefaultGameScene(object):
             assets.img("branch.PNG", (64, 64)),
             1,
             self.plant,
-            play_buy=self.sound_control.play_buy_sfx
+            play_buy_sfx=self.sound_control.play_buy_sfx
         )
         add_flower_item_floating = FloatingShopItem(
             (0, 0),
@@ -472,7 +475,7 @@ class DefaultGameScene(object):
             assets.img("sunflowers/1.PNG", (64, 64)),
             1,
             self.plant,
-            play_buy=self.sound_control.play_buy_sfx
+            play_buy_sfx=self.sound_control.play_buy_sfx
         )
         start_flower_item_floating = FloatingShopItem(
             (0, 0),
@@ -482,7 +485,7 @@ class DefaultGameScene(object):
             self.plant,
             tag="flower",
             return_pos=True,
-            play_buy=self.sound_control.play_buy_sfx
+            play_buy_sfx=self.sound_control.play_buy_sfx
         )
 
         self.floating_shop.add_item(add_leaf_item_floating)
@@ -654,6 +657,7 @@ class DefaultGameScene(object):
         self.camera.update(dt)
         self.environment.update(dt)
         self.shop.update(dt)
+        self.floating_shop.update(dt)
         self.ui.update(dt)
         self.narrator.update(dt)
         self.plant.update(dt, self.server_plant.photon)
@@ -696,6 +700,7 @@ class DefaultGameScene(object):
 class TitleScene(object):
     def __init__(self, manager=None):
         super(TitleScene, self).__init__()
+        self.sound_control = SoundControl()
         self.title = config.MENU_TITLE.render("PlantEd", True, config.WHITE)
         self.center_h = config.SCREEN_HEIGHT / 2 + 100
         self.center_w = config.SCREEN_WIDTH / 2
@@ -706,6 +711,7 @@ class TitleScene(object):
             callback=manager.go_to,
             callback_var=DefaultGameScene,
             keywords="Beginner, Medium Temperatures",
+            play_select_sfx=self.sound_control.play_select_sfx
         )
 
         self.credit_button = Button(
@@ -719,6 +725,7 @@ class TitleScene(object):
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
+            play_confirm=self.sound_control.play_toggle_sfx
         )
         self.options_button = Button(
             self.center_w - 200,
@@ -731,6 +738,7 @@ class TitleScene(object):
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
+            play_confirm=self.sound_control.play_toggle_sfx
         )
         self.scores_button = Button(
             self.center_w + 50,
@@ -743,6 +751,7 @@ class TitleScene(object):
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
+            play_confirm=self.sound_control.play_toggle_sfx
         )
         self.quit_button = Button(
             self.center_w + 300,
@@ -755,6 +764,7 @@ class TitleScene(object):
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
+            play_confirm=self.sound_control.play_toggle_sfx
         )
 
         self.button_sprites = pygame.sprite.Group()
@@ -934,6 +944,7 @@ class CustomScene(object):
 class Credits:
     def __init__(self):
         super(Credits, self).__init__()
+        self.sound_control = SoundControl()
         self.center_w, self.center_h = (
             config.SCREEN_WIDTH / 2,
             config.SCREEN_HEIGHT / 2,
@@ -955,6 +966,7 @@ class Credits:
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
+            play_confirm=self.sound_control.play_toggle_sfx
         )
         self.button_sprites.add(self.back)
 
@@ -1080,7 +1092,7 @@ def main(windowed: bool, port: int):
 
         if pygame.event.get(QUIT):
             running = False
-            print("pygame.event.get(QUIT):")
+            #print("pygame.event.get(QUIT):")
             break
 
         # manager handles the current scene

@@ -33,6 +33,11 @@ class SoundControl:
         self.loose_sfx = self.fill_sfx_array(config.LOOSE_SFX_PATH, self.sfx_volume)
         self.select_organs_sfx = self.fill_sfx_array(config.ORGANS_SFX_PATH, self.sfx_volume)
         self.hive_clicked_sfx = self.fill_sfx_array(config.HIVE_SFX_PATH, self.sfx_volume)
+        self.watering_can_sfx = self.fill_sfx_array(config.WATERING_CAN, self.sfx_volume)
+        self.nitrogen_sfx = self.fill_sfx_array(config.NITROGEN, self.sfx_volume)
+        self.level_up_sfx = self.fill_sfx_array(config.LEVEL_UP, self.sfx_volume)
+        self.spraycan_sfx = self.fill_sfx_array(config.SPRAYCAN, self.sfx_volume)
+        self.reward_sfx = self.fill_sfx_array(config.REWARD, self.sfx_volume)
 
         self.sfx = []
         self.sfx.append(self.start_sfx)
@@ -49,6 +54,11 @@ class SoundControl:
         self.sfx.append(self.loose_sfx)
         self.sfx.append(self.select_organs_sfx)
         self.sfx.append(self.hive_clicked_sfx)
+        self.sfx.append(self.spraycan_sfx)
+        self.sfx.append(self.watering_can_sfx)
+        self.sfx.append(self.level_up_sfx)
+        self.sfx.append(self.nitrogen_sfx)
+        self.sfx.append(self.reward_sfx)
 
     def play_music(self):
         i = int(random.random() * len(self.music))
@@ -104,6 +114,29 @@ class SoundControl:
     def play_hive_clicked_sfx(self):
         i = int(random.random() * len(self.hive_clicked_sfx))
         self.hive_clicked_sfx[i].play()
+
+    def play_level_up_sfx(self):
+        i = int(random.random() * len(self.level_up_sfx))
+        self.level_up_sfx[i].play()
+
+    def play_watering_can_sfx(self):
+        #i = int(random.random() * len(self.hive_clicked_sfx))
+        self.watering_can_sfx[0].play(-1)
+
+    def stop_watering_can_sfx(self):
+        self.watering_can_sfx[0].stop()
+
+    def play_spraycan_sfx(self):
+        i = int(random.random() * len(self.spraycan_sfx))
+        self.spraycan_sfx[i].play()
+
+    def play_nitrogen_sfx(self):
+        i = int(random.random() * len(self.nitrogen_sfx))
+        self.nitrogen_sfx[i].play()
+
+    def play_reward_sfx(self):
+        i = int(random.random() * len(self.reward_sfx))
+        self.reward_sfx[i].play()
 
     def fill_sfx_array(self, relative_path, volume=None):
         path = data_dir / "assets" / relative_path

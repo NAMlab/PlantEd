@@ -64,7 +64,7 @@ class SnailSpawner:
         for snail in self.snails:
             snail.update(dt)
         #self.remove_dead_snails()
-        if random.random() > 0.999 and len(self.snails) < self.max_amount:
+        if random.random() > 0.9 and len(self.snails) < self.max_amount:
             self.spawn_snail()
 
     def handle_event(self, e):
@@ -97,6 +97,8 @@ class Snail:
         self.camera = camera
         self.animation_left = Animation(self.images_left, 0.5)
         self.animation_right = Animation(self.images_right, 0.5)
+        skull_images = Animation.generate_rising_animation(image=assets.img("skull.png",(64,64)), move_up=-1)
+        self.animation_death = Animation(images=skull_images, duration=1, running=False, once=True)
         self.speed = speed
         self.snail_clicked = snail_clicked
         self.base_speed = speed
@@ -129,6 +131,7 @@ class Snail:
                 self.target_plant((config.SCREEN_WIDTH/2, 0))
 
         self.move(dt)
+        self.animation_death.update(dt)
         if self.animation_left:
             self.animation_left.update(dt)
         if self.animation_right:
@@ -176,9 +179,9 @@ class Snail:
 
     def kill(self, rect):
         if rect.collidepoint(self.pos):
+            self.animation_death.start(self.pos)
             self.target = None
-            self.set_random_direction()
-            self.speed = 1
+            self.speed = 0
             self.death_timer = 1
 
     def target_plant(self, pos):
@@ -206,6 +209,7 @@ class Snail:
     def draw(self, screen):
         if self.dead:
             return
+        self.animation_death.draw(screen)
         if self.target:
             dist = math.sqrt((self.target[0] - self.pos[0]) * (self.target[0] - self.pos[0]))
             if dist < 10:

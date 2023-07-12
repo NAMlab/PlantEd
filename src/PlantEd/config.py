@@ -56,6 +56,11 @@ TOGGLE_SFX_PATH = "sound/toggle"
 LOOSE_SFX_PATH = "sound/loose"
 ORGANS_SFX_PATH = "sound/select_organs"
 HIVE_SFX_PATH = "sound/hive_clicked"
+WATERING_CAN = "sound/watering_can"
+LEVEL_UP = "sound/level_up"
+SPRAYCAN = "sound/spraycan"
+NITROGEN = "sound/nitrogen"
+REWARD = "sound/reward"
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080

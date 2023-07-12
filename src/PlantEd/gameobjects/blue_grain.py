@@ -10,11 +10,17 @@ from pygame.locals import *
 
 
 class Blue_grain:
-    def __init__(self, pos, client: Client, amount: int = 50000):
+    def __init__(self,
+                 pos,
+                 client: Client,
+                 amount: int = 50000,
+                 play_sound=None
+                 ):
         self.image = assets.img("blue_grain_bag.PNG", (128, 128))
         self.pos = pos
         self.client = client
         self.amount = amount
+        self.play_sound = play_sound
         self.active = False
         self.particle_system = ParticleSystem(
             80,
@@ -64,6 +70,7 @@ class Blue_grain:
             self.particle_system.spawn_box = Rect(
                 self.pos[0], self.pos[1], 20, 20
             )
+            self.play_sound()
             self.particle_system.activate()
             self.client.increase_nitrate(
                 µmol_nitrate= 1000

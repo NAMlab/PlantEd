@@ -975,11 +975,13 @@ class UI:
         config.write_options(self.get_options())
 
     def get_options(self):
+        upload_score = config.load_options()["upload_score"]
         options = {
             "music_volume": self.music_slider.get_percentage() / 100,
             "sfx_volume": self.sfx_slider.get_percentage() / 100,
             "narator_volume": self.narator_slider.get_percentage() / 100,
             "name": self.textbox.text,
+            "upload_score": upload_score
         }
         return options
 
