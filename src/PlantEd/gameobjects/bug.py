@@ -8,7 +8,7 @@ import numpy as np
 
 class Bug:
     def __init__(
-        self, pos, bounding_rect, images, camera, image=None, speed=1
+        self, pos, bounding_rect, images, camera, image=None, speed=1, play_clicked=None
     ):
         self.pos = pos
         self.bounding_rect = bounding_rect
@@ -17,6 +17,7 @@ class Bug:
         self.image = image if image else self.images[0]
         self.animation = Animation(self.images, 1)
         self.speed = speed
+        self.play_clicked = play_clicked
         self.rect = self.image.get_rect()
         self.dir = (0, 0)
         self.pause_timer = 0
@@ -39,11 +40,7 @@ class Bug:
                 self.set_random_direction()
                 self.pause_timer = 0
                 self.speed = 5
-                assets.sfx(
-                    "bug_click_sound/bug_squeek_{}.mp3".format(
-                        random.randint(0, 2)
-                    )
-                ).play()
+                self.play_clicked()
 
     def set_random_direction(self):
         self.dir = (random.random() - 0.5, random.random() - 0.5)

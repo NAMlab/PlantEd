@@ -7,3 +7,5 @@ dist
 __pycache__
 build/__pycache__
 logs
+
+src/PlantEd/build/

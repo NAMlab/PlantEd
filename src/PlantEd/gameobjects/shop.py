@@ -3,11 +3,13 @@ import pygame
 from PlantEd import config
 from PlantEd.client.client import Client
 from PlantEd.data import assets
+from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.blue_grain import Blue_grain
 from PlantEd.gameobjects.root_item import Root_Item
 from PlantEd.gameobjects.spraycan import Spraycan
 from PlantEd.gameobjects.water_reservoir import Water_Grid
 from PlantEd.gameobjects.watering_can import Watering_can
+from PlantEd.utils.animation import Animation
 from PlantEd.utils.button import Button
 
 """
@@ -24,6 +26,7 @@ class FloatingShop:
         self.pos = pos
         self.shop_items = []
         self.visible_shop_items = []
+        self.animations = []
         self.margin = 16
         self.rect = pygame.Rect(
             (
@@ -38,6 +41,16 @@ class FloatingShop:
             (self.margin + 3 * (self.margin + 64), 64 + self.margin * 2),
             pygame.SRCALPHA,
         )
+
+        images = Animation.generate_rising_animation("-1", config.RED)
+        self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
+        images = Animation.generate_rising_animation("-2", config.RED)
+        self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
+        images = Animation.generate_rising_animation("-3", config.RED)
+        self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
+
+    def buy(self, cost):
+        self.animations[max(0,cost-1)].start(pygame.mouse.get_pos())
 
     def activate(self, pos, show_items=True, show_flower=False):
         self.visible_shop_items = []
@@ -62,6 +75,10 @@ class FloatingShop:
                 64 + 2 * self.margin,
             )
         )
+
+    def update(self,dt):
+        for animation in self.animations:
+            animation.update(dt)
 
     def deactivate(self):
         self.visible_shop_items = []
@@ -95,8 +112,10 @@ class FloatingShop:
                     self.active = False
 
     def draw(self, screen):
+        for animation in self.animations:
+            animation.draw(screen)
         if self.active:
-            self.s.fill((0,0,0,0))
+            self.s.fill((0, 0, 0, 0))
             pygame.draw.rect(
                 self.s,
                 config.WHITE_TRANSPARENT,
@@ -118,7 +137,16 @@ class FloatingShop:
 
 
 class FloatingShopItem:
-    def __init__(self, pos, callback, image, cost, plant, tag=None, return_pos=False):
+    def __init__(self,
+                 pos,
+                 callback,
+                 image,
+                 cost,
+                 plant,
+                 tag=None,
+                 return_pos=False,
+                 play_buy_sfx=None):
+
         self.tag = tag
         self.pos = pos
         self.rect = pygame.Rect(
@@ -129,6 +157,7 @@ class FloatingShopItem:
         self.cost = cost
         self.plant = plant
         self.return_pos = return_pos
+        self.play_buy_sfx = play_buy_sfx
         self.shop_items = []
         self.floating_shop = None
         self.hover = False
@@ -147,22 +176,24 @@ class FloatingShopItem:
             mouse_pos = pygame.mouse.get_pos()
             if e.type == pygame.MOUSEMOTION:
                 if self.rect.collidepoint(
-                    (mouse_pos[0] - shop_pos[0], mouse_pos[1] - shop_pos[1])
+                        (mouse_pos[0] - shop_pos[0], mouse_pos[1] - shop_pos[1])
                 ):
                     self.hover = True
                 else:
                     self.hover = False
             if e.type == pygame.MOUSEBUTTONDOWN:
                 if self.rect.collidepoint(
-                    (mouse_pos[0] - shop_pos[0], mouse_pos[1] - shop_pos[1])
+                        (mouse_pos[0] - shop_pos[0], mouse_pos[1] - shop_pos[1])
                 ):
                     self.plant.upgrade_points -= self.cost
+                    self.play_buy_sfx()
                     if self.return_pos:
                         self.callback(mouse_pos)
                     else:
                         self.callback()
                     self.hover = False
                     self.floating_shop.deactivate()
+                    self.floating_shop.buy(self.cost)
 
     def draw(self, screen):
         if self.cost <= self.plant.upgrade_points:
@@ -178,16 +209,17 @@ class FloatingShopItem:
 
 class Shop:
     def __init__(
-        self,
-        rect,
-        shop_items,
-        client: Client,
-        water_grid: Water_Grid,
-        plant,
-        cols=2,
-        margin=10,
-        post_hover_message=None,
-        active=True,
+            self,
+            rect,
+            shop_items,
+            client: Client,
+            water_grid: Water_Grid,
+            plant,
+            cols=2,
+            margin=10,
+            post_hover_message=None,
+            active=True,
+            sound_control: SoundControl = None
     ):
         # performance improve test
         self.s = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA)
@@ -202,12 +234,20 @@ class Shop:
         self.water_grid = water_grid
         self.plant = plant
         self.active = active
+        self.animations = []
+        self.sound_control = sound_control
         self.green_thumbs_icon = assets.img("green_thumb.PNG", (26, 26))
         self.current_cost = 0
-        self.animations = []
-        self.watering_can = Watering_can((0, 0), self.water_grid)
-        self.blue_grain = Blue_grain(pos=(0, 0), client=self.client)
-        self.spraycan = Spraycan(pos=(0, 0), amount=3, cost=2)
+        self.watering_can = Watering_can((0, 0), self.water_grid,
+                                         play_sound=self.sound_control.play_watering_can_sfx,
+                                         stop_sound=self.sound_control.stop_watering_can_sfx)
+        self.blue_grain = Blue_grain(pos=(0, 0),
+                                     client=self.client,
+                                     play_sound=self.sound_control.play_nitrogen_sfx)
+        self.spraycan = Spraycan(pos=(0, 0),
+                                 amount=3,
+                                 cost=2,
+                                 play_sound=self.sound_control.play_spraycan_sfx)
         self.root_item = Root_Item(
             self.plant.organs[2].create_new_root, self.plant
         )
@@ -222,6 +262,15 @@ class Shop:
             offset=(rect[0], rect[1]),
         )
         self.init_layout()
+
+        images = Animation.generate_rising_animation("-1", config.RED)
+        self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
+        images = Animation.generate_rising_animation("-2", config.RED)
+        self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
+        images = Animation.generate_rising_animation("-3", config.RED)
+        self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
+
+
 
     def init_layout(self):
         if len(self.shop_items) <= 0:
@@ -266,6 +315,7 @@ class Shop:
                         self.watering_can.activate,
                         post_hover_message=self.post_hover_message,
                         message="Buy a watering can to increase availability.",
+                        play_selected=self.sound_control.play_select_sfx
                     )
                 )
             elif keyword == "blue_grain":
@@ -275,6 +325,7 @@ class Shop:
                         self.blue_grain.activate,
                         post_hover_message=self.post_hover_message,
                         message="Blue grain increases nitrate in the ground.",
+                        play_selected=self.sound_control.play_select_sfx
                     )
                 )
             elif keyword == "spraycan":
@@ -284,6 +335,7 @@ class Shop:
                         self.spraycan.activate,
                         post_hover_message=self.post_hover_message,
                         message="Spray em!",
+                        play_selected=self.sound_control.play_select_sfx
                     )
                 )
         for item in self.shop_items:
@@ -301,10 +353,13 @@ class Shop:
                                 item.post_hover_message(
                                     item.condition_not_met_message
                                 )
+                            self.sound_control.play_error_sfx()
                             return
                     self.plant.upgrade_points -= item.cost
+                    self.animations[max(0, item.cost - 1)].start(pygame.mouse.get_pos())
                     item.callback()
                     item.selected = False
+                    self.sound_control.play_buy_sfx()
                     self.update_current_cost()
                 else:
                     # throw insufficient funds, maybe post hover msg
@@ -316,11 +371,10 @@ class Shop:
         self.spraycan.update(dt)
         self.root_item.update(dt)
         self.buy_button.update(dt)
-
+        for animation in self.animations:
+            animation.update(dt)
         for item in self.shop_items:
             item.update(dt)
-        for anim in self.animations:
-            anim.update()
 
     def update_current_cost(self):
         self.current_cost = 0
@@ -387,24 +441,27 @@ class Shop:
         self.blue_grain.draw(screen)
         self.spraycan.draw(screen)
         self.root_item.draw(screen)
+        for animation in self.animations:
+            animation.draw(screen)
 
 
 class Shop_Item:
     def __init__(
-        self,
-        image,
-        callback,
-        cost=1,
-        info_text=None,
-        rect=(0, 0, 0, 0),
-        selected_color=(255, 255, 255),
-        hover_color=(128, 128, 128, 128),
-        border_width=3,
-        condition=None,
-        condition_not_met_message=None,
-        post_hover_message=None,
-        message=None,
-        offset=(0, 0),
+            self,
+            image,
+            callback,
+            cost=1,
+            info_text=None,
+            rect=(0, 0, 0, 0),
+            selected_color=(255, 255, 255),
+            hover_color=(128, 128, 128, 128),
+            border_width=3,
+            condition=None,
+            condition_not_met_message=None,
+            post_hover_message=None,
+            message=None,
+            play_selected=None,
+            offset=(0, 0),
     ):
         self.image = image
         self.callback = callback
@@ -412,6 +469,7 @@ class Shop_Item:
         self.info_text = info_text
         self.post_hover_message = post_hover_message
         self.message = message
+        self.play_selected = play_selected
         self.rect = pygame.Rect(rect[0], rect[1], rect[2], rect[3])  # ugly
         self.selected_color = selected_color
         self.hover_color = hover_color
@@ -447,6 +505,7 @@ class Shop_Item:
                     for item in self.shop_items:
                         item.selected = False
                     self.selected = True
+                    self.play_selected()
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)

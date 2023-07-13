@@ -10,13 +10,15 @@ import pygame
 
 
 class Hive:
-    def __init__(self, pos, amount, plant, camera, spawn_rate):
+    def __init__(self, pos, amount, plant, camera, spawn_rate, play_hive_clicked, play_bee_clicked):
         self.pos = pos
         self.image = assets.img("bee/hive.png", (128, 128))
         self.amount = amount
         self.plant = plant
         self.camera = camera
         self.spawn_rate = spawn_rate
+        self.play_hive_clicked = play_hive_clicked
+        self.play_bee_clicked = play_bee_clicked
 
         self.bees: List[Bee] = []
 
@@ -26,7 +28,7 @@ class Hive:
         if e.type == pygame.MOUSEBUTTONDOWN:
             # if self.bounding_rect.collidepoint(pygame.mouse.get_pos()):
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
-                assets.sfx("bee/beehive_clicked.mp3").play()
+                self.play_hive_clicked()
                 if self.amount > len(self.bees):
                     self.spawn_bee(
                         (
@@ -59,6 +61,7 @@ class Hive:
                 self.camera,
                 self.plant.organs[3].pollinate,
                 pos,
+                play_bee_clicked=self.play_bee_clicked
             )
         )
 
@@ -121,6 +124,7 @@ class Bee:
         image=None,
         speed=4,
         lifetime=20,
+        play_bee_clicked=None
     ):
         self.pos = pos
         self.bounding_rect = bounding_rect
@@ -128,9 +132,10 @@ class Bee:
         self.camera = camera
         self.callback = callback
         self.hive_pos = hive_pos
-        self.animation = Animation(self.images, 0.5)
+        self.animation = Animation(self.images, 0.1)
         self.speed = speed
         self.lifetime = lifetime
+        self.play_bee_clicked=play_bee_clicked
         self.rect = self.images[0].get_rect()
         self.dir = (0, 0)
         self.target = None
@@ -176,11 +181,7 @@ class Bee:
                 if not self.target:
                     self.set_random_direction()
                     self.speed = 4
-                    assets.sfx(
-                        "bug_click_sound/bug_squeek_{}.mp3".format(
-                            random.randint(0, 2)
-                        )
-                    ).play()
+                    self.play_bee_clicked()
 
     def set_random_direction(self):
         self.dir = (random.random() - 0.5, random.random() - 0.5)

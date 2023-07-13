@@ -19,6 +19,8 @@ class Watering_can:
         cost=1,
         active=False,
         callback=None,
+        play_sound=None,
+        stop_sound=None
     ):  # take from config
         self.gametime = GameTime.instance()
         self.pos = (pos[0] - 20, pos[1] - 120)
@@ -31,6 +33,8 @@ class Watering_can:
         self.active = active
         self.pouring = False
         self.callback = callback
+        self.play_sound = play_sound
+        self.stop_sound = stop_sound
         self.rect = Rect(self.pos[0], self.pos[1], 20, 20)
         self.can_particle_system = ParticleSystem(
             290,
@@ -57,7 +61,7 @@ class Watering_can:
         self.amount = 0
         self.active = False
         self.pouring = False
-        pygame.mixer.Sound.stop(assets.sfx("water_can.mp3"))
+        self.stop_sound()
         pygame.mouse.set_visible(True)
 
     def update(self, dt):
@@ -81,11 +85,11 @@ class Watering_can:
             self.image = assets.img("watering_can_tilted.PNG", (182, 148))
             self.pouring = True
             self.can_particle_system.activate()
-            pygame.mixer.Sound.play(assets.sfx("water_can.mp3", 0.05), -1)
+            self.play_sound()
         if e.type == MOUSEBUTTONUP:
             self.image = assets.img("watering_can.PNG", (214, 147))
             self.can_particle_system.deactivate()
-            pygame.mixer.Sound.stop(assets.sfx("water_can.mp3", 0.05))
+            self.stop_sound()
             self.pouring = False
         if e.type == MOUSEMOTION:
             x, y = pygame.mouse.get_pos()

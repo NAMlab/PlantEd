@@ -36,7 +36,7 @@ class Particle:
             else:
                 self.speed[0] = 0
         if self.lifetime:
-            delta = self.lifetime - 0.2
+            delta = self.lifetime - dt
             if delta > 0:
                 self.lifetime = delta
             else:

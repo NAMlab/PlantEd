@@ -1,14 +1,9 @@
+from __future__ import annotations
+
 import math
 import random
 import pygame
 import numpy as np
-
-
-tier_list_basic = [
-    {"max_length": 400, "duration": 7, "tries": 5, "max_branches": 10},
-    {"max_length": 200, "duration": 2, "tries": 3, "max_branches": 5},
-    {"max_length": 50, "duration": 1, "tries": 1, "max_branches": 0},
-]
 
 
 short_root = [
@@ -31,38 +26,52 @@ long_root = [
 
 root_classes = [short_root, medium_root, long_root]
 
-
+"""
+Letters are part of a root. Each letter has an id, that indicates its state.
+# 300 -> apex
+# 200 -> branching
+# 100 -> basal
+# <100 -> fully grown
+Rules apply based on its id. Growth depends on duration (delta mass).
+Following branches or segments are stored in a list of branches.
+"""
 class Letter:
     def __init__(
-        self,
-        id: int,
-        root_class: dict,
-        tier: int,
-        dir: tuple[float,float],
-        max_length: int,
-        mass_start: float,
-        mass_end: float,
-        max_branches: int = None,
-        branches: list = [],
-        t: float = None,
+            self,
+            id: int,
+            root_class: int,
+            tier: int,
+            dir: tuple[float, float],
+            max_length: float,
+            mass_start: float,
+            mass_end: float,
+            max_branches: int = None,
+            branches: list = [],
+            t: float = None,
+            branching_t: list[float] = None,
+            length: float = 0,
+            pos: tuple[float, float] = (0, 0)
     ):
         self.id: int = id
         self.tier: int = tier
-        self.root_class: dict = root_class
+        self.root_class: int = root_class
         self.dir: tuple[float, float] = dir
-        self.branching_t: float = (
-            np.random.random(max_branches).tolist()
-            if max_branches is not None
-            else None
-        )  # branching dist
+        if branching_t is None:
+            self.branching_t: float = (
+                np.random.random(max_branches).tolist()
+                if max_branches is not None
+                else None
+            )  # branching dist
+        else:
+            self.branching_t = branching_t
         self.t: float = t
-        self.max_length: int = max_length
+        self.max_length: float = max_length
         self.mass_start: float = mass_start
         self.mass_end: float = mass_end
         self.max_branches: int = max_branches
         self.branches: list[Letter] = branches
-        self.length: float = 0
-        self.pos: tuple[float, float] = (0, 0)
+        self.length: float = length
+        self.pos: tuple[float, float] = pos
 
     def draw(self, screen, start_pos):
         if self.id == 300:
@@ -108,21 +117,19 @@ class Letter:
 
     def to_dict(self) -> dict:
         dic = {}
-
         dic["id"] = self.id
-        dic["tier"] = self.tier,
+        dic["tier"] = self.tier
         dic["root_class"] = self.root_class
-        dic["length"] = self.length,
-        dic["max_length"] = self.max_length,
-        dic["mass_start"] = self.mass_start,
-        dic["mass_end"] = self.mass_end,
-        dic["branching_t"] = self.branching_t,
+        dic["length"] = self.length
+        dic["max_length"] = self.max_length
+        dic["mass_start"] = self.mass_start
+        dic["mass_end"] = self.mass_end
+        dic["branching_t"] = self.branching_t
         dic["branches"] = [branch.to_dict() for branch in self.branches]
         dic["max_branches"] = self.max_branches
         dic["t"] = self.t
         dic["pos"] = self.pos
         dic["dir"] = self.dir
-
         return dic
 
     def print(self, offset=""):
@@ -140,42 +147,53 @@ class Letter:
         for branch in self.branches:
             branch.print(offset="   " + offset)
 
-    def get_pos(self):
+    def get_pos(self) -> tuple[float, float]:
         return self.pos
 
 
+"""
+A list of all root segments
+Roots consist of basal, branching ans apex
+All three segments can grow. The branching part is also able to grow branches.
+When doing so, it will create a new segment and pick a new semi-random direction.
+Initial roots can bew small, medium and long. Each type has a different architecture.
+Root tiers describe the degree of each branch. Once the lowest tier has been reached, 
+branching can no longer happen.
+"""
 class LSystem:
     def __init__(
-        self,
-        root_grid: np.ndarray,
-        water_grid_pos: tuple[float, float],
-        directions: tuple[float, float] = [],
-        positions: list[tuple[float, float]] = None,
-        mass: float = 0,
+            self,
+            root_grid: np.ndarray,
+            water_grid_pos: tuple[float, float],
+            directions: list[tuple[float, float]] = [],
+            positions: list[tuple[float, float]] = None,
+            mass: float = 0,
     ):
         self.root_grid: np.ndarray = root_grid
         self.water_grid_pos: tuple[float, float] = water_grid_pos
         self.positions: list[tuple[float, float]] = positions if positions is not None else []
         self.first_letters: list[Letter] = []
-        self.apexes: list[Letter] = []
-        self.directions = directions # if directions is not None else []
-        self.root_classes = root_classes
+        self.directions: list[tuple[float,float]] = directions  # if directions is not None else []
+        self.root_classes: list[list[dict]] = root_classes
         for dir in directions:
             self.first_letters.append(self.create_root(dir, mass))
 
     def to_dict(self) -> dict:
-        dic = {}
-        dic["root_grid"] = self.root_grid
-        dic["water_grid_pos"] = self.water_grid_pos
-        dic["positions"] = self.positions
-        dic["apexes"] = self.apexes
-        dic["directions"] = self.directions
-        dic["root_classes"] = self.root_classes
-        dic["first_letters"] = [first_letter.to_dict() for first_letter in self.first_letters]
-
+        dic = {"root_grid": dict(enumerate(self.root_grid.flatten(), 1)),
+               "water_grid_pos": self.water_grid_pos,
+               "positions": self.positions,
+               "directions": self.directions,
+               "root_classes": self.root_classes,
+               "first_letters": [first_letter.to_dict() for first_letter in self.first_letters]}
         return dic
 
-    def create_root(self, dir=None, mass=0, root_class=0, tier=None, t=None):
+
+    """
+    Make a root of basal, branching and apex letters
+    Duration is staggered. Therefore each segment has to be 
+    fully grown before the next one can grow
+    """
+    def create_root(self, dir: tuple[float,float] = None, mass: float = 0, root_class: int = 0, tier: int = None, t: float = None):
         dir = dir if dir is not None else (0, 1)
         next_tier = tier if tier else 0
         dic = self.root_classes[root_class][next_tier]
@@ -189,49 +207,51 @@ class LSystem:
         apex_duration = dic["duration"] / 10 * 2
 
         apex = Letter(
-            300,
-            root_class,
-            next_tier,
-            self.get_random_dir(dic["tries"], dir),
-            apex_length,
-            mass + basal_duration + branching_duration,
-            mass + basal_duration + branching_duration + apex_duration,
+            id=300,
+            root_class=root_class,
+            tier=next_tier,
+            dir=self.get_random_dir(dic["tries"], dir),
+            max_length=apex_length,
+            mass_start=mass + basal_duration + branching_duration,
+            mass_end=mass + basal_duration + branching_duration + apex_duration,
             t=1,
         )
         branching = Letter(
-            200,
-            root_class,
-            next_tier,
-            self.get_random_dir(dic["tries"], dir),
-            branching_length,
-            mass + basal_duration,
-            mass + basal_duration + branching_duration,
+            id=200,
+            root_class=root_class,
+            tier=next_tier,
+            dir=self.get_random_dir(dic["tries"], dir),
+            max_length=branching_length,
+            mass_start=mass + basal_duration,
+            mass_end=mass + basal_duration + branching_duration,
             max_branches=dic["max_branches"],
             branches=[apex],
             t=1,
         )
         branching.branching_t.sort()
         basal = Letter(
-            100,
-            root_class,
-            next_tier,
-            self.get_random_dir(dic["tries"], dir),
-            basal_length,
-            mass,
-            mass + basal_duration,
+            id=100,
+            root_class=root_class,
+            tier=next_tier,
+            dir=self.get_random_dir(dic["tries"], dir),
+            max_length=basal_length,
+            mass_start=mass,
+            mass_end=mass + basal_duration,
             branches=[branching],
             t=t,
         )
         return basal
 
-    """def set_root_tier(self, root_tier):
-        self.tier_list = tier_lists[root_tier]"""
-
+    """
+    Apply rules to each letter
+    """
     def update(self, mass):
-        self.apexes = []
         for letter in self.first_letters:
             self.apply_rules(letter, mass)
 
+    """
+    
+    """
     def apply_rules(self, letter, mass):
         if letter.max_length <= letter.length:
             letter.id = 99
@@ -243,7 +263,6 @@ class LSystem:
             if letter.max_branches > len(letter.branches):
                 if letter.branching_t and len(letter.branching_t) > 0:
                     # make branch, remove apex, apend branch, make segment, apend apex
-
                     self.create_branch(letter, mass)
 
         # calc root pos in water grid
@@ -254,9 +273,7 @@ class LSystem:
             # todo fix ugly hard coded numbers
             x = min(19, max(0, int((pos[0] - self.water_grid_pos[0]) / 100)))
             y = min(5, max(0, int((pos[1] - self.water_grid_pos[1]) / 100)))
-            # print(x,y,pos, self.root_grid, self.water_grid_pos)
             self.root_grid[y, x] = 1
-
         for branch in letter.branches:
             self.apply_rules(branch, mass)
 
@@ -273,18 +290,18 @@ class LSystem:
             apex = letter.branches.pop(-1)
             letter.branches.append(branch)
             segment = Letter(
-                letter.id,
-                letter.root_class,
-                letter.tier,
-                self.get_random_dir(
+                id=letter.id,
+                root_class=letter.root_class,
+                tier=letter.tier,
+                dir=self.get_random_dir(
                     self.root_classes[letter.root_class][letter.tier]["tries"],
                     letter.dir,
                 ),
-                letter.max_length - letter.length,
-                mass,
-                letter.mass_end,
-                letter.max_branches - len(letter.branches),
-                [apex],
+                max_length=letter.max_length - letter.length,
+                mass_start=mass,
+                mass_end=letter.mass_end,
+                max_branches=letter.max_branches - len(letter.branches),
+                branches=[apex],
                 t=1,
             )
             segment.branching_t = letter.branching_t
@@ -313,7 +330,6 @@ class LSystem:
                 (mass - letter.mass_start)
                 / (letter.mass_end - letter.mass_start),
             )
-            # print(letter.length, letter.mass_start, letter.mass_end, mass)
 
     def get_random_dir(self, tries, growth_dir=None, down=(0, 1)):
         phi = random.uniform(0, math.pi)
@@ -332,7 +348,7 @@ class LSystem:
                 angle_growth_xy = self.angle_between(growth_dir, (x, y))
                 angle_growth_dir = self.angle_between(growth_dir, dir)
             if (angle_down_xy + angle_growth_xy * 3) < (
-                angle_down_dir + angle_growth_dir * 3
+                    angle_down_dir + angle_growth_dir * 3
             ):
                 dir = (x, y)
             # if self.angle_between(down, (x, y)) < self.angle_between(down, dir):  # downward directions get promoted
@@ -352,14 +368,6 @@ class LSystem:
         for letter in self.first_letters:
             letter.print()
 
-    def handle_event(self, e):
-        pass
-        """if e.type == pygame.KEYDOWN and e.key == pygame.K_p:
-            print(self.root_grid)
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_l:
-            self.print()
-"""
-
     def unit_vector(self, vector):
         return vector / np.linalg.norm(vector)
 
@@ -374,3 +382,57 @@ class LSystem:
         v2 -= v2.dot(norm_vec) * norm_vec
         v2 /= np.linalg.norm(v2)
         return v2
+
+
+class DictToRoot:
+    @staticmethod
+    def load_root_system(dic: dict):
+        # convert LSystem dict to key, values
+        # for each first letter: convert dict of first letter
+        # for each branch in first letter: convert -> until
+
+        # maybe weird, but works
+        result = dic["root_grid"].items()
+        data = list(result)
+        npa = np.array(data)
+        dela = np.delete(npa, 0, 1)
+        root_grid: np.ndarray = np.reshape(dela, (-1, 20))
+
+        water_grid_pos: tuple[float, float] = dic["water_grid_pos"]
+        directions = []
+        positions: list[tuple[float, float]] = dic["positions"]
+
+        # mass: float = dic["mass"]
+        root_system = LSystem(root_grid=root_grid,
+                              water_grid_pos=water_grid_pos,
+                              directions=directions,
+                              positions=positions)
+
+        first_letters = dic["first_letters"]
+        # root_system.apexes = dic["apexes"]
+        root_system.directions = dic["directions"]
+        for i in range(len(first_letters)):
+            root_system.first_letters.append(DictToRoot.dict2letter(first_letters[i]))
+
+        return root_system
+
+    @staticmethod
+    def dict2letter(dic_letter):
+        id = dic_letter["id"]
+        tier = dic_letter["tier"]
+        root_class = dic_letter["root_class"]
+        length = dic_letter["length"]
+        max_length = dic_letter["max_length"]
+        mass_start = dic_letter["mass_start"]
+        mass_end = dic_letter["mass_end"]
+        branching_t = dic_letter["branching_t"]
+        branches = []
+        for branch in dic_letter["branches"]:
+            branches.append(DictToRoot.dict2letter(branch))
+        max_branches = dic_letter["max_branches"]
+        t = dic_letter["t"]
+        pos = dic_letter["pos"]
+        dir = dic_letter["dir"]
+        letter = Letter(id, root_class, tier, dir, max_length, mass_start, mass_end, max_branches, branches, t,
+                        branching_t, length, pos)
+        return letter

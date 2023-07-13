@@ -55,7 +55,7 @@ class Environment:
                 )
                 for i in range(0, 21)
             ],
-            duration=10,
+            duration=1,
             pos=(480, 0),
             running=False
         )
