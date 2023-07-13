@@ -445,7 +445,8 @@ class DefaultGameScene(object):
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Flowers will enable you to start seed production.",
-                play_selected=self.sound_control.play_select_sfx
+                play_selected=self.sound_control.play_select_sfx,
+                cost=2
             )
         )
 

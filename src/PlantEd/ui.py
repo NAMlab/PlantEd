@@ -349,6 +349,7 @@ class UI:
 
     def update(self, dt):
         if self.pause:
+            self.textbox.update(dt)
             return
         self.hover.update(dt)
         '''if self.plant.get_biomass() >= 4:
@@ -902,12 +903,23 @@ class UI:
 
     def init_pause_ui(self):
         self.options = config.load_options()
+
+        self.music_label = config.BIGGER_FONT.render(
+            "Music", True, config.WHITE
+        )
+        self.sfx_label = config.BIGGER_FONT.render(
+            "SFX", True, config.WHITE
+        )
+        self.narator_label = config.BIGGER_FONT.render(
+            "Narator", True, config.WHITE
+        )
+
         self.pause_label = config.MENU_TITLE.render(
             "Game Paused", True, config.WHITE
         )
         self.pause_button_resume = Button(
             700,
-            760,
+            config.SCREEN_HEIGHT-250,
             200,
             50,
             [self.sound_control.play_select_sfx, self.resume],
@@ -917,7 +929,7 @@ class UI:
         )
         self.pause_button_exit = Button(
             1020,
-            760,
+            config.SCREEN_HEIGHT-250,
             200,
             50,
             [self.quit],
@@ -927,21 +939,21 @@ class UI:
         )
 
         self.music_slider = Slider(
-            (250, 500, 15, 200),
+            (config.SCREEN_WIDTH/2-300-25, 350, 15, 200),
             config.FONT,
             (50, 20),
             percent=self.options["music_volume"] * 100,
             active=True,
         )
         self.sfx_slider = Slider(
-            (400, 500, 15, 200),
+            (config.SCREEN_WIDTH/2-150-25, 350, 15, 200),
             config.FONT,
             (50, 20),
             percent=self.options["sfx_volume"] * 100,
             active=True,
         )
         self.narator_slider = Slider(
-            (550, 500, 15, 200),
+            (config.SCREEN_WIDTH/2-25, 350, 15, 200),
             config.FONT,
             (50, 20),
             percent=self.options["narator_volume"] * 100,
@@ -949,9 +961,9 @@ class UI:
         )
 
         self.textbox = Textbox(
-            800,
-            600,
-            280,
+            config.SCREEN_WIDTH/2+100,
+            360,
+            200,
             50,
             config.BIGGER_FONT,
             self.options["name"],
@@ -961,8 +973,8 @@ class UI:
         )
 
         self.apply_button = Button(
-            300,
-            760,
+            config.SCREEN_WIDTH/2+100,
+            460,
             200,
             50,
             [self.apply_options, self.sound_control.reload_options],
@@ -1128,6 +1140,12 @@ class UI:
         # weird to have extra method for one element
         '''
     def draw_pause_menu(self, s):
+        pygame.draw.rect(s, config.WHITE, (config.SCREEN_WIDTH/2-400,220,800,430), border_radius=3, width=1)
+        s.blit(self.music_label, (config.SCREEN_WIDTH/2-self.music_label.get_width()/2-300,300))
+        s.blit(self.narator_label, (config.SCREEN_WIDTH/2-self.narator_label.get_width()/2-150,300))
+        s.blit(self.sfx_label, (config.SCREEN_WIDTH/2-self.sfx_label.get_width()/2,300))
+        s.blit(self.pause_label, (config.SCREEN_WIDTH/2-self.pause_label.get_width()/2,100))
+
         self.pause_button_exit.draw(s)
         self.pause_button_resume.draw(s)
         self.narator_slider.draw(s)
