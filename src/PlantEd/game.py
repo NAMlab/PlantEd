@@ -310,9 +310,7 @@ class DefaultGameScene(object):
             camera=self.camera,
             client=self.client,
             water_grid=self.water_grid,
-            growth_boost=1,
-            play_level_up=self.sound_control.play_level_up_sfx,
-            play_reward=self.sound_control.play_reward_sfx
+            sound_control=self.sound_control
         )
 
         self.water_grid.add_base_water(
@@ -329,7 +327,7 @@ class DefaultGameScene(object):
             plant=self.plant,
             server_plant=self.server_plant,
             water_grid=self.water_grid,
-            gametime=self.gametime      # T
+            gametime=self.gametime  # T
         )
 
         self.narrator = Narrator(self.environment)
@@ -363,7 +361,7 @@ class DefaultGameScene(object):
                         900 + random.randint(0, 200),
                     ),
                     bounding_rect=pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
-                    images=[assets.img("bug_purple/bug_purple_{}.png".format(i))for i in range(0, 3)],
+                    images=[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 3)],
                     camera=self.camera,
                     play_clicked=self.sound_control.play_bug_sfx
                 )
@@ -386,7 +384,7 @@ class DefaultGameScene(object):
             images_right=[assets.img("snail/4.png")],
             camera=self.camera,
             callback=self.plant.eat_stem,
-            bounds=pygame.Rect(0,870,1920,20),
+            bounds=pygame.Rect(0, 870, 1920, 20),
             max_amount=2,
             speed=1,
             snails=[],
@@ -537,7 +535,7 @@ class DefaultGameScene(object):
                     root=self.plant.organs[2].percentage,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
-                    time_frame= delta_time_in_h*3600
+                    time_frame=delta_time_in_h * 3600
                 )
 
                 self.client.growth_rate(
@@ -614,13 +612,12 @@ class DefaultGameScene(object):
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_growth_rates(growth_rates)
 
-
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
             pygame.event.post(pygame.event.Event(WIN))
 
     def update(self, dt):
-        #if self.ui.pause
+        # if self.ui.pause
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
         hour = day / 24
@@ -881,7 +878,7 @@ class CustomScene(object):
     def return_to_menu(self):
         pygame.quit()
         # sys.exit()
-        # self.manager.go_to(TitleScene(self.manager))
+        #self.manager.go_to(TitleScene(self.manager))
 
     def get_day_time(self, ticks):
         day = 1000 * 60 * 60 * 24
@@ -1050,6 +1047,7 @@ class SceneMananger(object):
 
 
 def main(windowed: bool, port: int):
+
     """
 
     Args:
@@ -1072,35 +1070,33 @@ def main(windowed: bool, port: int):
     else:
         size = pygame.FULLSCREEN
 
-    #pygame.display.set_mode((0, 0), size)
+    # pygame.display.set_mode((0, 0), size)
 
-    #version = PlantEd.__version__
-    #pygame.display.set_caption(f"PlantEd_{version}")
+    # version = PlantEd.__version__
+    # pygame.display.set_caption(f"PlantEd_{version}")
     timer = pygame.time.Clock()
     running = True
     # camera = Camera()
     manager = SceneMananger()
 
-    pause = False
-    pause_label = config.BIGGER_FONT.render("PAUSE", True, (255, 255, 255))
-
-
+    # pause = False
+    # pause_label = config.BIGGER_FONT.render("PAUSE", True, (255, 255, 255))
 
     while running:
         dt = timer.tick(60) / 1000.0
-        #fps = str(int(timer.get_fps()))
-        #fps_text = config.FONT.render(fps, False, (255, 255, 255))
+        # fps = str(int(timer.get_fps()))
+        # fps_text = config.FONT.render(fps, False, (255, 255, 255))
 
         if pygame.event.get(QUIT):
             running = False
-            #print("pygame.event.get(QUIT):")
+            # print("pygame.event.get(QUIT):")
             break
 
         # manager handles the current scene
         manager.scene.handle_events(pygame.event.get(), dt)
         manager.scene.update(dt)
         manager.scene.render(screen)
-        #screen.blit(fps_text, (500, 500))
+        # screen.blit(fps_text, (500, 500))
         # camera.render(screen)
         pygame.display.update()
 

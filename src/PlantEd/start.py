@@ -124,12 +124,13 @@ def main():
         try:
             from PlantEd import game
             game.main(
-                windowed= args.windowed,
-                port= server.port
-            )
+                windowed=args.windowed,
+                port=server.port)
         finally:
-            # make sure that the server stops whether the ui has an error or not
             server.stop()
+
+            # make sure that the server stops whether the ui has an error or not
+            #server.stop()
 
 
 def __stop_server_process():

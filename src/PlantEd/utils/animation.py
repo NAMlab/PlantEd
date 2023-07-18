@@ -14,7 +14,7 @@ class Animation:
         self.timer = 0
         self.interval = duration / len(images)
         # delta time to switch images
-        #self.start_interval = self.interval
+        # self.start_interval = self.interval
         self.index = 0
         self.once = once
         self.running = running
@@ -22,7 +22,7 @@ class Animation:
     def start(self, pos=None, center=True):
         if pos:
             if center:
-                pos = (pos[0]-self.images[0].get_width()/2,pos[1]-self.images[0].get_height()/2-50)
+                pos = (pos[0] - self.images[0].get_width() / 2, pos[1] - self.images[0].get_height() / 2 - 50)
             self.pos = pos
         self.running = True
 
@@ -39,7 +39,7 @@ class Animation:
                     self.index = 0
                     if self.once:
                         self.running = False
-                #self.interval += self.start_interval
+                # self.interval += self.start_interval
             self.image = self.images[self.index]
 
     def draw(self, screen):
@@ -47,25 +47,25 @@ class Animation:
             screen.blit(self.image, self.pos)
 
     @staticmethod
-    def generate_rising_animation(text=None, color=config.RED, image=None, move_up = -3):
+    def generate_rising_animation(text=None, color=config.RED, image=None, move_up=-3):
         images = []
         frames = 15
         width = 64
-        height = 64 #if text is not None else image.get_height()
+        height = 64  # if text is not None else image.get_height()
         increment = 3
         move_up = move_up
 
-        currency_minus_one_surface = pygame.Surface(
-            (width + increment * frames, height + increment * frames - move_up * frames * 2),
-            pygame.SRCALPHA)
-
         if text is not None:
-            scaleable_surface = pygame.Surface((width, height), pygame.SRCALPHA)
             currency_minus_one_label = config.BIGGER_FONT.render(text, True, color)
+            width = currency_minus_one_label.get_width() + 20
+            scaleable_surface = pygame.Surface((width, height), pygame.SRCALPHA)
             scaleable_surface.blit(currency_minus_one_label, (10, 10))
         if image is not None:
             scaleable_surface = image
 
+        currency_minus_one_surface = pygame.Surface(
+            (width + increment * frames, height + increment * frames - move_up * frames * 2),
+            pygame.SRCALPHA)
         center_w = currency_minus_one_surface.get_width() / 2
         center_h = currency_minus_one_surface.get_height() / 2
 
