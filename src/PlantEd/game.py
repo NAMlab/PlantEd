@@ -1,4 +1,6 @@
+import os
 import random
+import time
 from datetime import datetime
 from typing import List
 
@@ -18,6 +20,7 @@ from PlantEd.gameobjects.bee import Hive
 from PlantEd.gameobjects.bug import Bug
 from PlantEd.gameobjects.level_card import Card
 from PlantEd.gameobjects.plant import Plant
+from PlantEd.gameobjects import plant
 from PlantEd.gameobjects.shop import (
     Shop,
     Shop_Item,
@@ -60,8 +63,6 @@ plant_pos = (
 GREEN = (19, 155, 23)
 BLUE = (75, 75, 200)
 SKY_BLUE = (169, 247, 252)
-
-plant = None
 
 import logging
 
@@ -252,7 +253,7 @@ class OptionsScene:
     def update(self, dt):
         self.textbox.update(dt)
 
-    def handle_events(self, events, dt):
+    def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN:
                 if e.key == K_ESCAPE:
@@ -288,6 +289,14 @@ class OptionsScene:
 class DefaultGameScene(object):
     def __init__(self):
         self.end_initiated = False
+        # get name and date
+        name = config.load_options()["name"]
+
+        since_epoch = time.time()
+        datetime_added = datetime.utcfromtimestamp(since_epoch).strftime("%d/%m/%Y %H:%M")
+        self.path_to_logs = "./data/finished_games/{}{}".format(name, since_epoch)
+        os.makedirs(self.path_to_logs)
+        self.log = Log(self.path_to_logs)  # can be turned off
         global plant
         self.sound_control = SoundControl()
         self.sound_control.play_music()
@@ -297,7 +306,7 @@ class DefaultGameScene(object):
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
         self.gametime.faster()
-        self.log = Log()  # can be turned off
+
         self.water_grid = Water_Grid(pos=(0, 900))
         self.client = Client(port=client_port)
         self.server_plant = ServerPlant()
@@ -309,7 +318,8 @@ class DefaultGameScene(object):
             ),
             camera=self.camera,
             client=self.client,
-            water_grid=self.water_grid,
+            water_grid_pos=self.water_grid.pos,
+            water_grid_shape=self.water_grid.get_shape(),
             sound_control=self.sound_control
         )
 
@@ -503,11 +513,14 @@ class DefaultGameScene(object):
         self.plant.organs[0].activate_add_leaf()
 
     def quit(self):
+
         self.log.close_file()
         self.log.close_model_file()
-        pygame.quit()
+        plant_dict = self.plant.to_dict()
+        config.write_dict(plant_dict, self.path_to_logs + "/plant")
+        self.manager.go_to(EndScene(self.path_to_logs))
 
-    def handle_events(self, events: List[pygame.event.Event], dt):
+    def handle_events(self, events: List[pygame.event.Event]):
         for e in events:
             self.ui.handle_event(e)
             if self.ui.pause:
@@ -544,6 +557,34 @@ class DefaultGameScene(object):
                 )
 
                 self.plant.get_PLA()
+                days, hours, minutes = self.environment.get_day_time()
+
+                self.log.append_model_row(
+                    days=days,
+                    hours=hours,
+                    minutes=minutes,
+                    leaf_percentage=growth_percent.leaf,
+                    stem_percentage=growth_percent.stem,
+                    root_percentage=growth_percent.root,
+                    starch_percentage=growth_percent.starch,
+                    seed_percentage=flower_percent,
+                    water_in=0,
+                    nitrate_in=0,
+                    starch_in=0,
+                    photon_in=0,
+                    leaf_mass=self.plant.organs[0].get_mass(),
+                    stem_mass=self.plant.organs[1].mass,
+                    root_mass=self.plant.organs[2].mass,
+                    seed_mass=self.plant.organs[3].get_mass(),
+                    water_pool=0,
+                    starch_pool=0,
+                    nitrate_pool=0,
+                    leaf_rate=self.ui.growth_rates.leaf_rate,
+                    stem_rate=self.ui.growth_rates.stem_rate,
+                    root_rate=self.ui.growth_rates.root_rate,
+                    seed_rate=self.ui.growth_rates.seed_rate,
+                )
+
             if e.type == KEYDOWN and e.key == K_e:
                 self.end_initiated = not self.end_initiated
                 self.plant.organs[5].pop_all_seeds(timeframe=2000)
@@ -555,7 +596,7 @@ class DefaultGameScene(object):
                 scoring.upload_score(
                     self.ui.name, self.plant.organs[3].get_mass()
                 )
-                self.manager.go_to(CustomScene())
+                self.manager.go_to(EndScene(self.path_to_logs))
 
             self.shop.handle_event(e)
             self.floating_shop.handle_event(e)
@@ -803,7 +844,7 @@ class TitleScene(object):
     def go_to_scores(self):
         self.manager.go_to(CustomScene())
 
-    def handle_events(self, events, dt):
+    def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.quit()
@@ -814,6 +855,45 @@ class TitleScene(object):
                 button.handle_event(e)
             # self.watering_can.handle_event(e)
 
+class EndScene(object):
+    def __init__(self, path_to_logs):
+        super(EndScene, self).__init__()
+        self.camera = Camera(offset_y=-200)
+        dict_plant = config.load_dict(path_to_logs + "/plant.json")
+        self.plant_object: Plant = plant.from_dict(dict_plant, self.camera)
+
+        self.button_sprites = pygame.sprite.Group()
+        self.back = Button(
+            860,
+            930,
+            200,
+            50,
+            [self.return_to_menu],
+            config.BIGGER_FONT,
+            "BACK",
+            config.LIGHT_GRAY,
+            config.WHITE,
+            border_w=2,
+        )
+        self.button_sprites.add(self.back)
+
+    def update(self, dt):
+        pass
+
+    def render(self, screen):
+        screen.fill((0,0,0,0))
+        temp_surface.fill((0, 0, 0))
+        self.plant_object.draw(temp_surface)
+        screen.blit(temp_surface, (0, self.camera.offset_y))
+        self.button_sprites.draw(screen)
+
+    def handle_events(self, events):
+        for e in events:
+            for button in self.button_sprites:
+                button.handle_event(e)
+
+    def return_to_menu(self):
+        self.manager.go_to(TitleScene(self.manager))
 
 class CustomScene(object):
     def __init__(self):
@@ -878,7 +958,7 @@ class CustomScene(object):
     def return_to_menu(self):
         pygame.quit()
         # sys.exit()
-        #self.manager.go_to(TitleScene(self.manager))
+        # self.manager.go_to(TitleScene(self.manager))
 
     def get_day_time(self, ticks):
         day = 1000 * 60 * 60 * 24
@@ -931,7 +1011,7 @@ class CustomScene(object):
     def update(self, dt):
         pass
 
-    def handle_events(self, events, dt):
+    def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN:
                 self.manager.go_to(TitleScene(self.manager))
@@ -1019,7 +1099,7 @@ class Credits:
     def update(self, dt):
         pass
 
-    def handle_events(self, events, dt):
+    def handle_events(self, events):
         for e in events:
             if e.type == KEYDOWN:
                 if e.key == K_ESCAPE:
@@ -1047,7 +1127,6 @@ class SceneMananger(object):
 
 
 def main(windowed: bool, port: int):
-
     """
 
     Args:
@@ -1093,7 +1172,7 @@ def main(windowed: bool, port: int):
             break
 
         # manager handles the current scene
-        manager.scene.handle_events(pygame.event.get(), dt)
+        manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
         # screen.blit(fps_text, (500, 500))

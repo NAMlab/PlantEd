@@ -11,16 +11,20 @@ from PlantEd import config
 from PlantEd.utils.gametime import GameTime
 
 
-
-
 class Cubic_Tree:
-    def __init__(self, branches, camera):
+    def __init__(self, branches, camera=None):
         self.branches = branches
         self.camera = camera
         self.branches[0].main = True
 
     def grow_main(self):
         self.branches[0].grow()
+
+    def to_dict(self) -> dict:
+        cubic_dict = {
+            "branches": [branch.to_dict() for branch in self.branches]
+        }
+        return cubic_dict
 
     def grow_all(self):
         for branch in self.branches:
@@ -34,14 +38,12 @@ class Cubic_Tree:
                     spots += 1
         return spots
 
-
     def get_spots(self):
         spots = []
         for branch in self.branches:
             for free_spot in branch.free_spots:
                 spots.append(free_spot)
         return spots
-
 
     def add_branch(self, highlight, mouse_pos):
         point = highlight[0]
@@ -142,6 +144,12 @@ class Cubic:
         y_new = f(x_new)
         return list(zip(y_new, x_new))
 
+    def to_dict(self) -> dict:
+        branch_dict = {
+            "branch": self.points
+        }
+        return branch_dict
+
     def grow(self, point=None):
         if not point:
             point = [
@@ -172,11 +180,11 @@ class Cubic:
             self.interpolated = []
             for i in range(len(self.curve)):
                 x = (
-                    self.new_curve[i + 1][0] - self.curve[i][0]
-                ) * self.growth_percentage + self.curve[i][0]
+                            self.new_curve[i + 1][0] - self.curve[i][0]
+                    ) * self.growth_percentage + self.curve[i][0]
                 y = (
-                    self.new_curve[i + 1][1] - self.curve[i][1]
-                ) * self.growth_percentage + self.curve[i][1]
+                            self.new_curve[i + 1][1] - self.curve[i][1]
+                    ) * self.growth_percentage + self.curve[i][1]
                 self.interpolated.append((x, y))
                 self.growth_percentage += dt / 50
             self.interpolated.append(self.curve[-1])
@@ -228,16 +236,16 @@ class Cubic:
             return False
 
         x_dist = (
-            self.points[id][0]
-            - self.offsets[id][0]
-            + pos[0]
-            - self.points[id][0]
+                self.points[id][0]
+                - self.offsets[id][0]
+                + pos[0]
+                - self.points[id][0]
         )
         y_dist = (
-            self.points[id][1]
-            - self.offsets[id][1]
-            + pos[1]
-            - self.points[id][1]
+                self.points[id][1]
+                - self.offsets[id][1]
+                + pos[1]
+                - self.points[id][1]
         )
 
         dist = math.sqrt(x_dist * x_dist + y_dist * y_dist)
@@ -322,11 +330,11 @@ class Cubic:
 
 class Beziere:
     def __init__(
-        self,
-        list_of_points: List[Tuple[float, float]],
-        color=config.GREEN,
-        res=100,
-        width=10,
+            self,
+            list_of_points: List[Tuple[float, float]],
+            color=config.GREEN,
+            res=100,
+            width=10,
     ):
         """
         list_of_points: Control points in the xy plane on which to interpolate. These
@@ -365,7 +373,7 @@ class Beziere:
         # self.update(0)
 
     def basis_function(
-        self, t: float, list_of_points: List[Tuple[float, float]], degree: int
+            self, t: float, list_of_points: List[Tuple[float, float]], degree: int
     ):
         """
         The basis function determines the weight of each control point at time t.
@@ -383,14 +391,14 @@ class Beziere:
         for i in range(len(list_of_points)):
             # basis function for each i
             output_values.append(
-                comb(degree, i) * ((1 - t) ** (degree - i)) * (t**i)
+                comb(degree, i) * ((1 - t) ** (degree - i)) * (t ** i)
             )
         # the basis must sum up to 1 for it to produce a valid Bezier curve.
         # assert round(sum(output_values), 5) == 1
         return output_values
 
     def bezier_curve_function(
-        self, t: float, list_of_points: List[Tuple[float, float]], degree: int
+            self, t: float, list_of_points: List[Tuple[float, float]], degree: int
     ) -> Tuple[float, float]:
         """
         The function to produce the values of the Bezier curve at time t.
@@ -418,7 +426,7 @@ class Beziere:
         return (x, y)
 
     def list_at_resolution(
-        self, list_of_points: List[Tuple[float, float]], degree: int
+            self, list_of_points: List[Tuple[float, float]], degree: int
     ):
         """
         This function gets x and y of bezier_curve_function at all resolution points
@@ -535,7 +543,7 @@ class Beziere:
 
             # for i in range(0,len(self.list_of_points)):
             height_multiplicator = (
-                1 - self.list_of_points[i][1] / config.SCREEN_HEIGHT
+                    1 - self.list_of_points[i][1] / config.SCREEN_HEIGHT
             )  # used as mass
             # calculate a to get v over dt to get x,y
             a_x = sum_forces_x / height_multiplicator
@@ -561,11 +569,11 @@ class Beziere:
                 t, self.list_of_points, self.degree
             )
             x = (
-                new_point[0] - old_point[0]
-            ) * self.growth_percentage + old_point[0]
+                        new_point[0] - old_point[0]
+                ) * self.growth_percentage + old_point[0]
             y = (
-                new_point[1] - old_point[1]
-            ) * self.growth_percentage + old_point[1]
+                        new_point[1] - old_point[1]
+                ) * self.growth_percentage + old_point[1]
         else:
             return self.bezier_curve_function(
                 t, self.list_of_points, self.degree
@@ -586,11 +594,11 @@ class Beziere:
             interpolated_points = []
             for i in range(0, len(old_points)):
                 x = (
-                    new_points[i][0] - old_points[i][0]
-                ) * self.growth_percentage + old_points[i][0]
+                            new_points[i][0] - old_points[i][0]
+                    ) * self.growth_percentage + old_points[i][0]
                 y = (
-                    new_points[i][1] - old_points[i][1]
-                ) * self.growth_percentage + old_points[i][1]
+                            new_points[i][1] - old_points[i][1]
+                    ) * self.growth_percentage + old_points[i][1]
                 interpolated_points.append((x, y))
             # pygame.draw.lines(screen, (0,255,0), False, interpolated_points, 5)
             self.points_to_draw = interpolated_points
@@ -675,6 +683,7 @@ class Beziere:
                 self.points_to_draw[i],
                 width=int(self.width - (i - half) * tapering),
             )
+
         # pygame.draw.lines(screen, (0,0,0), False, self.points_to_draw, width=7)
         # pygame.draw.lines(screen, config.GREEN, False, self.points_to_draw, width=5)
 

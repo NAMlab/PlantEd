@@ -36,10 +36,10 @@ MAX_DAYS = 27
 current_dir = os.path.abspath(os.getcwd())
 OPTIONS_PATH = "options.json"
 
-#ambience_volume
-#music_volume
-#sfx_volume
-#naration_volume
+# ambience_volume
+# music_volume
+# sfx_volume
+# naration_volume
 
 START_PATH = "sound/start"
 AMBIENCE_PATH = "sound/ambience"
@@ -206,6 +206,15 @@ def write_options(options):
     with open(fileDir, "w") as convert_file:
         convert_file.write(json.dumps(options))
 
+
+def write_dict(dict, path):
+    with open("{}.json".format(path), "w") as outfile:
+        json.dump(dict, outfile)
+
+def load_dict(path) -> dict:
+    with open(path) as convert_file:
+        plant_dict = json.load(convert_file)
+    return plant_dict
 
 def apply_volume(options):
     volume = options["effects"]

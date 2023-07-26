@@ -442,22 +442,22 @@ class UI:
         self.button_array.update(hours)
         hours = (int)(hours / 2)
         open = self.stomata_hours[hours]
-        if open and self.plant.stomata_open is False:
+        if open and self.plant.get_stomata_open() is False:
             self.open_stomata()
             self.button_array.go_green()
-        if not open and self.plant.stomata_open is True:
+        if not open and self.plant.get_stomata_open() is True:
             self.close_stomata()
             self.button_array.go_red()
 
     def open_stomata(self):
         self.client.open_stomata()
-        self.plant.stomata_open = True
+        self.plant.organs[0].stomata_open = True
         self.open_stomata_particle_in.activate()
         self.open_stomata_particle_out.activate()
 
     def close_stomata(self):
         self.client.close_stomata()
-        self.plant.stomata_open = False
+        self.plant.organs[0].stomata_open = False
         self.open_stomata_particle_in.deactivate()
         self.open_stomata_particle_out.deactivate()
 
