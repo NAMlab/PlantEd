@@ -17,14 +17,10 @@ from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.data import assets
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.shop import FloatingShop
-from PlantEd.gameobjects.water_reservoir import Water_Grid
 from PlantEd.utils.LSystem import DictToRoot, LSystem
 from PlantEd.utils.animation import Animation
-from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.particle import ParticleSystem
 from PlantEd.utils.spline import Cubic_Tree, Cubic
-
-from PlantEd.client.leaf import Leaf as client_Leaf
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +48,34 @@ beans = [
 ]
 
 
+def from_dict(plant_dict, camera=None):
+    plant = Plant(
+        pos = plant_dict["pos"],
+        water_grid_shape=plant_dict["water_grid_shape"],
+        water_grid_pos=plant_dict["water_grid_pos"],
+        camera=camera
+    )
+
+    plant.organs[0].leaves = plant_dict["leaf"]["leaves"]
+    print(plant_dict["leaf"]["leaves"])
+    for leaf in plant.organs[0].leaves:
+        leaf["image"] = leaves[int(random.random() * len(leaves))][0]
+    plant.organs[0].update_image_size()
+    branches: list[Cubic] = []
+    branches_dict_list = plant_dict["stem"]["curve"]["branches"]
+    for branch in branches_dict_list:
+        print(branch["branch"])
+        branches.append(Cubic(branch["branch"]))
+    plant.organs[1].curve = Cubic_Tree(branches=branches)
+
+
+    plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["roots"])
+    plant.organs[3].flowers = plant_dict["flower"]["flowers"]
+    for flower in plant.organs[3].flowers:
+        flower["image"] = flowers[int(random.random()*len(flowers))]
+    return plant
+
+
 class Plant:
     LEAF = 1
     STEM = 2
@@ -62,36 +86,41 @@ class Plant:
     def __init__(
             self,
             pos: tuple[float, float],
-            camera: Camera,
-            client: Client,
-            water_grid: Water_Grid,
-            sound_control,
+            water_grid_shape: tuple[int, int],
+            water_grid_pos: tuple[float, float],
+            sound_control: SoundControl = None,
+            client: Client = None,
             upgrade_points: int = 1,
+            camera: Camera = None
     ):
         self.x: float = pos[0]
         self.y: float = pos[1]
+        self.water_grid_shape = water_grid_shape
+        self.water_grid_pos = water_grid_pos
         self.client: Client = client
         self.upgrade_points: int = upgrade_points
         self.sound_control: SoundControl = sound_control
-        self.stomata_open: bool = False
+        play_level_up_sfx = None
+        play_reward_sfx = None
+        if self.sound_control is not None:
+            play_level_up_sfx = self.sound_control.play_level_up_sfx
+            play_reward_sfx = self.sound_control.play_reward_sfx
         self.use_starch: bool = True
         self.camera: Camera = camera
-        self.water_grid: Water_Grid = water_grid
         self.danger_mode: bool = False
-        self.gametime: GameTime = GameTime.instance()
         organ_leaf = Leaf(
             x=self.x,
             y=self.y,
             name="Leaves",
             organ_type=self.LEAF,
             callback=self.set_target_organ_leaf,
-            plant=self,
             images=leaves,
             mass=0.1,
             active=False,
-            client=client,
-            play_level_up=self.sound_control.play_level_up_sfx,
-            play_reward=self.sound_control.play_reward_sfx
+            play_level_up=play_level_up_sfx,
+            play_reward=play_reward_sfx,
+            camera=self.camera,
+            level_up=self.level_up
         )
         organ_flower = Flower(
             x=self.x,
@@ -99,12 +128,11 @@ class Plant:
             name="Flower",
             organ_type=self.FLOWER,
             callback=self.set_target_organ_flower,
-            plant=self,
             images=flowers,
             mass=0.1,
             active=False,
-            client=client,
-            play_reward=self.sound_control.play_reward_sfx
+            play_reward=play_reward_sfx,
+            camera=self.camera,
         )
         organ_stem = Stem(
             x=self.x,
@@ -112,14 +140,14 @@ class Plant:
             name="Stem",
             organ_type=self.STEM,
             callback=self.set_target_organ_stem,
-            plant=self,
             mass=0.1,
             leaf=organ_leaf,
             flower=organ_flower,
             active=False,
-            client=client,
-            play_level_up=self.sound_control.play_level_up_sfx,
-            play_reward=self.sound_control.play_reward_sfx
+            play_level_up=play_level_up_sfx,
+            play_reward=play_reward_sfx,
+            camera=self.camera,
+            level_up=self.level_up
         )
         organ_root = Root(
             x=self.x,
@@ -127,12 +155,14 @@ class Plant:
             name="Roots",
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
-            plant=self,
             mass=4,
             active=True,
-            client=client,
-            play_level_up=self.sound_control.play_level_up_sfx,
-            play_reward=self.sound_control.play_reward_sfx
+            water_grid_shape=water_grid_shape,
+            water_grid_pos=water_grid_pos,
+            play_level_up=play_level_up_sfx,
+            play_reward=play_reward_sfx,
+            camera=self.camera,
+            level_up=self.level_up
         )
         self.organ_starch = Starch(
             x=self.x,
@@ -140,17 +170,37 @@ class Plant:
             name="Starch",
             organ_type=self.STARCH,
             callback=self,
-            plant=self,
             image=None,
             mass=1000000,
             active=True,
-            client=client
+            client=client,
+            camera=self.camera
         )
 
         self.seedling = Seedling(self.x, self.y, beans, 4)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_flower]
-        self.target_organ = self.organs[2]
         # Fix env constraints
+        config.write_dict(self.to_dict(), "plant")
+
+
+    def to_dict(self) -> dict:
+
+        plant_dict = {
+            "pos": (self.x, self.y),
+            "water_grid_shape": self.water_grid_shape,
+            "water_grid_pos": self.water_grid_pos,
+            "leaf": self.organs[0].to_dict(),
+            "stem": self.organs[1].to_dict(),
+            "root": self.organs[2].to_dict(),
+            "flower": self.organs[3].to_dict()
+        }
+        return plant_dict
+
+    def level_up(self):
+        self.upgrade_points += 1
+
+    def get_stomata_open(self) -> bool:
+        return self.organs[0].stomata_open
 
     def check_organ_level(self):
         lvl = 0
@@ -213,23 +263,32 @@ class Plant:
         self.organ_starch.drain(dt, 0, 0)
 
     def set_target_organ_leaf(self):
-        self.target_organ = self.organs[0]
+        for organ in self.organs:
+            organ.target = False
+        self.organs[0].target = True
 
     def set_target_organ_stem(self):
-        self.target_organ = self.organs[1]
+        for organ in self.organs:
+            organ.target = False
+        self.organs[1].target = True
 
     def set_target_organ_root(self):
-        self.target_organ = self.organs[2]
+        for organ in self.organs:
+            organ.target = False
+        self.organs[2].target = True
 
     def set_target_organ_flower(self):
-        self.target_organ = self.organs[3]
+        for organ in self.organs:
+            organ.target = False
+        self.organs[3].target = True
 
     def update(self, dt, photon_intake):
+        self.check_organ_level()
         self.grow(dt)
         if self.danger_mode:
             for organ in self.organs:
                 # Todo make it more scientifically accurate
-                organ.drain(0.00001, self.gametime.GAMESPEED, dt)
+                organ.drain(0.00001, dt)
         if self.get_biomass() > self.seedling.max and not self.organs[1].active:
             self.organs[1].activate()
             self.organs[0].activate()
@@ -278,9 +337,8 @@ class Organ:
             y: float,
             name: string,
             organ_type: int,
-            client: Client,
             callback: callable,
-            plant: Plant,
+            client: Client = None,
             image: pygame.Surface = None,
             pivot: tuple[float, float] = None,
             mass: float = 1,
@@ -289,7 +347,10 @@ class Organ:
             active: bool = False,
             base_mass: float = 0.9,
             play_level_up: callable = None,
-            play_reward: callable = None
+            play_reward: callable = None,
+            target: bool = False,
+            camera: Camera = None,
+            level_up: callable = None
     ):
         if thresholds is None:
             thresholds = [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
@@ -297,7 +358,6 @@ class Organ:
         self.y = y
         self.client = client
         self.callback = callback
-        self.plant = plant
         self.base_image = image
         self.image = image
         self.pivot = pivot
@@ -315,7 +375,11 @@ class Organ:
         self.skills = []
         self.play_level_up = play_level_up
         self.play_reward = play_reward
-        level_up_animation_images: list[pygame.Surface] = Animation.generate_rising_animation("{} Level Up!".format(self.name), config.WHITE)
+        self.target = target
+        self.camera = camera
+        self.level_up = level_up
+        level_up_animation_images: list[pygame.Surface] = Animation.generate_rising_animation(
+            "{} Level Up!".format(self.name), config.WHITE)
         self.animation: Animation = Animation(level_up_animation_images, 0.3, running=False, once=True)
 
     def update(self, dt):
@@ -333,7 +397,7 @@ class Organ:
             y = self.y - self.pivot[1] if self.pivot else self.y
             rect = pygame.Rect(
                 x,
-                y + self.plant.camera.offset_y,
+                y + self.camera.offset_y,
                 self.image.get_width(),
                 self.image.get_height(),
             )
@@ -341,9 +405,9 @@ class Organ:
             rect = pygame.Rect(0, 0, 0, 0)
         return [rect]
 
-    def drain(self, rate, gamespeed, dt):
+    def drain(self, rate, dt):
         if self.mass > 1:
-            self.mass -= (rate + rate * 0.01 * self.mass) * dt * gamespeed
+            self.mass -= (rate + rate * 0.01 * self.mass) * dt
 
     def grow(self, dt):
         if not self.active:
@@ -357,12 +421,12 @@ class Organ:
     Organ has reached enough mass to level up
     Player gets rewarded with a green thumb + sound and animation
     """
+
     def reach_threshold(self):
         if self.active_threshold >= len(self.thresholds) - 1:
             return
-        self.plant.upgrade_points += 1
+        self.level_up()
         self.level += 1
-        self.plant.check_organ_level()
         self.update_image_size()
         self.play_level_up()
         self.animation.start((config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2))
@@ -381,6 +445,7 @@ class Organ:
     Not all organs are active at the start of the game
     Once activated, their base mass gets applied to fasten growth
     """
+
     def activate(self):
         if self.mass < self.base_mass:
             self.mass = self.base_mass
@@ -390,6 +455,7 @@ class Organ:
     Basic draw of an image
     More complex organs need to override this
     """
+
     def draw(self, screen):
         self.animation.draw(screen)
         if not self.pivot:
@@ -403,6 +469,7 @@ class Organ:
     Basic increase of organ image
     More complex structures need to override
     """
+
     def update_image_size(self, factor=5, base=40):
         if self.image:
             ratio = self.image.get_height() / self.image.get_width()
@@ -426,13 +493,13 @@ class Leaf(Organ):
             name: string,
             organ_type: int,
             callback: callable,
-            plant: Plant,
             images: list[pygame.Surface],
             mass: float,
             active: bool,
-            client: Client,
             play_level_up: callable = None,
-            play_reward: callable = None
+            play_reward: callable = None,
+            camera: Camera = None,
+            level_up: callable = None
     ):
         self.leaves = []
         super().__init__(
@@ -441,12 +508,12 @@ class Leaf(Organ):
             name=name,
             organ_type=organ_type,
             callback=callback,
-            plant=plant,
             mass=mass,
             active=active,
-            client=client,
             play_level_up=play_level_up,
-            play_reward=play_reward
+            play_reward=play_reward,
+            camera=camera,
+            level_up=level_up
         )
         self.callback = callback
         self.images = images
@@ -469,13 +536,14 @@ class Leaf(Organ):
         self.shadow_resolution: int = 0
         self.max_shadow: int = 0
         self.play_reward: callable = play_reward
+        self.stomata_open = False
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     self.callback()
-        if self.type == self.plant.target_organ.type:
+        if self.target:
             if event.type == pygame.MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
                 rects = self.get_rect()
@@ -487,6 +555,16 @@ class Leaf(Organ):
 
     def activate_add_leaf(self):
         self.can_add_leaf = True
+
+    def to_dict(self) -> dict:
+        # factor 7, base 80
+        cleared_leaves = self.leaves.copy()
+        for leaf in cleared_leaves:
+            leaf.pop("image")
+        leaf_dict = {
+            "leaves": cleared_leaves
+        }
+        return leaf_dict
 
     def get_pla(self):
         return (
@@ -564,19 +642,6 @@ class Leaf(Organ):
             "growth_index": self.active_threshold,
         }
 
-        client_leaf = client_Leaf(
-            pos_x=pos[0],
-            pos_y=pos[1],
-            t=(highlight[1], highlight[2]),
-            offset_x=offset[0],
-            offset_y=offset[1],
-            direction=dir,
-            growth_index=self.active_threshold,
-            image=image[0],
-            base_image_id=image_id,
-        )
-
-        # self.client.create_leaf(client_leaf)
         self.update_leaf_image(leaf, init=True)
         self.particle_systems.append(
             ParticleSystem(
@@ -598,7 +663,7 @@ class Leaf(Organ):
             leaf["image"].get_rect(
                 topleft=(
                     leaf["x"] - leaf["offset_x"],
-                    leaf["y"] - leaf["offset_y"] + self.plant.camera.offset_y,
+                    leaf["y"] - leaf["offset_y"] + self.camera.offset_y,
                 )
             )
             for leaf in self.leaves
@@ -651,7 +716,7 @@ class Leaf(Organ):
                 0,
                 0,
             )
-            if self.photon_intake > 0 and self.plant.stomata_open:
+            if self.photon_intake > 0 and self.stomata_open:
                 adapted_pi = self.photon_intake / 50 * 3 + 5
                 self.particle_systems[i].lifetime = adapted_pi
                 self.particle_systems[i].activate()
@@ -688,7 +753,7 @@ class Leaf(Organ):
             x, y = pygame.mouse.get_pos()
             screen.blit(
                 assets.img("leaf_small.PNG", (128, 128)),
-                (x, y - self.plant.camera.offset_y),
+                (x, y - self.camera.offset_y),
             )
 
         for leaf in self.leaves:
@@ -698,7 +763,7 @@ class Leaf(Organ):
                 (leaf["x"] - leaf["offset_x"], leaf["y"] - leaf["offset_y"]),
             )
 
-        if self.type == self.plant.target_organ.type:
+        if self.target:
             outlines = self.get_outlines()
             for i in range(0, len(self.leaves)):
                 s = pygame.Surface((64, 64), pygame.SRCALPHA)
@@ -730,14 +795,16 @@ class Root(Organ):
             name: string,
             organ_type: int,
             callback: callable,
-            plant: Plant,
-            client: Client,
             image: pygame.Surface = None,
             pivot: tuple[float, float] = None,
             mass: float = 0.0,
             active: bool = False,
+            water_grid_shape: tuple[int, int] = None,
+            water_grid_pos: tuple[float, float] = None,
             play_level_up: callable = None,
-            play_reward: callable = None
+            play_reward: callable = None,
+            camera: Camera = None,
+            level_up: callable = None
     ):
         super().__init__(
             x=x,
@@ -745,22 +812,19 @@ class Root(Organ):
             name=name,
             organ_type=organ_type,
             callback=callback,
-            plant=plant,
             image=image,
             pivot=pivot,
             mass=mass,
             active=active,
-            client=client,
             play_level_up=play_level_up,
-            play_reward=play_reward
+            play_reward=play_reward,
+            camera=camera,
+            level_up=level_up
         )
         # self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
-        # positions = [(x,y+45)]
-        # directions = [(0,1)]
-
-        root_grid: np.array = np.zeros(plant.water_grid.get_shape())
-        water_grid_pos: tuple[float, float] = plant.water_grid.pos
+        root_grid: np.array = np.zeros(water_grid_shape)
+        water_grid_pos: tuple[float, float] = water_grid_pos
 
         self.ls: LSystem = LSystem(root_grid, water_grid_pos)
         self.create_new_root(dir=(0, 1))
@@ -769,6 +833,12 @@ class Root(Organ):
     # Todo make root outlines
     def get_outline(self):
         pass
+
+    def to_dict(self) -> dict:
+        root_dict = {
+            "roots": self.ls.to_dict()
+        }
+        return root_dict
 
     def check_can_add_root(self):
         if self.active_threshold > len(self.ls.first_letters):
@@ -781,7 +851,8 @@ class Root(Organ):
         self.animation.update(dt)
 
     def create_new_root(self, mouse_pos=None, dir=None):
-        self.play_reward()
+        if self.play_reward is not None:
+            self.play_reward()
         dist = None
         if mouse_pos:
             dist = math.sqrt(
@@ -800,7 +871,7 @@ class Root(Organ):
 
     def draw(self, screen):
         self.animation.draw(screen)
-        if self.type == self.plant.target_organ.type:
+        if self.target:
             # pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 8)
             self.ls.draw_highlighted(screen)
         else:
@@ -815,24 +886,23 @@ class Stem(Organ):
             name: string,
             organ_type: int,
             callback: callable,
-            plant: Plant,
-            client: Client,
             image: pygame.Surface = None,
             leaf: Leaf = None,
-            flower = None,
-            mass: float  = 0.0,
+            flower=None,
+            mass: float = 0.0,
             active: bool = False,
             play_level_up: callable = None,
-            play_reward: callable = None
+            play_reward: callable = None,
+            camera: Camera = None,
+            level_up: callable = None
     ):
         self.leaf = leaf
         self.flower = flower
         self.width: float = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
         self.curve = Cubic_Tree(
-            [Cubic([[955, 900], [960, 820], [940, 750]])], plant.camera
+            [Cubic([[955, 900], [960, 820], [940, 750]])], camera
         )
-        self.gametime = GameTime.instance()
         self.timer: float = 0
         self.floating_shop: FloatingShop = None
         self.dist_to_stem: float = 1000
@@ -846,14 +916,14 @@ class Stem(Organ):
             name=name,
             organ_type=organ_type,
             callback=callback,
-            plant=plant,
             image=image,
             mass=mass,
             active=active,
             base_mass=1,
-            client=client,
             play_level_up=play_level_up,
-            play_reward=play_reward
+            play_reward=play_reward,
+            camera=camera,
+            level_up=level_up
         )
 
     def update(self, dt):
@@ -887,11 +957,17 @@ class Stem(Organ):
     def check_can_add_leaf(self):
         return True
 
+    def to_dict(self) -> dict:
+        stem_dict = {
+            "curve": self.curve.to_dict()
+        }
+        return stem_dict
+
     def handle_event(self, event):
         self.curve.handle_event(event)
         if event.type == pygame.MOUSEMOTION:
             x, y = pygame.mouse.get_pos()
-            y -= self.plant.camera.offset_y
+            y -= self.camera.offset_y
             point, branch_id, point_id = self.curve.find_closest((x, y), True)
             if self.leaf.can_add_leaf:
                 self.highlight = (point, branch_id, point_id)
@@ -910,7 +986,7 @@ class Stem(Organ):
                     if rect.collidepoint((x, y)):
                         self.callback()
             if not self.can_add_branch or self.leaf.can_add_leaf:
-                y -= self.plant.camera.offset_y
+                y -= self.camera.offset_y
                 point, branch_id, point_id = self.curve.find_closest(
                     (x, y), False
                 )
@@ -918,7 +994,7 @@ class Stem(Organ):
                     (x - point[0]) ** 2 + (y - point[1]) ** 2
                 )
                 if dist_to_stem < 20:
-                    self.timer = self.gametime.get_time()
+                    self.timer = pygame.time.get_ticks()
 
         if event.type == pygame.MOUSEBUTTONUP:
             if self.can_add_branch and self.dist_to_stem < 50:
@@ -941,9 +1017,10 @@ class Stem(Organ):
                         self.highlight[2]
                     ] = config.FLOWER_SPOT
             else:
-                if self.gametime.get_time() - self.timer < 1000 * 120:
+                print(self.timer, pygame.time.get_ticks(), pygame.time.get_ticks()-self.timer)
+                if pygame.time.get_ticks() - self.timer < 300:
                     x, y = pygame.mouse.get_pos()
-                    y -= self.plant.camera.offset_y
+                    y -= self.camera.offset_y
                     # check how many free spots the stem hast, adapt shop accordingly
                     # no spots -> if flower selected -> flower option
                     # no spots, no flower -> nothing
@@ -976,9 +1053,6 @@ class Stem(Organ):
         if event.type == KEYDOWN and event.key == K_m:
             self.curve.toggle_move()
 
-    """
-    There is no single image to draw
-    """
     def update_image_size(self, factor=3, base=5):
         pass
 
@@ -988,13 +1062,13 @@ class Stem(Organ):
 
     def draw(self, screen):
         self.animation.draw(screen)
-        if self.plant.target_organ.type == self.type:
+        if self.target:
             self.curve.draw(screen, True)
         else:
             self.curve.draw(screen)
         if self.highlight:
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            mouse_y = mouse_y - self.plant.camera.offset_y
+            mouse_y = mouse_y - self.camera.offset_y
             self.dist_to_stem = math.sqrt(
                 (mouse_x - self.highlight[0][0]) ** 2
                 + (mouse_y - self.highlight[0][1]) ** 2
@@ -1017,6 +1091,7 @@ class Stem(Organ):
     def get_rect(self):
         return self.curve.get_rects()
 
+
 class Starch(Organ):
     def __init__(
             self,
@@ -1025,11 +1100,11 @@ class Starch(Organ):
             name: string,
             organ_type: int,
             callback: callable,
-            plant: Plant,
             image: pygame.Surface,
             mass: float,
             active: bool,
-            client: Client
+            client: Client,
+            camera: Camera = None
     ):
         super().__init__(
             x=x,
@@ -1037,12 +1112,12 @@ class Starch(Organ):
             name=name,
             organ_type=organ_type,
             callback=callback,
-            plant=plant,
             image=image,
             mass=mass,
             active=active,
             thresholds=[500],
-            client=client
+            client=client,
+            camera=camera
         )
         self.toggle_button = None
         self.starch_intake = 0
@@ -1080,12 +1155,11 @@ class Flower(Organ):
             name: string,
             organ_type: int,
             callback: callable,
-            plant: Plant,
             images: pygame.Surface,
             mass: float,
             active: bool,
-            client: Client,
             play_reward,
+            camera: Camera = None
     ):
         self.flowers = []
         super().__init__(
@@ -1093,13 +1167,12 @@ class Flower(Organ):
             y=y,
             name=name,
             organ_type=organ_type,
-            plant=plant,
             callback=callback,
             mass=mass,
             active=active,
             thresholds=[1, 2, 3, 10],
-            client=client,
-            play_reward=play_reward
+            play_reward=play_reward,
+            camera=camera
         )
         self.callback = callback
         self.images = images
@@ -1115,12 +1188,12 @@ class Flower(Organ):
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
             pass
-            #self.pop_seed()
+            # self.pop_seed()
         if event.type == pygame.MOUSEBUTTONUP:
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     self.callback()
-        if self.type == self.plant.target_organ.type:
+        if self.target:
             if event.type == pygame.MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
                 rects = self.get_rect()
@@ -1130,6 +1203,15 @@ class Flower(Organ):
 
     def activate_add_flower(self):
         self.can_add_flower = True
+
+    def to_dict(self) -> dict:
+        cleared_flowers = self.flowers.copy()
+        for flower in cleared_flowers:
+            flower.pop("image")
+        flower_dict = {
+            "flowers": cleared_flowers
+        }
+        return flower_dict
 
     def flower_flower(self, flower):
         flower["flowering"] = True
@@ -1298,7 +1380,7 @@ class Flower(Organ):
                     flower["x"] - flower["offset_x"],
                     flower["y"]
                     - flower["offset_y"]
-                    + self.plant.camera.offset_y,
+                    + self.camera.offset_y,
                 )
             )
             for flower in self.flowers
@@ -1322,7 +1404,7 @@ class Flower(Organ):
             x, y = pygame.mouse.get_pos()
             screen.blit(
                 assets.img("sunflowers/2.PNG", (128, 128)),
-                (x, y - self.plant.camera.offset_y),
+                (x, y - self.camera.offset_y),
             )
 
         for flower in self.flowers:
@@ -1334,7 +1416,7 @@ class Flower(Organ):
                 ),
             )
 
-        if self.type == self.plant.target_organ.type:
+        if self.target:
             outlines = self.get_outlines()
             for i in range(0, len(self.flowers)):
                 s = pygame.Surface((64, 64), pygame.SRCALPHA)
@@ -1434,5 +1516,6 @@ class Flower(Organ):
     Flowrs should not provide green thumbs
     since they are sinks and only increase the score
     """
+
     def reach_threshold(self):
         pass

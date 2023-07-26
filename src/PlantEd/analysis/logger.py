@@ -2,7 +2,7 @@ import csv
 
 
 class Log:
-    def __init__(self):
+    def __init__(self, path):
         self.file = open("logfile.csv", "w")
         self.writer = csv.writer(self.file)
         self.writer.writerow(
@@ -22,7 +22,7 @@ class Log:
             ]
         )
 
-        self.model_file = open("model_logs.csv", "w")
+        self.model_file = open(path + "/model_logs.csv", "w")
         self.model_writer = csv.writer(self.model_file)
         self.model_writer.writerow(
             [
