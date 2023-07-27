@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from typing import List
 
+import pandas
 import pygame
 from pygame.locals import *
 
@@ -32,6 +33,7 @@ from PlantEd.gameobjects.tree import Tree
 from PlantEd.gameobjects.water_reservoir import Water_Grid, Base_water
 from PlantEd.server.plant.plant import Plant as ServerPlant
 from PlantEd.ui import UI
+from PlantEd.utils import plot
 from PlantEd.utils.button import Button, Slider, ToggleButton, Textbox
 from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.narrator import Narrator
@@ -855,12 +857,25 @@ class TitleScene(object):
                 button.handle_event(e)
             # self.watering_can.handle_event(e)
 
+
 class EndScene(object):
     def __init__(self, path_to_logs):
         super(EndScene, self).__init__()
         self.camera = Camera(offset_y=-200)
         dict_plant = config.load_dict(path_to_logs + "/plant.json")
         self.plant_object: Plant = plant.from_dict(dict_plant, self.camera)
+
+        '''
+        Prepare plots
+        - Mass (Organs)
+        - Pools (Water, Nitrate, starch)
+        - Environment (Photon, Humidity, Precipitation, Temperature)
+        - Special (Transpiration, APS lol)
+        '''
+
+        #df = pandas.read_csv(path_to_logs + "/model_logs.csv")
+        #self.image = plot.generate_png_from_vec(None, None, None, None, None)
+
 
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
@@ -881,11 +896,12 @@ class EndScene(object):
         pass
 
     def render(self, screen):
-        screen.fill((0,0,0,0))
+        screen.fill((0, 0, 0, 0))
         temp_surface.fill((0, 0, 0))
         self.plant_object.draw(temp_surface)
         screen.blit(temp_surface, (0, self.camera.offset_y))
         self.button_sprites.draw(screen)
+        screen.blit(self.image,(0,0))
 
     def handle_events(self, events):
         for e in events:
@@ -894,6 +910,7 @@ class EndScene(object):
 
     def return_to_menu(self):
         self.manager.go_to(TitleScene(self.manager))
+
 
 class CustomScene(object):
     def __init__(self):

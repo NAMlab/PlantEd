@@ -1,0 +1,6 @@
+Time,,,Percentage Sliders,,,,,Intake,Mikromol/Second,,,Masses,gramm DW,,,Pools,Mikromol,,Rates,MirkoMol/Second,,
+Days,Hours,Minutes,Leaf_percentage, Stem_percentage,Root_percentage,Starch_percentage,Seed_percentage,Water_in,Nitrate_in,Starch_in,Photon_in,Leaf_mass,Stem_mass,Root_mass,Seed_mass,Water_pool,Starch_pool,Nitrate_pool,Leaf_rate,Stem_rate,Root_rate,Seed_rate
+0,1.0021677777777778,0.13006666666666666,0.0,0.0,100.0,-100.0,0,0,0,0,0,0.9,1.0,4.0,0.1,0,0,0,0,0,0,0
+0,1.6650530555555556,39.90318333333333,0.0,0.0,100.0,-100.0,0,0,0,0,0,0.9001,1.0,4.039507734533654,0.1,0,0,0,0.0,0.0,0.00011538473870809085,0.0
+0,2.3316080555555554,19.896483333333332,0.0,0.0,100.0,-100.0,0,0,0,0,0,0.9001,1.0,4.085593847697552,0.1,0,0,0,0.0,0.0,0.00011538854260484399,0.0
+0,3.0011655555555556,0.06993333333333333,0.0,0.0,100.0,-100.0,0,0,0,0,0,0.9001,1.0,4.131935341826471,0.1,0,0,0,0.0,0.0,0.00011539234662683029,0.0

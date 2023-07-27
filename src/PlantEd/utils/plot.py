@@ -1,12 +1,46 @@
 import matplotlib.pyplot as plt
-import pandas as pd
+#import numpy
+#from PIL import Image
+#from matplotlib.backends.backend_agg import FigureCanvasAgg
+#from matplotlib.figure import Figure
+#import pandas as pd
+#import pygame
+
+"""def generate_png_from_vec(vec, time, xlabel, ylabel, path_to_logs, color="black") -> pygame.Surface:
+    # make a Figure and attach it to a canvas.
+    fig = Figure(figsize=(5, 4), dpi=100)
+    canvas = FigureCanvasAgg(fig)
+
+    # Do some plotting here
+    ax = fig.add_subplot(111)
+    ax.plot([1, 2, 3])
+
+    # Retrieve a view on the renderer buffer
+    canvas.draw()
+    rgba = numpy.asarray(canvas.buffer_rgba())
+    # ... and pass it to PIL.
+    image = Image.fromarray(rgba)
 
 
-def main(path="../logfile.csv", logname="log"):
-    df = pd.read_csv(path)
-    plot_all_single(df, logname)
-    # hourly_gr = df.gr / df.speed * 3600
+    return image"""
 
+
+
+
+"""
+    seconds = time / 1000
+    minutes = seconds / 60
+    hours = minutes / 60
+    days = hours / 24
+    # print(seconds, minutes, hours, days)
+    plt.plot(days, vec, color=color)
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylabel:
+        plt.ylabel(ylabel)
+    plt.savefig(path_to_logs + "{}.png".format(ylabel))
+    plt.close()
+"""
 
 def plot_all_single(df, logname):
     plot_vec(
@@ -110,7 +144,6 @@ def plot_all_single(df, logname):
         "cyan",
     )
     # plot_all(df)
-
 
 def plot_vec(
     logname,
