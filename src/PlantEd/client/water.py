@@ -34,9 +34,12 @@ class Water:
             water_pool = abs(START_WATER_POOL_IN_MICROMOL) * self.__max_water_pool
 
         self.__water_pool: float = water_pool
+        self.transpiration: float = 0
+
+        # legacy will be removed
         self.water_intake: int = 0
         self.water_intake_pool: int = 0
-        self.transpiration: float = 0
+
 
     def __repr__(self):
         string = f"Water object with following values:" \
@@ -85,6 +88,17 @@ class Water:
 
         logger.debug(f"Calculated water percentage is {percentage} from {self}")
         return percentage
+    
+    @property
+    def missing_amount(self) -> float:
+        """
+        Provides the amount of water that can still be added to the pool.
+        
+        Returns:
+            float: Amount of water that can still be added to the pool in micromol.
+        """
+
+        return self.max_water_pool - self.water_pool
 
     def to_dict(self) -> dict:
         """
@@ -174,11 +188,11 @@ class Water:
 
         return value
 
-    def update_transpiration(self, stomata_open: bool, co2_uptake_in_micromol: float, transpiration_factor:float):
+    def update_transpiration(self, stomata_open: bool, co2_uptake_in_micromol_per_second_and_gram: float, transpiration_factor:float):
         transpiration = 0
         if stomata_open:
-            if co2_uptake_in_micromol > 0:
-                transpiration = co2_uptake_in_micromol * transpiration_factor
+            if co2_uptake_in_micromol_per_second_and_gram > 0:
+                transpiration = co2_uptake_in_micromol_per_second_and_gram * transpiration_factor
 
-        logger.debug(f"Setting transpiration to {transpiration}. Based on CO2 intake of {co2_uptake_in_micromol} and a transpiration_factor of {transpiration_factor}" )
+        logger.debug(f"Setting transpiration to {transpiration}. Based on CO2 intake of {co2_uptake_in_micromol_per_second_and_gram} and a transpiration_factor of {transpiration_factor}" )
         self.transpiration = transpiration

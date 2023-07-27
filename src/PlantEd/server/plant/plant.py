@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 
+import numpy as np
+
 from PlantEd.client.water import Water
 from PlantEd.constants import LEAF_BIOMASS_GRAM_PER_MICROMOL, STEM_BIOMASS_GRAM_PER_MICROMOL, \
     ROOT_BIOMASS_GRAM_PER_MICROMOL, SEED_BIOMASS_GRAM_PER_MICROMOL, START_LEAF_BIOMASS_GRAM, START_STEM_BIOMASS_GRAM, \
@@ -9,6 +11,7 @@ from PlantEd.constants import LEAF_BIOMASS_GRAM_PER_MICROMOL, STEM_BIOMASS_GRAM_
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.starch import Starch
+from PlantEd.utils.LSystem import LSystem
 
 class Plant:
     """
@@ -31,7 +34,7 @@ class Plant:
 
         photon_upper (float):
     """
-    def __init__(self):
+    def __init__(self, ground_grid_resolution: tuple[int,int]):
         self.leafs: list[Leaf] = []
         self.leafs_biomass: float = START_LEAF_BIOMASS_GRAM/ LEAF_BIOMASS_GRAM_PER_MICROMOL
         self.stem_biomass: float = START_STEM_BIOMASS_GRAM / STEM_BIOMASS_GRAM_PER_MICROMOL
@@ -47,6 +50,11 @@ class Plant:
         self.nitrate: Nitrate = Nitrate(plant_weight_gram= biomass)
 
         self.stomata_open:bool = False
+
+        self.root = LSystem(
+            root_grid= np.zeros(ground_grid_resolution), # same resolution as environment grids
+            water_grid_pos= (0, 900) # hardcoded at ui [game.py 310]
+        )
 
     def __repr__(self):
         string =f"Plant object with following biomass values:" \
@@ -206,12 +214,15 @@ class Plant:
     def update_max_starch_pool(self):
         self.starch_pool.scale_pool_via_biomass(biomass_in_gram= self.biomass_total_gram)
 
-    def update_transpiration(self, transpiration_factor: float):
+    def update_transpiration(self, transpiration_factor: float, co2_uptake_in_micromol_per_second_and_gram: float):
         self.water.update_transpiration(
             stomata_open= self.stomata_open,
-            co2_uptake_in_micromol= self.co2,
+            co2_uptake_in_micromol_per_second_and_gram= co2_uptake_in_micromol_per_second_and_gram,
             transpiration_factor = transpiration_factor,
         )
+    
+    def get_transpiration_in_micromol(self, time_in_s: int):
+        return self.water.transpiration * self.leafs_biomass_gram * time_in_s
 
     def update_nitrate_pool_intake(self, seconds:int):
         self.nitrate.update_nitrate_pool_based_on_root_weight(

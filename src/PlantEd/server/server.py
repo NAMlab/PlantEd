@@ -17,6 +17,7 @@ from PlantEd.client.growth_percentage import GrowthPercent
 from PlantEd.client.update import UpdateInfo
 from PlantEd.client.water import Water
 from PlantEd.fba.dynamic_model import DynamicModel
+from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.nitrate import Nitrate
 
@@ -114,7 +115,11 @@ class Server:
         self.clients = set()
         self.sock: Optional[socket.socket] = sock
         self.websocket: websockets.WebSocketServer = None
-        self.model: DynamicModel = DynamicModel()
+        self.environment : Environment = Environment()
+        self.model: DynamicModel = DynamicModel(
+            enviroment= self.environment,
+        )
+
         self.__future: asyncio.Future = None
         self.loop: asyncio.AbstractEventLoop = None
         self.only_local = only_local
@@ -247,7 +252,7 @@ class Server:
             logger.debug("The passed TimeFrame is 0. Returning plant objects without simulation.")
             return self.model.plant.to_json()
 
-        self.model.calc_growth_rate(growth_percent)
+        self.model.calc_growth_rate(new_growth_percentages= growth_percent, environment= self.environment)
         logger.info(f"Calculated growth rates: {self.model.growth_rates}")
 
         message = self.model.plant.to_json()

@@ -15,6 +15,7 @@ from PlantEd.client.update import UpdateInfo
 from PlantEd.fba.helpers import (
     normalize,
 )
+from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.plant import (
     Plant,
     ROOT_BIOMASS_GRAM_PER_MICROMOL,
@@ -131,13 +132,16 @@ script_dir = fileDir.parent
 class DynamicModel:
     def __init__(
         self,
+        enviroment: Environment,
         model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
     ):
         self.model = model.copy()
         self.set_objective()
         self._objective_value: float = 0
 
-        self.plant = Plant()
+        self.plant = Plant(
+            ground_grid_resolution= Environment.water_grid.grid_size
+        )
 
         self.use_starch = False
         self.temp = 20  # degree ceclsius        # define init pool and rates in JSON or CONFIG
@@ -160,7 +164,7 @@ class DynamicModel:
         self.update_constraints()
 
         self.init_constraints()
-        self.calc_growth_rate(self.percentages)
+        self.calc_growth_rate(new_growth_percentages= self.percentages, environment= enviroment)
 
     def set_objective(self):
         root: Reaction = self.model.reactions.get_by_id("Biomass_tx_root")
@@ -200,7 +204,7 @@ class DynamicModel:
 
         # Literature ATP NADPH: 7.27 and 2.56 mmol gDW−1 day−1
 
-    def calc_growth_rate(self, new_growth_percentages: GrowthPercent):
+    def calc_growth_rate(self, new_growth_percentages: GrowthPercent, environment: Environment):
         time_frame = new_growth_percentages.time_frame
         self.seconds_passed += time_frame
 
@@ -245,14 +249,23 @@ class DynamicModel:
         logger.debug(f"Bounds for starch are {starch_bounds}")
         self.set_bounds(STARCH_IN, starch_bounds)
 
-        water_upper_bounds = (
+        water_upper_bound_plant_pool = (
             self.plant.water.calc_available_water_in_mol_per_gram_and_time(
                 gram_of_organ=self.plant.root_biomass_gram,
                 time_in_seconds=time_frame,
             )
         )
-        water_bounds = (-1000, water_upper_bounds)
-        logger.debug(f"Bounds for water are  {water_bounds}")
+
+        water_upper_bound_env_pool = (
+            environment.water_grid.available(self.plant.root) # <- mol not mol/g*t
+        )
+
+        transpiration = self.plant.get_transpiration_in_micromol(time_in_s= time_frame)
+
+        max_usable_water = min(water_upper_bound_plant_pool + water_upper_bound_env_pool - transpiration, 0)
+
+        water_bounds = (-1000, max_usable_water)
+        logger.debug(f"Available Water from Plant pool is: {water_upper_bound_plant_pool}, available water from env pool is: {water_upper_bound_env_pool}, transpiration is {transpiration}. Bounds for water set to: {water_bounds}")
         self.set_bounds(WATER, water_bounds)
 
         photon_upper_bound = (
@@ -332,6 +345,7 @@ class DynamicModel:
 
         # Uptake and release
         # via leaf
+        co2_uptake_in_micromol_per_second_and_gram = co2
         co2 = co2 * leaf_biomass * time_frame
         photon = photon * leaf_biomass * time_frame
 
@@ -357,12 +371,30 @@ class DynamicModel:
 
 
         # update water
-        self.plant.water.water_intake = water
+        used_water =  water + transpiration
+
+        if used_water > water_upper_bound_env_pool:
+            taken_from_internal_pool = used_water - water_upper_bound_env_pool
+
+            self.plant.water.water_pool =- used_water - water_upper_bound_env_pool
+            used_water =- taken_from_internal_pool
+
+        environment.water_grid.drain(amount=used_water, roots= self.plant.root)
+
         self.plant.update_max_water_pool()
         self.update_transpiration_factor()
         self.plant.update_transpiration(
             transpiration_factor = self.transpiration_factor,
+            co2_uptake_in_micromol_per_second_and_gram= co2_uptake_in_micromol_per_second_and_gram,
         )
+
+        amount = self.plant.water.missing_amount
+        available = environment.water_grid.available(roots= self.plant.root)
+        diff = min(amount, available)
+
+        environment.water_grid.drain(amount=diff, roots= self.plant.root)
+        self.plant.water.water_pool =+ diff
+
 
         # update starch pool
         self.plant.starch_out = starch_out
