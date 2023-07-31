@@ -61,6 +61,7 @@ LEVEL_UP = "sound/level_up"
 SPRAYCAN = "sound/spraycan"
 NITROGEN = "sound/nitrogen"
 REWARD = "sound/reward"
+POP_SEED = "sound/pop_seed"
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
@@ -68,7 +69,7 @@ SCREEN_HEIGHT = 1080
 ###############################################################################
 # COLORS
 ###############################################################################
-WHITE = (255, 255, 255)
+WHITE = (255, 255, 255, 255)
 DARK_WHITE = (180, 170, 148)
 GRAY = (145, 145, 145)
 LIGHT_GRAY = (50, 50, 50)
@@ -78,7 +79,7 @@ DARK_GREY_TRANSPARENT = (128, 128, 128, 180)
 DARKER_GREY_TRANSPARENT = (128, 128, 128, 210)
 RED_GRAY_TRANSPARENT = (161, 92, 92, 210)
 RED_TRANSPARENT = (255, 0, 0, 210)
-GREEN = (150, 168, 96)
+GREEN = (150, 168, 96, 255)
 TRANSPARENT = (0, 0, 0, 255)
 BLACK = (0, 0, 0)
 BLUE = (75, 75, 200)
@@ -89,8 +90,8 @@ BACKGROUND_BLUE = (118, 231, 255)
 DARK_BLUE = (10, 40, 190)
 LIGHT_BLUE = (25, 30, 255)
 SKY_BLUE = (169, 247, 252)
-YELLOW = (255, 250, 94)
-RED = (255, 0, 0)
+YELLOW = (255, 250, 94, 255)
+RED = (255, 0, 0, 255)
 RED_TRANSPARENT = (255, 0, 0, 128)
 LIGHT_RED = (255, 193, 189)
 ORANGE = (255, 111, 0)
@@ -107,7 +108,7 @@ MENU_TITLE = pygame.font.SysFont("timesnewroman", 72)
 MENU_SUBTITLE = pygame.font.SysFont("timesnewroman", 56)
 YELLOW_TRANSPARENT = (255, 255, 255, 128)
 PURPLE = (171, 36, 255)
-BROWN = (161, 148, 120)
+BROWN = (161, 148, 120, 255)
 
 PLANTNAME = "GenEric"
 _OPTIONS = None
@@ -170,6 +171,10 @@ water_concentration_at_temp = [
     2.703,
 ]
 
+
+def hex_color_to_float(hex_color):
+    float_color = [hex_color[0]/255, hex_color[1]/255, hex_color[2]/255, hex_color[3]/255]
+    return float_color
 
 # provide season and x in hours to get temp or humidity
 def get_y(x, dict):

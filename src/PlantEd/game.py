@@ -34,9 +34,11 @@ from PlantEd.gameobjects.water_reservoir import Water_Grid, Base_water
 from PlantEd.server.plant.plant import Plant as ServerPlant
 from PlantEd.ui import UI
 from PlantEd.utils import plot
+from PlantEd.utils.animation import Animation
 from PlantEd.utils.button import Button, Slider, ToggleButton, Textbox
 from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.narrator import Narrator
+from PlantEd.utils.particle import ParticleSystem, ParticleExplosion
 from PlantEd.weather import Environment
 
 # currentdir = os.path.abspath('../..')
@@ -861,9 +863,67 @@ class TitleScene(object):
 class EndScene(object):
     def __init__(self, path_to_logs):
         super(EndScene, self).__init__()
-        self.camera = Camera(offset_y=-200)
+        self.camera = Camera(offset_y=-50)
+        self.sound_control = SoundControl()
         dict_plant = config.load_dict(path_to_logs + "/plant.json")
         self.plant_object: Plant = plant.from_dict(dict_plant, self.camera)
+        positions = []
+        for flower in self.plant_object.organs[3].flowers:
+            positions.append((flower["x"], flower["y"] + self.camera.offset_y))
+
+        systems = []
+        for position in positions:
+            systems.append(
+                ParticleSystem(
+                    max_particles=50,
+                    spawn_box=(position[0], position[1], 0, 0),
+                    lifetime=10,
+                    color=(int(255 * random.random()), int(255 * random.random()), int(255 * random.random())),
+                    apply_gravity=2,
+                    speed=[(random.random() - 0.5) * 20, -80 * random.random()],
+                    spread=[50, 30],
+                    active=False,
+                    size_over_lifetime=True,
+                    size=10,
+                    once=True,
+                )
+            )
+        self.explosion: ParticleExplosion = ParticleExplosion(
+            systems=systems,
+            interval=0.5,
+            play_explosion_sound=self.sound_control.play_pop_seed_sfx,
+        )
+        self.explosion.start()
+
+        images = Animation.generate_counter(
+            start_number=1000,
+            end_number=2000,
+            resolution=10)
+
+        explosion_duration = 0.5 * len(self.plant_object.organs[3].flowers)
+
+        self.score_animation = Animation(
+            images=images,
+            duration=explosion_duration,
+            pos=(400, 400),
+            running=True,
+            once=True
+        )
+
+        self.score_header_label = config.MENU_SUBTITLE.render("Score", True, config.WHITE)
+        self.flower_score_list = []
+        score_sum = 0
+        for i in range(len(self.plant_object.organs[3].flowers)):
+            flowers = self.plant_object.organs[3].flowers
+            flower_score = config.BIGGER_FONT.render("Flower {}: {:.2f} mmol".format(i, float(flowers[i]["mass"])), True,
+                                                     config.WHITE)
+            self.flower_score_list.append(flower_score)
+            score_sum += flowers[i]["mass"]
+
+        self.score_sum_label = config.BIGGER_FONT.render("{:.2f} mmol".format(float(score_sum)), True, config.WHITE)
+        self.title = config.MENU_TITLE.render("Finished", True, config.WHITE)
+
+        self.plot_label = config.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
 
         '''
         Prepare plots
@@ -873,19 +933,28 @@ class EndScene(object):
         - Special (Transpiration, APS lol)
         '''
 
-        #df = pandas.read_csv(path_to_logs + "/model_logs.csv")
-        #self.image = plot.generate_png_from_vec(None, None, None, None, None)
-
+        df = pandas.read_csv(path_to_logs + "/model_logs.csv")
+        self.image = plot.generate_png_from_vec([df.Leaf_mass, df.Stem_mass, df.Root_mass, df.Seed_mass],
+                                                name_list=["Leaf", "Stem", "Root", "Seed"],
+                                                colors=[config.hex_color_to_float(config.GREEN),
+                                                        config.hex_color_to_float(config.WHITE),
+                                                        config.hex_color_to_float(config.RED),
+                                                        config.hex_color_to_float(config.YELLOW)],
+                                                time=[df.Hours],
+                                                xlabel="Time",
+                                                ylabel="VEC",
+                                                path_to_logs=path_to_logs,
+                                                filename="PLOT.png")
 
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
-            860,
+            config.SCREEN_WIDTH / 2 - 150,
             930,
-            200,
+            300,
             50,
-            [self.return_to_menu],
+            [self.sound_control.play_toggle_sfx, self.return_to_menu],
             config.BIGGER_FONT,
-            "BACK",
+            "Upload Simulation",
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
@@ -893,7 +962,15 @@ class EndScene(object):
         self.button_sprites.add(self.back)
 
     def update(self, dt):
-        pass
+        self.explosion.update(dt)
+        self.score_animation.update(dt)
+
+    def handle_events(self, events):
+        for e in events:
+            if e.type == pygame.MOUSEBUTTONDOWN:
+                print(pygame.mouse.get_pos())
+            for button in self.button_sprites:
+                button.handle_event(e)
 
     def render(self, screen):
         screen.fill((0, 0, 0, 0))
@@ -901,12 +978,21 @@ class EndScene(object):
         self.plant_object.draw(temp_surface)
         screen.blit(temp_surface, (0, self.camera.offset_y))
         self.button_sprites.draw(screen)
-        screen.blit(self.image,(0,0))
+        self.explosion.draw(screen)
+        self.score_animation.draw(screen)
 
-    def handle_events(self, events):
-        for e in events:
-            for button in self.button_sprites:
-                button.handle_event(e)
+
+        distance = self.flower_score_list[0].get_height() + 20
+        width = self.flower_score_list[0].get_width()
+        for i in range(len(self.flower_score_list)):
+            screen.blit(self.flower_score_list[i], (500 - width, 380 + (distance * i)))
+        pygame.draw.line(screen, config.WHITE, (150, 380 + (distance * len(self.flower_score_list))), (550, 380 + (distance * len(self.flower_score_list))))
+        screen.blit(self.score_sum_label, (500 - self.score_sum_label.get_width(), 400 + (distance * len(self.flower_score_list))))
+        screen.blit(self.score_header_label, (350 - self.score_header_label.get_width()/2, 270))
+        pygame.draw.rect(screen, config.WHITE, (100,360,500, int((len(self.flower_score_list)+2) * distance)), 1, 1)
+        screen.blit(self.image, (config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))
+        screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
+        screen.blit(self.title, (config.SCREEN_WIDTH / 2 - self.title.get_width() / 2, 100))
 
     def return_to_menu(self):
         self.manager.go_to(TitleScene(self.manager))

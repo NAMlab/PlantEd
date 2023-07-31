@@ -14,26 +14,26 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
     def __init__(
-        self,
-        x,
-        y,
-        w,
-        h,
-        callbacks,
-        font=None,
-        text="",
-        button_color=WHITE_TRANSPARENT,
-        text_color=BLACK,
-        image=None,
-        border_w=None,
-        post_hover_message=None,
-        hover_message=None,
-        hover_message_image=None,
-        button_sound=None,
-        active=True,
-        offset=(0, 0),
-        callback_var=None,
-        play_confirm=None,
+            self,
+            x,
+            y,
+            w,
+            h,
+            callbacks,
+            font=None,
+            text="",
+            button_color=WHITE_TRANSPARENT,
+            text_color=BLACK,
+            image=None,
+            border_w=None,
+            post_hover_message=None,
+            hover_message=None,
+            hover_message_image=None,
+            button_sound=None,
+            active=True,
+            offset=(0, 0),
+            callback_var=None,
+            play_confirm=None,
     ):
         super().__init__()
         self.posted = False
@@ -117,11 +117,8 @@ class Button(pygame.sprite.Sprite):
                 event.pos[1] - self.offset[1],
             )
             # If the rect collides with the mouse pos.
-            print("Mouse up:", pos, self.rect)
             if self.rect.collidepoint(pos) and self.button_down:
-                print("Mouse up:", pos, self.rect, "COLLIDEEEEE")
                 for callback in self.callbacks:
-                    print("CALBACKK")
                     if self.callback_var:
                         callback(self.callback_var)
                     else:
@@ -157,25 +154,25 @@ class Button(pygame.sprite.Sprite):
 
 class Button_Once(pygame.sprite.Sprite):
     def __init__(
-        self,
-        x,
-        y,
-        w,
-        h,
-        callbacks,
-        font=None,
-        text="",
-        button_color=WHITE_TRANSPARENT,
-        text_color=BLACK,
-        image=None,
-        border_w=None,
-        post_hover_message=None,
-        hover_message=None,
-        hover_message_image=None,
-        button_sound=None,
-        active=True,
-        offset=(0, 0),
-        callback_var=None,
+            self,
+            x,
+            y,
+            w,
+            h,
+            callbacks,
+            font=None,
+            text="",
+            button_color=WHITE_TRANSPARENT,
+            text_color=BLACK,
+            image=None,
+            border_w=None,
+            post_hover_message=None,
+            hover_message=None,
+            hover_message_image=None,
+            button_sound=None,
+            active=True,
+            offset=(0, 0),
+            callback_var=None,
     ):
         super().__init__()
         self.posted = False
@@ -297,24 +294,24 @@ class Button_Once(pygame.sprite.Sprite):
 
 class Arrow_Button(pygame.sprite.Sprite):
     def __init__(
-        self,
-        x,
-        y,
-        w,
-        h,
-        callbacks,
-        arrow_dir,
-        font=None,
-        text="",
-        arrow_color=WHITE,
-        border_w=None,
-        post_hover_message=None,
-        hover_message=None,
-        hover_message_image=None,
-        button_sound=None,
-        active=True,
-        offset=(0, 0),
-        callback_var=None,
+            self,
+            x,
+            y,
+            w,
+            h,
+            callbacks,
+            arrow_dir,
+            font=None,
+            text="",
+            arrow_color=WHITE,
+            border_w=None,
+            post_hover_message=None,
+            hover_message=None,
+            hover_message_image=None,
+            button_sound=None,
+            active=True,
+            offset=(0, 0),
+            callback_var=None,
     ):
         super().__init__()
         self.posted = False
@@ -492,24 +489,24 @@ class Arrow_Button(pygame.sprite.Sprite):
 
 class ToggleButton(pygame.sprite.Sprite):
     def __init__(
-        self,
-        x,
-        y,
-        w,
-        h,
-        callback,
-        font=None,
-        text="",
-        button_color=WHITE_TRANSPARENT,
-        text_color=BLACK,
-        image=None,
-        border_w=None,
-        border_radius=None,
-        pressed=False,
-        fixed=False,
-        vertical=False,
-        cross=False,
-        cross_size=None
+            self,
+            x,
+            y,
+            w,
+            h,
+            callback,
+            font=None,
+            text="",
+            button_color=WHITE_TRANSPARENT,
+            text_color=BLACK,
+            image=None,
+            border_w=None,
+            border_radius=None,
+            pressed=False,
+            fixed=False,
+            vertical=False,
+            cross=False,
+            cross_size=None
     ):
         super().__init__()
         self.fixed = fixed
@@ -539,8 +536,8 @@ class ToggleButton(pygame.sprite.Sprite):
         )
 
         if image:
-            image_x = w/2-image.get_width()/2
-            image_y = h/2-image.get_height()/2
+            image_x = w / 2 - image.get_width() / 2
+            image_y = h / 2 - image.get_height() / 2
             self.button_image.blit(image.copy(), (image_x, image_y))
             self.hover_image.blit(image.copy(), (image_x, image_y))
             self.clicked_image.blit(image.copy(), (image_x, image_y))
@@ -554,7 +551,7 @@ class ToggleButton(pygame.sprite.Sprite):
         )
         if cross:
             if not cross_size:
-                cross_size = (0,0,w,h)
+                cross_size = (0, 0, w, h)
 
             pygame.draw.line(
                 self.clicked_image, WHITE, (cross_size[0], cross_size[1]), (cross_size[2], cross_size[3]), self.border_w
@@ -630,21 +627,21 @@ class ToggleButton(pygame.sprite.Sprite):
 # image size has to be = w,h
 class RadioButton(pygame.sprite.Sprite):
     def __init__(
-        self,
-        x,
-        y,
-        w,
-        h,
-        callbacks,
-        font=None,
-        text="",
-        button_color=WHITE_TRANSPARENT,
-        text_color=BLACK,
-        image=None,
-        border_w=None,
-        target=None,
-        callback_var=None,
-        border_radius=0,
+            self,
+            x,
+            y,
+            w,
+            h,
+            callbacks,
+            font=None,
+            text="",
+            button_color=WHITE_TRANSPARENT,
+            text_color=BLACK,
+            image=None,
+            border_w=None,
+            target=None,
+            callback_var=None,
+            border_radius=0,
     ):
         super().__init__()
         self.callback_var = callback_var
@@ -736,17 +733,17 @@ class RadioButton(pygame.sprite.Sprite):
 # image size has to be = w,h
 class DoubleRadioButton(pygame.sprite.Sprite):
     def __init__(
-        self,
-        x,
-        y,
-        w,
-        h,
-        callbacks,
-        button_color=WHITE_TRANSPARENT,
-        border_w=None,
-        callback_var=None,
-        border_radius=0,
-        preset=None,
+            self,
+            x,
+            y,
+            w,
+            h,
+            callbacks,
+            button_color=WHITE_TRANSPARENT,
+            border_w=None,
+            callback_var=None,
+            border_radius=0,
+            preset=None,
     ):
         super().__init__()
         self.w = w
@@ -951,7 +948,7 @@ class DoubleRadioButton(pygame.sprite.Sprite):
 
 class OptionBox:
     def __init__(
-        self, x, y, w, h, color, highlight_color, font, option_list, selected=0
+            self, x, y, w, h, color, highlight_color, font, option_list, selected=0
     ):
         self.color = color
         self.highlight_color = highlight_color
@@ -1023,18 +1020,18 @@ class OptionBox:
 # Todo include slider to mouse offset when clicked to avoid jumping
 class Slider:
     def __init__(
-        self,
-        rect,
-        font,
-        slider_size,
-        organ=None,
-        plant=None,
-        color=None,
-        slider_color=None,
-        callback=None,
-        percent=0,
-        active=True,
-        visible=True,
+            self,
+            rect,
+            font,
+            slider_size,
+            organ=None,
+            plant=None,
+            color=None,
+            slider_color=None,
+            callback=None,
+            percent=0,
+            active=True,
+            visible=True,
     ):
         super().__init__()
         self.color = color if color else (255, 255, 255, 128)
@@ -1151,67 +1148,29 @@ class Slider:
             if self.drag:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
                 self.slider_y = (
-                    clamp(
-                        pygame.mouse.get_pos()[1],
-                        self.y,
-                        self.y - self.slider_h + self.h,
-                    )
-                    - self.y
+                        clamp(
+                            pygame.mouse.get_pos()[1],
+                            self.y,
+                            self.y - self.slider_h + self.h,
+                        )
+                        - self.y
                 )
 
-'''
-class SliderGroup:
-    def __init__(self, sliders, max_sum):
-        self.sliders = sliders
-        self.sliders_zero = []
-        self.max_sum = max_sum
-
-        for slider in self.sliders:
-            slider.callback = self.change_percentage
-            # slider.set_percentage(self.max_sum/len(self.sliders))
-
-    def slider_sum(self):
-        return sum([slider.get_percentage() for slider in self.sliders])
-
-    def change_percentage(self, slider):
-        print("changing percentage of: ", slider.get_percentage())
-        # @slider: slider that changed
-        while (
-            self.max_sum < self.slider_sum() - 0.1
-            or self.max_sum > self.slider_sum() + 1
-        ):
-            # special case, if max is smaller than 100%
-            if slider.get_percentage() > self.max_sum:
-                slider.set_percentage(self.max_sum)
-            # slider that called and zero sliders aren't able to reduce --> available_sliders
-            available_sliders = (
-                len(self.sliders) - len(self.sliders_zero)
-            ) - 1
-            delta = (self.slider_sum() - self.max_sum) / (available_sliders)
-            for s in self.sliders:
-                if s == slider or s in self.sliders_zero:
-                    pass
-                else:
-                    # extra: extra = s.get_percentage() - delta
-                    extra = s.sub_percentage(delta)
-                    if extra > 0:
-                        self.sliders_zero.append(s)
-'''
 
 class NegativeSlider:
     def __init__(
-        self,
-        rect,
-        font,
-        slider_size,
-        organ=None,
-        plant=None,
-        color=None,
-        slider_color=None,
-        callback=None,
-        percent=0,
-        active=True,
-        visible=True,
+            self,
+            rect,
+            font,
+            slider_size,
+            organ=None,
+            plant=None,
+            color=None,
+            slider_color=None,
+            callback=None,
+            percent=0,
+            active=True,
+            visible=True,
     ):
         super().__init__()
         self.color = color if color else (255, 255, 255, 128)
@@ -1274,9 +1233,8 @@ class NegativeSlider:
             return delta - 100
         else:
             # delta 0 .. 100 -> 50 .. 100
-            self.set_percentage((delta/2)+50)
+            self.set_percentage((delta / 2) + 50)
             return 0
-
 
     def draw(self, screen):
         if not self.visible:
@@ -1337,12 +1295,12 @@ class NegativeSlider:
             if self.drag:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
                 self.slider_y = (
-                    clamp(
-                        pygame.mouse.get_pos()[1],
-                        self.y,
-                        self.y - self.slider_h + self.h,
-                    )
-                    - self.y
+                        clamp(
+                            pygame.mouse.get_pos()[1],
+                            self.y,
+                            self.y - self.slider_h + self.h,
+                        )
+                        - self.y
                 )
 
 
@@ -1360,7 +1318,7 @@ class SliderGroup:
         sum = 0
         for slider in self.sliders:
             percent = slider.get_percentage()
-            #percent = percent if percent > 0 else 0
+            # percent = percent if percent > 0 else 0
             percent = 0 if percent < 0 else percent
             sum += percent
         return sum
@@ -1386,7 +1344,8 @@ class SliderGroup:
                 delta -= (delta_each_slider - excess)
                 if excess != 0:
                     available_sliders.remove(slider)
-            tries = tries -1
+            tries = tries - 1
+
 
 '''
 
@@ -1414,18 +1373,19 @@ class SliderGroup:
                         self.sliders_zero.append(s)
 '''
 
+
 class Textbox:
     def __init__(
-        self,
-        x,
-        y,
-        w,
-        h,
-        font,
-        text="name",
-        background_color=(240, 240, 240, 180),
-        highlight_color=(255, 255, 255),
-        textcolor=(0, 0, 0),
+            self,
+            x,
+            y,
+            w,
+            h,
+            font,
+            text="name",
+            background_color=(240, 240, 240, 180),
+            highlight_color=(255, 255, 255),
+            textcolor=(0, 0, 0),
     ):
         self.x = x
         self.y = y
@@ -1546,8 +1506,8 @@ class ButtonArray:
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
         self.gradient = None
         if start_color and end_color:
-            gradient_early = self.get_color_gradient(end_color, start_color, int(amount/2))
-            gradient_late = self.get_color_gradient(start_color, end_color, int((amount/2)+0.5))
+            gradient_early = self.get_color_gradient(end_color, start_color, int(amount / 2))
+            gradient_late = self.get_color_gradient(start_color, end_color, int((amount / 2) + 0.5))
             self.gradient = gradient_early + gradient_late
         set_all_width = 50
 
@@ -1614,14 +1574,14 @@ class ButtonArray:
         for bool in self.get_bool_list():
             if bool:
                 sum_true += 1
-        if len(self.toggle_buttons)/2 > sum_true:
+        if len(self.toggle_buttons) / 2 > sum_true:
             for button in self.toggle_buttons:
                 button.activate()
-            #self.go_green()
+            # self.go_green()
         else:
             for button in self.toggle_buttons:
                 button.deactivate()
-            #self.go_red()
+            # self.go_red()
         self.callback(self.get_bool_list())
 
     def get_bool_list(self):
@@ -1644,16 +1604,16 @@ class ButtonArray:
         return self.rect
 
     def get_color_gradient(self, start_color, end_color, iterations):
-        r_delta = (start_color[0] - end_color[0])/iterations
-        g_delta = (start_color[1] - end_color[1])/iterations
-        b_delta = (start_color[2] - end_color[2])/iterations
+        r_delta = (start_color[0] - end_color[0]) / iterations
+        g_delta = (start_color[1] - end_color[1]) / iterations
+        b_delta = (start_color[2] - end_color[2]) / iterations
 
         gradient = []
         for i in range(iterations):
             gradient.append((
-                start_color[0]-r_delta*i,
-                start_color[1]-g_delta*i,
-                start_color[2]-b_delta*i))
+                start_color[0] - r_delta * i,
+                start_color[1] - g_delta * i,
+                start_color[2] - b_delta * i))
         return gradient
 
     def draw(self, screen):
@@ -1662,7 +1622,7 @@ class ButtonArray:
             screen,
             self.color,
             (
-                (self.rect[2]-50) / 24 * self.hours + self.rect[0] + 50,
+                (self.rect[2] - 50) / 24 * self.hours + self.rect[0] + 50,
                 self.rect[1] + 32 + 50,
                 10,
                 10,

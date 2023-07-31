@@ -1,30 +1,26 @@
 import matplotlib.pyplot as plt
-#import numpy
-#from PIL import Image
-#from matplotlib.backends.backend_agg import FigureCanvasAgg
-#from matplotlib.figure import Figure
-#import pandas as pd
-#import pygame
+import numpy
+import pandas as pd
+import pygame
 
-"""def generate_png_from_vec(vec, time, xlabel, ylabel, path_to_logs, color="black") -> pygame.Surface:
+from PlantEd.data import assets
+
+
+def generate_png_from_vec(vector_list, name_list, colors, time, xlabel, ylabel, path_to_logs, filename, color="black") -> pygame.Surface:
     # make a Figure and attach it to a canvas.
-    fig = Figure(figsize=(5, 4), dpi=100)
-    canvas = FigureCanvasAgg(fig)
+    plt.style.use('dark_background')
+    fig, ax = plt.subplots()
 
-    # Do some plotting here
-    ax = fig.add_subplot(111)
-    ax.plot([1, 2, 3])
+    for vector, name, color in zip(vector_list, name_list, colors):
+        print(color)
+        ax.plot(time[0], vector, label="{}".format(name), color=color)
+    ax.legend(loc='upper right')
+    plt.xlabel = xlabel
+    plt.ylabel = ylabel
+    plt.savefig(path_to_logs + "/" + filename)
+    image = pygame.image.load(path_to_logs + "/" + filename).convert_alpha()
 
-    # Retrieve a view on the renderer buffer
-    canvas.draw()
-    rgba = numpy.asarray(canvas.buffer_rgba())
-    # ... and pass it to PIL.
-    image = Image.fromarray(rgba)
-
-
-    return image"""
-
-
+    return image
 
 
 """
@@ -180,7 +176,3 @@ def plot_all(df):
     plt.savefig("plot.png")
     plt.show()
     plt.close()
-
-
-if __name__ == "__main__":
-    main(path="../logs/6.csv", logname="6")

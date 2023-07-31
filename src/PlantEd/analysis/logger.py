@@ -24,7 +24,7 @@ class Log:
 
         self.model_file = open(path + "/model_logs.csv", "w")
         self.model_writer = csv.writer(self.model_file)
-        self.model_writer.writerow(
+        '''self.model_writer.writerow(
             [
                 "Time",
                 "",
@@ -50,7 +50,7 @@ class Log:
                 "",
                 "",
             ]
-        )
+        )'''
         self.model_writer.writerow(
             [
                 "Days",

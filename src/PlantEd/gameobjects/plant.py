@@ -57,14 +57,12 @@ def from_dict(plant_dict, camera=None):
     )
 
     plant.organs[0].leaves = plant_dict["leaf"]["leaves"]
-    print(plant_dict["leaf"]["leaves"])
     for leaf in plant.organs[0].leaves:
         leaf["image"] = leaves[int(random.random() * len(leaves))][0]
     plant.organs[0].update_image_size()
     branches: list[Cubic] = []
     branches_dict_list = plant_dict["stem"]["curve"]["branches"]
     for branch in branches_dict_list:
-        print(branch["branch"])
         branches.append(Cubic(branch["branch"]))
     plant.organs[1].curve = Cubic_Tree(branches=branches)
 
@@ -1017,7 +1015,6 @@ class Stem(Organ):
                         self.highlight[2]
                     ] = config.FLOWER_SPOT
             else:
-                print(self.timer, pygame.time.get_ticks(), pygame.time.get_ticks()-self.timer)
                 if pygame.time.get_ticks() - self.timer < 300:
                     x, y = pygame.mouse.get_pos()
                     y -= self.camera.offset_y

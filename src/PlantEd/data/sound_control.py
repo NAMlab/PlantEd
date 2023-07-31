@@ -38,6 +38,7 @@ class SoundControl:
         self.level_up_sfx = self.fill_sfx_array(config.LEVEL_UP, self.sfx_volume)
         self.spraycan_sfx = self.fill_sfx_array(config.SPRAYCAN, self.sfx_volume)
         self.reward_sfx = self.fill_sfx_array(config.REWARD, self.sfx_volume)
+        self.pop_seed = self.fill_sfx_array(config.POP_SEED, self.sfx_volume)
 
         self.sfx = []
         self.sfx.append(self.start_sfx)
@@ -59,6 +60,7 @@ class SoundControl:
         self.sfx.append(self.level_up_sfx)
         self.sfx.append(self.nitrogen_sfx)
         self.sfx.append(self.reward_sfx)
+        self.sfx.append(self.pop_seed)
 
     def play_music(self):
         i = int(random.random() * len(self.music))
@@ -137,6 +139,10 @@ class SoundControl:
     def play_reward_sfx(self):
         i = int(random.random() * len(self.reward_sfx))
         self.reward_sfx[i].play()
+
+    def play_pop_seed_sfx(self):
+        i = int(random.random() * len(self.pop_seed))
+        self.pop_seed[i].play()
 
     def fill_sfx_array(self, relative_path, volume=None):
         path = data_dir / "assets" / relative_path
