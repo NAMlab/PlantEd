@@ -7,7 +7,7 @@ import logging
 import threading
 from asyncio import Future
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Literal
 
 import websockets
 
@@ -57,9 +57,7 @@ class Client:
         connect = self.__connect()
 
         await self.loop.create_task(connect, name="Connect")
-        self.loop.create_task(
-            self.__receive_handler(), name="get_nitrate_pool"
-        )
+        self.loop.create_task(self.__receive_handler(), name="get_nitrate_pool")
         await self.__future
 
     def stop(self):
@@ -109,9 +107,7 @@ class Client:
         self.expected_receive["growth_rate"] = future_received
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
-        task = self.__receive_growth_rate(
-            future=future_received, callback=callback
-        )
+        task = self.__receive_growth_rate(future=future_received, callback=callback)
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __receive_growth_rate(
@@ -134,14 +130,10 @@ class Client:
         if growth_percent.starch < 0:
             growth_percent.starch = 0
 
-        message_dict = {
-            "growth_rate": {"GrowthPercent": growth_percent.to_json()}
-        }
+        message_dict = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
 
         logger.info(
-            "Sending Request for growth rates."
-            f"Payload is : "
-            f"{message_dict}"
+            "Sending Request for growth rates." f"Payload is : " f"{message_dict}"
         )
 
         message_str = json.dumps(message_dict)
@@ -240,9 +232,7 @@ class Client:
 
         self.expected_receive["get_water_pool"] = future_received
 
-        task = self.__receive_get_water_pool(
-            future=future_received, callback=callback
-        )
+        task = self.__receive_get_water_pool(future=future_received, callback=callback)
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
         task = self.__request_get_water_pool()
@@ -295,9 +285,7 @@ class Client:
         future_received = self.loop.create_future()
         self.expected_receive["get_nitrate_pool"] = future_received
 
-        task = self.__receive_nitrate_pool(
-            future=future_received, callback=callback
-        )
+        task = self.__receive_nitrate_pool(future=future_received, callback=callback)
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
         task = self.__request_nitrate_pool()
@@ -355,9 +343,7 @@ class Client:
 
         self.expected_receive["get_environment"] = future_received
 
-        task = self.__get_environment(
-            future=future_received, callback=callback
-        )
+        task = self.__get_environment(future=future_received, callback=callback)
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __get_environment(
@@ -374,3 +360,74 @@ class Client:
         env = Environment.from_json(future.result())
 
         callback(env)
+
+    def create_new_first_letter(
+        self,
+        dir,
+        pos,
+        mass,
+        dist,
+    ):
+        task = self.__create_new_first_letter(
+            dir=dir,
+            pos=pos,
+            mass=mass,
+            dist=dist,
+        )
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+
+    async def __create_new_first_letter(
+        self,
+        dir,
+        pos,
+        mass,
+        dist,
+    ):
+        logger.debug("Sending request for environment")
+        message = json.dumps(
+            {"get_environment": {"dir": dir, "pos": pos, "mass": mass, "dist": dist}}
+        )
+
+        await self.websocket.send(message)
+
+    def add2grid(
+        self,
+        amount: float,
+        x: int,
+        y: int,
+        grid: Literal["nitrate", "water"],
+    ):
+        """
+        The method allows access to both grids on the server. It thus enables the use of add2grid of the
+        MetaboliteGrid objects of the server-side environment.
+
+        Args:
+            amount: Quantity in micromol to be added to the celle of the grid.
+            x: X position within the grid.
+            y: Y position within the grid.
+            grid: The grid to be used. Possible here are 'nitrate' or 'water'.
+
+        Returns:
+
+        """
+        task = self.__add2grid(
+            amount=amount,
+            x=x,
+            y=y,
+            grid=grid,
+        )
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+
+    async def __add2grid(
+        self,
+        amount,
+        x,
+        y,
+        grid,
+    ):
+        logger.debug("Sending request to add2grid")
+        message = json.dumps(
+            {"add2grid": {"amount": amount, "x": x, "y": y, "grid": grid}}
+        )
+
+        await self.websocket.send(message)

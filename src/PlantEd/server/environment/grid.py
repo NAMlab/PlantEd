@@ -82,7 +82,6 @@ class MetaboliteGrid:
             
         self.trickle(dt= time_in_s % 3600)
 
-
     def available(self, roots: LSystem) -> int:
         root_grid = roots.root_grid
 
@@ -115,7 +114,6 @@ class MetaboliteGrid:
             else:
                 self.grid[x,y] -= average_cell_drain
 
-
     def add2cell(self, rate: int, x: int, y: int):
         """
         Increase amount of once cell.
@@ -126,7 +124,6 @@ class MetaboliteGrid:
         """
 
         self.grid[x, y] = min( self.grid[x,y]+ rate, self.max_metabolite_cell)
-
 
     def trickle(self, dt):
         """

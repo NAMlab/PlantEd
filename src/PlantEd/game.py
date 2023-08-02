@@ -561,8 +561,6 @@ class DefaultGameScene(object):
                 self.plant.get_PLA()
                 days, hours, minutes = self.environment.get_day_time()
 
-
-
                 self.log.append_model_row(
                     days=days,
                     hours=hours,
@@ -588,6 +586,9 @@ class DefaultGameScene(object):
                     root_rate=self.ui.growth_rates.root_rate,
                     seed_rate=self.ui.growth_rates.seed_rate,
                 )
+
+                # Request env and set it to self.server_environment
+                self.client.get_environment(callback= self.set_environment)
 
             if e.type == KEYDOWN and e.key == K_e:
                 self.end_initiated = not self.end_initiated

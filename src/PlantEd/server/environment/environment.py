@@ -36,13 +36,13 @@ class Environment:
         end_time = self.time_in_s + time_in_s
 
         seconds_missing_for_full_h = 3600 - self.time_in_s % 3600
-        state_hour = start_time // 3600
+        state_hour = int(start_time // 3600)
 
         weather_state: WeatherState = self.weather.get_weather_state(state_hour )
         self.water_grid.rain_linke_increase(time_in_s = seconds_missing_for_full_h,rain= weather_state.precipitation)
 
-        state_hour = state_hour+1
-        full_hours = (end_time // 3600)
+        state_hour = state_hour + 1
+        full_hours = int(end_time // 3600)
 
         for hour in range(state_hour + 1, state_hour + full_hours + 1, 1):
             weather_state = self.weather.get_weather_state(hour)

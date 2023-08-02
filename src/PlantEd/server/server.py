@@ -349,6 +349,45 @@ class Server:
     def get_environment(self) -> str:
         return self.environment.to_json()
 
+    def create_new_first_letter(
+            self,
+            dir,
+            pos,
+            mass,
+            dist,
+    ):
+        self.model.plant.root.create_new_first_letter(
+            dir=dir,
+            pos= pos,
+            mass=mass,
+            dist=dist,
+        )
+
+    def add2grid(self, payload):
+        amount = payload["amount"]
+        x = payload["x"]
+        y = payload["y"]
+
+        match payload["grid"]:
+            case "nitrate":
+                self.environment.nitrate_grid.add2cell(
+                    rate=amount,
+                    x=x,
+                    y=y,
+                )
+
+            case "water":
+                self.environment.water_grid.add2cell(
+                    rate=amount,
+                    x=x,
+                    y=y,
+                )
+
+            case _:
+                logger.error(
+                    "Unknown grid"
+                )
+
 
     async def main_handler(self, ws: WebSocketServerProtocol):
         """
@@ -495,6 +534,21 @@ class Server:
                             response[
                                 "get_environment"
                             ] = self.get_environment()
+
+                        case "create_new_first_letter":
+                            logger.debug(
+                                "Received command identified as create_new_first_letter."
+                            )
+
+                            self.create_new_first_letter(
+                                dir= payload["dir"],
+                                pos= payload["pos"],
+                                mass= payload["mass"],
+                                dist= payload["dist"],
+                            )
+
+                        case "add2grid":
+                            self.add2grid(payload=payload)
 
                         case _:
                             logger.error(

@@ -31,6 +31,7 @@ class WeatherSimulator(WeatherSimulatorMinimal):
             precip_bins: int = 100,
             seed: float = 15
     ):
+        super().__init__()
         if not seed:
             seed = random.randint(0, 100)
         self.seed = seed

@@ -33,6 +33,18 @@ class Nitrate:
         for field in dataclasses.fields(self):
             yield getattr(self, field.name)
 
+    @property
+    def missing_amount(self) -> float:
+        """
+        Provides the amount of water that can still be added to the pool.
+
+        Returns:
+            float: Amount of water that can still be added to the pool in micromol.
+        """
+        if self.nitrate_pool > self.__max_nitrate_pool:
+            return 0
+
+        return self.__max_nitrate_pool - self.nitrate_pool
     def to_dict(self) -> dict:
 
         dic = {}

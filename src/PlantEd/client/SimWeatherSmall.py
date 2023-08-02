@@ -14,7 +14,6 @@ class WeatherSimulatorMinimal:
 
         return str(self.to_dict()["states"])
 
-
     def __eq__(self, other):
         if not isinstance(other, WeatherSimulatorMinimal):
             return False
