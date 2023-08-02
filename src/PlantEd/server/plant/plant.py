@@ -5,8 +5,7 @@ import json
 import numpy as np
 
 from PlantEd.client.water import Water
-from PlantEd.constants import LEAF_BIOMASS_GRAM_PER_MICROMOL, STEM_BIOMASS_GRAM_PER_MICROMOL, \
-    ROOT_BIOMASS_GRAM_PER_MICROMOL, SEED_BIOMASS_GRAM_PER_MICROMOL, START_LEAF_BIOMASS_GRAM, START_STEM_BIOMASS_GRAM, \
+from PlantEd.constants import START_LEAF_BIOMASS_GRAM, START_STEM_BIOMASS_GRAM, \
     START_ROOT_BIOMASS_GRAM, START_SEED_BIOMASS_GRAM, SLA_IN_SQUARE_METER_PER_GRAM
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.leaf import Leaf
@@ -36,12 +35,13 @@ class Plant:
     """
     def __init__(self, ground_grid_resolution: tuple[int,int]):
         self.leafs: list[Leaf] = []
-        self.leafs_biomass: float = START_LEAF_BIOMASS_GRAM/ LEAF_BIOMASS_GRAM_PER_MICROMOL
-        self.stem_biomass: float = START_STEM_BIOMASS_GRAM / STEM_BIOMASS_GRAM_PER_MICROMOL
-        self.root_biomass: float = START_ROOT_BIOMASS_GRAM / ROOT_BIOMASS_GRAM_PER_MICROMOL
-        self.seed_biomass: float = START_SEED_BIOMASS_GRAM / SEED_BIOMASS_GRAM_PER_MICROMOL
+        self.leafs_biomass: float = START_LEAF_BIOMASS_GRAM
+        self.stem_biomass: float = START_STEM_BIOMASS_GRAM
+        self.root_biomass: float = START_ROOT_BIOMASS_GRAM
+        self.seed_biomass: float = START_SEED_BIOMASS_GRAM
 
         self.co2: float = 0
+        self.co2_uptake_in_micromol_per_second_and_gram:float = 0
         self.photon: float = 0
 
         biomass = self.biomass_total_gram
@@ -172,19 +172,19 @@ class Plant:
 
     @property
     def leafs_biomass_gram(self):
-        return self.leafs_biomass * LEAF_BIOMASS_GRAM_PER_MICROMOL
+        return self.leafs_biomass
 
     @property
     def stem_biomass_gram(self):
-        return self.stem_biomass * STEM_BIOMASS_GRAM_PER_MICROMOL
+        return self.stem_biomass
 
     @property
     def root_biomass_gram(self):
-        return self.root_biomass * ROOT_BIOMASS_GRAM_PER_MICROMOL
+        return self.root_biomass
 
     @property
     def seed_biomass_gram(self):
-        return self.seed_biomass * SEED_BIOMASS_GRAM_PER_MICROMOL
+        return self.seed_biomass
 
     @property
     def biomass_total(self):
@@ -214,11 +214,11 @@ class Plant:
     def update_max_starch_pool(self):
         self.starch_pool.scale_pool_via_biomass(biomass_in_gram= self.biomass_total_gram)
 
-    def update_transpiration(self, transpiration_factor: float, co2_uptake_in_micromol_per_second_and_gram: float):
+    def update_transpiration(self):
         self.water.update_transpiration(
             stomata_open= self.stomata_open,
-            co2_uptake_in_micromol_per_second_and_gram= co2_uptake_in_micromol_per_second_and_gram,
-            transpiration_factor = transpiration_factor,
+            co2_uptake_in_micromol_per_second_and_gram= self.co2_uptake_in_micromol_per_second_and_gram,
+            transpiration_factor = self.water.transpiration_factor,
         )
     
     def get_transpiration_in_micromol(self, time_in_s: int):

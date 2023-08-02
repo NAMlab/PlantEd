@@ -252,6 +252,8 @@ class Server:
             logger.debug("The passed TimeFrame is 0. Returning plant objects without simulation.")
             return self.model.plant.to_json()
 
+        self.environment.simulate(time_in_s= growth_percent.time_frame)
+
         self.model.calc_growth_rate(new_growth_percentages= growth_percent, environment= self.environment)
         logger.info(f"Calculated growth rates: {self.model.growth_rates}")
 
@@ -341,10 +343,12 @@ class Server:
         self.model.plant.set_water(water)
         logger.debug(f"Water set to {self.model.plant.water}")
 
-
-
     def update(self, update_info: UpdateInfo):
         self.model.update(update_info=update_info)
+
+    def get_environment(self) -> str:
+        return self.environment.to_json()
+
 
     async def main_handler(self, ws: WebSocketServerProtocol):
         """
@@ -482,6 +486,15 @@ class Server:
                             update_info = UpdateInfo.from_json(payload)
 
                             self.update(update_info=update_info)
+
+                        case "get_environment":
+                            logger.debug(
+                                "Received command identified as get_environment."
+                            )
+
+                            response[
+                                "get_environment"
+                            ] = self.get_environment()
 
                         case _:
                             logger.error(

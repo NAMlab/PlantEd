@@ -51,15 +51,6 @@ LMA_IN_GRAM_PER_SQUARE_METER: Final[float] = 40
 SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1/LMA_IN_GRAM_PER_SQUARE_METER
 
 ###############################################################################
-# Biomass
-###############################################################################
-
-LEAF_BIOMASS_GRAM_PER_MICROMOL = 899.477379 / 1000000
-STEM_BIOMASS_GRAM_PER_MICROMOL = 916.2985939 / 1000000
-ROOT_BIOMASS_GRAM_PER_MICROMOL = 956.3297883 / 1000000
-SEED_BIOMASS_GRAM_PER_MICROMOL = 978.8487602 / 1000000
-
-###############################################################################
 # Plant initialization values
 ###############################################################################
 

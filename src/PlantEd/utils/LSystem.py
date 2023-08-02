@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 import random
-import pygame
 import numpy as np
 
 
@@ -74,6 +73,8 @@ class Letter:
         self.pos: tuple[float, float] = pos
 
     def draw(self, screen, start_pos):
+        import pygame
+
         if self.id == 300:
             self.pos = start_pos
         end_pos = (
@@ -93,6 +94,8 @@ class Letter:
             branch.draw(screen, next_start_pos)
 
     def draw_highlighted(self, screen, start_pos):
+        import pygame
+
         if self.id == 300 or self.id == 301:
             # pygame.draw.circle(screen,(255,0,0),start_pos,10)
             self.pos = start_pos

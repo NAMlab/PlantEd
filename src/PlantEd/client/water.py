@@ -11,15 +11,57 @@ from pydantic import confloat
 from PlantEd.constants import MAX_WATER_POOL_PER_GRAMM, START_WATER_POOL_IN_MICROMOL, \
     PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP, PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP
 from PlantEd.exceptions.pools import NegativeBiomassError
+from PlantEd.server.environment.weather import WeatherState
 
 logger = logging.getLogger(__name__)
 
-
+water_concentration_at_temp = [
+    0.269,
+    0.288,
+    0.309,
+    0.33,
+    0.353,
+    0.378,
+    0.403,
+    0.431,
+    0.459,
+    0.49,
+    0.522,
+    0.556,
+    0.592,
+    0.63,
+    0.67,
+    0.713,
+    0.757,
+    0.804,
+    0.854,
+    0.906,
+    0.961,
+    1.018,
+    1.079,
+    1.143,
+    1.21,
+    1.28,
+    1.354,
+    1.432,
+    1.513,
+    1.598,
+    1.687,
+    1.781,
+    1.879,
+    1.981,
+    2.089,
+    2.201,
+    2.318,
+    2.441,
+    2.569,
+    2.703,
+]
 
 @dataclass
 class Water:
     """
-    This class represents the water pool of the plant. All values
+    This class represents the water pool inside the plant. All values
     are in µmol unless otherwise stated.
     """
 
@@ -60,10 +102,6 @@ class Water:
     @water_pool.setter
     def water_pool(self, value: float):
         self.__water_pool = min(self.__max_water_pool, value)
-
-
-    def get_water_drain(self) -> float:
-        return self.water_intake + self.__max_water_pool
 
     @property
     def max_water_pool(self) -> float:
@@ -196,3 +234,19 @@ class Water:
 
         logger.debug(f"Setting transpiration to {transpiration}. Based on CO2 intake of {co2_uptake_in_micromol_per_second_and_gram} and a transpiration_factor of {transpiration_factor}" )
         self.transpiration = transpiration
+
+    def update_transpiration_factor(self, weather_state: WeatherState):
+        K = 291.18
+        RH = weather_state.humidity
+        T = weather_state.temperatur
+
+        In_Concentration = water_concentration_at_temp[int(T + 2)]
+        Out_Concentration = water_concentration_at_temp[int(T)]
+        new_transpiration_factor = K * (
+                In_Concentration - Out_Concentration * RH / 100
+        )
+
+        logger.debug(f"Setting transpiration_factor to {new_transpiration_factor}.")
+
+        self.transpiration_factor = new_transpiration_factor
+

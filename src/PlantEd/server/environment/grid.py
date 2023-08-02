@@ -47,7 +47,26 @@ class MetaboliteGrid:
 
         self.max_metabolite_cell = max_metabolite_cell
 
-    def simulate(self, time_in_s: int, rain: float):
+    def __str__(self) -> str:
+        string = str(self.grid)
+        return string
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, MetaboliteGrid):
+            return False
+        
+        if self.grid_size != __value.grid_size:
+            return False
+        
+        if self.max_metabolite_cell != __value.max_metabolite_cell:
+            return False
+        
+        if not np.array_equal(self.grid, __value.grid):
+            return False
+
+        return True
+
+    def rain_linke_increase(self, time_in_s: int, rain: float):
         """_summary_
 
         Args:
@@ -92,7 +111,6 @@ class MetaboliteGrid:
                 n_cells2drain_from -=1
 
                 average_cell_drain = amount/n_cells2drain_from
-                print(average_cell_drain)
             
             else:
                 self.grid[x,y] -= average_cell_drain
@@ -142,7 +160,7 @@ class MetaboliteGrid:
     def to_dict(self):
         dic = {}
 
-        dic["grid_size"] = self.grid_size,
+        dic["grid_size"] = self.grid_size
         dic["grid"] = self.grid.tolist()
         dic["max_metabolite_cell"] = self.max_metabolite_cell
 
@@ -157,9 +175,11 @@ class MetaboliteGrid:
 
         met_grid = MetaboliteGrid()
 
-        met_grid.grid_size = dic["grid_size"]
+        met_grid.grid_size = tuple(dic["grid_size"])
         met_grid.grid = np.asarray(dic["grid"])
         met_grid.max_metabolite_cell = dic["max_metabolite_cell"]
+
+        return met_grid
 
     @classmethod
     def from_json(cls, string:str) -> MetaboliteGrid:

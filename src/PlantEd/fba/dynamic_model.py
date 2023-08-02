@@ -16,13 +16,8 @@ from PlantEd.fba.helpers import (
     normalize,
 )
 from PlantEd.server.environment.environment import Environment
-from PlantEd.server.plant.plant import (
-    Plant,
-    ROOT_BIOMASS_GRAM_PER_MICROMOL,
-    STEM_BIOMASS_GRAM_PER_MICROMOL,
-    LEAF_BIOMASS_GRAM_PER_MICROMOL,
-    SEED_BIOMASS_GRAM_PER_MICROMOL,
-)
+from PlantEd.server.plant.plant import Plant
+
 from PlantEd.server.plant.starch import GRAM_STARCH_PER_MICROMOL_STARCH
 
 # states for objective
@@ -58,49 +53,6 @@ winter = {"Min_T": -5, "Max_T": 10, "shift": 10, "skew": 3.2}
 
 # HUMIDITY
 humidity = {"Min_T": 0.4, "Max_T": 1, "shift": -20.8, "skew": 3.2}
-
-water_concentration_at_temp = [
-    0.269,
-    0.288,
-    0.309,
-    0.33,
-    0.353,
-    0.378,
-    0.403,
-    0.431,
-    0.459,
-    0.49,
-    0.522,
-    0.556,
-    0.592,
-    0.63,
-    0.67,
-    0.713,
-    0.757,
-    0.804,
-    0.854,
-    0.906,
-    0.961,
-    1.018,
-    1.079,
-    1.143,
-    1.21,
-    1.28,
-    1.354,
-    1.432,
-    1.513,
-    1.598,
-    1.687,
-    1.781,
-    1.879,
-    1.981,
-    2.089,
-    2.201,
-    2.318,
-    2.441,
-    2.569,
-    2.703,
-]
 
 def get_y(x, dict):
     M = (dict["Min_T"] + dict["Max_T"]) / 2  # mean
@@ -206,6 +158,8 @@ class DynamicModel:
 
     def calc_growth_rate(self, new_growth_percentages: GrowthPercent, environment: Environment):
         time_frame = new_growth_percentages.time_frame
+        weather_state = environment.weather.get_latest_weather_state()
+
         self.seconds_passed += time_frame
 
         logger.debug(
@@ -215,7 +169,6 @@ class DynamicModel:
         self.plant.update_nitrate_pool_intake(
             seconds= time_frame,
         )
-
 
         if new_growth_percentages != self.percentages:
             logger.info("Updating the model objectives.")
@@ -260,9 +213,12 @@ class DynamicModel:
             environment.water_grid.available(self.plant.root) # <- mol not mol/g*t
         )
 
-        transpiration = self.plant.get_transpiration_in_micromol(time_in_s= time_frame)
+        self.plant.water.update_transpiration_factor(weather_state= weather_state)
+        self.plant.update_transpiration()
 
-        max_usable_water = min(water_upper_bound_plant_pool + water_upper_bound_env_pool - transpiration, 0)
+        transpiration = self.plant.get_transpiration_in_micromol(time_in_s= time_frame) # ToDo check with stomata
+
+        max_usable_water = max(water_upper_bound_plant_pool + water_upper_bound_env_pool - transpiration, 0)
 
         water_bounds = (-1000, max_usable_water)
         logger.debug(f"Available Water from Plant pool is: {water_upper_bound_plant_pool}, available water from env pool is: {water_upper_bound_env_pool}, transpiration is {transpiration}. Bounds for water set to: {water_bounds}")
@@ -275,6 +231,8 @@ class DynamicModel:
         photon_bounds = (0, photon_upper_bound)
         logger.debug(f"Bounds for photons are {photon_bounds}")
         self.set_bounds(PHOTON, photon_bounds)
+
+        # Nitrate
 
         nitrate_upper_bounds = (
             self.plant.nitrate.calc_available_nitrate_in_micromol_per_gram_and_time(
@@ -315,10 +273,7 @@ class DynamicModel:
         photon = solution.fluxes[PHOTON]
 
         # via stem
-        starch_out = solution.fluxes.get(STARCH_OUT)
-        # Todo remove boost
-        if starch_out > 0:
-            starch_out *= 3
+        starch_out = solution.fluxes.get(STARCH_OUT) 
         starch_in = solution.fluxes[STARCH_IN]
 
         # via root
@@ -368,10 +323,11 @@ class DynamicModel:
 
         self.plant.photon = photon
         self.plant.co2 = co2
+        self.plant.co2_uptake_in_micromol_per_second_and_gram = co2_uptake_in_micromol_per_second_and_gram
 
 
         # update water
-        used_water =  water + transpiration
+        used_water = water + transpiration
 
         if used_water > water_upper_bound_env_pool:
             taken_from_internal_pool = used_water - water_upper_bound_env_pool
@@ -382,11 +338,8 @@ class DynamicModel:
         environment.water_grid.drain(amount=used_water, roots= self.plant.root)
 
         self.plant.update_max_water_pool()
-        self.update_transpiration_factor()
-        self.plant.update_transpiration(
-            transpiration_factor = self.transpiration_factor,
-            co2_uptake_in_micromol_per_second_and_gram= co2_uptake_in_micromol_per_second_and_gram,
-        )
+        self.plant.water.update_transpiration_factor(weather_state= weather_state)
+        self.plant.update_transpiration()
 
         amount = self.plant.water.missing_amount
         available = environment.water_grid.available(roots= self.plant.root)
@@ -424,25 +377,6 @@ class DynamicModel:
         self.photon_intake = photon
 
         logger.debug(f"Updated Plant is as follows - {str(self.plant)}")
-
-    def update_transpiration_factor(self):
-        K = 291.18
-
-        day = 1000 * 60 * 60 * 24
-        hour = day / 24
-        current_hour = (self.seconds_passed % day) / hour
-
-        RH = get_y(current_hour, humidity)
-        T = get_y(current_hour, summer)
-        In_Concentration = water_concentration_at_temp[int(T + 2)]
-        Out_Concentration = water_concentration_at_temp[int(T)]
-        new_transpiration_factor = K * (
-            In_Concentration - Out_Concentration * RH / 100
-        )
-
-        logger.debug(f"Setting transpiration_factor to {new_transpiration_factor}.")
-
-        self.transpiration_factor = new_transpiration_factor
 
     def open_stomata(self):
         """
@@ -516,17 +450,6 @@ class DynamicModel:
         i = integrate.quad(f, start, end)
         return max(i[0]/(end-start),0)
 
-
-    def update(self, update_info=UpdateInfo):
-        dt = update_info.delta_time
-        root_mass = self.plant.root_biomass_gram
-        PLA = update_info.PLA
-        sun_intensity = update_info.sun_intensity
-        RH = update_info.humidity
-        T = update_info.temperature
-
-        # sun intensity old = PLA * sun_intensity
-
     def update_constraints(self):
         root_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_ROOT)
         stem_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_STEM)
@@ -557,13 +480,6 @@ class DynamicModel:
             self.plant.leafs_biomass_gram,
             self.plant.seed_biomass_gram,
             self.plant.stem_biomass_gram,
-        ]
-        mass_molecule = [
-            ROOT_BIOMASS_GRAM_PER_MICROMOL,
-            STEM_BIOMASS_GRAM_PER_MICROMOL,
-            LEAF_BIOMASS_GRAM_PER_MICROMOL,
-            SEED_BIOMASS_GRAM_PER_MICROMOL,
-            GRAM_STARCH_PER_MICROMOL_STARCH,
         ]
 
         n_reactions = len(reactions)
@@ -607,11 +523,9 @@ class DynamicModel:
                         (
                             reactions[i].flux_expression
                             * mass_organ[i]
-                            * mass_molecule[i]
                             / percentage[i]
                             - reactions[j].flux_expression
                             * mass_organ[j]
-                            * mass_molecule[j]
                             / percentage[j]
                         ),
                         lb=0,

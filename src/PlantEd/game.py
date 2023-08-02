@@ -31,6 +31,7 @@ from PlantEd.gameobjects.snail import SnailSpawner
 from PlantEd.gameobjects.tree import Tree
 from PlantEd.gameobjects.water_reservoir import Water_Grid, Base_water
 from PlantEd.server.plant.plant import Plant as ServerPlant
+from PlantEd.server.environment.environment import Environment as ServerEnvironment
 from PlantEd.ui import UI
 from PlantEd.utils.button import Button, Slider, ToggleButton, Textbox
 from PlantEd.utils.gametime import GameTime
@@ -309,7 +310,8 @@ class DefaultGameScene(object):
 
         self.water_grid = Water_Grid(pos=(0, 900))
         self.client = Client(port=client_port)
-        self.server_plant = ServerPlant()
+        self.server_plant = ServerPlant(ground_grid_resolution= (6,20))
+        self.server_environment = ServerEnvironment()
         self.hours_since_start_where_growth_last_computed = 0
         self.plant = Plant(
             pos=(
@@ -559,6 +561,8 @@ class DefaultGameScene(object):
                 self.plant.get_PLA()
                 days, hours, minutes = self.environment.get_day_time()
 
+
+
                 self.log.append_model_row(
                     days=days,
                     hours=hours,
@@ -608,6 +612,9 @@ class DefaultGameScene(object):
             self.hive.handle_event(e)
             self.narrator.handle_event(e)
             self.camera.handle_event(e)
+
+    def set_environment(self, environment: ServerEnvironment):
+        self.server_environment = environment
 
     def update_growth_rates(self, plant: ServerPlant):
         """

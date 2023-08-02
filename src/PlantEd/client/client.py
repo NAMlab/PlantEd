@@ -15,6 +15,7 @@ from PlantEd.client.growth_percentage import GrowthPercent
 from PlantEd.client.leaf import Leaf
 from PlantEd.client.update import UpdateInfo
 from PlantEd.client.water import Water
+from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.plant import Plant
 
@@ -342,3 +343,34 @@ class Client:
 
         message = {"update": update_info.to_json()}
         await self.websocket.send(message)
+
+    def get_environment(self, callback: Callable[[Environment], None]):
+        """
+        Method to obtain the WaterPool defined in the DynamicModel.
+
+        Returns: A WaterPool object.
+        """
+
+        future_received = self.loop.create_future()
+
+        self.expected_receive["get_environment"] = future_received
+
+        task = self.__get_environment(
+            future=future_received, callback=callback
+        )
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+
+    async def __get_environment(
+        self, future: Future, callback: Callable[[Environment], None]
+    ):
+        logger.debug("Sending request for environment")
+
+        message = '{"get_environment": "null"}'
+
+        await self.websocket.send(message)
+
+        await future
+
+        env = Environment.from_json(future.result())
+
+        callback(env)
