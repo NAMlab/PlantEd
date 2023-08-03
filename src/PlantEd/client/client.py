@@ -356,8 +356,10 @@ class Client:
         await self.websocket.send(message)
 
         await future
+        payload = future.result()
+        logger.debug(f"Received following as answer for environment request: {payload}")
 
-        env = Environment.from_json(future.result())
+        env = Environment.from_json(payload)
 
         callback(env)
 
