@@ -130,11 +130,12 @@ class Plant:
 
     @classmethod
     def from_dict(cls, dic:dict) -> Plant:
-        plant = Plant()
-
+        # Todo dirty hardcoded change
+        plant = Plant((20,6))
         plant.leafs_biomass = dic["leafs_biomass"]
         plant.stem_biomass = dic["stem_biomass"]
         plant.root_biomass = dic["root_biomass"]
+
         plant.seed_biomass = dic["seed_biomass"]
 
         plant.co2 = dic["co2"]
@@ -145,7 +146,6 @@ class Plant:
         plant.water = Water.from_dict(dic["water"])
         plant.nitrate = Nitrate.from_dict(dic["nitrate"])
         plant.starch_pool = Starch.from_dict(dic["starch"])
-
         return plant
 
     @classmethod

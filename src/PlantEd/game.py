@@ -353,7 +353,6 @@ class DefaultGameScene(object):
             environment=self.environment,
             camera=self.camera,
             sound_control=self.sound_control,
-            growth_rates=growth_rates,
             server_plant=self.server_plant,
             quit=self.quit
         )
@@ -581,10 +580,10 @@ class DefaultGameScene(object):
                     water_pool=0,
                     starch_pool=0,
                     nitrate_pool=0,
-                    leaf_rate=self.ui.growth_rates.leaf_rate,
-                    stem_rate=self.ui.growth_rates.stem_rate,
-                    root_rate=self.ui.growth_rates.root_rate,
-                    seed_rate=self.ui.growth_rates.seed_rate,
+                    leaf_rate=0,
+                    stem_rate=0,
+                    root_rate=0,
+                    seed_rate=0,
                 )
 
                 # Request env and set it to self.server_environment
@@ -632,6 +631,8 @@ class DefaultGameScene(object):
         old_plant = self.server_plant
         self.server_plant = plant
 
+        #print(plant.root_biomass)
+
         # max starch pool can be smaller in the beginning due to balancing
         max_starch_pool = plant.starch_pool.max_starch_pool
         if plant.starch_pool.max_starch_pool < plant.starch_pool.available_starch_pool:
@@ -643,23 +644,19 @@ class DefaultGameScene(object):
 
         logger.debug("Calculating the delta of the growth in grams. ")
 
-        growth_rates: GrowthRates = GrowthRates(
-            unit="mol",
-            leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram),
-            stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram),
-            root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram),
-            starch_rate=plant.starch_pool.starch_out,
-            starch_intake=plant.starch_pool.starch_in,
-            seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram),
-            time_frame=-1,
-        )
+        masses = {
+            "leaf_mass": self.server_plant.leafs_biomass,
+            "stem_mass": self.server_plant.stem_biomass,
+            "root_mass": self.server_plant.root_biomass,
+            "seed_mass": self.server_plant.seed_biomass,
+            "starch_pool": self.server_plant.starch_pool,
+        }
 
-        logger.debug(f"Delta is as follows: {str(growth_rates)}")
+        #logger.debug(f"Delta is as follows: {str(growth_rates)}")
 
-        self.ui.growth_rates = growth_rates
         self.ui.server_plant = plant
         logger.debug("Updating the gram representation of the UI.")
-        self.plant.update_growth_rates(growth_rates)
+        self.plant.update_organ_masses(masses)
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:

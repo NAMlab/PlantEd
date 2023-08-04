@@ -117,11 +117,8 @@ class Button(pygame.sprite.Sprite):
                 event.pos[1] - self.offset[1],
             )
             # If the rect collides with the mouse pos.
-            print("Mouse up:", pos, self.rect)
             if self.rect.collidepoint(pos) and self.button_down:
-                print("Mouse up:", pos, self.rect, "COLLIDEEEEE")
                 for callback in self.callbacks:
-                    print("CALBACKK")
                     if self.callback_var:
                         callback(self.callback_var)
                     else:

@@ -6,7 +6,6 @@ from PlantEd import config
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.server.plant.plant import Plant as serverPlant
 from PlantEd.client.client import Client
-from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.camera import Camera
 from PlantEd.gameobjects.plant import Plant
 from PlantEd.utils.gametime import GameTime
@@ -60,7 +59,6 @@ class UI:
         server_plant: serverPlant,
         narrator: Narrator,
         client: Client,
-        growth_rates: GrowthRates,
         environment: Environment,
         camera: Camera,
         sound_control: SoundControl,
@@ -78,7 +76,6 @@ class UI:
         self.server_plant = server_plant
 
         self.client = client
-        self.growth_rates: GrowthRates = growth_rates
         self.environment = environment
         self.gametime = GameTime.instance()
 

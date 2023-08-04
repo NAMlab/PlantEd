@@ -54,10 +54,10 @@ SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1/LMA_IN_GRAM_PER_SQUARE_METER
 # Plant initialization values
 ###############################################################################
 
-START_LEAF_BIOMASS_GRAM = 0.5
-START_STEM_BIOMASS_GRAM = 0.5
+START_LEAF_BIOMASS_GRAM = 0.8
+START_STEM_BIOMASS_GRAM = 0.9
 START_ROOT_BIOMASS_GRAM = 2.0
-START_SEED_BIOMASS_GRAM = 0.5
+START_SEED_BIOMASS_GRAM = 0.01
 
 # ↓ if negative set to multiple of max_{molecule}_pool
 # ↓ => for starch : -2 = 2 * max_starch_pool

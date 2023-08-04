@@ -63,18 +63,31 @@ class MetaboliteGrid:
         
         if not np.array_equal(self.grid, __value.grid):
             return False
-
         return True
 
     def rain_linke_increase(self, time_in_s: int, rain: float):
         """_summary_
 
+        weather simulates mm of precipitation per hour per m²
+
         Args:
             time_in_s (int): _description_
             rain (float): Rainfall per second in micromol.
         """
+
+        # Todo source
+        #convert mm/m²/h -> millimol/s
+        # water has 55.509 mmol / liter
+        # 1mm = 1liter of water
+        # size of cell?
+        # the complete width of the screen has around one meter
+        # for 20 cells, that would be 0.05m for each cell
+        # all cells together will be 1m
+
+        rain_per_cell = rain / self.grid.shape[1] * 55.509 / 3600
+
         if rain > 0:
-            self.grid[:, 0] += rain * time_in_s
+            self.grid[:, 0] += rain_per_cell * time_in_s
         
         times = math.floor(time_in_s / 3600)
         for _ in range(times):

@@ -11,6 +11,7 @@ from PlantEd.server.environment.grid import MetaboliteGrid
 from PlantEd.server.environment.weather import WeatherSimulator, WeatherState
 
 
+
 class Environment:
     water_grid: MetaboliteGrid = MetaboliteGrid()
     nitrate_grid: MetaboliteGrid = MetaboliteGrid()
@@ -65,7 +66,6 @@ class Environment:
 
     def to_dict(self):
         dic = {}
-
         dic["water_grid"] = self.water_grid.to_dict()
         dic["nitrate_grid"] = self.nitrate_grid.to_dict()
         dic["weather"] = self.weather.to_dict()
@@ -78,7 +78,6 @@ class Environment:
     @classmethod
     def from_dict(cls, dic: dict) -> Environment:
         env = Environment()
-        print(dic)
 
         env.water_grid = MetaboliteGrid.from_dict(dic["water_grid"])
         env.nitrate_grid = MetaboliteGrid.from_dict(dic["nitrate_grid"])

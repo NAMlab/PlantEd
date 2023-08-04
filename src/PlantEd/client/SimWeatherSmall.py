@@ -44,7 +44,6 @@ class WeatherSimulatorMinimal:
             raise KeyError(f"Weather state for hour: {time} does not exist") from e
 
     def get_latest_weather_state(self):
-
         return self.state[self.latest_hour]
 
     def to_dict(self) -> dict:
@@ -61,7 +60,6 @@ class WeatherSimulatorMinimal:
     @classmethod
     def from_dict(cls, dic: dict) -> WeatherSimulatorMinimal:
         w_sim = WeatherSimulatorMinimal()
-
         w_sim.latest_hour = dic["latest_hour"]
         states_as_dic = dic["states"]
 
