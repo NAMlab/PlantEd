@@ -59,13 +59,14 @@ class WeatherSimulatorMinimal:
 
     @classmethod
     def from_dict(cls, dic: dict) -> WeatherSimulatorMinimal:
+        print("CALLED ME")
         w_sim = WeatherSimulatorMinimal()
         w_sim.latest_hour = dic["latest_hour"]
         states_as_dic = dic["states"]
 
         for hour, state in states_as_dic.items():
             w_sim.state[hour] = WeatherState(
-                temperatur=state["temperatur"],
+                temperature=state["temperature"],
                 humidity= state["humidity"],
                 precipitation=state["precipitation"]
             )

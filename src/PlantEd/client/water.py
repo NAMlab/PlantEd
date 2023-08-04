@@ -122,13 +122,13 @@ class Water:
         Returns the percentage level of the water supply as float.
         """
         percentage = self.water_pool / self.__max_water_pool
-        if percentage > 1 or percentage < 0:
+        '''if percentage > 1 or percentage < 0:
             logger.warning(
                 f"The water pool is over 100% full or in the "
                 f"minus. It is {percentage}, where water_pool is "
                 f"{self.water_pool} µmol and max_water_pool is "
                 f"{self.__max_water_pool} µmol."
-            )
+            )'''
 
         logger.debug(f"Calculated water percentage is {percentage} from {self}")
         return percentage
@@ -253,7 +253,7 @@ class Water:
     def update_transpiration_factor(self, weather_state: WeatherState):
         K = 291.18
         RH = weather_state.humidity
-        T = weather_state.temperatur
+        T = weather_state.temperature
 
         In_Concentration = water_concentration_at_temp[int(T + 2)]
         Out_Concentration = water_concentration_at_temp[int(T)]

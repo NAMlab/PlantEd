@@ -361,6 +361,7 @@ class Client:
 
         env = Environment.from_json(payload)
 
+
         callback(env)
 
     def create_new_first_letter(

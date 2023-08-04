@@ -89,7 +89,7 @@ class WeatherSimulator(WeatherSimulatorMinimal):
         start_hum = data["humidity"][0]
         start_precip = data["precipitation"][0]
         self.state[0] = WeatherState(
-            temperatur= start_temp,
+            temperature= start_temp,
             humidity= start_hum,
             precipitation= start_precip
         )
@@ -120,7 +120,7 @@ class WeatherSimulator(WeatherSimulatorMinimal):
             curr_precip = self.curr_precip_bin * self.precip_step
 
             weather_state = WeatherState(
-                temperatur=curr_temp,
+                temperature=curr_temp,
                 humidity=curr_hum,
                 precipitation=curr_precip
             )

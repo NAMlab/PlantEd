@@ -28,7 +28,6 @@ from PlantEd.utils.hover_message import Hover_Message
 
 # constants in dynamic model, beter in config? dont think so
 from PlantEd.data import assets
-from PlantEd.weather import Environment
 
 """
 UI: set up all UI elements, update them, link them to functions
@@ -76,7 +75,8 @@ class UI:
         self.server_plant = server_plant
 
         self.client = client
-        self.environment = environment
+        self.growth_rates: GrowthRates = growth_rates
+        self.latest_weather_state = None
         self.gametime = GameTime.instance()
 
         self.hover = Hover_Message(config.FONT, 30, 5)
@@ -785,22 +785,24 @@ class UI:
             clock_text,
             (config.SCREEN_WIDTH / 2 - clock_text.get_width() / 2, 16),
         )
+        humidity = 0
+        temperature = 0
+        if self.latest_weather_state is not None:
+            humidity = self.latest_weather_state["humidity"]
+            temperature = self.latest_weather_state["temperature"]
 
-        RH = self.environment.humidity
-        T = self.environment.temperature
-
-        RH_label = config.FONT.render(
-            "{:.0f} %".format(RH), True, config.BLACK
+        humidity_label = config.FONT.render(
+            "{:.0f} %".format(humidity), True, config.BLACK
         )
-        T_label = config.FONT.render("{:.0f} °C".format(T), True, config.BLACK)
+        temperature_label = config.FONT.render("{:.0f} °C".format(temperature), True, config.BLACK)
 
         s.blit(
-            RH_label,
-            ((config.SCREEN_WIDTH / 2 - 110) - RH_label.get_width() / 2, 16),
+            humidity_label,
+            ((config.SCREEN_WIDTH / 2 - 110) - humidity_label.get_width() / 2, 16),
         )
         s.blit(
-            T_label,
-            ((config.SCREEN_WIDTH / 2 + 110) - T_label.get_width() / 2, 16),
+            temperature_label,
+            ((config.SCREEN_WIDTH / 2 + 110) - temperature_label.get_width() / 2, 16),
         )
 
     def init_gradient(self):

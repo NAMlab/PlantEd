@@ -48,7 +48,7 @@ class Water_Grid:
         Update trickle and drain_grid
         Depending on raining, apply water to upper row
         """
-        if self.raining > 0:
+        '''if self.raining > 0:
             self.water_grid[0, :] += (
                 self.raining * self.gametime.GAMESPEED * dt
             )
@@ -56,7 +56,7 @@ class Water_Grid:
         self.trickle(dt)
 
         # self.set_max_drain_rate()
-        self.drain_grid(dt, water=water, client=client)
+        self.drain_grid(dt, water=water, client=client)'''
         for base_water in self.base_waters:
             base_water.update(dt)
 

@@ -310,7 +310,7 @@ class DefaultGameScene(object):
 
         self.water_grid = Water_Grid(pos=(0, 900))
         self.client = Client(port=client_port)
-        self.server_plant = ServerPlant(ground_grid_resolution= (6,20))
+        self.server_plant = ServerPlant(ground_grid_resolution=(6, 20))
         self.server_environment = ServerEnvironment()
         self.hours_since_start_where_growth_last_computed = 0
         self.plant = Plant(
@@ -347,7 +347,6 @@ class DefaultGameScene(object):
             plant=self.plant,
             narrator=self.narrator,
             client=self.client,
-            environment=self.environment,
             camera=self.camera,
             sound_control=self.sound_control,
             server_plant=self.server_plant,
@@ -613,6 +612,13 @@ class DefaultGameScene(object):
     def set_environment(self, environment: ServerEnvironment):
         self.server_environment = environment
 
+        self.ui.latest_weather_state = self.server_environment.weather.get_latest_weather_state()
+        self.environment.precipitation = self.server_environment.weather.get_latest_weather_state()["precipitation"]
+
+        self.water_grid.water_grid = self.server_environment.water_grid.grid
+        # setup local environment -> only to draw water, nitrate
+        # setup local ui -> to draw temp, hum, precipi, sun?
+
     def update_growth_rates(self, plant: ServerPlant):
         """
         Callback function for the client to update the GrowthRates
@@ -857,6 +863,7 @@ class TitleScene(object):
                 button.handle_event(e)
             # self.watering_can.handle_event(e)
 
+
 class EndScene(object):
     def __init__(self, path_to_logs):
         super(EndScene, self).__init__()
@@ -883,7 +890,7 @@ class EndScene(object):
         pass
 
     def render(self, screen):
-        screen.fill((0,0,0,0))
+        screen.fill((0, 0, 0, 0))
         temp_surface.fill((0, 0, 0))
         self.plant_object.draw(temp_surface)
         screen.blit(temp_surface, (0, self.camera.offset_y))
@@ -896,6 +903,7 @@ class EndScene(object):
 
     def return_to_menu(self):
         self.manager.go_to(TitleScene(self.manager))
+
 
 class CustomScene(object):
     def __init__(self):
