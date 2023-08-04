@@ -337,14 +337,11 @@ class DefaultGameScene(object):
         )
         self.environment = Environment(
             plant=self.plant,
-            server_plant=self.server_plant,
             water_grid=self.water_grid,
-            gametime=self.gametime  # T
         )
 
         self.narrator = Narrator(self.environment)
 
-        growth_rates = GrowthRates("grams", 0, 0, 0, 0, 0, 0, 0)
         self.ui = UI(
             scale=1,
             plant=self.plant,
