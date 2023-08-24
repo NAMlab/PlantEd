@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import logging
 import math
 from operator import itemgetter
 import random
@@ -15,6 +16,8 @@ TRICKLE_AMOUNT: float = 0.001
 MAX_DRAIN_CELL: int = 100
 MINIMUM_CELL_AMOUNT_TO_DRAW: int = 20
 MAX_DROPS_TO_DRAW: int = 20
+
+logger = logging.getLogger(__name__)
 
 
 # Coordinates for the Grid:
@@ -70,7 +73,7 @@ class MetaboliteGrid:
         """_summary_
 
         Args:
-            time_in_s (int): _description_
+            time_in_s (int): The duration of the rain in seconds.
             rain (float): Rainfall per second in micromol.
         """
         if rain > 0:
@@ -82,24 +85,59 @@ class MetaboliteGrid:
             
         self.trickle(dt= time_in_s % 3600)
 
-    def available(self, roots: LSystem) -> int:
+    def available_absolute(self, roots: LSystem) -> int:
         root_grid = roots.root_grid
 
         available_metabolite = np.multiply(root_grid, self.grid)
+        sum = available_metabolite.sum()
 
-        return available_metabolite.sum()
+        if sum < 0:
+            logger.error("The calculated absolute available value based on the occurrence of the metabolite in the soil and root is negative. Check the grid itself and the root.")
+
+        return sum
+
+    def available_relative_mm(self, time_seconds: int, g_root:float, v_max: float, k_m: float, roots:LSystem):
+        """
+        This method calculates the usable metabolites in [mMol] / ([gram] * [s]. Either the calculated value is limited
+        by the metabolites available in the soil or by the maximum uptake per second,
+        which in turn is calculated by a time-dependent Michaelis-Menten equation.
+
+        Args:
+            time_seconds:
+            g_root:
+            v_max:
+            k_m:
+            roots:
+
+        Returns:
+            Relative availability of the Metabolite. The unit is [mMol] / ([gram] * [s]).
+        """
+        if any( x < 0 for x in [time_seconds, g_root, v_max, k_m]):
+            logger.error(f"One of the parameters is contrary to expectations, negative. Parameters: {time_seconds} s, {g_root} g, {v_max} mMol/(g*s), k_m mMol, ")
+
+        amount_absolute = self.available_absolute(roots= roots)
+        max_uptake_per_second = amount_absolute / (time_seconds * g_root) # based on availability
+
+        theoretical_uptake_per_second = (v_max * amount_absolute ) / (k_m + amount_absolute) # based on MM
+
+        logger.info(f"Calculated max uptake based on the soil as {max_uptake_per_second} and based on the Michaelis-Menten equation is {theoretical_uptake_per_second} ")
+
+        return min(max_uptake_per_second, theoretical_uptake_per_second)
     
     def drain(self, amount: float ,roots: LSystem):
+        if amount == 0:
+            return
+
         root_grid = roots.root_grid
         available_water_grid = np.multiply(root_grid, self.grid)
 
         n_cells2drain_from = (available_water_grid>0).sum()
 
-        average_cell_drain = amount/ n_cells2drain_from
+        average_cell_drain = amount / n_cells2drain_from
 
         # iterates over all cells ordered by key
         # => here from the cell with the lowest concentration to the highest concentration 
-        for (x,y), value in sorted(np.ndenumerate(available_water_grid), key=itemgetter(1), reverse=False): # change to available
+        for (x,y), value in sorted(np.ndenumerate(available_water_grid), key=itemgetter(1), reverse=False):
             if value == 0:
                 continue
             if value < average_cell_drain:

@@ -21,8 +21,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-class TestServer(unittest.IsolatedAsyncioTestCase):
 
+class TestServer(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         if self._testMethodName == "test_start":
             return
@@ -33,14 +33,13 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
         self.ip_address: Optional[str] = self.manager.Value(Optional[str], None)
         self.ready: Event = multiprocessing.Event()
 
-
         self.server = Server(
-            shutdown_signal = self.shutdown_signal,
-            ready= self.ready,
-            sock= None,
-            only_local= True,
-            port = self.port,
-            ip_adress= self.ip_address,
+            shutdown_signal=self.shutdown_signal,
+            ready=self.ready,
+            sock=None,
+            only_local=True,
+            port=self.port,
+            ip_adress=self.ip_address,
         )
 
         self.thread = threading.Thread(target=self.server.start)
@@ -48,12 +47,11 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
         self.ready.wait()
 
     def tearDown(self):
-
         if self._testMethodName != "test_start":
             self.shutdown_signal.set()
             self.thread.join()
-    async def test_connect(self):
 
+    async def test_connect(self):
         async with websockets.connect(f"ws://localhost:{self.port.value}") as _:
             msg = "Single connection results in multiple registered clients"
             self.assertEqual(1, len(self.server.clients), msg)
@@ -65,7 +63,6 @@ class TestServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.port.value, port)
             self.assertIn(host, ["localhost", "127.0.0.1", "::1"])
             self.assertEqual(self.ip_address.value, host)
-
 
     def test_send_growth(self):
         self.fail()

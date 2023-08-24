@@ -26,7 +26,7 @@ class Environment:
     time_in_s: int = 0
 
     def __str__(self):
-        string = f"{self.water_grid}\n----------\n{self.nitrate_grid}\n----------\n{self.weather}"
+        string = f"Water Grid:\n{self.water_grid}\n----------\nNitrate Grid\n{self.nitrate_grid}\n----------\nWeather\n{self.weather}"
         return string
 
     def simulate(self, time_in_s):
@@ -34,7 +34,8 @@ class Environment:
             return
 
         start_time = self.time_in_s
-        end_time = self.time_in_s + time_in_s
+        self.time_in_s += time_in_s
+        end_time = self.time_in_s
 
         seconds_missing_for_full_h = 3600 - self.time_in_s % 3600
         state_hour = int(start_time // 3600)
@@ -69,6 +70,7 @@ class Environment:
         dic["water_grid"] = self.water_grid.to_dict()
         dic["nitrate_grid"] = self.nitrate_grid.to_dict()
         dic["weather"] = self.weather.to_dict()
+        dic["time_in_s"] = self.time_in_s
 
         return dic
 
@@ -78,11 +80,11 @@ class Environment:
     @classmethod
     def from_dict(cls, dic: dict) -> Environment:
         env = Environment()
-        print(dic)
 
         env.water_grid = MetaboliteGrid.from_dict(dic["water_grid"])
         env.nitrate_grid = MetaboliteGrid.from_dict(dic["nitrate_grid"])
         env.weather = WeatherSimulator.from_dict(dic["weather"])
+        env.time_in_s = dic["time_in_s"]
 
         return env
 

@@ -37,6 +37,8 @@ CO2 = "CO2_tx_leaf"
 
 # mol
 Vmax = 3360 / 3600  # mikroMol/gDW/s
+Vmax = 0.038 # mikroMol/gDW / s
+
 Km = 4000  # mikromol
 
 # Todo change to 0.1 maybe
@@ -215,7 +217,7 @@ class DynamicModel:
             )
         )
 
-        water_upper_bound_env_pool = environment.water_grid.available(
+        water_upper_bound_env_pool = environment.water_grid.available_absolute(
             self.plant.root
         ) / (self.plant.root_biomass_gram * time_frame)
 
@@ -253,15 +255,12 @@ class DynamicModel:
             )
         )
 
-        nitrate_upper_bound_env_pool = environment.nitrate_grid.available(
-            self.plant.root
-        ) / (self.plant.root_biomass_gram * time_frame)
-        nitrate_upper_bound_env_pool = max(
-            (
-                (Vmax * nitrate_upper_bound_env_pool)
-                / (Km + nitrate_upper_bound_env_pool)
-            ),
-            0,
+        nitrate_upper_bound_env_pool = environment.nitrate_grid.available_relative_mm(
+            roots= self.plant.root,
+            time_seconds= time_frame,
+            g_root= self.plant.root_biomass_gram,
+            v_max= Vmax,
+            k_m= Km,
         )
 
         nitrate_upper_bounds = (
@@ -330,6 +329,7 @@ class DynamicModel:
         co2_uptake_in_micromol_per_second_and_gram = co2
         co2 = co2 * leaf_biomass * time_frame
         photon = photon * leaf_biomass * time_frame
+        logger.debug(f"CO2 uptake is {co2}, photon uptake is {photon}")
 
         # via stem
         starch_out = starch_out * stem_biomass * time_frame
@@ -339,6 +339,7 @@ class DynamicModel:
         # via root
         water = water * root_biomass * time_frame
         nitrate = nitrate * root_biomass * time_frame
+        logger.debug(f"Water uptake is {water}, nitrate uptake is {nitrate}")
 
         # set values
         self.plant.root_biomass = self.plant.root_biomass + root
@@ -368,7 +369,7 @@ class DynamicModel:
         self.plant.update_transpiration()
 
         amount = self.plant.water.missing_amount
-        available = environment.water_grid.available(roots=self.plant.root)
+        available = environment.water_grid.available_absolute(roots=self.plant.root)
         diff = min(amount, available)
 
         environment.water_grid.drain(amount=diff, roots=self.plant.root)
@@ -388,7 +389,7 @@ class DynamicModel:
         self.plant.update_max_nitrate_pool()
         self.plant.nitrate.nitrate_intake = nitrate
         amount = self.plant.nitrate.missing_amount
-        available = environment.nitrate_grid.available(roots=self.plant.root)
+        available = environment.nitrate_grid.available_absolute(roots=self.plant.root)
         diff = min(amount, available)
         environment.nitrate_grid.drain(amount=diff, roots=self.plant.root)
         self.plant.nitrate.nitrate_pool += diff
