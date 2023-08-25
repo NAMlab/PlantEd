@@ -786,8 +786,8 @@ class UI:
         humidity = 0
         temperature = 0
         if self.latest_weather_state is not None:
-            humidity = self.latest_weather_state["humidity"]
-            temperature = self.latest_weather_state["temperature"]
+            humidity = self.latest_weather_state.humidity
+            temperature = self.latest_weather_state.temperature
 
         humidity_label = config.FONT.render(
             "{:.0f} %".format(humidity), True, config.BLACK

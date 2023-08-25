@@ -150,6 +150,5 @@ class WeatherSimulator(WeatherSimulatorMinimal):
         return state
 
     def get_latest_weather_state(self):
-
         return self.state.get(self.latest_hour)
 

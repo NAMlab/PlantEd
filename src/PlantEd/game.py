@@ -611,9 +611,8 @@ class DefaultGameScene(object):
 
     def set_environment(self, environment: ServerEnvironment):
         self.server_environment = environment
-
         self.ui.latest_weather_state = self.server_environment.weather.get_latest_weather_state()
-        self.environment.precipitation = self.server_environment.weather.get_latest_weather_state()["precipitation"]
+        self.environment.precipitation = self.server_environment.weather.get_latest_weather_state().precipitation
 
         self.water_grid.water_grid = self.server_environment.water_grid.grid
         # setup local environment -> only to draw water, nitrate
@@ -627,14 +626,10 @@ class DefaultGameScene(object):
             plant: The new Plant object.
 
         """
-
         logger.debug("Replacing the existing plant object of the UI with the "
                      f"new one. NEW: {plant}")
 
-        old_plant = self.server_plant
         self.server_plant = plant
-
-        #print(plant.root_biomass)
 
         # max starch pool can be smaller in the beginning due to balancing
         max_starch_pool = plant.starch_pool.max_starch_pool
@@ -655,8 +650,6 @@ class DefaultGameScene(object):
             "starch_pool": self.server_plant.starch_pool,
         }
 
-        #logger.debug(f"Delta is as follows: {str(growth_rates)}")
-
         self.ui.server_plant = plant
         logger.debug("Updating the gram representation of the UI.")
         self.plant.update_organ_masses(masses)
@@ -674,7 +667,6 @@ class DefaultGameScene(object):
         hours = (ticks % day) / hour
         self.check_game_end(days)
         if 8 < hours < 20:
-            # print(hours)
             (
                 shadow_map,
                 resolution,

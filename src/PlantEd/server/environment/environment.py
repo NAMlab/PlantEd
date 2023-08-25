@@ -83,8 +83,6 @@ class Environment:
 
         env.water_grid = MetaboliteGrid.from_dict(dic["water_grid"])
         env.nitrate_grid = MetaboliteGrid.from_dict(dic["nitrate_grid"])
-        print(dic)
-        print(dic["weather"])
         env.weather = WeatherSimulator.from_dict(dic["weather"])
         env.time_in_s = dic["time_in_s"]
 
