@@ -5,7 +5,7 @@ import json
 def upload_score(name, score):
     test_file = open("logfile.csv", "rb")
     requests.post(
-        "http://biotools-online.com/planted-highscore/post.php",
+        "https://planted.ipk-gatersleben.de/highscores/post.php",
         files={"logfile": test_file},
         data={"name": name, "score": score},
     )
@@ -14,12 +14,12 @@ def upload_score(name, score):
 def get_scores():
     scores = json.loads(
         requests.get(
-            "http://biotools-online.com/planted-highscore/highscores.json"
+            "https://planted.ipk-gatersleben.de/highscores/highscores.json",
+			headers={'Cache-Control': 'no-cache'}
         ).text
     )
     return scores
 
-
-# https://biotools-online.com/planted-highscore/logs/1.csv
-# http://biotools-online.com/planted-highscore/highscores.json
-# clear scores: http://biotools-online.com/planted-highscore/clearscores.php
+# https://planted.ipk-gatersleben.de/highscores/logs/
+# https://planted.ipk-gatersleben.de/highscores/highscores.json
+# clear scores and delete all log files: https://planted.ipk-gatersleben.de/highscores/clearscores.php

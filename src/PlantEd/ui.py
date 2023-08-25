@@ -58,7 +58,6 @@ class UI:
         server_plant: serverPlant,
         narrator: Narrator,
         client: Client,
-        environment: Environment,
         camera: Camera,
         sound_control: SoundControl,
         production_topleft: Tuple[int, int] = (10, 100),
@@ -75,7 +74,6 @@ class UI:
         self.server_plant = server_plant
 
         self.client = client
-        self.growth_rates: GrowthRates = growth_rates
         self.latest_weather_state = None
         self.gametime = GameTime.instance()
 

@@ -1,3 +1,4 @@
+import logging
 import random
 import sys
 from unittest import TestCase
@@ -8,8 +9,13 @@ from numpy.testing import assert_almost_equal
 from PlantEd.server.environment.grid import MetaboliteGrid
 from PlantEd.utils.LSystem import LSystem
 
+logging.basicConfig(
+    level="DEBUG",
+    format="%(asctime)s %(name)s %(levelname)s:%(message)s",
+    datefmt="%H:%M:%S",
+)
 
-class TestMetaboiteGrid(TestCase):
+class TestMetaboliteGrid(TestCase):
     def setUp(self) -> None:
         random.seed(10)
 
@@ -367,7 +373,7 @@ class TestMetaboiteGrid(TestCase):
 
         assert_almost_equal(met.grid, expected, decimal=1)
 
-    def test_available(self):
+    def test_available_absolute(self):
         grid = MetaboliteGrid()
         grid.add2cell(
             rate= 500,
@@ -386,10 +392,10 @@ class TestMetaboiteGrid(TestCase):
             water_grid_pos= (0,900)
             )
 
-        self.assertEqual(grid.available(roots= root), 1000)
+        self.assertEqual(grid.available_absolute(roots= root), 1000)
 
         root.root_grid[1,2] = 0
-        self.assertEqual(grid.available(roots= root), 500)
+        self.assertEqual(grid.available_absolute(roots= root), 500)
 
     def test_drain(self):
         grid = MetaboliteGrid()
@@ -411,10 +417,10 @@ class TestMetaboiteGrid(TestCase):
             water_grid_pos= (0,900)
             )
 
-        self.assertEqual(grid.available(roots= root), 1000)
+        self.assertEqual(grid.available_absolute(roots= root), 1000)
 
         grid.drain(amount= 500, roots= root)
-        self.assertEqual(grid.available(roots= root), 500)
+        self.assertEqual(grid.available_absolute(roots= root), 500)
         self.assertEqual(grid.grid[4,3], 250)
         self.assertEqual(grid.grid[1,2], 250)
 
@@ -424,15 +430,15 @@ class TestMetaboiteGrid(TestCase):
             y = 0,
         )
 
-        self.assertEqual(grid.available(roots= root), 1500)
+        self.assertEqual(grid.available_absolute(roots= root), 1500)
         grid.drain(amount= 300, roots= root)
-        self.assertEqual(grid.available(roots= root), 1200)
+        self.assertEqual(grid.available_absolute(roots= root), 1200)
         self.assertEqual(grid.grid[4,3], 150)
         self.assertEqual(grid.grid[1,2], 150)
         self.assertEqual(grid.grid[10,0], 900)
 
         grid.drain(amount=900, roots= root)
-        self.assertEqual(grid.available(roots= root), 300)
+        self.assertEqual(grid.available_absolute(roots= root), 300)
         self.assertEqual(grid.grid[4,3], 0)
         self.assertEqual(grid.grid[1,2], 0)
         self.assertEqual(grid.grid[10,0], 300)
@@ -528,5 +534,51 @@ class TestMetaboiteGrid(TestCase):
         
         self.assertTrue(grid == restored_grid)
 
+    def test_available_relative_mm(self):
+        met = MetaboliteGrid()
+        root = LSystem(root_grid=np.ones((20, 6)), water_grid_pos=(0, 900))
+        met.add2cell(20, 1,1)
+        met.add2cell(7, 5, 5)
+        v_max = 0.038
+        k_m = 4000
+
+        mm_limit = 0.0002547802334243854
+
+        self.assertEqual(mm_limit, met.available_relative_mm(
+            roots=root,
+            g_root= 1,
+            time_seconds= 20,
+            v_max= v_max,
+            k_m=k_m,
+        )
+        )
+        self.assertEqual(mm_limit,met.available_relative_mm(
+            roots=root,
+            g_root= 1,
+            time_seconds= 30,
+            v_max= v_max,
+            k_m=k_m,
+        )
+
+        )
+
+        self.assertEqual(27/500000, met.available_relative_mm(
+                roots=root,
+                g_root=1,
+                time_seconds=500000,
+                v_max=v_max,
+                k_m=k_m,
+            ))
+
+        self.assertEqual(
+            27 / (500000 * 57),
+            met.available_relative_mm(
+                roots=root,
+                g_root=57,
+                time_seconds=500000,
+                v_max=v_max,
+                k_m=k_m,
+            ),
+        )
 
 

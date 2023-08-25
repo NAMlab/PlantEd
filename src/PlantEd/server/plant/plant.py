@@ -5,12 +5,18 @@ import json
 import numpy as np
 
 from PlantEd.client.water import Water
-from PlantEd.constants import START_LEAF_BIOMASS_GRAM, START_STEM_BIOMASS_GRAM, \
-    START_ROOT_BIOMASS_GRAM, START_SEED_BIOMASS_GRAM, SLA_IN_SQUARE_METER_PER_GRAM
+from PlantEd.constants import (
+    START_LEAF_BIOMASS_GRAM,
+    START_STEM_BIOMASS_GRAM,
+    START_ROOT_BIOMASS_GRAM,
+    START_SEED_BIOMASS_GRAM,
+    SLA_IN_SQUARE_METER_PER_GRAM,
+)
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.starch import Starch
 from PlantEd.utils.LSystem import LSystem
+
 
 class Plant:
     """
@@ -33,7 +39,8 @@ class Plant:
 
         photon_upper (float):
     """
-    def __init__(self, ground_grid_resolution: tuple[int,int]):
+
+    def __init__(self, ground_grid_resolution: tuple[int, int]):
         self.leafs: list[Leaf] = []
         self.leafs_biomass: float = START_LEAF_BIOMASS_GRAM
         self.stem_biomass: float = START_STEM_BIOMASS_GRAM
@@ -41,34 +48,37 @@ class Plant:
         self.seed_biomass: float = START_SEED_BIOMASS_GRAM
 
         self.co2: float = 0
-        self.co2_uptake_in_micromol_per_second_and_gram:float = 0
+        self.co2_uptake_in_micromol_per_second_and_gram: float = 0
         self.photon: float = 0
 
         biomass = self.biomass_total_gram
-        self.starch_pool: Starch = Starch(plant_weight_gram= biomass)
-        self.water: Water = Water(plant_weight_gram= biomass)
-        self.nitrate: Nitrate = Nitrate(plant_weight_gram= biomass)
+        self.starch_pool: Starch = Starch(plant_weight_gram=biomass)
+        self.water: Water = Water(plant_weight_gram=biomass)
+        self.nitrate: Nitrate = Nitrate(plant_weight_gram=biomass)
 
-        self.stomata_open:bool = False
+        self.stomata_open: bool = False
 
         self.root = LSystem(
-            root_grid= np.zeros(ground_grid_resolution), # same resolution as environment grids
-            water_grid_pos= (0, 900) # hardcoded at ui [game.py 310]
+            root_grid=np.zeros(
+                ground_grid_resolution
+            ),  # same resolution as environment grids
+            water_grid_pos=(0, 900),  # hardcoded at ui [game.py 310]
         )
 
     def __repr__(self):
-        string =f"Plant object with following biomass values:" \
-                f" Leafs {self.leafs_biomass:.4E} µmol" \
-                f" Stem {self.stem_biomass:.4E} µmol" \
-                f" Root {self.root_biomass:.4E} µmol" \
-                f" Seed {self.seed_biomass:.4E} µmol" \
-                f" - other values :" \
-                f" CO2 uptake is {self.co2:.4E} µmol;" \
-                f" Photon uptake is {self.photon:.4E} µmol;" \
-                f" Starch is {str(self.starch_pool)};" \
-                f" Water is {str(self.water)};" \
-                f" Nitrate is {str(self.nitrate)}" \
-
+        string = (
+            f"Plant object with following biomass values:"
+            f" Leafs {self.leafs_biomass:.4E} µmol"
+            f" Stem {self.stem_biomass:.4E} µmol"
+            f" Root {self.root_biomass:.4E} µmol"
+            f" Seed {self.seed_biomass:.4E} µmol"
+            f" - other values :"
+            f" CO2 uptake is {self.co2:.4E} µmol;"
+            f" Photon uptake is {self.photon:.4E} µmol;"
+            f" Starch is {str(self.starch_pool)};"
+            f" Water is {str(self.water)};"
+            f" Nitrate is {str(self.nitrate)}"
+        )
         return string
 
     def __eq__(self, other):
@@ -84,7 +94,6 @@ class Plant:
                 return False
 
         return True
-
 
     def to_json(self) -> str:
         """
@@ -149,10 +158,10 @@ class Plant:
         return plant
 
     @classmethod
-    def from_json(cls, string:str) -> Plant:
+    def from_json(cls, string: str) -> Plant:
         dic = json.loads(string)
 
-        return Plant.from_dict(dic = dic)
+        return Plant.from_dict(dic=dic)
 
     @property
     def starch_out(self):
@@ -188,16 +197,25 @@ class Plant:
 
     @property
     def biomass_total(self):
-        return self.leafs_biomass + self.stem_biomass + self.root_biomass + self.seed_biomass
+        return (
+            self.leafs_biomass
+            + self.stem_biomass
+            + self.root_biomass
+            + self.seed_biomass
+        )
 
     @property
     def biomass_total_gram(self):
-        return self.leafs_biomass_gram + self.stem_biomass_gram + self.root_biomass_gram + self.seed_biomass_gram
+        return (
+            self.leafs_biomass_gram
+            + self.stem_biomass_gram
+            + self.root_biomass_gram
+            + self.seed_biomass_gram
+        )
 
     @property
     def specific_leaf_area_in_square_meter(self):
         return SLA_IN_SQUARE_METER_PER_GRAM * self.leafs_biomass_gram
-
 
     def set_water(self, water: Water):
         self.water = water
@@ -212,25 +230,24 @@ class Plant:
         self.water.update_max_water_pool(plant_biomass=self.biomass_total_gram)
 
     def update_max_starch_pool(self):
-        self.starch_pool.scale_pool_via_biomass(biomass_in_gram= self.biomass_total_gram)
+        self.starch_pool.scale_pool_via_biomass(biomass_in_gram=self.biomass_total_gram)
 
     def update_transpiration(self):
         self.water.update_transpiration(
-            stomata_open= self.stomata_open,
-            co2_uptake_in_micromol_per_second_and_gram= self.co2_uptake_in_micromol_per_second_and_gram,
-            transpiration_factor = self.water.transpiration_factor,
+            stomata_open=self.stomata_open,
+            co2_uptake_in_micromol_per_second_and_gram=self.co2_uptake_in_micromol_per_second_and_gram,
+            transpiration_factor=self.water.transpiration_factor,
         )
-    
+
     def get_transpiration_in_micromol(self, time_in_s: int):
         return self.water.transpiration * self.leafs_biomass_gram * time_in_s
 
-    def update_nitrate_pool_intake(self, seconds:int):
+    def update_nitrate_pool_intake(self, seconds: int):
         self.nitrate.update_nitrate_pool_based_on_root_weight(
-            root_weight_in_gram= self.root_biomass_gram,
-            time_in_seconds= seconds
+            root_weight_in_gram=self.root_biomass_gram, time_in_seconds=seconds
         )
 
     def update_max_nitrate_pool(self):
         self.nitrate.update_nitrate_pool_based_on_plant_weight(
-            plant_weight_gram= self.biomass_total_gram
+            plant_weight_gram=self.biomass_total_gram
         )
