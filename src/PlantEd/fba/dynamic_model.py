@@ -87,9 +87,9 @@ script_dir = fileDir.parent
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
     def __init__(
-        self,
-        enviroment: Environment,
-        model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
+            self,
+            enviroment: Environment,
+            model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
     ):
         self.model = model.copy()
         self.set_objective()
@@ -131,10 +131,10 @@ class DynamicModel:
 
         objective = self.model.problem.Objective(
             expression=Add(leaf.flux_expression)
-            + Add(root.flux_expression)
-            + Add(seed.flux_expression)
-            + Add(stem.flux_expression)
-            + Add(starch.flux_expression),
+                       + Add(root.flux_expression)
+                       + Add(seed.flux_expression)
+                       + Add(stem.flux_expression)
+                       + Add(starch.flux_expression),
             direction="max",
             name="multi_objective",
         )
@@ -163,7 +163,7 @@ class DynamicModel:
         # Literature ATP NADPH: 7.27 and 2.56 mmol gDW−1 day−1
 
     def calc_growth_rate(
-        self, new_growth_percentages: GrowthPercent, environment: Environment
+            self, new_growth_percentages: GrowthPercent, environment: Environment
     ):
         time_frame = new_growth_percentages.time_frame
         weather_state = environment.weather.get_latest_weather_state()
@@ -239,8 +239,8 @@ class DynamicModel:
         self.set_bounds(WATER, water_bounds)
 
         photon_upper_bound = (
-            self.plant.specific_leaf_area_in_square_meter
-            * self.micromol_photon_per_square_meter
+                self.plant.specific_leaf_area_in_square_meter
+                * self.micromol_photon_per_square_meter
         )
         photon_bounds = (0, photon_upper_bound)
         logger.debug(f"Bounds for photons are {photon_bounds}")
@@ -264,7 +264,7 @@ class DynamicModel:
         )
 
         nitrate_upper_bounds = (
-            nitrate_upper_bound_env_pool + nitrate_upper_bound_plant_pool
+                nitrate_upper_bound_env_pool + nitrate_upper_bound_plant_pool
         )
 
         nitrate_bounds = (-1000, nitrate_upper_bounds)
@@ -355,11 +355,14 @@ class DynamicModel:
 
         # update water
         used_water = water + transpiration
-
         if used_water > water_upper_bound_env_pool:
             taken_from_internal_pool = used_water - water_upper_bound_env_pool
+            if self.plant.water.water_pool - taken_from_internal_pool < 0:
+                taken_from_internal_pool -= self.plant.water.water_pool
+                self.plant.water.water_pool = 0
+            else:
+                self.plant.water.water_pool -= taken_from_internal_pool
 
-            self.plant.water.water_pool -= taken_from_internal_pool
             used_water -= taken_from_internal_pool
 
         environment.water_grid.drain(amount=used_water, roots=self.plant.root)
@@ -401,7 +404,7 @@ class DynamicModel:
         self.plant.starch_in = starch_in
         self.plant.update_max_starch_pool()
         self.plant.starch_pool.available_starch_pool = (
-            self.plant.starch_pool.available_starch_pool + (starch_out - starch_in)
+                self.plant.starch_pool.available_starch_pool + (starch_out - starch_in)
         )
 
         # ToDo remove growth_rates not needed anymore everything is in plant
@@ -554,10 +557,10 @@ class DynamicModel:
                 if percentage[i] != 0 and percentage[j] != 0:
                     constraint = self.model.problem.Constraint(
                         (
-                            reactions[i].flux_expression * mass_organ[i] / percentage[i]
-                            - reactions[j].flux_expression
-                            * mass_organ[j]
-                            / percentage[j]
+                                reactions[i].flux_expression * mass_organ[i] / percentage[i]
+                                - reactions[j].flux_expression
+                                * mass_organ[j]
+                                / percentage[j]
                         ),
                         lb=0,
                         ub=0,

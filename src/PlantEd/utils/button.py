@@ -1156,45 +1156,6 @@ class Slider:
                     - self.y
                 )
 
-'''
-class SliderGroup:
-    def __init__(self, sliders, max_sum):
-        self.sliders = sliders
-        self.sliders_zero = []
-        self.max_sum = max_sum
-
-        for slider in self.sliders:
-            slider.callback = self.change_percentage
-            # slider.set_percentage(self.max_sum/len(self.sliders))
-
-    def slider_sum(self):
-        return sum([slider.get_percentage() for slider in self.sliders])
-
-    def change_percentage(self, slider):
-        print("changing percentage of: ", slider.get_percentage())
-        # @slider: slider that changed
-        while (
-            self.max_sum < self.slider_sum() - 0.1
-            or self.max_sum > self.slider_sum() + 1
-        ):
-            # special case, if max is smaller than 100%
-            if slider.get_percentage() > self.max_sum:
-                slider.set_percentage(self.max_sum)
-            # slider that called and zero sliders aren't able to reduce --> available_sliders
-            available_sliders = (
-                len(self.sliders) - len(self.sliders_zero)
-            ) - 1
-            delta = (self.slider_sum() - self.max_sum) / (available_sliders)
-            for s in self.sliders:
-                if s == slider or s in self.sliders_zero:
-                    pass
-                else:
-                    # extra: extra = s.get_percentage() - delta
-                    extra = s.sub_percentage(delta)
-                    if extra > 0:
-                        self.sliders_zero.append(s)
-'''
-
 class NegativeSlider:
     def __init__(
         self,

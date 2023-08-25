@@ -18,7 +18,7 @@ class TestWeatherSimulatorMinimal(TestCase):
             w_sim.get_weather_state(5)
 
         weather_state = WeatherState(
-            temperatur= 20,
+            temperature= 20,
             humidity= 30,
             precipitation= 176,
         )
@@ -33,7 +33,7 @@ class TestWeatherSimulatorMinimal(TestCase):
             w_sim.get_latest_weather_state()
 
         weather_state = WeatherState(
-            temperatur=20,
+            temperature=20,
             humidity=30,
             precipitation=176,
         )
@@ -42,7 +42,7 @@ class TestWeatherSimulatorMinimal(TestCase):
         self.assertEqual(w_sim.get_latest_weather_state(), weather_state)
 
         weather_state = WeatherState(
-            temperatur=8,
+            temperature=8,
             humidity=17,
             precipitation=348,
         )
@@ -55,14 +55,14 @@ class TestWeatherSimulatorMinimal(TestCase):
         w_sim = WeatherSimulatorMinimal()
 
         weather_state = WeatherState(
-            temperatur=20,
+            temperature=20,
             humidity=30,
             precipitation=176,
         )
         w_sim.state = {0: weather_state}
 
         weather_state = WeatherState(
-            temperatur=8,
+            temperature=8,
             humidity=17,
             precipitation=348,
         )
@@ -70,7 +70,7 @@ class TestWeatherSimulatorMinimal(TestCase):
         w_sim.latest_hour = 1
 
         dic = w_sim.to_dict()
-        expected = {'states': {0: {'temperatur': 20, 'humidity': 30, 'precipitation': 176}, 1: {'temperatur': 8, 'humidity': 17, 'precipitation': 348}}, 'latest_hour': 1}
+        expected = {'states': {0: {'temperature': 20, 'humidity': 30, 'precipitation': 176}, 1: {'temperature': 8, 'humidity': 17, 'precipitation': 348}}, 'latest_hour': 1}
 
         self.assertEqual(dic, expected)
 
@@ -78,14 +78,14 @@ class TestWeatherSimulatorMinimal(TestCase):
         w_sim = WeatherSimulatorMinimal()
 
         weather_state = WeatherState(
-            temperatur=20,
+            temperature=20,
             humidity=30,
             precipitation=176,
         )
         w_sim.state = {0: weather_state}
 
         weather_state = WeatherState(
-            temperatur=8,
+            temperature=8,
             humidity=17,
             precipitation=348,
         )

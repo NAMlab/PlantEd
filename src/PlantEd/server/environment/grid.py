@@ -22,12 +22,12 @@ logger = logging.getLogger(__name__)
 
 # Coordinates for the Grid:
 # -----x----->
-#|
-#|
-#y
-#|
-#|
-#↓
+# |
+# |
+# y
+# |
+# |
+# ↓
 #
 # acess grid like this grid[x,y]
 
@@ -41,9 +41,9 @@ class MetaboliteGrid:
     """
 
     def __init__(
-        self,
-        grid_size: tuple[int, int] = (20, 6),
-        max_metabolite_cell: int = 1000000,
+            self,
+            grid_size: tuple[int, int] = (20, 6),
+            max_metabolite_cell: int = 1000000,
     ):
         self.grid_size: tuple[int, int] = grid_size
         self.grid: np.ndarray = np.zeros(grid_size)
@@ -57,13 +57,13 @@ class MetaboliteGrid:
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, MetaboliteGrid):
             return False
-        
+
         if self.grid_size != __value.grid_size:
             return False
-        
+
         if self.max_metabolite_cell != __value.max_metabolite_cell:
             return False
-        
+
         if not np.array_equal(self.grid, __value.grid):
             return False
         return True
@@ -79,7 +79,7 @@ class MetaboliteGrid:
         """
 
         # Todo source
-        #convert mm/m²/h -> millimol/s
+        # convert mm/m²/h -> millimol/s
         # water has 55.509 mmol / liter
         # 1mm = 1liter of water
         # size of cell?
@@ -91,12 +91,10 @@ class MetaboliteGrid:
 
         if rain > 0:
             self.grid[:, 0] += rain_per_cell * time_in_s
-        
+
         times = math.floor(time_in_s / 3600)
         for _ in range(times):
-            self.trickle(dt= 3600)
-            
-        self.trickle(dt= time_in_s % 3600)
+            self.trickle(dt=3600)
 
     def available_absolute(self, roots: LSystem) -> int:
         root_grid = roots.root_grid
@@ -144,7 +142,7 @@ class MetaboliteGrid:
         root_grid = roots.root_grid
         available_water_grid = np.multiply(root_grid, self.grid)
 
-        n_cells2drain_from = (available_water_grid>0).sum()
+        n_cells2drain_from = (available_water_grid > 0).sum()
 
         average_cell_drain = amount / n_cells2drain_from
 
@@ -154,16 +152,16 @@ class MetaboliteGrid:
             if value == 0:
                 continue
             if value < average_cell_drain:
-                drained = self.grid[x,y]
-                self.grid[x,y] = 0
+                drained = self.grid[x, y]
+                self.grid[x, y] = 0
 
                 amount -= drained
-                n_cells2drain_from -=1
+                n_cells2drain_from -= 1
 
-                average_cell_drain = amount/n_cells2drain_from
-            
+                average_cell_drain = amount / n_cells2drain_from
+
             else:
-                self.grid[x,y] -= average_cell_drain
+                self.grid[x, y] -= average_cell_drain
 
     def add2cell(self, rate: int, x: int, y: int):
         """
@@ -174,7 +172,7 @@ class MetaboliteGrid:
             pos (tuple[int, int]): position of the cell
         """
 
-        self.grid[x, y] = min( self.grid[x,y]+ rate, self.max_metabolite_cell)
+        self.grid[x, y] = min(self.grid[x, y] + rate, self.max_metabolite_cell)
 
     def trickle(self, dt):
         """
@@ -189,22 +187,22 @@ class MetaboliteGrid:
 
         for x in range(0, self.grid.shape[0]):
             for y in reversed(range(0, self.grid.shape[1])):
-                upper_cell = self.grid[x , y - 1]
+                upper_cell = self.grid[x, y - 1]
                 if upper_cell > 0:
                     adjusted_trickle = (
-                        (TRICKLE_AMOUNT + TRICKLE_AMOUNT * upper_cell ) / 1000
-                        * random.random()
-                        * dt
+                            (TRICKLE_AMOUNT + TRICKLE_AMOUNT * upper_cell) / 1000
+                            * random.random()
+                            * dt
                     )
                     # check if zero in upper cell
-                    delta_trickle = self.grid[x , y - 1] - adjusted_trickle
+                    delta_trickle = self.grid[x, y - 1] - adjusted_trickle
                     if delta_trickle <= 0:
-                        self.grid[x , y - 1] = 0
+                        self.grid[x, y - 1] = 0
                         adjusted_trickle = adjusted_trickle - delta_trickle
                     else:
-                        self.grid[x , y - 1] -= adjusted_trickle
+                        self.grid[x, y - 1] -= adjusted_trickle
                     self.grid[x, y] += adjusted_trickle
-    
+
     def to_dict(self):
         dic = {}
 
@@ -213,13 +211,13 @@ class MetaboliteGrid:
         dic["max_metabolite_cell"] = self.max_metabolite_cell
 
         return dic
-    
+
     def to_json(self) -> str:
 
         return json.dumps(self.to_dict())
-    
+
     @classmethod
-    def from_dict(cls, dic:dict) -> MetaboliteGrid:
+    def from_dict(cls, dic: dict) -> MetaboliteGrid:
 
         met_grid = MetaboliteGrid()
 
@@ -230,7 +228,7 @@ class MetaboliteGrid:
         return met_grid
 
     @classmethod
-    def from_json(cls, string:str) -> MetaboliteGrid:
+    def from_json(cls, string: str) -> MetaboliteGrid:
         dic = json.loads(string)
 
-        return MetaboliteGrid.from_dict(dic = dic)
+        return MetaboliteGrid.from_dict(dic=dic)

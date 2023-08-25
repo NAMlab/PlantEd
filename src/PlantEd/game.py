@@ -306,7 +306,8 @@ class DefaultGameScene(object):
 
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
-        self.gametime.faster()
+        #self.gametime.fastest()
+        #self.gametime.faster()
 
         self.water_grid = Water_Grid(pos=(0, 900))
         self.client = Client(port=client_port)
@@ -503,7 +504,7 @@ class DefaultGameScene(object):
         self.plant.organs[2].floating_shop = self.floating_shop
 
         # start plant growth timer
-        pygame.time.set_timer(GROWTH, 2000)
+        pygame.time.set_timer(GROWTH, 1000)
 
     def activate_add_leaf(self):
         # if there are funds, buy a leave will enable leave @ mouse pos until clicked again
@@ -523,7 +524,6 @@ class DefaultGameScene(object):
             if self.ui.pause:
                 continue
             if e.type == GROWTH:
-
                 game_time_now = self.gametime.time_since_start_in_hours
                 delta_time_in_h = \
                     game_time_now \
@@ -552,6 +552,14 @@ class DefaultGameScene(object):
                     growth_percent=growth_percent,
                     callback=self.update_growth_rates,
                 )
+
+                if self.shop.watering_can.pouring:
+                    for i in range(len(self.water_grid.poured_cells)):
+                        amount = self.water_grid.poured_cells[i]
+                        if amount > 0:
+                            print("AMOUNT: ", amount, i)
+                            self.client.add2grid(amount, i, 0, "water")
+                    self.water_grid.poured_cells.fill(0)
 
                 self.plant.get_PLA()
                 days, hours, minutes = self.environment.get_day_time()
@@ -611,10 +619,11 @@ class DefaultGameScene(object):
 
     def set_environment(self, environment: ServerEnvironment):
         self.server_environment = environment
-        self.ui.latest_weather_state = self.server_environment.weather.get_latest_weather_state()
-        self.environment.precipitation = self.server_environment.weather.get_latest_weather_state().precipitation
 
-        self.water_grid.water_grid = self.server_environment.water_grid.grid
+        self.ui.latest_weather_state = self.server_environment.weather.get_latest_weather_state()
+        if not self.shop.watering_can.pouring:
+            self.water_grid.water_grid = self.server_environment.water_grid.grid.transpose()
+        self.environment.precipitation = self.server_environment.weather.get_latest_weather_state().precipitation
         # setup local environment -> only to draw water, nitrate
         # setup local ui -> to draw temp, hum, precipi, sun?
 
@@ -638,7 +647,6 @@ class DefaultGameScene(object):
         self.plant.organ_starch.update_starch_max(max_starch_pool)
 
         self.plant.organ_starch.mass = plant.starch_pool.available_starch_pool
-        # Todo, currently only pool is updated by server, not content?
 
         logger.debug("Calculating the delta of the growth in grams. ")
 
@@ -685,9 +693,7 @@ class DefaultGameScene(object):
         self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
 
         # ToDo Does the Watergrid need that many updates? (sends everytime one request)
-        self.water_grid.update(
-            dt=dt, water=self.server_plant.water, client=self.client
-        )
+        self.water_grid.update(dt)
         self.snail_spawner.update(dt)
         for bug in self.bugs:
             bug.update(dt)

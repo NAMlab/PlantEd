@@ -8,7 +8,7 @@ class WeatherState:
             precipitation: int,
     ) -> None:
         self.temperature: float = temperature
-        self.humidity:float = humidity
+        self.humidity: float = humidity
         self.precipitation: int = precipitation
 
     def __str__(self):

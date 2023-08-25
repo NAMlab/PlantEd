@@ -237,7 +237,7 @@ class UI:
                 border_w=3,
             )
         )
-        '''
+
         # init speed control
         speed_options = [
             RadioButton(
@@ -271,12 +271,12 @@ class UI:
                 image=assets.img("fastest_speed.PNG"),
             ),
         ]
-         for rb in speed_options:
+        for rb in speed_options:
             rb.setRadioButtons(speed_options)
             self.button_sprites.add(rb)
         speed_options[0].button_down = True
 
-
+        '''
         self.skip_intro = Button_Once(
             440,
             config.SCREEN_HEIGHT - 50,
@@ -1280,10 +1280,11 @@ class UI:
             (topleft[0], topleft[1] + 40, width, 30),
             border_radius=3,
         )
+
         pygame.draw.rect(
             s,
             config.BLUE,
-            (topleft[0], topleft[1] + 40, int(width * self.server_plant.water.fill_percentage), 30),
+            (topleft[0], topleft[1] + 40, int(width * min(self.server_plant.water.fill_percentage, 1)), 30),
             border_radius=3,
         )  # exp
         text_water_pool = config.FONT.render(

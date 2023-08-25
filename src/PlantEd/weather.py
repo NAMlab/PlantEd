@@ -176,7 +176,7 @@ class Environment:
         """
         if self.precipitation > 0:
             self.rain_animation.running = True
-            self.water_grid.activate_rain(self.rain_rate)
+            self.water_grid.activate_rain()
         else:
             self.rain_animation.running = False
             self.water_grid.deactivate_rain()
