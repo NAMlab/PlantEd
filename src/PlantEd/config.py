@@ -108,6 +108,7 @@ MENU_SUBTITLE = pygame.font.SysFont("timesnewroman", 56)
 YELLOW_TRANSPARENT = (255, 255, 255, 128)
 PURPLE = (171, 36, 255)
 BROWN = (161, 148, 120)
+NITRATE_BROWN=(90, 40, 10)
 
 PLANTNAME = "GenEric"
 _OPTIONS = None
@@ -235,6 +236,9 @@ def apply_volume(options):
 # STARCH
 
 # DYNAMIC MODEL
+
+# NITRATE RATE
+NITRATE_FILL_CELL = 10000
 
 
 # this file should hold states of objects necessary for savegames

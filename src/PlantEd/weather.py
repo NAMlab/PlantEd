@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 from numpy import ndarray
+
 from PlantEd.gameobjects.plant import Plant
 from PlantEd.gameobjects.water_reservoir import Water_Grid
 from PlantEd.utils.gametime import GameTime
@@ -27,7 +28,6 @@ class Environment:
         self.plant = plant
         self.gametime = GameTime.instance()
         self.water_grid = water_grid
-
         self.s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
         self.sun_pos_spline: list[tuple[float, float]] = Beziere(
             [(-100, 800), (960, -200), (2020, 800)], res=SUN_POS_SPLINE_RES

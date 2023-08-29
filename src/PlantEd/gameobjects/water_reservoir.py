@@ -32,7 +32,6 @@ class Water_Grid:
         # offset_grid shape: ((x,y), n_drops, width, height)
         self.offset_grid: ndarray = np.random.randint(0, 90, (2, MAX_DROPS_TO_DRAW, grid_size[0], grid_size[1]))
         self.grid_screen = pygame.Surface((1920, 1080), pygame.SRCALPHA)
-        self.gametime = GameTime.instance()
 
     def update(self, dt):
         for base_water in self.base_waters:

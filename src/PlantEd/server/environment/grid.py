@@ -144,7 +144,7 @@ class MetaboliteGrid:
 
         n_cells2drain_from = (available_water_grid > 0).sum()
 
-        average_cell_drain = amount / n_cells2drain_from
+        average_cell_drain = amount / n_cells2drain_from if n_cells2drain_from is not 0 else 0
 
         # iterates over all cells ordered by key
         # => here from the cell with the lowest concentration to the highest concentration 

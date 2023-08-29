@@ -32,8 +32,6 @@ class WeatherSimulatorMinimal:
         return True
 
     def get_weather_state(self, time: int) -> WeatherState:
-        print(self.state)
-        print(self.state[time]["humidity"])
         try:
 
             state: WeatherState = self.state[time]
@@ -62,7 +60,6 @@ class WeatherSimulatorMinimal:
         w_sim = WeatherSimulatorMinimal()
         w_sim.latest_hour = int(dic["latest_hour"])
         states_as_dic = dic["states"]
-        print("DICT: ", states_as_dic)
         for hour, state in states_as_dic.items():
             w_sim.state[int(hour)] = WeatherState(
                 temperature=state["temperature"],

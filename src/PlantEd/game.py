@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from typing import List
 
+import numpy as np
 import pygame
 from pygame.locals import *
 
@@ -18,6 +19,7 @@ from PlantEd.data import assets
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.bee import Hive
 from PlantEd.gameobjects.bug import Bug
+from PlantEd.gameobjects.grid import Grid
 from PlantEd.gameobjects.level_card import Card
 from PlantEd.gameobjects.plant import Plant
 from PlantEd.gameobjects import plant
@@ -82,11 +84,6 @@ def shake():
         s *= -1
     while True:
         yield (0, 0)
-
-
-# Todo
-# unittests, dir that contains all tests, one test file for one class, secure class function
-# pipenv for git, enable cloners to see all depencies
 
 
 class OptionsScene:
@@ -289,7 +286,6 @@ class OptionsScene:
 
 class DefaultGameScene(object):
     def __init__(self):
-        self.end_initiated = False
         # get name and date
         name = config.load_options()["name"]
 
@@ -311,6 +307,7 @@ class DefaultGameScene(object):
 
         self.water_grid = Water_Grid(pos=(0, 900))
         self.client = Client(port=client_port)
+        self.nitrate_grid = Grid()
         self.server_plant = ServerPlant(ground_grid_resolution=(6, 20))
         self.server_environment = ServerEnvironment()
         self.hours_since_start_where_growth_last_computed = 0
@@ -557,7 +554,6 @@ class DefaultGameScene(object):
                     for i in range(len(self.water_grid.poured_cells)):
                         amount = self.water_grid.poured_cells[i]
                         if amount > 0:
-                            print("AMOUNT: ", amount, i)
                             self.client.add2grid(amount, i, 0, "water")
                     self.water_grid.poured_cells.fill(0)
 
@@ -593,10 +589,6 @@ class DefaultGameScene(object):
                 # Request env and set it to self.server_environment
                 self.client.get_environment(callback= self.set_environment)
 
-            if e.type == KEYDOWN and e.key == K_e:
-                self.end_initiated = not self.end_initiated
-                self.plant.organs[5].pop_all_seeds(timeframe=2000)
-
             if e.type == WIN:
                 if self.log:
                     self.log.close_file()
@@ -621,9 +613,10 @@ class DefaultGameScene(object):
         self.server_environment = environment
 
         self.ui.latest_weather_state = self.server_environment.weather.get_latest_weather_state()
-        if not self.shop.watering_can.pouring:
+        if not self.shop.watering_can.active:
             self.water_grid.water_grid = self.server_environment.water_grid.grid.transpose()
         self.environment.precipitation = self.server_environment.weather.get_latest_weather_state().precipitation
+        self.nitrate_grid.grid = self.server_environment.nitrate_grid.grid.transpose()
         # setup local environment -> only to draw water, nitrate
         # setup local ui -> to draw temp, hum, precipi, sun?
 
@@ -716,10 +709,6 @@ class DefaultGameScene(object):
         if self.ui.pause:
             self.ui.draw(screen)
             return
-        if self.end_initiated:
-            self.plant.draw(temp_surface)
-            screen.blit(temp_surface, (0, self.camera.offset_y))
-            return
 
         self.environment.draw_background(temp_surface)
         self.hive.draw(temp_surface)
@@ -733,6 +722,7 @@ class DefaultGameScene(object):
         self.environment.draw_shadows(temp_surface)
 
         self.water_grid.draw(temp_surface)
+        self.nitrate_grid.draw(temp_surface)
         self.floating_shop.draw(temp_surface)
 
         screen.blit(temp_surface, (0, self.camera.offset_y))

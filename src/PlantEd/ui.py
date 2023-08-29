@@ -369,33 +369,6 @@ class UI:
             animation.update()
         self.update_stomata_automation()
 
-        '''         
-        def apply_preset(self, id=0):
-        preset = self.presets[id]
-        self.leaf_slider.set_percentage(preset["leaf_slider"])
-        self.stem_slider.set_percentage(preset["stem_slider"])
-        self.root_slider.set_percentage(preset["root_slider"])
-        self.starch_slider.set_percentage(preset["starch_slider"])
-        if (
-            preset["consume_starch"]
-            and not self.plant.organs[2].toggle_button.button_down
-        ):
-            self.plant.organ_starch.toggle_button.activate()'''
-
-    '''def generate_preset(self, id=0):
-        active_consumption = False
-        """if self.plant.organs[2].toggle_button is not None:
-            active_consumption = self.plant.organs[2].toggle_button.active"""
-        preset = {
-            "leaf_slider": self.leaf_slider.get_percentage(),
-            "stem_slider": self.stem_slider.get_percentage(),
-            "root_slider": self.root_slider.get_percentage(),
-            "starch_slider": self.starch_slider.get_percentage(),
-            "consume_starch": active_consumption,
-        }
-        self.presets[id] = preset
-        return preset'''
-
     def draw(self, screen):
         if self.pause:
             self.draw_pause_menu(screen)

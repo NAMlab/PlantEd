@@ -56,7 +56,7 @@ def from_dict(plant_dict, camera=None):
         water_grid_pos=plant_dict["water_grid_pos"],
         camera=camera
     )
-
+    plant.organs[0].mass = plant_dict["leaf"]["mass"]
     plant.organs[0].leaves = plant_dict["leaf"]["leaves"]
     for leaf in plant.organs[0].leaves:
         leaf["image"] = leaves[int(random.random() * len(leaves))][0]
@@ -65,9 +65,12 @@ def from_dict(plant_dict, camera=None):
     branches_dict_list = plant_dict["stem"]["curve"]["branches"]
     for branch in branches_dict_list:
         branches.append(Cubic(branch["branch"]))
+    plant.organs[1].mass = plant_dict["stem"]["mass"]
     plant.organs[1].curve = Cubic_Tree(branches=branches)
 
+    plant.organs[2].mass = plant_dict["root"]["mass"]
     plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["roots"])
+    plant.organs[3].mass = plant_dict["flower"]["mass"]
     plant.organs[3].flowers = plant_dict["flower"]["flowers"]
     for flower in plant.organs[3].flowers:
         flower["image"] = flowers[int(random.random() * len(flowers))]
@@ -214,6 +217,7 @@ class Plant:
     def get_biomass(self):
         biomass = 0
         for organ in self.organs:
+            print(organ.mass)
             biomass += organ.mass
         return biomass
 
@@ -277,6 +281,7 @@ class Plant:
 
     def draw(self, screen):
         self.draw_seedling(screen)
+        print(self.get_biomass(), self.seedling.max)
         if self.get_biomass() < self.seedling.max:
             self.organs[2].draw(screen)
             return
@@ -523,6 +528,7 @@ class Leaf(Organ):
         for leaf in cleared_leaves:
             leaf.pop("image")
         leaf_dict = {
+            "mass": self.mass,
             "leaves": cleared_leaves
         }
         return leaf_dict
@@ -792,6 +798,7 @@ class Root(Organ):
 
     def to_dict(self) -> dict:
         root_dict = {
+            "mass": self.mass,
             "roots": self.ls.to_dict()
         }
         return root_dict
@@ -919,6 +926,7 @@ class Stem(Organ):
 
     def to_dict(self) -> dict:
         stem_dict = {
+            "mass": self.mass,
             "curve": self.curve.to_dict()
         }
         return stem_dict
@@ -1152,7 +1160,9 @@ class Flower(Organ):
         cleared_flowers = self.flowers.copy()
         for flower in cleared_flowers:
             flower.pop("image")
+        mass = 0
         flower_dict = {
+            "mass": sum([flower["mass"] for flower in self.flowers]),
             "flowers": cleared_flowers
         }
         return flower_dict
