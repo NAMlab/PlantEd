@@ -80,3 +80,11 @@ class Animation:
             addable_s = currency_minus_one_surface.copy()
             images.append(addable_s)
         return images
+
+    @staticmethod
+    def generate_counter(start_number: int, end_number: int, resolution: int, color=config.WHITE) -> list[pygame.Surface]:
+        images = []
+        delta = int((end_number - start_number)/10)
+        for n in range(0, delta):
+            images.append(config.BIGGER_FONT.render("{}".format(start_number + n*10), True, color))
+        return images

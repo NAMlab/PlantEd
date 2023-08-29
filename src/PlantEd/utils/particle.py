@@ -2,6 +2,49 @@ import pygame, random
 from pygame import Rect
 
 
+"""
+With a set list of particle systems, once can be activated at a time.
+Basically a fancy timer to switch them on and off.
+"""
+class ParticleExplosion:
+    def __init__(self, systems, interval, play_explosion_sound):
+        self.systems: list[ParticleSystem] = systems
+        self.interval: float = interval
+        self.timer: int = 0
+        self.current_system: int = 0
+        self.running: bool = False
+        self.play_explosion_sound: callable = play_explosion_sound
+
+    def update(self, dt):
+        for system in self.systems:
+            system.update(dt)
+        if self.running:
+            self.timer -= dt
+            if self.timer <= 0:
+                self.systems[self.current_system].activate()
+                self.play_explosion_sound()
+                self.timer = self.interval
+                self.current_system += 1
+                if self.current_system >= len(self.systems):
+                    self.stop()
+
+    def start(self):
+        if len(self.systems) > 0:
+            print("LENS: ", len(self.systems))
+            self.timer = self.interval
+            self.running = True
+            self.current_system = 0
+
+    def stop(self):
+        self.running = False
+        self.current_system = 0
+        self.timer = 0
+
+    def draw(self, screen):
+        for system in self.systems:
+            system.draw(screen)
+
+
 class Particle:
     def __init__(
         self,

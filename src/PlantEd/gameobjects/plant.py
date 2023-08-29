@@ -91,7 +91,7 @@ class Plant:
             water_grid_pos: tuple[float, float],
             sound_control: SoundControl = None,
             client: Client = None,
-            upgrade_points: int = 3,
+            upgrade_points: int = 1,
             camera: Camera = None
     ):
         self.x: float = pos[0]
@@ -409,6 +409,7 @@ class Organ:
     Not all organs are active at the start of the game
     Once activated, their base mass gets applied to fasten growth
     """
+
     def activate(self):
         if self.mass < self.base_mass:
             self.mass = self.base_mass
@@ -418,6 +419,7 @@ class Organ:
     Basic draw of an image
     More complex organs need to override this
     """
+
     def draw(self, screen):
         self.animation.draw(screen)
         if not self.pivot:
@@ -431,6 +433,7 @@ class Organ:
     Basic increase of organ image
     More complex structures need to override
     """
+
     def update_image_size(self, factor=5, base=40):
         if self.image:
             ratio = self.image.get_height() / self.image.get_width()
