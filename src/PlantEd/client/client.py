@@ -4,8 +4,10 @@
 import asyncio
 import json
 import logging
+import multiprocessing
 import threading
 from asyncio import Future
+from multiprocessing import Event
 from pathlib import Path
 from typing import Callable, Literal
 
@@ -37,27 +39,31 @@ class Client:
         self.__future: asyncio.Future = None
         self.loop: asyncio.AbstractEventLoop = None
         self.expected_receive: dict[str, Future] = dict()
+        ready: multiprocessing.Event = multiprocessing.Event()
 
         thread = threading.Thread(
-            target=asyncio.run, daemon=True, args=(self.__start(),)
+            target=asyncio.run, daemon=True, args=(self.__start(ready= ready),)
         )
         self.thread: threading.Thread = thread
         self.thread.start()
         self.lock = asyncio.Lock()
+        ready.wait()
 
         logger.info("Connected to localhost")
 
     async def __connect(self):
         self.websocket = await websockets.connect(self.url)
 
-    async def __start(self):
+    async def __start(self, ready: Event):
         self.loop = asyncio.get_running_loop()
         self.__future = self.loop.create_future()
 
         connect = self.__connect()
 
         await self.loop.create_task(connect, name="Connect")
-        self.loop.create_task(self.__receive_handler(), name="get_nitrate_pool")
+        self.loop.create_task(self.__receive_handler(), name="receive_handler")
+        ready.set()
+
         await self.__future
 
     def stop(self):
@@ -438,3 +444,21 @@ class Client:
         )
 
         await self.websocket.send(message)
+
+    def load_level(self):
+        lock = threading.Lock()
+        lock.acquire()
+
+        task = self.__load_level(lock = lock)
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+        lock.acquire()
+
+    async def __load_level(self, lock:threading.Lock):
+        future_received = self.loop.create_future()
+        self.expected_receive["load_level"] = future_received
+
+        await self.websocket.send('{"load_level": "null"}')
+
+        await future_received
+        lock.release()
+

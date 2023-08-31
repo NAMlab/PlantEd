@@ -155,6 +155,12 @@ class Server:
 
         loop.run_until_complete(self.__start_loop())
 
+    async def __load_level(self):
+        self.environment: Environment = Environment()
+        self.model: DynamicModel = DynamicModel(
+            enviroment=self.environment,
+        )
+
     async def __start_loop(self):
         """
         Internal function that creates the loop of the object, creates
@@ -388,7 +394,6 @@ class Server:
                     "Unknown grid"
                 )
 
-
     async def main_handler(self, ws: WebSocketServerProtocol):
         """
         Method that accepts all requests to the server
@@ -548,7 +553,13 @@ class Server:
                             )
 
                         case "add2grid":
+                            logger.debug("Received command identified as add2grid.")
                             self.add2grid(payload=payload)
+
+                        case "load_level":
+                            logger.debug("Received command identified as load_level.")
+                            await self.__load_level()
+                            response["load_level"] = "None"
 
                         case _:
                             logger.error(

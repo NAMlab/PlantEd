@@ -8,7 +8,7 @@ from PlantEd.server.plant.starch import Starch
 
 class TestPlant(TestCase):
     def test_to_json(self):
-        plant = Plant()
+        plant = Plant(ground_grid_resolution=(20,6))
         plant.leafs_biomass = 87
         plant.stem_biomass = 56
         plant.root_biomass = 24
