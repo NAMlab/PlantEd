@@ -915,18 +915,18 @@ class UI:
             percent=self.options["music_volume"] * 100,
             active=True,
         )
-        self.sfx_slider = Slider(
+        self.narator_slider = Slider(
             (config.SCREEN_WIDTH/2-150-25, 350, 15, 200),
             config.FONT,
             (50, 20),
-            percent=self.options["sfx_volume"] * 100,
+            percent=self.options["narator_volume"] * 100,
             active=True,
         )
-        self.narator_slider = Slider(
+        self.sfx_slider = Slider(
             (config.SCREEN_WIDTH/2-25, 350, 15, 200),
             config.FONT,
             (50, 20),
-            percent=self.options["narator_volume"] * 100,
+            percent=self.options["sfx_volume"] * 100,
             active=True,
         )
 
@@ -947,7 +947,7 @@ class UI:
             460,
             200,
             50,
-            [self.apply_options, self.sound_control.reload_options],
+            [self.apply_options, self.sound_control.reload_options, self.narrator.reload_options],
             config.BIG_FONT,
             "APPLY",
             border_w=2,

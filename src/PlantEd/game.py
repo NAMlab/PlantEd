@@ -56,7 +56,6 @@ true_res = (
 temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 # screen_high = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.SRCALPHA)
 GROWTH = 26
-RECALC = 25
 WIN = pygame.USEREVENT + 1
 
 # stupid, change dynamically
@@ -299,6 +298,7 @@ class DefaultGameScene(object):
         os.makedirs(self.path_to_logs)
         self.log = Log(self.path_to_logs)  # can be turned off
         global plant
+        pygame.mixer.set_reserved(2)
         self.sound_control = SoundControl()
         self.sound_control.play_music()
         self.sound_control.play_start_sfx()
@@ -512,9 +512,8 @@ class DefaultGameScene(object):
         self.plant.organs[0].activate_add_leaf()
 
     def quit(self):
-
-        self.log.close_file()
         self.log.close_model_file()
+        self.plant.save_image(self.path_to_logs)
         plant_dict = self.plant.to_dict()
         config.write_dict(plant_dict, self.path_to_logs + "/plant")
         self.manager.go_to(EndScene(self.path_to_logs))
@@ -595,7 +594,6 @@ class DefaultGameScene(object):
 
             if e.type == WIN:
                 if self.log:
-                    self.log.close_file()
                     self.log.close_model_file()
                 scoring.upload_score(
                     self.ui.name, self.plant.organs[3].get_mass()
@@ -858,6 +856,7 @@ class TitleScene(object):
 
 class EndScene(object):
     def __init__(self, path_to_logs):
+        self.path_to_logs = path_to_logs
         super(EndScene, self).__init__()
         self.camera = Camera(offset_y=-50)
         self.sound_control = SoundControl()
@@ -948,7 +947,7 @@ class EndScene(object):
             930,
             300,
             50,
-            [self.sound_control.play_toggle_sfx, self.return_to_menu],
+            [self.sound_control.play_toggle_sfx, self.return_to_menu, self.upload_data],
             config.BIGGER_FONT,
             "Upload Simulation",
             config.LIGHT_GRAY,
@@ -964,9 +963,15 @@ class EndScene(object):
     def handle_events(self, events):
         for e in events:
             if e.type == pygame.MOUSEBUTTONDOWN:
-                print(pygame.mouse.get_pos())
+                pass
             for button in self.button_sprites:
                 button.handle_event(e)
+
+    def upload_data(self):
+        options = config.load_options()
+        scoring.upload_score(
+            options["name"], self.plant_object.organs[3].get_mass(), self.path_to_logs
+        )
 
     def render(self, screen):
         screen.fill((0, 0, 0, 0))
@@ -1267,7 +1272,6 @@ def main(windowed: bool, port: int):
 
         if pygame.event.get(QUIT):
             running = False
-            # print("pygame.event.get(QUIT):")
             break
 
         # manager handles the current scene

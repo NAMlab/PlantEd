@@ -5,6 +5,9 @@ Use options to set volumes
 import os
 import random
 from pathlib import Path
+
+import pygame.mixer
+
 from PlantEd import config
 from PlantEd.data import assets
 
@@ -17,6 +20,7 @@ class SoundControl:
         options = config.load_options()
         self.music_volume = options["music_volume"]
         self.sfx_volume = options["sfx_volume"]
+        self.channel = pygame.mixer.Channel(1)
 
         self.start_sfx = self.fill_sfx_array(config.START_PATH, self.sfx_volume)
         self.ambience = self.fill_sfx_array(config.AMBIENCE_PATH, self.sfx_volume)
@@ -64,7 +68,7 @@ class SoundControl:
 
     def play_music(self):
         i = int(random.random() * len(self.music))
-        self.music[i].play()
+        self.channel.play(self.music[i], -1)
 
     def play_start_sfx(self):
         i = int(random.random() * len(self.start_sfx))

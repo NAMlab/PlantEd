@@ -281,7 +281,6 @@ class Plant:
 
     def draw(self, screen):
         self.draw_seedling(screen)
-        print(self.get_biomass(), self.seedling.max)
         if self.get_biomass() < self.seedling.max:
             self.organs[2].draw(screen)
             return
@@ -291,9 +290,17 @@ class Plant:
         self.organs[0].draw(screen)
         self.organs[3].draw(screen)
 
+    def save_image(self, path_to_logs):
+        temp_surface = pygame.Surface((1920, 1080), pygame.SRCALPHA)
+        self.organs[2].draw(temp_surface)
+        self.organs[1].draw(temp_surface)
+        self.organs[0].draw(temp_surface)
+        self.organs[3].draw(temp_surface)
+
+        pygame.image.save(temp_surface, path_to_logs + "/plant.jpeg")
+
     def draw_seedling(self, screen):
         self.seedling.draw(screen, self.get_biomass())
-
 
 class Seedling:
     def __init__(self, x, y, images, max):
