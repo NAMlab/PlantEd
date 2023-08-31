@@ -105,6 +105,7 @@ class MetaboliteGrid:
         if sum < 0:
             logger.error("The calculated absolute available value based on the occurrence of the metabolite in the soil and root is negative. Check the grid itself and the root.")
 
+        logger.debug(f"The passed root has access to {sum} mMol of metabolites.")
         return sum
 
     def available_relative_mm(self, time_seconds: int, g_root:float, v_max: float, k_m: float, roots:LSystem):
@@ -136,7 +137,7 @@ class MetaboliteGrid:
         return min(max_uptake_per_second, theoretical_uptake_per_second)
     
     def drain(self, amount: float ,roots: LSystem):
-        if amount == 0:
+        if amount <= 0:
             return
 
         root_grid = roots.root_grid

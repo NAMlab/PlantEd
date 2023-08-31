@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 import numpy as np
 
@@ -15,8 +16,9 @@ from PlantEd.constants import (
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.starch import Starch
-from PlantEd.utils.LSystem import LSystem
+from PlantEd.utils.LSystem import LSystem, DictToRoot
 
+logger = logging.getLogger(__name__)
 
 class Plant:
     """
@@ -44,7 +46,7 @@ class Plant:
         self.leafs: list[Leaf] = []
         self.leafs_biomass: float = START_LEAF_BIOMASS_GRAM
         self.stem_biomass: float = START_STEM_BIOMASS_GRAM
-        self.root_biomass: float = START_ROOT_BIOMASS_GRAM
+        self.__root_biomass: float = START_ROOT_BIOMASS_GRAM
         self.seed_biomass: float = START_SEED_BIOMASS_GRAM
 
         self.co2: float = 0
@@ -58,7 +60,7 @@ class Plant:
 
         self.stomata_open: bool = False
 
-        self.root = LSystem(
+        self.root: LSystem = LSystem(
             root_grid=np.zeros(
                 ground_grid_resolution
             ),  # same resolution as environment grids
@@ -135,6 +137,8 @@ class Plant:
         dic["nitrate"] = self.nitrate.to_dict()
         dic["starch"] = self.starch_pool.to_dict()
 
+        dic["root"] = self.root.to_dict()
+
         return dic
 
     @classmethod
@@ -155,6 +159,9 @@ class Plant:
         plant.water = Water.from_dict(dic["water"])
         plant.nitrate = Nitrate.from_dict(dic["nitrate"])
         plant.starch_pool = Starch.from_dict(dic["starch"])
+
+        plant.root = DictToRoot.load_root_system(dic["root"])
+        plant.root.root_grid = plant.root.root_grid.transpose()
         return plant
 
     @classmethod
@@ -162,6 +169,20 @@ class Plant:
         dic = json.loads(string)
 
         return Plant.from_dict(dic=dic)
+
+    @property
+    def root_biomass(self):
+        return self.__root_biomass
+
+    @root_biomass.setter
+    def root_biomass(self, value):
+        diff = value - self.root_biomass
+        if diff < 0:
+            logger.error(f"Root mass is decreasing. This is ignored! ")
+            return
+
+        self.root.update(diff)
+        self.__root_biomass = value
 
     @property
     def starch_out(self):

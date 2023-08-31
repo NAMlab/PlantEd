@@ -95,7 +95,7 @@ class DynamicModel:
         self.set_objective()
         self._objective_value: float = 0
 
-        self.plant = Plant(ground_grid_resolution=Environment.water_grid.grid_size)
+        self.plant: Plant = Plant(ground_grid_resolution=Environment.water_grid.grid_size)
 
         self.use_starch = False
         self.temp = (

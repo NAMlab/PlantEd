@@ -181,6 +181,25 @@ class LSystem:
         for dir in directions:
             self.first_letters.append(self.create_root(dir, mass))
 
+    def __eq__(self, other):
+        if not isinstance(other, LSystem):
+            return False
+
+        if not np.all(self.root_grid == other.root_grid):
+            return False
+        if self.water_grid_pos != other.water_grid_pos:
+            return False
+        if self.positions != other.positions:
+            return False
+        if self.directions != other.directions:
+            return False
+        if self.root_classes != other.root_classes:
+            return False
+        if set(self.first_letters) != set(other.first_letters):
+            return False
+
+        return True
+
     def to_dict(self) -> dict:
         dic = {"root_grid": dict(enumerate(self.root_grid.flatten(), 1)),
                "water_grid_pos": self.water_grid_pos,
@@ -389,7 +408,7 @@ class LSystem:
 
 class DictToRoot:
     @staticmethod
-    def load_root_system(dic: dict):
+    def load_root_system(dic: dict) -> LSystem:
         # convert LSystem dict to key, values
         # for each first letter: convert dict of first letter
         # for each branch in first letter: convert -> until
@@ -397,11 +416,11 @@ class DictToRoot:
         # maybe weird, but works
         result = dic["root_grid"].items()
         data = list(result)
-        npa = np.array(data)
+        npa = np.array(data, dtype= float)
         dela = np.delete(npa, 0, 1)
         root_grid: np.ndarray = np.reshape(dela, (-1, 20))
 
-        water_grid_pos: tuple[float, float] = dic["water_grid_pos"]
+        water_grid_pos: tuple[float, float] = tuple(dic["water_grid_pos"])
         directions = []
         positions: list[tuple[float, float]] = dic["positions"]
 

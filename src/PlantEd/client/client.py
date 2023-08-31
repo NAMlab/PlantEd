@@ -89,7 +89,11 @@ class Client:
             data: dict = json.loads(answer)
 
             for id_string, payload in data.items():
-                future = self.expected_receive[id_string]
+                try:
+                    future = self.expected_receive[id_string]
+                except KeyError as e:
+                    logger.error(f"Task {id_string} was not found. All expected are {self.expected_receive.keys()}", exc_info=e)
+                    continue
 
                 logger.debug(
                     f"Setting future for {id_string} as done with result {payload}"
@@ -133,7 +137,7 @@ class Client:
         message_dict = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
 
         logger.info(
-            "Sending Request for growth rates." f"Payload is : " f"{message_dict}"
+            f"Sending Request for growth rates. Payload is : {message_dict}"
         )
 
         message_str = json.dumps(message_dict)

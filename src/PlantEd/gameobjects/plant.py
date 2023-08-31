@@ -14,7 +14,6 @@ from PlantEd import config
 from PlantEd import constants
 from PlantEd.camera import Camera
 from PlantEd.client.client import Client
-from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.data import assets
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.shop import FloatingShop
@@ -89,8 +88,8 @@ class Plant:
             pos: tuple[float, float],
             water_grid_shape: tuple[int, int],
             water_grid_pos: tuple[float, float],
+            client: Client,
             sound_control: SoundControl = None,
-            client: Client = None,
             upgrade_points: int = 1,
             camera: Camera = None
     ):
@@ -121,7 +120,8 @@ class Plant:
             play_level_up=play_level_up_sfx,
             play_reward=play_reward_sfx,
             camera=self.camera,
-            level_up=self.level_up
+            level_up=self.level_up,
+            client = self.client,
         )
         organ_flower = Flower(
             x=self.x,
@@ -134,6 +134,7 @@ class Plant:
             active=False,
             play_reward=play_reward_sfx,
             camera=self.camera,
+            client = self.client,
         )
         organ_stem = Stem(
             x=self.x,
@@ -148,7 +149,8 @@ class Plant:
             play_level_up=play_level_up_sfx,
             play_reward=play_reward_sfx,
             camera=self.camera,
-            level_up=self.level_up
+            level_up=self.level_up,
+            client = self.client,
         )
         organ_root = Root(
             x=self.x,
@@ -163,7 +165,8 @@ class Plant:
             play_level_up=play_level_up_sfx,
             play_reward=play_reward_sfx,
             camera=self.camera,
-            level_up=self.level_up
+            level_up=self.level_up,
+            client = self.client,
         )
         self.organ_starch = Starch(
             x=self.x,
@@ -324,7 +327,7 @@ class Organ:
             name: string,
             organ_type: int,
             callback: callable,
-            client: Client = None,
+            client: Client,
             image: pygame.Surface = None,
             pivot: tuple[float, float] = None,
             mass: float = 1,
@@ -467,10 +470,11 @@ class Leaf(Organ):
             images: list[pygame.Surface],
             mass: float,
             active: bool,
+            client: Client,
             play_level_up: callable = None,
             play_reward: callable = None,
             camera: Camera = None,
-            level_up: callable = None
+            level_up: callable = None,
     ):
         self.leaves = []
         super().__init__(
@@ -484,7 +488,8 @@ class Leaf(Organ):
             play_level_up=play_level_up,
             play_reward=play_reward,
             camera=camera,
-            level_up=level_up
+            level_up=level_up,
+            client= client,
         )
         self.callback = callback
         self.images = images
@@ -767,6 +772,7 @@ class Root(Organ):
             name: string,
             organ_type: int,
             callback: callable,
+            client: Client,
             image: pygame.Surface = None,
             pivot: tuple[float, float] = None,
             mass: float = 0.0,
@@ -791,7 +797,8 @@ class Root(Organ):
             play_level_up=play_level_up,
             play_reward=play_reward,
             camera=camera,
-            level_up=level_up
+            level_up=level_up,
+            client= client,
         )
         # self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
@@ -837,6 +844,7 @@ class Root(Organ):
         if not dir and mouse_pos:
             dir = (mouse_pos[0] - self.x, mouse_pos[1] - (self.y + 45))
         self.ls.create_new_first_letter(dir, pos, self.mass, dist=dist)
+        self.client.create_new_first_letter(dir, pos, self.mass, dist= dist)
 
     def get_root_grid(self):
         return self.ls.root_grid
@@ -861,6 +869,7 @@ class Stem(Organ):
             name: string,
             organ_type: int,
             callback: callable,
+            client: Client,
             image: pygame.Surface = None,
             leaf: Leaf = None,
             flower=None,
@@ -898,7 +907,8 @@ class Stem(Organ):
             play_level_up=play_level_up,
             play_reward=play_reward,
             camera=camera,
-            level_up=level_up
+            level_up=level_up,
+            client = client,
         )
 
     def update(self, dt):
@@ -1122,6 +1132,7 @@ class Flower(Organ):
             organ_type: int,
             callback: callable,
             images: pygame.Surface,
+            client: Client,
             mass: float,
             active: bool,
             play_reward,
@@ -1138,7 +1149,8 @@ class Flower(Organ):
             active=active,
             thresholds=[1, 2, 3, 10],
             play_reward=play_reward,
-            camera=camera
+            camera=camera,
+            client = client,
         )
         self.callback = callback
         self.images = images

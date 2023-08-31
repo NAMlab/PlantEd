@@ -22,7 +22,7 @@ from PlantEd.gameobjects.bee import Hive
 from PlantEd.gameobjects.bug import Bug
 from PlantEd.gameobjects.grid import Grid
 from PlantEd.gameobjects.level_card import Card
-from PlantEd.gameobjects.plant import Plant
+from PlantEd.gameobjects.plant import Plant, Root
 from PlantEd.gameobjects import plant
 from PlantEd.gameobjects.shop import (
     Shop,
@@ -654,8 +654,12 @@ class DefaultGameScene(object):
         }
 
         self.ui.server_plant = plant
-        logger.debug("Updating the gram representation of the UI.")
+        logger.debug(f"Updating the gram representation of the UI. With the following values: Leaf: {self.server_plant.leafs_biomass}, Stem: {self.server_plant.stem_biomass}, Root: {self.server_plant.seed_biomass}, Starch: {self.server_plant.starch_pool}.")
         self.plant.update_organ_masses(masses)
+
+        old_root: Root = self.plant.organs[2]
+        old_root.ls = plant.root # assigning root from server
+        self.plant.organs[2] = old_root
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
