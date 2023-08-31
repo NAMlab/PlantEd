@@ -63,7 +63,7 @@ class WeatherSimulatorMinimal:
         states_as_dic = dic["states"]
         for hour, state in states_as_dic.items():
             w_sim.state[int(hour)] = WeatherState(
-                temperatur=state["temperatur"],
+                temperature=state["temperature"],
                 humidity= state["humidity"],
                 precipitation=state["precipitation"]
             )
