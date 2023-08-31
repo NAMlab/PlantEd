@@ -220,7 +220,6 @@ class Plant:
     def get_biomass(self):
         biomass = 0
         for organ in self.organs:
-            print(organ.mass)
             biomass += organ.mass
         return biomass
 

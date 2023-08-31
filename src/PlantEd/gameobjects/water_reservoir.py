@@ -14,15 +14,18 @@ class Water_Grid:
     Drainers are the plant and trickle
     Fillers are rain and the watering_can
 
+    Dimensions: x horizontal, y vertical
+
     The grid shape defines the resolution of the grid. The root_grid must be of the same shape as water_grid.
     """
     def __init__(
         self, pos: tuple[int, int] = (0, 900),
-            grid_size: tuple[int, int] = (6, 20),
+            grid_size: tuple[int, int] = (20, 6),
             max_water_cell: int = 1000000
     ):
         self.pos = pos
         self.water_grid: ndarray = np.zeros(grid_size)
+        print(self.water_grid.shape)
         self.poured_cells: ndarray = np.zeros(20)
         self.available_water_grid: ndarray = np.zeros(grid_size)
         self.root_grid: ndarray
@@ -53,8 +56,8 @@ class Water_Grid:
             dt (float): ticks between last call
             pos (tuple[int, int]): position of watering can
         """
-        if not self.water_grid[0, int(pos[0] / 100)] > self.max_water_cell:
-            self.water_grid[0, int(pos[0] / 100)] += rate * dt
+        if not self.water_grid[int(pos[0] / 100), 0] > self.max_water_cell:
+            self.water_grid[int(pos[0] / 100), 0] += rate * dt
             self.poured_cells[int(pos[0]/100)] += rate * dt
 
     def add_base_water(self, base_water):
@@ -93,7 +96,10 @@ class Water_Grid:
         for base_water in self.base_waters:
             base_water.draw(screen)
         # self.grid_screen.fill((0,0,0,0))
+
+        # x
         for i in range(0, self.water_grid.shape[0] - 1):
+            # y
             for j in range(0, self.water_grid.shape[1]):
                 cell = self.water_grid[i, j]
 
@@ -105,8 +111,8 @@ class Water_Grid:
                         # color variations
                         color=(0, 10 + offset_y, 255 - offset_x),
                         center=(
-                            self.pos[0] + j * 100 + offset_x,
-                            self.pos[1] + i * 100 + offset_y,
+                            self.pos[0] + i * 100 + offset_x,
+                            self.pos[1] + j * 100 + offset_y,
                         ),
                         radius=int(cell / (self.max_water_cell / 5) + 5),
                     )
@@ -119,8 +125,8 @@ class Water_Grid:
                             screen,
                             (10, 10 + offset_y, 255 - offset_x),
                             (
-                                self.pos[0] + j * 100 + offset_x,
-                                self.pos[1] + i * 100 + offset_y,
+                                self.pos[0] + i * 100 + offset_x,
+                                self.pos[1] + j * 100 + offset_y,
                             ),
                             5,
                         )

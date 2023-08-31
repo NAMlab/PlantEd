@@ -616,9 +616,9 @@ class DefaultGameScene(object):
 
         self.ui.latest_weather_state = self.server_environment.weather.get_latest_weather_state()
         if not self.shop.watering_can.active:
-            self.water_grid.water_grid = self.server_environment.water_grid.grid.transpose()
+            self.water_grid.water_grid = self.server_environment.water_grid.grid
         self.environment.precipitation = self.server_environment.weather.get_latest_weather_state().precipitation
-        self.nitrate_grid.grid = self.server_environment.nitrate_grid.grid.transpose()
+        self.nitrate_grid.grid = self.server_environment.nitrate_grid.grid
         # setup local environment -> only to draw water, nitrate
         # setup local ui -> to draw temp, hum, precipi, sun?
 

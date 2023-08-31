@@ -10,7 +10,7 @@ class Grid:
     def __init__(
             self,
             pos: tuple[int, int] = (0, 900),
-            grid_size: tuple[int, int] = (6, 20),
+            grid_size: tuple[int, int] = (20, 6),
             max_cell: int = 100000
     ):
 
@@ -39,8 +39,8 @@ class Grid:
                         # color variations
                         color=(90, 40 + int(offset_x / 4), 10 + int(offset_y / 4)),
                         center=(
-                            self.pos[0] + j * 100 + offset_x,
-                            self.pos[1] + i * 100 + offset_y,
+                            self.pos[0] + i * 100 + offset_x,
+                            self.pos[1] + j * 100 + offset_y,
                         ),
                         radius=min(15,int(cell / (self.max_cell / 5) + int(offset_x/10))),
                     )
@@ -54,8 +54,8 @@ class Grid:
                             # color variations
                             color=(90, 40 + int(offset_x / 4), 10 + int(offset_y / 4)),
                             center=(
-                                self.pos[0] + j * 100 + offset_x,
-                                self.pos[1] + i * 100 + offset_y,
+                                self.pos[0] + i * 100 + offset_x,
+                                self.pos[1] + j * 100 + offset_y,
                             ),
                             radius=min(15, int(cell / (self.max_cell / 5) + int(offset_x/10))),
                         )

@@ -295,7 +295,7 @@ class LSystem:
             # todo fix ugly hard coded numbers
             x = min(19, max(0, int((pos[0] - self.water_grid_pos[0]) / 100)))
             y = min(5, max(0, int((pos[1] - self.water_grid_pos[1]) / 100)))
-            self.root_grid[y, x] = 1
+            self.root_grid[x, y] = 1
         for branch in letter.branches:
             self.apply_rules(branch, mass)
 
