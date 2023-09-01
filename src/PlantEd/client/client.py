@@ -396,9 +396,9 @@ class Client:
         mass,
         dist,
     ):
-        logger.debug("Sending request for environment")
+        logger.debug("Sending request for new first letter of root system")
         message = json.dumps(
-            {"get_environment": {"dir": dir, "pos": pos, "mass": mass, "dist": dist}}
+            {"create_new_first_letter": {"dir": dir, "pos": pos, "mass": mass, "dist": dist}}
         )
 
         await self.websocket.send(message)
