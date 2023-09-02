@@ -75,7 +75,8 @@ class Narrator:
     def reload_options(self):
         options = config.load_options()
         self.volume = options["narator_volume"]
-        self.channel.set_volume(self.volume)
+        if not self.muted:
+            self.channel.set_volume(self.volume)
 
     def update(self, dt):
         if len(self.queue) > 0:

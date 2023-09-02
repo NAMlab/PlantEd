@@ -799,7 +799,6 @@ class Root(Organ):
             level_up=level_up,
             client= client,
         )
-        # self.curves = [Beziere([(self.x, self.y), (self.x - 20, self.y + 50), (self.x + 70, self.y + 100)],color=config.WHITE, res=10, width=mass+5)]
         self.selected = 0
         root_grid: np.array = np.zeros(water_grid_shape)
         water_grid_pos: tuple[float, float] = water_grid_pos
@@ -826,7 +825,7 @@ class Root(Organ):
             return False
 
     def update(self, dt):
-        self.ls.update(self.mass)
+        #self.ls.update(self.mass)
         self.animation.update(dt)
         if self.mass > self.thresholds[self.active_threshold]:
             self.reach_threshold()
@@ -842,7 +841,7 @@ class Root(Organ):
         pos = (self.x - 5, self.y + 40)
         if not dir and mouse_pos:
             dir = (mouse_pos[0] - self.x, mouse_pos[1] - (self.y + 45))
-        self.ls.create_new_first_letter(dir, pos, self.mass, dist=dist)
+        #self.ls.create_new_first_letter(dir, pos, self.mass, dist=dist)
         self.client.create_new_first_letter(dir, pos, self.mass, dist= dist)
 
     def get_root_grid(self):

@@ -72,6 +72,17 @@ class Letter:
         self.length: float = length
         self.pos: tuple[float, float] = pos
 
+    def calc_position(self, start_pos):
+        if self.id == 300:
+            self.pos = start_pos
+
+        for branch in self.branches:
+            next_start_pos = (
+                start_pos[0] + self.dir[0] * branch.t * self.length,
+                start_pos[1] + self.dir[1] * branch.t * self.length,
+            )
+            branch.calc_position(next_start_pos)
+
     def draw(self, screen, start_pos):
         import pygame
 
@@ -268,6 +279,17 @@ class LSystem:
     Apply rules to each letter
     """
     def update(self, mass):
+
+        """
+        mass should change from 0.00001 to 1
+        rules should apply for each 0.1 step
+        but should be called once at least
+
+        delta_mass = 0.2 -> 2 apply_rules calls
+        delta_mass = 0.02 -> 1
+        """
+        #delta_mass = mass_end - mass_start
+
         for letter in self.first_letters:
             self.apply_rules(letter, mass)
 
@@ -376,6 +398,10 @@ class LSystem:
             # if self.angle_between(down, (x, y)) < self.angle_between(down, dir):  # downward directions get promoted
             #    dir = (x, y)
         return dir
+
+    def calc_positions(self):
+        for i in range(0, len(self.first_letters)):
+            self.first_letters[i].calc_position(self.positions[i])
 
     def draw(self, screen):
         for i in range(0, len(self.first_letters)):

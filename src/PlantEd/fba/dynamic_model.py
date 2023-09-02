@@ -347,6 +347,9 @@ class DynamicModel:
         self.plant.leafs_biomass = self.plant.leafs_biomass + leaf
         self.plant.seed_biomass = self.plant.seed_biomass + seed
 
+        self.plant.root.update(self.plant.root_biomass)
+        self.plant.root.calc_positions()
+
         self.plant.photon = photon
         self.plant.co2 = co2
         self.plant.co2_uptake_in_micromol_per_second_and_gram = (
