@@ -268,7 +268,7 @@ class DynamicModel:
         )
 
         nitrate_bounds = (-1000, nitrate_upper_bounds)
-        logger.debug(f"Bounds for nitrate are  {nitrate_bounds}")
+        logger.debug(f"Bounds for nitrate are  {nitrate_bounds}, Nitrate pool available is {nitrate_upper_bound_env_pool}")
         self.set_bounds(NITRATE, nitrate_bounds)
 
         solution = self.model.optimize()
@@ -377,7 +377,6 @@ class DynamicModel:
         self.plant.update_transpiration()
 
         amount = self.plant.water.missing_amount
-        logger.debug(f"FIND ME:  , {amount}, water_pool: {self.plant.water.water_pool},  MAX water_pool: {self.plant.water.max_water_pool}")
         available = environment.water_grid.available_absolute(roots=self.plant.root)
         diff = min(amount, available)
 
@@ -387,10 +386,16 @@ class DynamicModel:
         # update nitrate
         used_nitrate = nitrate
 
+        # Todo nitrate pool goes below 0
         if used_nitrate > nitrate_upper_bound_env_pool:
             taken_from_internal_pool = used_nitrate - nitrate_upper_bound_env_pool
 
-            self.plant.nitrate.nitrate_pool -= taken_from_internal_pool
+            if self.plant.nitrate.nitrate_pool - taken_from_internal_pool < 0:
+                taken_from_internal_pool -= self.plant.nitrate.nitrate_pool
+                self.plant.nitrate.nitrate_pool = 0
+            else:
+                self.plant.nitrate.nitrate_pool -= taken_from_internal_pool
+
             used_nitrate -= taken_from_internal_pool
 
         environment.nitrate_grid.drain(amount=used_nitrate, roots=self.plant.root)
@@ -398,6 +403,8 @@ class DynamicModel:
         self.plant.update_max_nitrate_pool()
         self.plant.nitrate.nitrate_intake = nitrate
         amount = self.plant.nitrate.missing_amount
+        logger.debug(
+            f"FIND ME NITRATE:  , {amount}, nitrate_pool: {self.plant.nitrate.nitrate_pool},  MAX nitrate_pool: {self.plant.nitrate.max_nitrate_pool}")
         available = environment.nitrate_grid.available_absolute(roots=self.plant.root)
         diff = min(amount, available)
         environment.nitrate_grid.drain(amount=diff, roots=self.plant.root)

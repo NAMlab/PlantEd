@@ -58,7 +58,7 @@ class Nitrate:
         Returns:
             float: Amount of water that can still be added to the pool in micromol.
         """
-        if self.nitrate_pool > self.__max_nitrate_pool:
+        if self.nitrate_pool < self.__max_nitrate_pool:
             return 0
 
         return self.__max_nitrate_pool - self.nitrate_pool

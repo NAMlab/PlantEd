@@ -65,8 +65,8 @@ START_SEED_BIOMASS_GRAM = 0.0001
 # ↓ since plant can consume up to its pools in one simulation -2 results
 # ↓ in metabolites for a minimum of 2 simulations
 START_STARCH_POOL_IN_MICROMOL = -1
-START_WATER_POOL_IN_MICROMOL = -10
-START_NITRATE_POOL_IN_MICROMOL = -10
+START_WATER_POOL_IN_MICROMOL = 0
+START_NITRATE_POOL_IN_MICROMOL = -5
 
 ###############################################################################
 # Pool usage factors
