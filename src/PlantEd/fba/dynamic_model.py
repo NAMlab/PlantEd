@@ -347,7 +347,9 @@ class DynamicModel:
         self.plant.leafs_biomass = self.plant.leafs_biomass + leaf
         self.plant.seed_biomass = self.plant.seed_biomass + seed
 
+        # root LS has to be updated after each simulation to apply rules
         self.plant.root.update(self.plant.root_biomass)
+        # to update the root_grid, positions of each root have to be calculated
         self.plant.root.calc_positions()
 
         self.plant.photon = photon
@@ -375,6 +377,7 @@ class DynamicModel:
         self.plant.update_transpiration()
 
         amount = self.plant.water.missing_amount
+        logger.debug(f"FIND ME:  , {amount}, water_pool: {self.plant.water.water_pool},  MAX water_pool: {self.plant.water.max_water_pool}")
         available = environment.water_grid.available_absolute(roots=self.plant.root)
         diff = min(amount, available)
 

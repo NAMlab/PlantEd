@@ -17,6 +17,7 @@ from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.starch import Starch
 from PlantEd.utils.LSystem import LSystem, DictToRoot
+from PlantEd import config
 
 logger = logging.getLogger(__name__)
 
@@ -70,16 +71,16 @@ class Plant:
     def __repr__(self):
         string = (
             f"Plant object with following biomass values:"
-            f" Leafs {self.leafs_biomass:.4E} µmol"
-            f" Stem {self.stem_biomass:.4E} µmol"
-            f" Root {self.root_biomass:.4E} µmol"
-            f" Seed {self.seed_biomass:.4E} µmol"
+            f" Leafs {self.leafs_biomass:.4E} gram"
+            f" Stem {self.stem_biomass:.4E} gram"
+            f" Root {self.root_biomass:.4E} gram"
+            f" Seed {self.seed_biomass:.4E} gram"
             f" - other values :"
-            f" CO2 uptake is {self.co2:.4E} µmol;"
-            f" Photon uptake is {self.photon:.4E} µmol;"
-            f" Starch is {str(self.starch_pool)};"
-            f" Water is {str(self.water)};"
-            f" Nitrate is {str(self.nitrate)}"
+            f" CO2 uptake is {self.co2:.4E} µmol"
+            f" Photon uptake is {self.photon:.4E} µmol"
+            f" Starch is {str(self.starch_pool)} µmol"
+            f" Water is {str(self.water)} µmol"
+            f" Nitrate is {str(self.nitrate)} µmol"
         )
         return string
 

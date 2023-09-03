@@ -72,9 +72,8 @@ class Blue_grain:
             )
             self.play_sound()
             self.particle_system.activate()
-            x, y = pygame.mouse.get_pos()
-            lower_limit = max(0, int(x/100)-3)
-            upper_limit = max(0, int(x/100)+3)
+            lower_limit = max(0, int(self.pos[0]/100)-3)
+            upper_limit = max(0, int(self.pos[0]/100)+3)
             for i in range(lower_limit, upper_limit):
                 self.client.add2grid(config.NITRATE_FILL_CELL, i, 0, "nitrate")
             self.deactivate()

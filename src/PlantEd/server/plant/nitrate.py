@@ -36,6 +36,16 @@ class Nitrate:
 
         self.nitrate_intake: int = 0
 
+    def __repr__(self):
+        string = (
+            f"Nitrate object with following values:"
+            f" nitrate_pool is {self.nitrate_pool} µmol"
+            f" nitrate_intake is {self.nitrate_intake} µmol"
+            f" max_nitrate_pool is {self.max_nitrate_pool} µmol."
+        )
+
+        return string
+
     def __iter__(self):
         for field in dataclasses.fields(self):
             yield getattr(self, field.name)

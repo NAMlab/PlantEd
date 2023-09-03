@@ -141,7 +141,7 @@ class Water:
         Returns:
             float: Amount of water that can still be added to the pool in micromol.
         """
-        if self.max_water_pool > self.water_pool:
+        if self.max_water_pool < self.water_pool:
             return 0
 
         return self.max_water_pool - self.water_pool

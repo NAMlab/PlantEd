@@ -306,7 +306,7 @@ class DefaultGameScene(object):
 
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
-        self.gametime.fastest()
+        #self.gametime.fastest()
         #self.gametime.faster()
 
         self.water_grid = Water_Grid(pos=(0, 900))
@@ -658,7 +658,6 @@ class DefaultGameScene(object):
         self.plant.update_organ_masses(masses)
 
         old_root: Root = self.plant.organs[2]
-        print(plant.root.to_dict()["root_grid"])
         old_root.ls = plant.root # assigning root from server
         self.plant.organs[2] = old_root
 

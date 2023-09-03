@@ -181,7 +181,7 @@ class Plant:
             camera=self.camera
         )
 
-        self.seedling = Seedling(self.x, self.y, beans, 4)
+        self.seedling = Seedling(self.x, self.y, beans, 0.2)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_flower]
         # Fix env constraints
         config.write_dict(self.to_dict(), "plant")
@@ -333,7 +333,6 @@ class Organ:
             growth_rate: float = 0,
             thresholds: list[int] = None,
             active: bool = False,
-            base_mass: float = 0.9,
             play_level_up: callable = None,
             play_reward: callable = None,
             target: bool = False,
@@ -341,7 +340,7 @@ class Organ:
             level_up: callable = None
     ):
         if thresholds is None:
-            thresholds = [1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40]
+            thresholds = [0.2, 0.5, 1, 1.5, 3]
         self.x = x
         self.y = y
         self.client = client
@@ -353,7 +352,6 @@ class Organ:
         self.name = name
         self.type = organ_type
         self.mass = mass
-        self.base_mass = base_mass
         self.growth_rate = growth_rate
         self.percentage = 0
         self.thresholds = thresholds
@@ -420,8 +418,6 @@ class Organ:
     """
 
     def activate(self):
-        if self.mass < self.base_mass:
-            self.mass = self.base_mass
         self.active = True
 
     """
@@ -493,19 +489,9 @@ class Leaf(Organ):
         self.callback = callback
         self.images = images
         self.photon_intake: float = 0
-        self.base_mass: float = 0.9
         self.target_leaf: int = 0
         self.can_add_leaf: bool = False
-        self.particle_system: ParticleSystem = ParticleSystem(
-            20,
-            spawn_box=Rect(500, 500, 50, 20),
-            lifetime=8,
-            color=config.YELLOW,
-            apply_gravity=False,
-            speed=[0, -1],
-            spread=[1, -1],
-            active=False,
-        )
+
         self.particle_systems: list[ParticleSystem] = []
         self.shadow_map: np.ndarray = None
         self.shadow_resolution: int = 0
@@ -513,10 +499,6 @@ class Leaf(Organ):
         self.play_reward: callable = play_reward
         self.stomata_open = False
 
-    def update(self, dt):
-        for leaf in self.leaves:
-            if leaf["lifetime"] > leaf["age"]:
-                leaf["age"] += 1 * dt  # seconds
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -549,7 +531,7 @@ class Leaf(Organ):
 
     def get_pla(self):
         return (
-            (self.mass + self.base_mass)
+            self.mass
             * 0.03152043208186226
             * self.get_shadowscore()
             if len(self.leaves) > 0
@@ -586,7 +568,7 @@ class Leaf(Organ):
 
     def get_mass(self):
         return (
-                sum([leaf["mass"] for leaf in self.leaves]) + self.base_mass
+                sum([leaf["mass"] for leaf in self.leaves])
         )
 
     def append_leaf(self, highlight: Tuple[list[int], int, int]):
@@ -654,6 +636,9 @@ class Leaf(Organ):
         )
 
     def update(self, dt):
+        for leaf in self.leaves:
+            if leaf["lifetime"] > leaf["age"]:
+                leaf["age"] += 1 * dt  # seconds
         self.animation.update(dt)
         # apply shadow penalty to leaves
         if self.shadow_map is not None:
@@ -693,11 +678,13 @@ class Leaf(Organ):
                 0,
             )
             if self.photon_intake > 0 and self.stomata_open:
-                adapted_pi = self.photon_intake / 50 * 3 + 5
+                adapted_pi = min(15, int(self.photon_intake / 50 * 3 + 5))
                 self.particle_systems[i].lifetime = adapted_pi
                 self.particle_systems[i].activate()
             else:
                 self.particle_systems[i].deactivate()
+        if self.get_mass() > self.thresholds[self.active_threshold]:
+            self.reach_threshold()
 
     def update_image_size(self, factor=7, base=80):
         for leaf in self.leaves:
@@ -804,7 +791,7 @@ class Root(Organ):
         water_grid_pos: tuple[float, float] = water_grid_pos
 
         self.ls: LSystem = LSystem(root_grid, water_grid_pos)
-        self.create_new_root(dir=(0, 1))
+        #self.create_new_root(dir=(0, 1))
         self.play_reward = play_reward
 
     # Todo make root outlines
@@ -901,7 +888,6 @@ class Stem(Organ):
             image=image,
             mass=mass,
             active=active,
-            base_mass=1,
             play_level_up=play_level_up,
             play_reward=play_reward,
             camera=camera,
@@ -1152,7 +1138,6 @@ class Flower(Organ):
         )
         self.callback = callback
         self.images = images
-        self.base_mass: float = 0.1
         self.target_flower: int = 0
         self.can_add_flower: bool = False
         self.flowering: bool = False
@@ -1252,7 +1237,7 @@ class Flower(Organ):
 
     def get_mass(self) -> float:
         return (
-                sum([leaf["mass"] for leaf in self.flowers]) + self.base_mass
+                sum([leaf["mass"] for leaf in self.flowers])
         )  # basemass for seedling leaves
 
     def get_random_flower_pos(self):
