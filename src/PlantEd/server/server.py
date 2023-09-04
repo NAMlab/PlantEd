@@ -112,7 +112,7 @@ class Server:
     ):
         self.shutdown_signal: Event = shutdown_signal
         self.ready: Event = ready
-        self.clients = set()
+        self.clients: set[WebSocketServerProtocol] = set()
         self.sock: Optional[socket.socket] = sock
         self.websocket: websockets.WebSocketServer = None
         self.environment : Environment = Environment()
@@ -406,9 +406,9 @@ class Server:
         while True:
             try:
                 request = await ws.recv()
-            except websockets.ConnectionClosedOK:
+            except websockets.ConnectionClosed as e:
                 self.close_connection(ws)
-                logger.debug(f"{ws.remote_address} unregistered.")
+                logger.debug(f"{ws.remote_address} unregistered. Closing Trace: {e}")
                 break
 
             logger.info(f"Received {request}")
@@ -570,7 +570,7 @@ class Server:
                             continue
                 # ToDo change exception type
                 except Exception:
-                    logger.error(
+                    logger.exception(
                         msg=f"Unable to handle {command}, "
                         f"with payload {payload}",
                         exc_info=True,

@@ -181,7 +181,7 @@ class Starch:
             time_in_seconds: The time span over which the pool is accessed in
                 seconds.
 
-        Returns: Maximum usable starch in micromol / (second * gram_of_organ).
+        Returns: Maximum usable starch in micromol / (second * gram).
         """
 
         # Pool usage factors (see constants.py)

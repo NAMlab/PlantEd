@@ -6,7 +6,7 @@ from PlantEd.server.environment.weather_state import WeatherState
 class TestWeatherState(TestCase):
     def test_init(self):
         w_state = WeatherState(
-            temperatur=20,
+            temperature=20,
             humidity=64,
             precipitation=0,
         )
@@ -46,18 +46,18 @@ class TestWeatherState(TestCase):
         )
 
         self.assertEqual(
-            {"temperatur": 20, "humidity": 64, "precipitation": 0}, w_state.to_dict()
+            {"temperature": 20, "humidity": 64, "precipitation": 0}, w_state.to_dict()
         )
 
         w_state.humidity = 15
         w_state.temperature = 75
         w_state.precipitation = 200
         self.assertEqual(
-            {"temperatur": 75, "humidity": 15, "precipitation": 200}, w_state.to_dict()
+            {"temperature": 75, "humidity": 15, "precipitation": 200}, w_state.to_dict()
         )
 
     def test_from_dict(self):
-        dic = {"temperatur": 75, "humidity": 15, "precipitation": 200}
+        dic = {"temperature": 75, "humidity": 15, "precipitation": 200}
 
         recreated_weather_state = WeatherState.from_dict(dic)
         self.assertEqual(75, recreated_weather_state.temperature)

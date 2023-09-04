@@ -183,6 +183,7 @@ class Plant:
             return
 
         self.root.update(diff)
+        self.root.calc_positions()
         self.__root_biomass = value
 
     @property
@@ -191,6 +192,7 @@ class Plant:
 
     @starch_out.setter
     def starch_out(self, value):
+        logger.debug(f"Setting starch_out to {value}")
         self.starch_pool.starch_out = value
 
     @property
@@ -199,6 +201,7 @@ class Plant:
 
     @starch_in.setter
     def starch_in(self, value):
+        logger.debug(f"Setting starch_in to {value}")
         self.starch_pool.starch_in = value
 
     @property

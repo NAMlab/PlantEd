@@ -106,7 +106,11 @@ class Water:
 
     @water_pool.setter
     def water_pool(self, value: float):
-        self.__water_pool = min(self.__max_water_pool, value)
+        if value < self.water_pool:
+            self.__water_pool  = value
+        else :
+            upper_limit = max(self.max_water_pool, self.water_pool)
+            self.__water_pool = min(value, upper_limit)
 
     @property
     def max_water_pool(self) -> float:
@@ -121,13 +125,13 @@ class Water:
         """
         Returns the percentage level of the water supply as float.
         """
-        percentage = self.water_pool / self.__max_water_pool
+        percentage = self.water_pool / self.max_water_pool
         if percentage > 1 or percentage < 0:
             logger.warning(
                 f"The water pool is over 100% full or in the "
                 f"minus. It is {percentage}, where water_pool is "
                 f"{self.water_pool} µmol and max_water_pool is "
-                f"{self.__max_water_pool} µmol."
+                f"{self.max_water_pool} µmol."
             )
 
         logger.debug(f"Calculated water percentage is {percentage} from {self}")

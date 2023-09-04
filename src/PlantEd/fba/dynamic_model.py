@@ -347,11 +347,6 @@ class DynamicModel:
         self.plant.leafs_biomass = self.plant.leafs_biomass + leaf
         self.plant.seed_biomass = self.plant.seed_biomass + seed
 
-        # root LS has to be updated after each simulation to apply rules
-        self.plant.root.update(self.plant.root_biomass)
-        # to update the root_grid, positions of each root have to be calculated
-        self.plant.root.calc_positions()
-
         self.plant.photon = photon
         self.plant.co2 = co2
         self.plant.co2_uptake_in_micromol_per_second_and_gram = (
@@ -390,12 +385,7 @@ class DynamicModel:
         if used_nitrate > nitrate_upper_bound_env_pool:
             taken_from_internal_pool = used_nitrate - nitrate_upper_bound_env_pool
 
-            if self.plant.nitrate.nitrate_pool - taken_from_internal_pool < 0:
-                taken_from_internal_pool -= self.plant.nitrate.nitrate_pool
-                self.plant.nitrate.nitrate_pool = 0
-            else:
-                self.plant.nitrate.nitrate_pool -= taken_from_internal_pool
-
+            self.plant.nitrate.nitrate_pool -= taken_from_internal_pool
             used_nitrate -= taken_from_internal_pool
 
         environment.nitrate_grid.drain(amount=used_nitrate, roots=self.plant.root)
@@ -410,9 +400,8 @@ class DynamicModel:
         environment.nitrate_grid.drain(amount=diff, roots=self.plant.root)
         self.plant.nitrate.nitrate_pool += diff
 
-        self.plant.nitrate.nitrate_pool -= nitrate
-
         # update starch pool
+
         self.plant.starch_out = starch_out
         self.plant.starch_in = starch_in
         self.plant.update_max_starch_pool()
