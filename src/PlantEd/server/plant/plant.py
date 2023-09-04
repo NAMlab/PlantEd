@@ -182,7 +182,7 @@ class Plant:
             logger.error(f"Root mass is decreasing. This is ignored! ")
             return
 
-        self.root.update(diff)
+        self.root.update(value)
         self.root.calc_positions()
         self.__root_biomass = value
 
