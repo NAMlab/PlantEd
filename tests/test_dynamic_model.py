@@ -1,9 +1,8 @@
 import logging
-from copy import copy
 from unittest import TestCase
 
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.fba.dynamic_model import (
+from PlantEd.server.fba.dynamic_model import (
     DynamicModel,
     NITRATE,
     PHOTON,

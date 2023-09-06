@@ -11,14 +11,11 @@ import scipy.integrate as integrate
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
 
-from PlantEd.client.update import UpdateInfo
-from PlantEd.fba.helpers import (
+from PlantEd.server.fba.helpers import (
     normalize,
 )
 from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.plant import Plant
-
-from PlantEd.server.plant.starch import GRAM_STARCH_PER_MICROMOL_STARCH
 
 # states for objective
 BIOMASS_ROOT = "Biomass_tx_root"

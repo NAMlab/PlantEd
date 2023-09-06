@@ -1,16 +1,12 @@
-import asyncio
-import threading
 import logging
 import multiprocessing
 import threading
-import time
-import unittest
 from multiprocessing import Event, Manager
 from typing import Optional
 from unittest import TestCase
 
 from PlantEd.client.client import Client
-from PlantEd.fba.dynamic_model import DynamicModel
+from PlantEd.server.fba.dynamic_model import DynamicModel
 from PlantEd.server.environment.environment import Environment
 from PlantEd.server.server import Server
 
