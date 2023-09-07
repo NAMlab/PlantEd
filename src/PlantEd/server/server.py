@@ -335,7 +335,7 @@ class Server:
         return answer
 
     def create_leaf(self, leaf: Leaf):
-        self.model.plant.create_leaf(leaf)
+        self.model.plant.leafs.new_leaf(leaf)
 
     def stop_water_intake(self):
         self.model.stop_water_intake()
@@ -492,10 +492,10 @@ class Server:
 
                         case "create_leaf":
                             logger.debug(
-                                "Received command identified as create_leaf."
+                                f"Received command identified as create_leaf. Payload: {payload}"
                             )
 
-                            leaf: Leaf = Leaf.from_json(payload["create_leaf"])
+                            leaf: Leaf = Leaf.from_dict(payload)
 
                             self.create_leaf(leaf=leaf)
 

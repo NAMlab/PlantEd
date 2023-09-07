@@ -14,10 +14,10 @@ from typing import Callable, Literal
 import websockets
 
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.client.leaf import Leaf
 from PlantEd.client.update import UpdateInfo
 from PlantEd.client.water import Water
 from PlantEd.server.environment.environment import Environment
+from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.plant import Plant
 
@@ -42,7 +42,7 @@ class Client:
         ready: multiprocessing.Event = multiprocessing.Event()
 
         thread = threading.Thread(
-            target=asyncio.run, daemon=True, args=(self.__start(ready= ready),)
+            target=asyncio.run, daemon=True, args=(self.__start(ready=ready),)
         )
         self.thread: threading.Thread = thread
         self.thread.start()
@@ -84,6 +84,7 @@ class Client:
         to the future object.
 
         """
+
         self.__future.set_result("")
 
     async def __receive_handler(self):
@@ -98,7 +99,10 @@ class Client:
                 try:
                     future = self.expected_receive[id_string]
                 except KeyError as e:
-                    logger.error(f"Task {id_string} was not found. All expected are {self.expected_receive.keys()}", exc_info=e)
+                    logger.error(
+                        f"Task {id_string} was not found. All expected are {self.expected_receive.keys()}",
+                        exc_info=e,
+                    )
                     continue
 
                 logger.debug(
@@ -142,9 +146,7 @@ class Client:
 
         message_dict = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
 
-        logger.info(
-            f"Sending Request for growth rates. Payload is : {message_dict}"
-        )
+        logger.info(f"Sending Request for growth rates. Payload is : {message_dict}")
 
         message_str = json.dumps(message_dict)
 
@@ -320,7 +322,7 @@ class Client:
 
     def create_leaf(self, leaf: Leaf):
         future = asyncio.run_coroutine_threadsafe(
-            self.self.__create_leaf(leaf=leaf), self.loop
+            self.__create_leaf(leaf=leaf), self.loop
         )
         result = future.result()
         return result
@@ -328,8 +330,7 @@ class Client:
     async def __create_leaf(self, leaf: Leaf):
         logger.debug("Request for the creation of a new leaf.")
 
-        data = leaf.strip2server_version()
-        message = {"create_leaf": data.to_json()}
+        message = json.dumps({"create_leaf": leaf.to_dict()})
         await self.websocket.send(message)
 
     def update(self, update_info: UpdateInfo):
@@ -371,7 +372,6 @@ class Client:
 
         env = Environment.from_json(payload)
 
-
         callback(env)
 
     def create_new_first_letter(
@@ -398,7 +398,14 @@ class Client:
     ):
         logger.debug("Sending request for new first letter of root system")
         message = json.dumps(
-            {"create_new_first_letter": {"dir": dir, "pos": pos, "mass": mass, "dist": dist}}
+            {
+                "create_new_first_letter": {
+                    "dir": dir,
+                    "pos": pos,
+                    "mass": mass,
+                    "dist": dist,
+                }
+            }
         )
 
         await self.websocket.send(message)
@@ -449,11 +456,11 @@ class Client:
         lock = threading.Lock()
         lock.acquire()
 
-        task = self.__load_level(lock = lock)
+        task = self.__load_level(lock=lock)
         asyncio.run_coroutine_threadsafe(task, self.loop)
         lock.acquire()
 
-    async def __load_level(self, lock:threading.Lock):
+    async def __load_level(self, lock: threading.Lock):
         future_received = self.loop.create_future()
         self.expected_receive["load_level"] = future_received
 
@@ -461,4 +468,3 @@ class Client:
 
         await future_received
         lock.release()
-

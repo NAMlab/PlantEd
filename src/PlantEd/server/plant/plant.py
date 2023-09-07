@@ -11,13 +11,11 @@ from PlantEd.constants import (
     START_STEM_BIOMASS_GRAM,
     START_ROOT_BIOMASS_GRAM,
     START_SEED_BIOMASS_GRAM,
-    SLA_IN_SQUARE_METER_PER_GRAM,
 )
 from PlantEd.server.plant.nitrate import Nitrate
-from PlantEd.server.plant.leaf import Leaf
+from PlantEd.server.plant.leaf import Leaf, Leafs
 from PlantEd.server.plant.starch import Starch
 from PlantEd.utils.LSystem import LSystem, DictToRoot
-from PlantEd import config
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +42,9 @@ class Plant:
     """
 
     def __init__(self, ground_grid_resolution: tuple[int, int]):
-        self.leafs: list[Leaf] = []
-        self.leafs_biomass: float = START_LEAF_BIOMASS_GRAM
+        self.leafs: Leafs = Leafs()
+        self.leafs.new_leaf(Leaf(mass= START_LEAF_BIOMASS_GRAM, max_mass= START_LEAF_BIOMASS_GRAM*5))
+
         self.stem_biomass: float = START_STEM_BIOMASS_GRAM
         self.__root_biomass: float = START_ROOT_BIOMASS_GRAM
         self.seed_biomass: float = START_SEED_BIOMASS_GRAM
@@ -124,7 +123,6 @@ class Plant:
         """
         dic = {}
 
-        dic["leafs_biomass"] = self.leafs_biomass
         dic["stem_biomass"] = self.stem_biomass
         dic["root_biomass"] = self.root_biomass
         dic["seed_biomass"] = self.seed_biomass
@@ -138,6 +136,7 @@ class Plant:
         dic["nitrate"] = self.nitrate.to_dict()
         dic["starch"] = self.starch_pool.to_dict()
 
+        dic["leafs"] = self.leafs.to_dict()
         dic["root"] = self.root.to_dict()
 
         return dic
@@ -146,7 +145,7 @@ class Plant:
     def from_dict(cls, dic:dict) -> Plant:
         # Todo dirty hardcoded change
         plant = Plant((20,6))
-        plant.leafs_biomass = dic["leafs_biomass"]
+
         plant.stem_biomass = dic["stem_biomass"]
         plant.root_biomass = dic["root_biomass"]
 
@@ -161,6 +160,8 @@ class Plant:
         plant.nitrate = Nitrate.from_dict(dic["nitrate"])
         plant.starch_pool = Starch.from_dict(dic["starch"])
 
+        plant.leafs = Leafs.from_dict(dic["leafs"])
+
         plant.root = DictToRoot.load_root_system(dic["root"])
         plant.root.root_grid = plant.root.root_grid.transpose()
         return plant
@@ -170,6 +171,14 @@ class Plant:
         dic = json.loads(string)
 
         return Plant.from_dict(dic=dic)
+
+    @property
+    def leafs_biomass(self):
+        return self.leafs.biomass
+
+    @leafs_biomass.setter
+    def leafs_biomass(self, value):
+        self.leafs.biomass = value
 
     @property
     def root_biomass(self):
@@ -238,18 +247,11 @@ class Plant:
             + self.seed_biomass_gram
         )
 
-    @property
-    def specific_leaf_area_in_square_meter(self):
-        return SLA_IN_SQUARE_METER_PER_GRAM * self.leafs_biomass_gram
-
     def set_water(self, water: Water):
         self.water = water
 
     def set_nitrate(self, nitrate: Nitrate):
         self.nitrate = nitrate
-
-    def new_leaf(self, leaf: Leaf):
-        self.leafs.append(leaf)
 
     def update_max_water_pool(self):
         self.water.update_max_water_pool(plant_biomass=self.biomass_total_gram)

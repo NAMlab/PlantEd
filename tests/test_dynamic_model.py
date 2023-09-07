@@ -2,6 +2,7 @@ import logging
 from unittest import TestCase
 
 from PlantEd.client.growth_percentage import GrowthPercent
+from PlantEd.server.environment.environment import Environment
 from PlantEd.server.fba.dynamic_model import (
     DynamicModel,
     NITRATE,
@@ -82,7 +83,7 @@ class TestDynamicModel(TestCase):
         self.fail()
 
     def test_objective_value_not_zero(self):
-        dyn_model = DynamicModel()
+        dyn_model = DynamicModel(enviroment= Environment())
 
         dyn_model.set_bounds(NITRATE, (-1000, 1000))
         dyn_model.set_bounds(CO2, (-1000, 1000))
@@ -97,7 +98,7 @@ class TestDynamicModel(TestCase):
         self.assertAlmostEqual(1000, ideal_objective_value, places=3)
 
     def test_update_constraints(self):
-        dyn_model = DynamicModel()
+        dyn_model = DynamicModel(enviroment= Environment())
         growth_percent = GrowthPercent(
             leaf=0.5,
             stem=0,
@@ -170,7 +171,7 @@ class TestDynamicModel(TestCase):
 
 
     def test_photosynthesis(self):
-        dyn_model = DynamicModel()
+        dyn_model = DynamicModel(enviroment= Environment())
 
         dyn_model.plant.root_biomass = 100
         dyn_model.plant.stem_biomass = 100

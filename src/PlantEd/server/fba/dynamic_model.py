@@ -10,11 +10,13 @@ import scipy.integrate as integrate
 
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
+from PlantEd.constants import MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
 
 from PlantEd.server.fba.helpers import (
     normalize,
 )
 from PlantEd.server.environment.environment import Environment
+from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.plant import Plant
 
 # states for objective
@@ -33,8 +35,7 @@ PHOTON = "Photon_tx_leaf"
 CO2 = "CO2_tx_leaf"
 
 # mol
-Vmax = 3360 / 3600  # mikroMol/gDW/s
-Vmax = 0.038 # mikroMol/gDW / s
+Vmax = MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
 
 Km = 4000  # mikromol
 
@@ -146,7 +147,7 @@ class DynamicModel:
         # up to 1230 mikromol/s/m² max -> sine function to simulate?
         return 1200 * self.get_sun_intensity_for_duration(
             self.seconds_passed - self.percentages.time_frame, self.seconds_passed
-        )  # * self.percentages.time_frame
+        )
 
     # set atp constraints, constrain nitrate intake to low/high
     def init_constraints(self):
@@ -236,9 +237,11 @@ class DynamicModel:
         self.set_bounds(WATER, water_bounds)
 
         photon_upper_bound = (
-                self.plant.specific_leaf_area_in_square_meter
-                * self.micromol_photon_per_square_meter
-        )
+                self.plant.leafs.specific_leaf_area_in_square_meter # m^2
+                * self.micromol_photon_per_square_meter # mikromol / (s * m^2)
+        ) / self.plant.leafs_biomass # g_organ
+
+
         photon_bounds = (0, photon_upper_bound)
         logger.debug(f"Bounds for photons are {photon_bounds}")
         self.set_bounds(PHOTON, photon_bounds)
@@ -267,6 +270,15 @@ class DynamicModel:
         nitrate_bounds = (-1000, nitrate_upper_bounds)
         logger.debug(f"Bounds for nitrate are  {nitrate_bounds}, Nitrate pool available is {nitrate_upper_bound_env_pool}")
         self.set_bounds(NITRATE, nitrate_bounds)
+
+        # Limit Biomass output based on created organs
+        if self.percentages.leaf != 0:
+            bounds_leaf = (0, self.plant.leafs.addable_leaf_biomass / (leaf_biomass * time_frame))
+            logger.debug(
+                f"Maximum addable biomass for leafs is {self.plant.leafs.addable_leaf_biomass},"
+                f" bounds are therefore {bounds_leaf}"
+            )
+            self.set_bounds(BIOMASS_LEAF, bounds_leaf)
 
         solution = self.model.optimize()
 
@@ -307,6 +319,7 @@ class DynamicModel:
         # Normalize
         # - multiply with time and mass resulting in micromol as unit
         # - micromol/(seconds * organ_mass) * organ_mass[gram] * time_frame[s]
+        # - biomass is defined that it results in g instead of micromol
 
         # biomass
         root = root * root_biomass * time_frame
@@ -315,10 +328,7 @@ class DynamicModel:
         seed = seed * seed_biomass * time_frame
 
         logger.debug(
-            f"Leaf biomass is {leaf} micromol, "
-            f"stem biomass is {stem} micromol, "
-            f"root biomass is {root} micromol, "
-            f"seed biomass is {seed} micromol."
+            f"Absolute values of biomass increase are: Leaf({leaf}), Stem({stem}), Root({root}), Seed{seed}"
         )
 
         # Uptake and release
