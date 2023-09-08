@@ -7,7 +7,7 @@ from PlantEd.data.sound_control import SoundControl
 from PlantEd.server.plant.plant import Plant as serverPlant
 from PlantEd.client.client import Client
 from PlantEd.camera import Camera
-from PlantEd.gameobjects.plant import Plant
+from PlantEd.gameobjects.plant import Plant, Organ
 from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.button import (
     DoubleRadioButton,
@@ -207,25 +207,6 @@ class UI:
             )
         )
 
-        '''
-        sfx_mute_icon = assets.img("sfx.png", (35, 35))
-        self.button_sprites.add(
-            ToggleButton(
-                360,
-                config.SCREEN_HEIGHT - 60,
-                50,
-                50,
-                [self.narrator.toggle_mute],
-                config.FONT,
-                image=sfx_mute_icon,
-                border_w=3,
-                border_radius=25,
-                cross=True,
-                cross_size=(10, 10, 40, 40)
-            )
-        )
-        '''
-
         self.button_sprites.add(
             Arrow_Button(
                 config.SCREEN_WIDTH / 2 - 100,
@@ -276,20 +257,6 @@ class UI:
             self.button_sprites.add(rb)
         speed_options[0].button_down = True
 
-        '''
-        self.skip_intro = Button_Once(
-            440,
-            config.SCREEN_HEIGHT - 50,
-            140,
-            32,
-            [self.skip_intro_ui],
-            config.FONT,
-            "SKIP INTRO",
-            border_w=2,
-        )
-        self.button_sprites.add(self.skip_intro)
-'''
-
         self.button_array = ButtonArray(
             (1405, 10, 30, 30),
             12,
@@ -314,10 +281,6 @@ class UI:
             self.gametime.pause()
         else:
             self.gametime.unpause()
-
-    def skip_intro_ui(self):
-        # self.tool_tip_manager.deactivate_tooltipps()
-        self.gametime.forward()
 
     def handle_event(self, e: pygame.event.Event):
         if e.type == KEYDOWN and e.key == K_ESCAPE:
@@ -923,7 +886,7 @@ class UI:
         self.apply_button.draw(s)
 
     def draw_organ_detail_temp(
-        self, s, organ, pos, label, show_amount=True, factor=1
+        self, s, organ: Organ, pos, label, show_amount=True, factor=1
     ):
         topleft = pos
         pygame.draw.rect(
@@ -977,7 +940,7 @@ class UI:
         )  # exp
         text_organ_mass = config.SMALL_FONT.render(
             "{:.2f} / {:.2f}".format(
-                organ.mass / factor, organ.get_maximum_growable_mass() / factor
+                organ.get_mass() / factor, organ.get_maximum_growable_mass() / factor
             ),
             True,
             (0, 0, 0),
@@ -989,13 +952,23 @@ class UI:
                 topleft[0] + exp_width / 2 - text_organ_mass.get_width() / 2,
                 topleft[1] + 120,
             ),
-        )  # Todo change x, y
+        )
+        # Todo indicate blocked organ
+        if organ.blocked_growth:
+            if organ.type == Plant.LEAF:
+                pygame.draw.rect(s, config.WHITE_TRANSPARENT, (1100, 400, 300, 50), border_radius=3)
+                pygame.draw.rect(s, config.WHITE, (1100, 400, 300, 50), border_radius=3, width=3)
+                label = config.TITLE_FONT.render("Buy new leaves to grow", True, config.BLACK)
+                s.blit(label, (1110, 410))
 
     def draw_production(self, s):
         topleft = self.production_topleft
         # headbox
         self.draw_organ_detail_temp(
-            s, self.plant.organs[0], topleft, self.label_leaf
+            s,
+            self.plant.organs[0],
+            topleft,
+            self.label_leaf
         )
         self.draw_organ_detail_temp(
             s,

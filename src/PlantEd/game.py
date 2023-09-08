@@ -526,14 +526,16 @@ class DefaultGameScene(object):
                 ].get_growing_flowers()
                 flower_percent = 0
                 # Todo fix percentages
+
                 for flower in growing_flowers:
-                    flower_percent += 10
+                    if flower["mass"] < flower["maximum_mass"]:
+                        flower_percent += 10
                 self.plant.organs[3].percentage = flower_percent
 
                 growth_percent = GrowthPercent(
-                    leaf=self.plant.organs[0].percentage,
-                    stem=self.plant.organs[1].percentage,
-                    root=self.plant.organs[2].percentage,
+                    leaf=self.plant.organs[0].percentage if not self.plant.organs[0].blocked_growth else 0,
+                    stem=self.plant.organs[1].percentage if not self.plant.organs[1].blocked_growth else 0,
+                    root=self.plant.organs[2].percentage if not self.plant.organs[2].blocked_growth else 0,
                     starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
                     time_frame=delta_time_in_h * 3600
@@ -638,12 +640,8 @@ class DefaultGameScene(object):
 
         self.plant.organ_starch.mass = plant.starch_pool.available_starch_pool
 
-        logger.debug("Calculating the delta of the growth in grams. ")
-
-        logger.debug(f" LEAFS FROM SERVER: {self.server_plant.leafs.leafs}")
-
         masses = {
-            "leaf_mass": self.server_plant.leafs_biomass,
+            "leafs": self.server_plant.leafs,
             "stem_mass": self.server_plant.stem_biomass,
             "root_mass": self.server_plant.root_biomass,
             "seed_mass": self.server_plant.seed_biomass,
@@ -653,9 +651,8 @@ class DefaultGameScene(object):
         self.ui.server_plant = plant
         logger.debug(f"Updating the gram representation of the UI. With the following values: Leaf: {self.server_plant.leafs_biomass}, Stem: {self.server_plant.stem_biomass}, Root: {self.server_plant.seed_biomass}, Starch: {self.server_plant.starch_pool}.")
         self.plant.update_organ_masses(masses)
-
         old_root: Root = self.plant.organs[2]
-        old_root.ls = plant.root # assigning root from server
+        old_root.ls = plant.root    # assigning root from server
         self.plant.organs[2] = old_root
 
     def check_game_end(self, days):

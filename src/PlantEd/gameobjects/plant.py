@@ -21,7 +21,7 @@ from PlantEd.utils.LSystem import DictToRoot, LSystem
 from PlantEd.utils.animation import Animation
 from PlantEd.utils.particle import ParticleSystem
 from PlantEd.utils.spline import Cubic_Tree, Cubic
-from PlantEd.server.plant.leaf import Leaf as Server_Leaf
+from PlantEd.server.plant.leaf import Leaf as Server_Leaf, Leafs
 
 logger = logging.getLogger(__name__)
 
@@ -205,11 +205,10 @@ class Plant:
         return self.organs[0].stomata_open
 
     def update_organ_masses(self, organ_masses):
-        self.organs[0].update_masses(organ_masses["leaf_mass"])
-        self.organs[1].mass = organ_masses["stem_mass"]
-        self.organs[2].mass = organ_masses["root_mass"]
+        self.organs[0].update_masses(organ_masses["leafs"])
+        self.organs[1].update_mass(organ_masses["stem_mass"])
+        self.organs[2].update_mass(organ_masses["root_mass"])
         self.organs[3].update_masses(organ_masses["seed_mass"])
-
         # self.organ_starch.starch_intake = growth_rates.starch_intake * growth_boost
 
     def get_biomass(self):
@@ -326,6 +325,7 @@ class Organ:
         self.skills = []
         self.target = target
         self.camera = camera
+        self.blocked_growth = False
 
     def update(self, dt):
         pass
@@ -336,7 +336,7 @@ class Organ:
     def get_organ_amount(self):
         return 1
 
-    def def_mass_to_grow(self):
+    def mass_to_grow(self):
         return 1
 
     def get_maximum_growable_mass(self):
@@ -485,18 +485,21 @@ class Leaf(Organ):
             else 0
         )
 
-    def update_masses(self, mass):
-        # Todo get all leafs by id and increase mass based on server
+    def update_masses(self, server_leaf: Leafs):
+        for server_leaf in server_leaf.leafs:
+            for leaf in self.leaves:
+                if leaf["id"] == server_leaf.id:
+                    leaf["mass"] = server_leaf.mass
 
+        # adjust image size for every 0.1 grams of biomass increase
         for leaf in self.leaves:
-            if leaf["mass"] > self.growth_intervals[leaf["size"] and leaf["size"] < len(self.growth_intervals)]:
-                leaf["size"] += 1
-                self.update_leaf_image(leaf)
+            if leaf["mass"] > leaf["size"]/10:
+                leaf["size"] = min(constants.MAXIMUM_LEAF_BIOMASS_GRAM*10, leaf["size"]+1)
 
     def get_organ_amount(self):
         return len(self.leaves)
 
-    def def_mass_to_grow(self):
+    def mass_to_grow(self):
         return self.get_maximum_growable_mass() - self.get_mass()
 
     def get_maximum_growable_mass(self):
@@ -566,8 +569,10 @@ class Leaf(Organ):
         ]
 
     def update(self, dt):
-        if self.get_maximum_growable_mass() <= 0:
+        if self.mass_to_grow() <= 0:
             self.blocked_growth = True
+        else:
+            self.blocked_growth = False
 
         for system in self.particle_systems:
             system.update(dt)
@@ -697,6 +702,20 @@ class Root(Organ):
     def update(self, dt):
         pass
 
+    def get_organ_amount(self):
+        return len(self.ls.first_letters)
+
+    def mass_to_grow(self):
+        return self.get_maximum_growable_mass() - self.get_mass()
+
+    def get_maximum_growable_mass(self):
+        return (
+            max(1, constants.MAXIMUM_ROOT_BIOMASS_GRAM * self.get_organ_amount())
+        )
+
+    def update_mass(self, mass):
+        self.mass = mass
+
     def create_new_root(self, mouse_pos=None, dir=None):
         if self.play_reward is not None:
             self.play_reward()
@@ -753,6 +772,7 @@ class Stem(Organ):
         self.dist_to_stem: float = 1000
         self.can_add_branch: bool = False
         self.play_reward: callable = play_reward
+        self.size = 0
 
         super().__init__(
             x=x,
@@ -793,6 +813,28 @@ class Stem(Organ):
     # Todo find out why always true is return
     def check_can_add_leaf(self):
         return True
+
+    def get_organ_amount(self):
+        return len(self.curve.branches)
+
+    def mass_to_grow(self):
+        return self.get_maximum_growable_mass() - self.get_mass()
+
+    def get_maximum_growable_mass(self):
+        return (
+            constants.MAXIMUM_STEM_BIOMASS_GRAM * self.get_organ_amount()
+        )
+
+    def update_mass(self, mass):
+        self.mass = mass
+        if self.mass*10 > self.size:
+            self.size += 1
+            self.curve.grow_all()
+
+    def get_mass(self):
+        return (
+            self.mass
+        )
 
     def to_dict(self) -> dict:
         stem_dict = {
@@ -1042,9 +1084,26 @@ class Flower(Organ):
         return closest_flower
 
     def update_masses(self, mass):
-        # Todo grow flowers according to server id
-        pass
+        delta_mass = mass - self.get_mass()
+        if delta_mass <= 0 or len(self.flowers) <= 0:
+            return
+        growable_flowers = []
+        for flower in self.flowers:
+            if flower["mass"] < flower["maximum_mass"]:
+                growable_flowers.append(flower)
+        n_flowers_to_grow = len(growable_flowers)
+        delta_each_flower = delta_mass / n_flowers_to_grow
+        growable_flowers.sort()
+        for flower in growable_flowers:
+            if flower["mass"] + delta_each_flower > flower["maximum_mass"]:
+                overflow_mass = flower["maximum_mass"] - flower["mass"] + delta_each_flower
 
+                n_flowers_to_grow -= 1
+                delta_each_flower = (delta_mass + overflow_mass) / n_flowers_to_grow
+
+            else:
+                flower["mass"] += delta_each_flower
+        print("6")
         # update image according to mass
         for flower in self.flowers:
             id = min(
@@ -1121,7 +1180,7 @@ class Flower(Organ):
     def get_organ_amount(self):
         return len(self.flowers)
 
-    def def_mass_to_grow(self):
+    def mass_to_grow(self):
         return self.get_maximum_growable_mass() - self.get_mass()
 
     def get_maximum_growable_mass(self):
@@ -1135,7 +1194,10 @@ class Flower(Organ):
         )
 
     def update(self, dt):
-        pass
+        if self.mass_to_grow() <= 0:
+            self.blocked_growth = True
+        else:
+            self.blocked_growth = False
 
     def update_image_size(self, factor=7, base=80):
         pass
@@ -1202,7 +1264,7 @@ class Flower(Organ):
                     3,
                 )
                 percentage_label = config.SMALL_FONT.render(
-                    "{:.0f}".format(percentage * 100), True, config.BLACK
+                    "{:.3f}".format(flower["mass"]), True, config.BLACK
                 )
                 screen.blit(
                     percentage_label,
@@ -1214,7 +1276,7 @@ class Flower(Organ):
                         flower["y"] - width / 4 - 10 - flower["offset_y"],
                     ),
                 )
-            if True:
+            '''if True:
                 width = flower["image"].get_width()
                 pygame.draw.rect(
                     screen,
@@ -1239,7 +1301,7 @@ class Flower(Organ):
                         - mass_label.get_width() / 2,
                         flower["y"] - width / 4 - 10 - flower["offset_y"],
                     ),
-                )
+                )'''
 
     def get_outlines(self):
         outlines = []

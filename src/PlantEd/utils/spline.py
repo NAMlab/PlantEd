@@ -110,7 +110,7 @@ class Cubic_Tree:
 
 
 class Cubic:
-    def __init__(self, points, color=config.GREEN, res=10, width=15):
+    def __init__(self, points, color=config.GREEN, res=10, width=15, max_points=8):
         self.points = points
         self.offsets = self.points.copy()
         self.main = False
@@ -132,6 +132,7 @@ class Cubic:
         self.new_curve = []
         self.interpolated = []
         self.growth_percentage = 1
+        self.max_points = max_points
         # print(self.curve)
 
     def get_curve(self):
@@ -151,6 +152,8 @@ class Cubic:
         return branch_dict
 
     def grow(self, point=None):
+        if len(self.points) >= self.max_points:
+            return
         if not point:
             point = [
                 self.points[-1][0] + random.randint(0, 80) - 40,
