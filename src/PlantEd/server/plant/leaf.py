@@ -4,7 +4,7 @@ import itertools
 import json
 import logging
 
-from PlantEd.constants import SLA_IN_SQUARE_METER_PER_GRAM
+from PlantEd.constants import SLA_IN_SQUARE_METER_PER_GRAM, MAXIMUM_LEAF_BIOMASS_GRAM
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ class Leaf:
     # not thread safe! class method creation might result in skipped ids
     __max_id = 1
 
-    def __init__(self, mass: float = 0.0, max_mass: float = 5.0):
+    def __init__(self, mass: float = 0.0, max_mass: float = MAXIMUM_LEAF_BIOMASS_GRAM):
         if max_mass < mass:
             raise ValueError(f"Max max mass ({max_mass}) of leaf is smaller than weight({mass}). ")
 

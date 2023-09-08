@@ -445,7 +445,6 @@ class DictToRoot:
         npa = np.array(data, dtype= float)
         dela = np.delete(npa, 0, 1)
         root_grid: np.ndarray = np.reshape(dela, (20, 6))
-        print(root_grid)
 
         water_grid_pos: tuple[float, float] = tuple(dic["water_grid_pos"])
         directions = []

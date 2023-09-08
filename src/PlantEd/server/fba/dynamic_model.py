@@ -10,7 +10,7 @@ import scipy.integrate as integrate
 
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.constants import MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
+from PlantEd.constants import MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND, PEAK_PHOTON
 
 from PlantEd.server.fba.helpers import (
     normalize,
@@ -35,7 +35,7 @@ PHOTON = "Photon_tx_leaf"
 CO2 = "CO2_tx_leaf"
 
 # mol
-Vmax = MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
+Vmax = MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
 
 Km = 4000  # mikromol
 
@@ -145,7 +145,7 @@ class DynamicModel:
 
         # ↓ 150 according to https://doi.org/10.3389/fpls.2017.00681
         # up to 1230 mikromol/s/m² max -> sine function to simulate?
-        return 1200 * self.get_sun_intensity_for_duration(
+        return PEAK_PHOTON * self.get_sun_intensity_for_duration(
             self.seconds_passed - self.percentages.time_frame, self.seconds_passed
         )
 
@@ -165,6 +165,25 @@ class DynamicModel:
     ):
         time_frame = new_growth_percentages.time_frame
         weather_state = environment.weather.get_latest_weather_state()
+
+        # handle negative starch
+        if new_growth_percentages.starch < 0:
+            # consume
+            self.plant.starch_pool.allowed_starch_pool_consumption = new_growth_percentages.starch / 100
+            new_growth_percentages.starch = 0
+        else:
+            # produce
+            self.plant.starch_pool.allowed_starch_pool_consumption = 0
+
+        starch_upper_bound = (
+            self.plant.starch_pool.calc_available_starch_in_mol_per_gram_and_time(
+                gram_of_organ=self.plant.stem_biomass_gram,
+                time_in_seconds=time_frame,
+            )
+        )
+        starch_bounds = (0, starch_upper_bound)
+        logger.debug(f"Bounds for starch intake are {starch_bounds}")
+        self.set_bounds(STARCH_IN, starch_bounds)
 
         self.seconds_passed += time_frame
 
@@ -193,20 +212,6 @@ class DynamicModel:
             leaf=leaf_biomass,
             seed=seed_biomass,
         )
-
-        # set limits from pools
-        # ToDo move in own function
-        starch_upper_bound = (
-            self.plant.starch_pool.calc_available_starch_in_mol_per_gram_and_time(
-                gram_of_organ=self.plant.stem_biomass_gram,
-                time_in_seconds=time_frame,
-            )
-        )
-        logger.debug(f"Upper Bound for starch is {starch_upper_bound}")
-
-        starch_bounds = (0, starch_upper_bound)
-        logger.debug(f"Bounds for starch are {starch_bounds}")
-        self.set_bounds(STARCH_IN, starch_bounds)
 
         water_upper_bound_plant_pool = (
             self.plant.water.calc_available_water_in_mol_per_gram_and_time(
@@ -456,19 +461,6 @@ class DynamicModel:
 
     def get_nitrate_pool(self):
         return self.plant.nitrate.nitrate_pool
-
-    def increase_nitrate_pool(self, amount):
-        self.plant.nitrate.nitrate_pool += amount
-
-    def get_nitrate_intake(self, mass):
-        # ToDo move to nitrate class
-        nitrate_pool = self.plant.nitrate.nitrate_pool
-
-        # Michaelis-Menten Kinetics
-        # v = Vmax*S/Km+S, v=intake speed, Vmax=max Intake, Km=Where S that v=Vmax/2, S=Substrate Concentration
-        # Literature: Vmax ~ 0.00336 mol g DW−1 day−1, KM = 0.4 mmol,  S = 50 mmol and 1.2 mmol (high, low)
-        # day --> sec
-        return max(((Vmax * nitrate_pool) / (Km + nitrate_pool)) * mass, 0)  # second
 
     def stop_water_intake(self):
         self.set_bounds(WATER, (-1000, 0))

@@ -43,7 +43,7 @@ class Plant:
 
     def __init__(self, ground_grid_resolution: tuple[int, int]):
         self.leafs: Leafs = Leafs()
-        self.leafs.new_leaf(Leaf(mass= START_LEAF_BIOMASS_GRAM, max_mass= START_LEAF_BIOMASS_GRAM*5))
+        self.leafs.new_leaf(Leaf(mass= START_LEAF_BIOMASS_GRAM))
 
         self.stem_biomass: float = START_STEM_BIOMASS_GRAM
         self.__root_biomass: float = START_ROOT_BIOMASS_GRAM

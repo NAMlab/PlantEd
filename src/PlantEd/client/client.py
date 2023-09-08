@@ -141,8 +141,6 @@ class Client:
         logger.debug("Callback executed.")
 
     async def __request_growth_rate(self, growth_percent: GrowthPercent):
-        if growth_percent.starch < 0:
-            growth_percent.starch = 0
 
         message_dict = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
 

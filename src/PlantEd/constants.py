@@ -24,7 +24,7 @@ MICROMOL_STARCH_PER_GRAM_STARCH: Final[float] = (
 # ToDo source
 # ↓ according to ?
 # 18 gram/mol -> mol = 1/18 -> 0.05550843506179199 mol/gramm -> 0.05550843506179199 * 1000000 mikromol/gram, 80% water in plant
-MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000 * 0.8
+MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000 * 4
 
 # 1.5 Tons of soil in one m³ -> PlantEd has exactly one -> 30% water, 500Kg -> 500 Litre -> 500000 Gram /18 -> 8333.333 Mol -> 8333.333/(20*6) = 70 Mol -> 70000000 Mikromol
 MAX_WATER_PER_CELL = 1000000
@@ -65,7 +65,7 @@ PEAK_PHOTON = 2000
 # Plant initialization values
 ###############################################################################
 
-START_LEAF_BIOMASS_GRAM = 0.1
+START_LEAF_BIOMASS_GRAM = 0.01
 START_STEM_BIOMASS_GRAM = 0.1
 START_ROOT_BIOMASS_GRAM = 0.2
 START_SEED_BIOMASS_GRAM = 0.0001
@@ -84,7 +84,7 @@ MAXIMUM_SEED_BIOMASS_GRAM = 1
 # ↓ in metabolites for a minimum of 2 simulations
 START_STARCH_POOL_IN_MICROMOL = -1
 START_WATER_POOL_IN_MICROMOL = 0
-START_NITRATE_POOL_IN_MICROMOL = -5
+START_NITRATE_POOL_IN_MICROMOL = 0
 
 ###############################################################################
 # Pool usage factors
@@ -100,4 +100,4 @@ PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP = 1
 # ↓ simulation step. This scales based on the maximum of the pool therefore
 # ↓ a value of 0.05 limits the uptake of the plant per step to 5%
 # ↓ of the max pool.
-PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.05
+PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 1

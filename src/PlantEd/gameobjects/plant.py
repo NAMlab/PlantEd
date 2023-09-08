@@ -21,6 +21,7 @@ from PlantEd.utils.LSystem import DictToRoot, LSystem
 from PlantEd.utils.animation import Animation
 from PlantEd.utils.particle import ParticleSystem
 from PlantEd.utils.spline import Cubic_Tree, Cubic
+from PlantEd.server.plant.leaf import Leaf as Server_Leaf
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +182,9 @@ class Plant:
 
         # one leaf to start the game
         highlight = self.organs[1].curve.find_closest((self.x, self.y - 50), True)
-        self.organs[0].append_leaf(highlight, id=0)
+        server_leaf = Server_Leaf()
+        self.client.create_leaf(server_leaf)
+        self.organs[0].append_leaf(highlight, server_leaf.id)
         self.organs[1].curve.branches[highlight[1]].free_spots[
             highlight[2]
         ] = config.LEAF_SPOT
@@ -218,7 +221,6 @@ class Plant:
     # Todo dirty to reduce mass like this
     def eat_stem(self, rate, dt):
         pass
-        #self.organs[1].mass -= rate * dt
 
     def set_target_organ_leaf(self):
         for organ in self.organs:
@@ -529,8 +531,8 @@ class Leaf(Organ):
             "image": image[0],
             "offset_x": offset[0],
             "offset_y": offset[1],
-            "mass": 0.0001,
-            "maximum_mass": 0.5,
+            "mass": constants.START_LEAF_BIOMASS_GRAM,
+            "maximum_mass": constants.MAXIMUM_LEAF_BIOMASS_GRAM,
             "base_image_id": image_id,
             "direction": dir,
             "size": 0,
@@ -842,8 +844,10 @@ class Stem(Organ):
                     self.can_add_branch = False
             elif self.leaf.can_add_leaf and self.dist_to_stem < 50:
                 if self.highlight:
-                    self.leaf.append_leaf(self.highlight, id=0)
-                    # Todo create server_leaf as well
+                    server_leaf = Server_Leaf()
+                    self.client.create_leaf(server_leaf)
+                    self.leaf.append_leaf(self.highlight, server_leaf.id)
+
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
                     ] = config.LEAF_SPOT
@@ -971,7 +975,7 @@ class Flower(Organ):
             name: string,
             organ_type: int,
             callback: callable,
-            images: pygame.Surface,
+            images: list[pygame.Surface],
             client: Client,
             mass: float,
             active: bool,
@@ -1038,8 +1042,18 @@ class Flower(Organ):
         return closest_flower
 
     def update_masses(self, mass):
-        pass
         # Todo grow flowers according to server id
+        pass
+
+        # update image according to mass
+        for flower in self.flowers:
+            id = min(
+                int(
+                    flower["mass"]
+                    /flower["maximum_mass"]
+                    *len(self.images)-1),
+                len(self.images)-1)
+            flower["image"] = self.images[id]
 
     def get_random_flower_pos(self):
         viable_flowers = []

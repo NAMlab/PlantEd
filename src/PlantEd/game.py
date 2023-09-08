@@ -487,21 +487,10 @@ class DefaultGameScene(object):
             self.plant,
             play_buy_sfx=self.sound_control.play_buy_sfx
         )
-        start_flower_item_floating = FloatingShopItem(
-            (0, 0),
-            self.plant.organs[3].start_flowering_closest,
-            assets.img("flowering.PNG", (64, 64)),
-            1,
-            self.plant,
-            tag="flower",
-            return_pos=True,
-            play_buy_sfx=self.sound_control.play_buy_sfx
-        )
 
         self.floating_shop.add_item(add_leaf_item_floating)
         self.floating_shop.add_item(add_branch_item_floating)
         self.floating_shop.add_item(add_flower_item_floating)
-        self.floating_shop.add_item(start_flower_item_floating)
         self.plant.organs[0].floating_shop = self.floating_shop
         self.plant.organs[1].floating_shop = self.floating_shop
         self.plant.organs[2].floating_shop = self.floating_shop
@@ -545,10 +534,11 @@ class DefaultGameScene(object):
                     leaf=self.plant.organs[0].percentage,
                     stem=self.plant.organs[1].percentage,
                     root=self.plant.organs[2].percentage,
-                    starch=abs(self.plant.organ_starch.percentage),
+                    starch=self.plant.organ_starch.percentage,
                     flower=self.plant.organs[3].percentage,
                     time_frame=delta_time_in_h * 3600
                 )
+
 
                 self.client.growth_rate(
                     growth_percent=growth_percent,
@@ -650,6 +640,8 @@ class DefaultGameScene(object):
         self.plant.organ_starch.mass = plant.starch_pool.available_starch_pool
 
         logger.debug("Calculating the delta of the growth in grams. ")
+
+        logger.debug(f" LEAFS FROM SERVER: {self.server_plant.leafs.leafs}")
 
         masses = {
             "leaf_mass": self.server_plant.leafs_biomass,
