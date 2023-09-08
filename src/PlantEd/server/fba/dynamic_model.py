@@ -166,10 +166,11 @@ class DynamicModel:
         time_frame = new_growth_percentages.time_frame
         weather_state = environment.weather.get_latest_weather_state()
 
+        logger.debug(f"STARCH SLIDER SERVER: {new_growth_percentages.starch}")
         # handle negative starch
         if new_growth_percentages.starch < 0:
             # consume
-            self.plant.starch_pool.allowed_starch_pool_consumption = new_growth_percentages.starch / 100
+            self.plant.starch_pool.allowed_starch_pool_consumption = abs(new_growth_percentages.starch / 100)
             new_growth_percentages.starch = 0
         else:
             # produce
