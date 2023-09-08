@@ -14,8 +14,8 @@ class Watering_can:
         self,
         pos,
         water_grid: Water_Grid = None,
-        amount=None,
-        rate: int = 3000000,    # micromol?
+        amount: int = config.WATERING_CAN_AMOUNT,
+        rate = None,
         cost=1,
         active=False,
         callback=None,
@@ -26,9 +26,9 @@ class Watering_can:
         self.pos = (pos[0] - 20, pos[1] - 120)
         self.water_grid = water_grid  # remove
         self.image = assets.img("watering_can.PNG", (214, 147))
-        self.default_amount = rate * 2  # default gamespeed 3s
+        self.default_amount = amount  # default gamespeed 3s
         self.amount = amount if amount else self.default_amount
-        self.rate = rate
+        self.rate = self.default_amount / 2
         self.cost = cost
         self.active = active
         self.pouring = False

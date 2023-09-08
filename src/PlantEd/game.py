@@ -16,6 +16,7 @@ from PlantEd.camera import Camera
 from PlantEd.client.client import Client
 from PlantEd.client.growth_percentage import GrowthPercent
 from PlantEd.client.growth_rates import GrowthRates
+from PlantEd.constants import MAX_NITRATE_PER_CELL, MAX_WATER_PER_CELL
 from PlantEd.data import assets
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.bee import Hive
@@ -278,7 +279,7 @@ class OptionsScene:
         return options
 
     def render(self, screen):
-        screen.fill(config.LIGHT_GRAY)
+        screen.fill(config.BLACK)
         screen.blit(self.label_surface, (0, 0))
         self.music_slider.draw(screen)
         self.sfx_slider.draw(screen)
@@ -306,13 +307,13 @@ class DefaultGameScene(object):
 
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
-        #self.gametime.fastest()
-        #self.gametime.faster()
+        self.gametime.reset()
 
-        self.water_grid = Water_Grid(pos=(0, 900))
+        self.water_grid = Water_Grid(pos=(0, 900), max_water_cell=MAX_WATER_PER_CELL)
         self.client = Client(port=client_port)
-        self.nitrate_grid = Grid()
-        self.server_plant = ServerPlant(ground_grid_resolution=(6, 20))
+        self.client.load_level()
+        self.nitrate_grid = Grid(max_cell=MAX_NITRATE_PER_CELL)
+        self.server_plant = ServerPlant(ground_grid_resolution=(20, 6))
         self.server_environment = ServerEnvironment()
         self.hours_since_start_where_growth_last_computed = 0
         self.plant = Plant(
@@ -326,6 +327,7 @@ class DefaultGameScene(object):
             water_grid_shape=self.water_grid.get_shape(),
             sound_control=self.sound_control
         )
+        self.plant.init_root_and_leaf()
 
         self.water_grid.add_base_water(
             Base_water(
@@ -543,7 +545,7 @@ class DefaultGameScene(object):
                     leaf=self.plant.organs[0].percentage,
                     stem=self.plant.organs[1].percentage,
                     root=self.plant.organs[2].percentage,
-                    starch=self.plant.organ_starch.percentage,
+                    starch=abs(self.plant.organ_starch.percentage),
                     flower=self.plant.organs[3].percentage,
                     time_frame=delta_time_in_h * 3600
                 )
@@ -560,33 +562,37 @@ class DefaultGameScene(object):
                             self.client.add2grid(amount, i, 0, "water")
                     self.water_grid.poured_cells.fill(0)
 
-                self.plant.get_PLA()
-                days, hours, minutes = self.environment.get_day_time()
+                ticks = self.gametime.get_time()
 
                 self.log.append_model_row(
-                    days=days,
-                    hours=hours,
-                    minutes=minutes,
+                    ticks=ticks,
+                    leaf_mass=self.plant.organs[0].get_mass(),
+                    stem_mass=self.plant.organs[1].mass,
+                    root_mass=self.plant.organs[2].mass,
+                    seed_mass=self.plant.organs[3].get_mass(),
                     leaf_percentage=growth_percent.leaf,
                     stem_percentage=growth_percent.stem,
                     root_percentage=growth_percent.root,
                     starch_percentage=growth_percent.starch,
                     seed_percentage=flower_percent,
-                    water_in=0,
-                    nitrate_in=0,
-                    starch_in=0,
-                    photon_in=0,
-                    leaf_mass=self.plant.organs[0].get_mass(),
-                    stem_mass=self.plant.organs[1].mass,
-                    root_mass=self.plant.organs[2].mass,
-                    seed_mass=self.plant.organs[3].get_mass(),
-                    water_pool=0,
-                    starch_pool=0,
-                    nitrate_pool=0,
-                    leaf_rate=0,
-                    stem_rate=0,
-                    root_rate=0,
-                    seed_rate=0,
+                    water_intake=self.server_plant.water.water_intake,
+                    water_pool_plant=self.server_plant.water.water_pool,
+                    water_available_env_abs=self.server_environment.water_grid.available_absolute(self.server_plant.root),
+                    nitrate_intake=self.server_plant.nitrate.nitrate_intake,
+                    nitrate_pool_plant=self.server_plant.nitrate.nitrate_pool,
+                    nitrate_available_env_abs=self.server_environment.nitrate_grid.available_absolute(self.server_plant.root),
+                    nitrate_available_env_michalis_menten=0, #self.server_environment.nitrate_grid.available_relative_mm(self.server_plant.root),
+                    starch_intake=self.server_plant.starch_pool.starch_in,
+                    starch_out=self.server_plant.starch_pool.starch_out,
+                    starch_pool=self.server_plant.starch_pool.available_starch_pool,
+
+                    photon_intake=self.server_plant.photon,
+                    co2_intake=self.server_plant.co2,
+
+
+                    temperature=self.server_environment.weather.get_latest_weather_state().temperature,
+                    humidity=self.server_environment.weather.get_latest_weather_state().humidity,
+                    precipitation=self.server_environment.weather.get_latest_weather_state().precipitation,
                 )
 
                 # Request env and set it to self.server_environment
@@ -819,7 +825,7 @@ class TitleScene(object):
         )
 
     def render(self, screen):
-        screen.fill(config.LIGHT_GRAY)
+        screen.fill(config.BLACK)
         screen.blit(
             self.title, (self.center_w - self.title.get_width() / 2, 100)
         )
@@ -914,12 +920,12 @@ class EndScene(object):
         score_sum = 0
         for i in range(len(self.plant_object.organs[3].flowers)):
             flowers = self.plant_object.organs[3].flowers
-            flower_score = config.BIGGER_FONT.render("Flower {}: {:.2f} mmol".format(i, float(flowers[i]["mass"])), True,
+            flower_score = config.BIGGER_FONT.render("Flower {}: {:.2f} grams".format(i, float(flowers[i]["mass"])), True,
                                                      config.WHITE)
             self.flower_score_list.append(flower_score)
             score_sum += flowers[i]["mass"]
 
-        self.score_sum_label = config.BIGGER_FONT.render("{:.2f} mmol".format(float(score_sum)), True, config.WHITE)
+        self.score_sum_label = config.BIGGER_FONT.render("{:.2f} grams".format(float(score_sum)), True, config.WHITE)
         self.title = config.MENU_TITLE.render("Finished", True, config.WHITE)
 
         self.plot_label = config.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
@@ -939,9 +945,9 @@ class EndScene(object):
                                                         config.hex_color_to_float(config.WHITE),
                                                         config.hex_color_to_float(config.RED),
                                                         config.hex_color_to_float(config.YELLOW)],
-                                                time=[df.Hours],
+                                                ticks=df.Ticks,
                                                 xlabel="Time",
-                                                ylabel="VEC",
+                                                ylabel="Organ Mass",
                                                 path_to_logs=path_to_logs,
                                                 filename="PLOT.png")
 
@@ -951,7 +957,7 @@ class EndScene(object):
             930,
             300,
             50,
-            [self.sound_control.play_toggle_sfx, self.return_to_menu, self.upload_data],
+            [self.sound_control.play_toggle_sfx, self.upload_data, self.return_to_menu],
             config.BIGGER_FONT,
             "Upload Simulation",
             config.LIGHT_GRAY,
@@ -986,9 +992,11 @@ class EndScene(object):
         self.explosion.draw(screen)
         self.score_animation.draw(screen)
 
-
-        distance = self.flower_score_list[0].get_height() + 20
-        width = self.flower_score_list[0].get_width()
+        distance = 0
+        width = 0
+        if self.flower_score_list:
+            distance = self.flower_score_list[0].get_height() + 20
+            width = self.flower_score_list[0].get_width()
         for i in range(len(self.flower_score_list)):
             screen.blit(self.flower_score_list[i], (500 - width, 380 + (distance * i)))
         pygame.draw.line(screen, config.WHITE, (150, 380 + (distance * len(self.flower_score_list))), (550, 380 + (distance * len(self.flower_score_list))))
@@ -1043,11 +1051,11 @@ class CustomScene(object):
 
         self.winners = sorted(self.winners, key=lambda x: x["score"])
 
-        for winner in self.winners:
-            print(winner["score"])
+        for winner in reversed(self.winners):
+            #print(winner["score"])
             score = winner["score"]
             score_label = config.BIGGER_FONT.render(
-                "Seed Mass {} gramms".format(score), True, (255, 255, 255)
+                "Seed Mass {:.5f} gramms".format(score), True, (255, 255, 255)
             )
             self.scores.append(score_label)
             name = config.BIGGER_FONT.render(
@@ -1064,9 +1072,9 @@ class CustomScene(object):
             self.datetimes.append(datetime_added)
 
     def return_to_menu(self):
-        pygame.quit()
+        #pygame.quit()
         # sys.exit()
-        # self.manager.go_to(TitleScene(self.manager))
+        self.manager.go_to(TitleScene(self.manager))
 
     def get_day_time(self, ticks):
         day = 1000 * 60 * 60 * 24
@@ -1079,7 +1087,7 @@ class CustomScene(object):
         return days + " Days " + hours + " Hours " + minutes + " Minutes"
 
     def render(self, screen):
-        screen.fill((50, 50, 50))
+        screen.fill(config.BLACK)
         screen.blit(
             self.text1, (SCREEN_WIDTH / 2 - self.text1.get_width() / 2, 100)
         )
@@ -1160,7 +1168,7 @@ class Credits:
         self.manager.go_to(TitleScene(self.manager))
 
     def init_labels(self):
-        self.label_surface.fill(config.LIGHT_GRAY)
+        self.label_surface.fill(config.BLACK)
         self.made_by_label = config.MENU_TITLE.render(
             "MADE BY", True, config.WHITE
         )
@@ -1173,11 +1181,14 @@ class Credits:
         self.nadine = config.MENU_SUBTITLE.render(
             "Nadine Töpfer", True, config.WHITE
         )
-        self.mona = config.MENU_SUBTITLE.render(
+        self.stefano = config.MENU_SUBTITLE.render(
             "Stefano A. Cruz", True, config.WHITE
         )
         self.pouneh = config.MENU_SUBTITLE.render(
             "Pouneh Pouramini", True, config.WHITE
+        )
+        self.jan = config.MENU_SUBTITLE.render(
+            "Jan-Niklas Weder", True, config.WHITE
         )
 
         pygame.draw.line(
@@ -1192,16 +1203,19 @@ class Credits:
             self.daniel, (self.center_w - self.daniel.get_width() / 2, 400)
         )
         self.label_surface.blit(
-            self.jj, (self.center_w - self.jj.get_width() / 2, 480)
+            self.jan, (self.center_w - self.jan.get_width() / 2, 480)
         )
         self.label_surface.blit(
-            self.pouneh, (self.center_w - self.pouneh.get_width() / 2, 560)
+            self.stefano, (self.center_w - self.stefano.get_width() / 2, 560)
         )
         self.label_surface.blit(
-            self.mona, (self.center_w - self.mona.get_width() / 2, 640)
+            self.pouneh, (self.center_w - self.pouneh.get_width() / 2, 640)
         )
         self.label_surface.blit(
             self.nadine, (self.center_w - self.nadine.get_width() / 2, 720)
+        )
+        self.label_surface.blit(
+            self.jj, (self.center_w - self.jj.get_width() / 2, 800)
         )
 
     def update(self, dt):

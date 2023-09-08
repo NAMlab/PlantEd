@@ -76,16 +76,16 @@ class Tree:
         opacity = 0
 
         # 0 - 8 spring
-        if time < 9 * day:
+        if time < 15 * day:
             base_image_index = 0
             opacity = time / (8 * day)
         # 9 - 18 summer
-        elif time < 18 * day:
+        elif time < 30 * day:
             fadeout = True
             base_image_index = 1
             opacity = (time - 9 * day) / (8 * day)
         # 19 - 27 autum
-        elif time < 27 * day:
+        elif time < 45 * day:
             fadeout = True
             base_image_index = 2
             opacity = (time - 18 * day) / (8 * day)

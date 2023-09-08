@@ -83,16 +83,12 @@ class Hive:
                     3
                 ].get_random_flower_pos()
                 if flower_pos:
-                    """flower_pos = (self.plant.organs[3].flowers[0]["x"] + self.plant.organs[3].flowers[0]["offset_x"] / 2,
-                    self.plant.organs[3].flowers[0]["y"] + self.plant.organs[3].flowers[0]["offset_y"] / 2 - 20)
-                    """
                     self.start_pollination(
                         flower_pos, target_flower_id, free_bees[i]
                     )
         for i in range(len(self.bees)):
             if self.get_rect().collidepoint(self.bees[i].pos):
                 if self.bees[i].lifetime <= 0:
-                    # if abs((self.bees[i].pos[0] - (self.pos[0]+self.image.get_width()/2)) + (self.bees[i].pos[0] - (self.pos[1]+self.image.get_height()/2))) < 25:
                     self.bees.pop(i)
                     break
 

@@ -145,7 +145,7 @@ class Plant:
     @classmethod
     def from_dict(cls, dic:dict) -> Plant:
         # Todo dirty hardcoded change
-        plant = Plant((20,6))
+        plant = Plant((20, 6))
         plant.leafs_biomass = dic["leafs_biomass"]
         plant.stem_biomass = dic["stem_biomass"]
         plant.root_biomass = dic["root_biomass"]
@@ -162,7 +162,7 @@ class Plant:
         plant.starch_pool = Starch.from_dict(dic["starch"])
 
         plant.root = DictToRoot.load_root_system(dic["root"])
-        plant.root.root_grid = plant.root.root_grid.transpose()
+        plant.root.root_grid = plant.root.root_grid
         return plant
 
     @classmethod

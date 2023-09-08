@@ -200,7 +200,7 @@ class Starch:
                 f"gram cannot be calculated."
             ) from e
 
-        value = value * self.allowed_starch_pool_consumption
+        value = value * (self.allowed_starch_pool_consumption/100)
 
         logging.debug(
             f"Within a time of {time_in_seconds} seconds, an organ "

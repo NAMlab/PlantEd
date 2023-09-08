@@ -6,21 +6,21 @@ import numpy as np
 
 
 short_root = [
-    {"max_length": 150, "duration": 4, "tries": 5, "max_branches": 5},
-    {"max_length": 100, "duration": 2, "tries": 4, "max_branches": 5},
-    {"max_length": 30, "duration": 1, "tries": 1, "max_branches": 0},
+    {"max_length": 150, "duration": 1, "tries": 5, "max_branches": 5},
+    {"max_length": 100, "duration": 0.5, "tries": 4, "max_branches": 5},
+    {"max_length": 30, "duration": 0.5, "tries": 1, "max_branches": 0},
 ]
 
 medium_root = [
-    {"max_length": 600, "duration": 5, "tries": 5, "max_branches": 5},
-    {"max_length": 250, "duration": 3, "tries": 4, "max_branches": 3},
-    {"max_length": 50, "duration": 2, "tries": 1, "max_branches": 0},
+    {"max_length": 600, "duration": 2, "tries": 5, "max_branches": 5},
+    {"max_length": 250, "duration": 1, "tries": 4, "max_branches": 3},
+    {"max_length": 50, "duration": 1, "tries": 1, "max_branches": 0},
 ]
 
 long_root = [
-    {"max_length": 800, "duration": 6, "tries": 6, "max_branches": 3},
-    {"max_length": 450, "duration": 4, "tries": 5, "max_branches": 2},
-    {"max_length": 90, "duration": 2, "tries": 1, "max_branches": 0},
+    {"max_length": 800, "duration": 3, "tries": 6, "max_branches": 3},
+    {"max_length": 450, "duration": 2, "tries": 5, "max_branches": 2},
+    {"max_length": 90, "duration": 1, "tries": 1, "max_branches": 0},
 ]
 
 root_classes = [short_root, medium_root, long_root]
@@ -444,7 +444,8 @@ class DictToRoot:
         data = list(result)
         npa = np.array(data, dtype= float)
         dela = np.delete(npa, 0, 1)
-        root_grid: np.ndarray = np.reshape(dela, (-1, 20))
+        root_grid: np.ndarray = np.reshape(dela, (20, 6))
+        print(root_grid)
 
         water_grid_pos: tuple[float, float] = tuple(dic["water_grid_pos"])
         directions = []

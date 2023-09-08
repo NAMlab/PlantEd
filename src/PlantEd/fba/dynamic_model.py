@@ -12,6 +12,7 @@ from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
 
 from PlantEd.client.update import UpdateInfo
+from PlantEd.constants import PEAK_PHOTON, MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
 from PlantEd.fba.helpers import (
     normalize,
 )
@@ -36,16 +37,15 @@ PHOTON = "Photon_tx_leaf"
 CO2 = "CO2_tx_leaf"
 
 # mol
-Vmax = 3360 / 3600  # mikroMol/gDW/s
-Vmax = 0.038 # mikroMol/gDW / s
+#Vmax = 3360 / 3600  # mikroMol/gDW/s
+#Vmax = 0.038 # mikroMol/gDW / s
+# Todo check with paper
+Vmax = MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
 
 Km = 4000  # mikromol
 
 # Todo change to 0.1 maybe
 MAX_STARCH_INTAKE = 0.9
-
-# gram to mikromol
-MAX_WATER_POOL_GRAMM = 0.05550843506179199 * 1000000
 
 summer = {"Min_T": 15, "Max_T": 30, "shift": 10, "skew": 3.2}
 
@@ -143,11 +143,10 @@ class DynamicModel:
 
     @property
     def micromol_photon_per_square_meter(self):
-        # ToDo better scaling over day (no light at 'night')
 
         # ↓ 150 according to https://doi.org/10.3389/fpls.2017.00681
-        # up to 1230 mikromol/s/m² max -> sine function to simulate?
-        return 1200 * self.get_sun_intensity_for_duration(
+        # up to 2000 mikromol/s/m² max
+        return PEAK_PHOTON * self.get_sun_intensity_for_duration(
             self.seconds_passed - self.percentages.time_frame, self.seconds_passed
         )  # * self.percentages.time_frame
 
@@ -165,13 +164,17 @@ class DynamicModel:
     def calc_growth_rate(
             self, new_growth_percentages: GrowthPercent, environment: Environment
     ):
+        # Todo fix this hack wacky, percentage can't be negative due to connection -> after we can work
+        if self.plant.starch_pool.allowed_starch_pool_consumption > 0:
+            self.plant.starch_pool.allowed_starch_pool_consumption = new_growth_percentages.starch/100
+            new_growth_percentages.starch = 0
         time_frame = new_growth_percentages.time_frame
         weather_state = environment.weather.get_latest_weather_state()
-
         self.seconds_passed += time_frame
 
         logger.debug(f"Simulating the growth of the plant for {time_frame} seconds.")
 
+        # Todo legacy, remoce if possible
         self.plant.update_nitrate_pool_intake(
             seconds=time_frame,
         )
@@ -198,16 +201,18 @@ class DynamicModel:
 
         # set limits from pools
         # ToDo move in own function
+
         starch_upper_bound = (
             self.plant.starch_pool.calc_available_starch_in_mol_per_gram_and_time(
                 gram_of_organ=self.plant.stem_biomass_gram,
                 time_in_seconds=time_frame,
             )
         )
+
         logger.debug(f"Upper Bound for starch is {starch_upper_bound}")
 
         starch_bounds = (0, starch_upper_bound)
-        logger.debug(f"Bounds for starch are {starch_bounds}")
+        logger.debug(f"Bounds for starch are {starch_bounds} and percentage is {self.plant.starch_pool.allowed_starch_pool_consumption}")
         self.set_bounds(STARCH_IN, starch_bounds)
 
         water_upper_bound_plant_pool = (
@@ -318,16 +323,17 @@ class DynamicModel:
         seed = seed * seed_biomass * time_frame
 
         logger.debug(
-            f"Leaf biomass is {leaf} micromol, "
-            f"stem biomass is {stem} micromol, "
-            f"root biomass is {root} micromol, "
-            f"seed biomass is {seed} micromol."
+            f"Leaf growth is {leaf} gram,"
+            f"stem growth is {stem} gram,"
+            f"root growth is {root} gram,"
+            f"seed growth is {seed} gram."
         )
 
         # Uptake and release
         # via leaf
         co2_uptake_in_micromol_per_second_and_gram = co2
         co2 = co2 * leaf_biomass * time_frame
+        # Todo check with jan, photon/gramm?
         photon = photon * leaf_biomass * time_frame
         logger.debug(f"CO2 uptake is {co2}, photon uptake is {photon}")
 
@@ -368,6 +374,7 @@ class DynamicModel:
         environment.water_grid.drain(amount=used_water, roots=self.plant.root)
 
         self.plant.update_max_water_pool()
+        # Todo check with jan if necessary -> transpiration calc
         self.plant.water.update_transpiration_factor(weather_state=weather_state)
         self.plant.update_transpiration()
 
@@ -381,7 +388,11 @@ class DynamicModel:
         # update nitrate
         used_nitrate = nitrate
 
-        # Todo nitrate pool goes below 0
+        # env: 0, pool: 10, used: 5 -> taken_internal: 5, -> reduce pool: 5, used: 0
+        # env: 5, pool: 2, used = 10 -> taken_internal: 5, -> env: 0, pool: 0, taken internal: 3 -> used: 7
+        # if pool does not have enough and env is empty, one step will miss some Nitrate taken -> but next step should be 0
+
+        # used nitrate larger than env -> take from pool
         if used_nitrate > nitrate_upper_bound_env_pool:
             taken_from_internal_pool = used_nitrate - nitrate_upper_bound_env_pool
 
@@ -393,9 +404,10 @@ class DynamicModel:
         self.plant.update_max_nitrate_pool()
         self.plant.nitrate.nitrate_intake = nitrate
         amount = self.plant.nitrate.missing_amount
-        logger.debug(
-            f"FIND ME NITRATE:  , {amount}, nitrate_pool: {self.plant.nitrate.nitrate_pool},  MAX nitrate_pool: {self.plant.nitrate.max_nitrate_pool}")
+
         available = environment.nitrate_grid.available_absolute(roots=self.plant.root)
+        logger.debug(
+            f"FIND ME NITRATE MISSING:  , {amount}, AVAILABLE: {available}, nitrate_pool: {self.plant.nitrate.nitrate_pool},  MAX nitrate_pool: {self.plant.nitrate.max_nitrate_pool}")
         diff = min(amount, available)
         environment.nitrate_grid.drain(amount=diff, roots=self.plant.root)
         self.plant.nitrate.nitrate_pool += diff
@@ -479,8 +491,7 @@ class DynamicModel:
         self.plant.nitrate.nitrate_pool += amount
 
     def activate_starch_resource(self, percentage: float = 1):
-        logger.info("Activating starch resource")
-
+        logger.info(f"Activating starch resource")
         self.plant.starch_pool.allowed_starch_pool_consumption = percentage
 
     def deactivate_starch_resource(self):

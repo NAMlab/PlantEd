@@ -44,9 +44,10 @@ class MetaboliteGrid:
             self,
             grid_size: tuple[int, int] = (20, 6),
             max_metabolite_cell: int = 1000000,
+            preset_fill_amount: int = 0,
     ):
         self.grid_size: tuple[int, int] = grid_size
-        self.grid: np.ndarray = np.zeros(grid_size)
+        self.grid: np.ndarray = np.full(grid_size, fill_value=preset_fill_amount)
 
         self.max_metabolite_cell = max_metabolite_cell
 

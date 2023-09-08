@@ -10,11 +10,14 @@ from PlantEd.client.SimWeatherSmall import WeatherSimulatorMinimal
 from PlantEd.server.environment.grid import MetaboliteGrid
 from PlantEd.server.environment.weather import WeatherSimulator, WeatherState
 
+from PlantEd.constants import MAX_WATER_PER_CELL
+from PlantEd.constants import MAX_NITRATE_PER_CELL
+
 
 
 class Environment:
-    water_grid: MetaboliteGrid = MetaboliteGrid()
-    nitrate_grid: MetaboliteGrid = MetaboliteGrid()
+    water_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_WATER_PER_CELL, preset_fill_amount=MAX_WATER_PER_CELL/20)
+    nitrate_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_NITRATE_PER_CELL, preset_fill_amount=MAX_NITRATE_PER_CELL/20)
 
     weather_data = importlib.resources.files(data) / "weather"
     df_weather_spring: pd.DataFrame = pd.read_csv(

@@ -594,126 +594,11 @@ class UI:
                     ),
                 )
 
-        """
-        pygame.draw.rect(
-            screen,
-            config.WHITE,
-            (700, 100, rates[0] / sum_rates * width, 50),
-            border_radius=3,
-        )
-        pygame.draw.rect(
-            screen,
-            config.WHITE_TRANSPARENT,
-            (700, 100, width, 50),
-            3,
-            border_radius=3,
-        )
-        leaf_rate_label = config.BIG_FONT.render(
-            "LEAF {}".format(rates[0]), True, config.BLACK
-        )
-        screen.blit(leaf_rate_label, (750, 110))
-
-        pygame.draw.rect(
-            screen,
-            config.WHITE,
-            (700, 150, rates[1] / sum_rates * width, 50),
-            border_radius=3,
-        )
-        pygame.draw.rect(
-            screen,
-            config.WHITE_TRANSPARENT,
-            (700, 150, width, 50),
-            3,
-            border_radius=3,
-        )
-        stem_rate_label = config.BIG_FONT.render(
-            "STEM {}".format(rates[1]), True, config.BLACK
-        )
-        screen.blit(stem_rate_label, (750, 160))
-
-        pygame.draw.rect(
-            screen,
-            config.WHITE,
-            (700, 200, rates[2] / sum_rates * width, 50),
-            border_radius=3,
-        )
-        pygame.draw.rect(
-            screen,
-            config.WHITE_TRANSPARENT,
-            (700, 200, width, 50),
-            3,
-            border_radius=3,
-        )
-        root_rate_label = config.BIG_FONT.render(
-            "ROOT {}".format(rates[2]), True, config.BLACK
-        )
-        screen.blit(root_rate_label, (750, 210))
-
-        pygame.draw.rect(
-            screen,
-            config.WHITE,
-            (700, 250, rates[5] / sum_rates * width, 50),
-            border_radius=3,
-        )
-        pygame.draw.rect(
-            screen,
-            config.WHITE_TRANSPARENT,
-            (700, 250, width, 50),
-            3,
-            border_radius=3,
-        )
-        seed_rate_label = config.BIG_FONT.render(
-            "SEED{}".format(rates[5]), True, config.BLACK
-        )
-        screen.blit(seed_rate_label, (750, 260))
-
-        pygame.draw.rect(
-            screen, config.WHITE, (700, 350, width, 50), border_radius=3
-        )
-        pygame.draw.rect(
-            screen,
-            config.WHITE_TRANSPARENT,
-            (700, 350, width, 50),
-            3,
-            border_radius=3,
-        )
-        starch_rate_label = config.BIG_FONT.render(
-            "STARCH PRODUCTION {}".format(rates[3]), True, config.BLACK
-        )
-        screen.blit(starch_rate_label, (750, 360))
-
-        pygame.draw.rect(
-            screen, config.WHITE, (700, 400, width, 50), border_radius=3
-        )
-        pygame.draw.rect(
-            screen,
-            config.WHITE_TRANSPARENT,
-            (700, 400, width, 50),
-            3,
-            border_radius=3,
-        )
-        starch_intake_rate_label = config.BIG_FONT.render(
-            "STARCH CONSUMPTION {}".format(rates[4]), True, config.BLACK
-        )
-        screen.blit(starch_intake_rate_label, (750, 410))
-        """
-
     def draw_plant_details(self, s):
         # details
         topleft = self.plant_details_topleft
         pygame.draw.rect(
             s, config.WHITE, (topleft[0], topleft[1], 470, 40), border_radius=3
-        )
-
-        # plant lvl
-        lvl_text = config.FONT.render("LvL:", True, (0, 0, 0))
-        s.blit(lvl_text, dest=(topleft[0] + 10, topleft[1] + 6))
-        level = config.FONT.render(
-            "{:.0f}".format(self.plant.get_level()), True, (0, 0, 0)
-        )  # title
-        s.blit(
-            level,
-            dest=(topleft[0] + lvl_text.get_width() + 30, topleft[1] + 6),
         )
 
         # biomass
@@ -776,33 +661,6 @@ class UI:
             ((config.SCREEN_WIDTH / 2 + 110) - temperature_label.get_width() / 2, 16),
         )
 
-    def init_gradient(self):
-        width = 30
-        colors = [
-            (238, 250, 110),
-            (241, 232, 83),
-            (245, 214, 57),
-            (248, 194, 28),
-            (251, 174, 0),
-            (254, 153, 0),
-            (255, 129, 0),
-            (255, 103, 0),
-            (255, 72, 0),
-            (255, 12, 12),
-        ]
-        gradient = pygame.Surface(
-            (width, config.SCREEN_HEIGHT), pygame.SRCALPHA
-        )
-        height = config.SCREEN_HEIGHT / 10
-        for i in range(len(colors)):
-            pygame.draw.rect(
-                gradient,
-                colors[i],
-                (0, config.SCREEN_HEIGHT - ((i + 1) * height), width, height),
-            )
-
-        return gradient
-
     def init_danger_box(self):
         danger_label_0 = config.BIGGER_FONT.render(
             "ENERGY WARNING", True, config.BLACK
@@ -857,19 +715,6 @@ class UI:
         )
 
         return danger_box
-
-    def init_flowering_ui(self):
-        topleft = self.production_topleft
-        self.flower_slider = Slider(
-            (topleft[0] + 25, topleft[1] + 300, 15, 200),
-            config.FONT,
-            (50, 20),
-            organ=self.plant.organs[3],
-            plant=self.plant,
-            percent=0,
-            active=True,
-        )
-        self.sliders.append(self.flower_slider)
 
     def init_pause_ui(self):
         self.options = config.load_options()
@@ -1052,7 +897,7 @@ class UI:
             organ=self.plant.organ_starch,
             plant=self.plant,
             callback=self.plant.organs[2].set_percentage,
-            percent=0,
+            percent=45,
             active=False,
         )
 
@@ -1062,53 +907,6 @@ class UI:
         self.sliders.append(self.starch_slider)
         SliderGroup([slider for slider in self.sliders], 100)
 
-
-
-        # test_slider = NegativeSlider((topleft[0] + 25 + 330, topleft[1] + 150, 15, 200), config.FONT, (50, 20),
-        #                             organ=self.plant.organ_starch,
-        #                             plant=self.plant, active=True)
-        # self.sliders.append(test_slider)
-
-        #preset = self.generate_preset()
-        '''
-        radioButtons = [
-            DoubleRadioButton(
-                topleft[0] + 500,
-                topleft[1] + 170,
-                45,
-                45,
-                [self.apply_preset, self.generate_preset],
-                preset=preset,
-                callback_var=0,
-                border_radius=1,
-            ),
-            DoubleRadioButton(
-                topleft[0] + 500,
-                topleft[1] + 240,
-                45,
-                45,
-                [self.apply_preset, self.generate_preset],
-                preset=preset,
-                callback_var=1,
-                border_radius=1,
-            ),
-            DoubleRadioButton(
-                topleft[0] + 500,
-                topleft[1] + 310,
-                45,
-                45,
-                [self.apply_preset, self.generate_preset],
-                preset=preset,
-                callback_var=2,
-                border_radius=1,
-            ),
-        ]
-        for rb in radioButtons:
-            rb.setRadioButtons(radioButtons)
-            self.button_sprites.add(rb)
-        radioButtons[2].button_down = True
-        # weird to have extra method for one element
-        '''
     def draw_pause_menu(self, s):
         pygame.draw.rect(s, config.WHITE, (config.SCREEN_WIDTH/2-400,220,800,430), border_radius=3, width=1)
         s.blit(self.music_label, (config.SCREEN_WIDTH/2-self.music_label.get_width()/2-300,300))
@@ -1125,9 +923,8 @@ class UI:
         self.apply_button.draw(s)
 
     def draw_organ_detail_temp(
-        self, s, organ, pos, label, show_level=True, factor=1
+        self, s, organ, pos, label, show_amount=True, factor=1
     ):
-        skills = organ.skills
         topleft = pos
         pygame.draw.rect(
             s, config.WHITE, (topleft[0], topleft[1], 100, 30), border_radius=3
@@ -1136,7 +933,7 @@ class UI:
             label, dest=(topleft[0] + 50 - label.get_width() / 2, topleft[1])
         )
 
-        if show_level:
+        if show_amount:
             pygame.draw.circle(
                 s,
                 config.WHITE_TRANSPARENT,
@@ -1150,15 +947,15 @@ class UI:
                 20,
                 width=3,
             )
-            level = organ.level
-            level_label = config.FONT.render(
-                "{:.0f}".format(level), True, (0, 0, 0)
+            amount = organ.get_organ_amount()
+            amount_label = config.FONT.render(
+                "{:.0f}".format(amount), True, (0, 0, 0)
             )
             s.blit(
-                level_label,
+                amount_label,
                 (
-                    topleft[0] + 20 - level_label.get_width() / 2,
-                    topleft[1] + 60 - level_label.get_height() / 2,
+                    topleft[0] + 20 - amount_label.get_width() / 2,
+                    topleft[1] + 60 - amount_label.get_height() / 2,
                 ),
             )
 
@@ -1169,9 +966,9 @@ class UI:
             (topleft[0], topleft[1] + 120, exp_width, 16),
             border_radius=3,
         )
-        needed_exp = organ.get_threshold()
-        exp = organ.mass / needed_exp
-        width = min(int(exp_width / 1 * exp), exp_width)
+        maximum_growable_mass = organ.get_maximum_growable_mass()
+        relative_mass = organ.get_mass() / maximum_growable_mass
+        width = min(int(exp_width / 1 * relative_mass), exp_width)
         pygame.draw.rect(
             s,
             (255, 255, 255),
@@ -1180,28 +977,11 @@ class UI:
         )  # exp
         text_organ_mass = config.SMALL_FONT.render(
             "{:.2f} / {:.2f}".format(
-                organ.mass / factor, organ.get_threshold() / factor
+                organ.mass / factor, organ.get_maximum_growable_mass() / factor
             ),
             True,
             (0, 0, 0),
         )
-
-        j = 0
-        for i in range(0, len(skills)):
-            if skills[i].active == True:
-                # pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0]+15,topleft[1]+360+i*75,70,70),border_radius=3)
-                pygame.draw.rect(
-                    s,
-                    config.WHITE,
-                    (topleft[0] + 15, topleft[1] + 410 + j * 75, 70, 70),
-                    3,
-                    border_radius=3,
-                )
-                s.blit(
-                    skills[i].image_skilled,
-                    (topleft[0] + 17, topleft[1] + 413 + j * 75),
-                )
-                j += 1
 
         s.blit(
             text_organ_mass,
@@ -1271,7 +1051,6 @@ class UI:
             ),
         )  # Todo change x, y
 
-        # self.draw_organ_detail_temp(s,self.plant.organ_starch,(topleft[0]+330,topleft[1]),self.label_starch, False, factor=1000)
         organ = self.plant.organ_starch
         pygame.draw.rect(
             s,
@@ -1294,8 +1073,7 @@ class UI:
             (topleft[0] + 100, topleft[1] + 150, 30, exp_height),
             border_radius=3,
         )
-        needed_exp = organ.get_threshold()
-        exp = organ.mass / needed_exp
+        exp = organ.mass / organ.max_pool
         # factor = 10000
         height = min(int(exp_height / 1 * exp), exp_height)
         pygame.draw.rect(
@@ -1334,14 +1112,3 @@ class UI:
                     - self.label_consuming.get_height() / 2,
                 ),
             )
-
-    """def draw_starch_details(self, s):
-        topleft = self.organ_details_topleft
-        # draw starch details
-        #lvl_pos = (topleft[0] + 128, topleft[1], 64, 64)
-        num_arrows = int((self.plant.organ_starch.percentage) / 100 * 3)
-        for i in range(0, num_arrows + 1):
-            pygame.draw.line(s, (255, 0, 0), (topleft[0] + 545, topleft[1] + 280 + i * 10),
-                             (topleft[0] + 560, topleft[1] + 300 + i * 10), width=4)
-            pygame.draw.line(s, (255, 0, 0), (topleft[0] + 575, topleft[1] + 280 + i * 10),
-                             (topleft[0] + 560, topleft[1] + 300 + i * 10), width=4)"""

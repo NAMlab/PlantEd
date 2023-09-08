@@ -1,0 +1,12 @@
+2023-09-03 13:21:05,084 PlantEd.server.server INFO:Starting the server.
+2023-09-03 13:21:05,091 PlantEd.server.server INFO:Waiting for the server to be fully started.
+2023-09-03 13:21:05,509 PlantEd.server.plant.nitrate DEBUG:Setting max_nitrate_pool to 3.1607900000000004 µmol. Based on a biomass of 0.4001 grams.
+2023-09-03 13:21:05,548 PlantEd.server.environment.grid DEBUG:The passed root has access to 0.0 mMol of metabolites.
+2023-09-03 13:21:05,549 PlantEd.server.plant.nitrate DEBUG:Within a time of 1 seconds, an organ with 0.2 grams of biomass has a maximum of 0.31607900000000005 µomol/(second * gram) of nitrate available_absolute.
+2023-09-03 13:21:05,549 PlantEd.server.environment.grid DEBUG:The passed root has access to 0.0 mMol of metabolites.
+2023-09-03 13:21:05,549 PlantEd.server.environment.grid INFO:Calculated max uptake based on the soil as 0.0 and based on the Michaelis-Menten equation is 0.0 
+2023-09-03 13:21:06,162 PlantEd.server.environment.grid DEBUG:The passed root has access to 0.0 mMol of metabolites.
+2023-09-03 13:21:06,162 PlantEd.server.plant.nitrate DEBUG:Setting max_nitrate_pool to 3.1607900000000004 µmol. Based on a biomass of 0.4001 grams.
+2023-09-03 13:21:06,162 PlantEd.server.environment.grid DEBUG:The passed root has access to 0.0 mMol of metabolites.
+2023-09-03 13:21:06,164 PlantEd.server.server INFO:Server is ready
+2023-09-03 13:21:08,278 PlantEd.server.server DEBUG:Process closed

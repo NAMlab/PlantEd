@@ -28,7 +28,7 @@ BRANCH_SPOT = 30
 ROOT_SPOT = 40
 FLOWER_SPOT = 50
 
-MAX_DAYS = 27
+MAX_DAYS = 45
 
 ###############################################################################
 # PATHS
@@ -243,7 +243,10 @@ def apply_volume(options):
 # DYNAMIC MODEL
 
 # NITRATE RATE
-NITRATE_FILL_CELL = 10000
+NITRATE_FILL_CELL = 2000    # mikromol
+
+# WATERING CAN AMOUNT
+WATERING_CAN_AMOUNT = 3000000   # mikromol
 
 
 # this file should hold states of objects necessary for savegames

@@ -320,7 +320,7 @@ class Client:
 
     def create_leaf(self, leaf: Leaf):
         future = asyncio.run_coroutine_threadsafe(
-            self.self.__create_leaf(leaf=leaf), self.loop
+            self.__create_leaf(leaf=leaf), self.loop
         )
         result = future.result()
         return result

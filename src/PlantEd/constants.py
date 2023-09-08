@@ -23,10 +23,14 @@ MICROMOL_STARCH_PER_GRAM_STARCH: Final[float] = (
 ###############################################################################
 # ToDo source
 # ↓ according to ?
-MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000 * 0.8
+# 18 gram/mol -> mol = 1/18 -> 0.05550843506179199 mol/gramm -> 0.05550843506179199 * 1000000 mikromol/gram, 80% water in plant
+MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000 * 0.8
+
+# 1.5 Tons of soil in one m³ -> PlantEd has exactly one -> 30% water, 500Kg -> 500 Litre -> 500000 Gram /18 -> 8333.333 Mol -> 8333.333/(20*6) = 70 Mol -> 70000000 Mikromol
+MAX_WATER_PER_CELL = 1000000
 
 ###############################################################################
-# Water
+# Nitrate
 ###############################################################################
 
 # ↓ value according to https://doi.org/10.1104/pp.105.074385
@@ -37,7 +41,10 @@ MICROMOL_NITRATE_PER_GRAMM_FRESH_WEIGHT = 7.9
 # ↓ value according to https://doi.org/10.3389/fpls.2018.00884
 # ↓ Arabidopsis thaliana
 MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY = 0.00336
-MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY / 1000000 * 24 * 60 *60
+MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY / 1000000 * 24 * 60 *60
+
+# guiding paper has 50 millimol for a complete growth -> 5 per cell maybe? -> 5000 mikromol
+MAX_NITRATE_PER_CELL = 5000
 
 ###############################################################################
 # Photon
@@ -50,6 +57,10 @@ LMA_IN_GRAM_PER_SQUARE_METER: Final[float] = 40
 # ↓ Specific leaf Area (SLA)
 SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1/LMA_IN_GRAM_PER_SQUARE_METER
 
+
+# photon availability according to https://doi.org/10.1146/annurev-arplant-070221-024745
+PEAK_PHOTON = 2000
+
 ###############################################################################
 # Plant initialization values
 ###############################################################################
@@ -58,6 +69,13 @@ START_LEAF_BIOMASS_GRAM = 0.1
 START_STEM_BIOMASS_GRAM = 0.1
 START_ROOT_BIOMASS_GRAM = 0.2
 START_SEED_BIOMASS_GRAM = 0.0001
+
+
+MAXIMUM_LEAF_BIOMASS_GRAM = 1
+MAXIMUM_STEM_BIOMASS_GRAM = 1
+MAXIMUM_ROOT_BIOMASS_GRAM = 1
+MAXIMUM_SEED_BIOMASS_GRAM = 1
+
 
 # ↓ if negative set to multiple of max_{molecule}_pool
 # ↓ => for starch : -2 = 2 * max_starch_pool
@@ -82,4 +100,4 @@ PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP = 1
 # ↓ simulation step. This scales based on the maximum of the pool therefore
 # ↓ a value of 0.05 limits the uptake of the plant per step to 5%
 # ↓ of the max pool.
-PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.02
+PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.05
