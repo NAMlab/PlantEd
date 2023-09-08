@@ -713,6 +713,9 @@ class Root(Organ):
             max(1, constants.MAXIMUM_ROOT_BIOMASS_GRAM * self.get_organ_amount())
         )
 
+    def get_mass(self):
+        return self.mass
+
     def update_mass(self, mass):
         self.mass = mass
 
@@ -1103,7 +1106,6 @@ class Flower(Organ):
 
             else:
                 flower["mass"] += delta_each_flower
-        print("6")
         # update image according to mass
         for flower in self.flowers:
             id = min(

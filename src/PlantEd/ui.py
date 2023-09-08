@@ -566,13 +566,13 @@ class UI:
 
         # biomass
         biomass_text = config.FONT.render("Mass:", True, (0, 0, 0))
-        s.blit(biomass_text, dest=(topleft[0] + 110, topleft[1] + 6))
+        s.blit(biomass_text, dest=(topleft[0] + 10, topleft[1] + 6))
         biomass = config.FONT.render(
             "{:.2f} g".format(self.plant.get_biomass()), True, (0, 0, 0)
         )  # title
         s.blit(
             biomass,
-            dest=(topleft[0] + biomass_text.get_width() + 130, topleft[1] + 6),
+            dest=(topleft[0] + biomass_text.get_width() + 30, topleft[1] + 6),
         )
 
         # name
@@ -590,8 +590,8 @@ class UI:
 
     def draw_clock(self, s):
         days, hours, minutes = self.get_day_time()
-        output_string = "Day {0}/30 {1:02}:{2:02}".format(
-            days, int(hours), int(minutes)
+        output_string = "Day {0}/55 {1:02}:{2:02}".format(
+            days+10, int(hours), int(minutes)
         )
         clock_text = config.FONT.render(output_string, True, config.BLACK)
         pygame.draw.rect(
@@ -956,10 +956,14 @@ class UI:
         # Todo indicate blocked organ
         if organ.blocked_growth:
             if organ.type == Plant.LEAF:
-                pygame.draw.rect(s, config.WHITE_TRANSPARENT, (1100, 400, 300, 50), border_radius=3)
-                pygame.draw.rect(s, config.WHITE, (1100, 400, 300, 50), border_radius=3, width=3)
-                label = config.TITLE_FONT.render("Buy new leaves to grow", True, config.BLACK)
-                s.blit(label, (1110, 410))
+                pygame.draw.rect(s, config.RED, (topleft[0], topleft[1], 100, 370), border_radius=3, width=3)
+
+                label = config.TITLE_FONT.render("LEAF GROWTH BLOCKED: Buy new leaves to grow", True, config.BLACK)
+                width = label.get_width() + 10
+                height = label.get_height() + 10
+                pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1]+380, width, height), border_radius=3)
+                #pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1]+380, width, height), border_radius=3, width=3)
+                s.blit(label, (topleft[0]+5, topleft[1]+385))
 
     def draw_production(self, s):
         topleft = self.production_topleft

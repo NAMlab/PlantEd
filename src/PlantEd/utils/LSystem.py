@@ -12,9 +12,9 @@ short_root = [
 ]
 
 medium_root = [
-    {"max_length": 600, "duration": 2, "tries": 5, "max_branches": 5},
-    {"max_length": 250, "duration": 1, "tries": 4, "max_branches": 3},
-    {"max_length": 50, "duration": 1, "tries": 1, "max_branches": 0},
+    {"max_length": 600, "duration": 0.5, "tries": 5, "max_branches": 5},
+    {"max_length": 250, "duration": 0.3, "tries": 4, "max_branches": 3},
+    {"max_length": 50, "duration": 0.2, "tries": 1, "max_branches": 0},
 ]
 
 long_root = [
@@ -355,13 +355,14 @@ class LSystem:
 
     def create_new_first_letter(self, dir, pos, mass, dist=None):
         root_class = 0
+        # todo maybe make better classes
         if dist:
             if dist < 300:
-                root_class = 0
+                root_class = 1
             elif dist < 600:
                 root_class = 1
             else:
-                root_class = 2
+                root_class = 1
         self.positions.append(pos)
         self.first_letters.append(
             self.create_root(dir, mass, root_class=root_class)
