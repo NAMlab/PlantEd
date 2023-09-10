@@ -10,7 +10,7 @@ import scipy.integrate as integrate
 
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.constants import MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND, PEAK_PHOTON
+from PlantEd.constants import MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND, PEAK_PHOTON, Vmax, Km
 
 from PlantEd.server.fba.helpers import (
     normalize,
@@ -34,10 +34,6 @@ WATER = "H2O_tx_root"
 PHOTON = "Photon_tx_leaf"
 CO2 = "CO2_tx_leaf"
 
-# mol
-Vmax = MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
-
-Km = 4000  # mikromol
 
 # Todo change to 0.1 maybe
 MAX_STARCH_INTAKE = 0.9
@@ -245,7 +241,7 @@ class DynamicModel:
         photon_upper_bound = (
                 self.plant.leafs.specific_leaf_area_in_square_meter # m^2
                 * self.micromol_photon_per_square_meter # mikromol / (s * m^2)
-        ) / self.plant.leafs_biomass # g_organ
+        ) / self.plant.leafs_biomass # g_organ TOdo fix this
 
 
         photon_bounds = (0, photon_upper_bound)
@@ -270,7 +266,7 @@ class DynamicModel:
         )
 
         nitrate_upper_bounds = (
-                nitrate_upper_bound_env_pool + nitrate_upper_bound_plant_pool
+                nitrate_upper_bound_env_pool# + nitrate_upper_bound_plant_pool
         )
 
         nitrate_bounds = (-1000, nitrate_upper_bounds)
@@ -342,7 +338,7 @@ class DynamicModel:
         co2_uptake_in_micromol_per_second_and_gram = co2
         co2 = co2 * leaf_biomass * time_frame
         photon = photon * leaf_biomass * time_frame
-        logger.debug(f"CO2 uptake is {co2}, photon uptake is {photon}")
+        logger.debug(f"CO2 uptake is {co2}, photon uptake is {photon} in a timeframe of {time_frame} and a leave mass of {self.plant.leafs_biomass}")
 
         # via stem
         starch_out = starch_out * stem_biomass * time_frame
@@ -394,24 +390,25 @@ class DynamicModel:
         # update nitrate
         used_nitrate = nitrate
 
-        # Todo nitrate pool goes below 0
+        '''# Todo nitrate pool goes below 0
         if used_nitrate > nitrate_upper_bound_env_pool:
             taken_from_internal_pool = used_nitrate - nitrate_upper_bound_env_pool
 
             self.plant.nitrate.nitrate_pool -= taken_from_internal_pool
             used_nitrate -= taken_from_internal_pool
-
+'''
         environment.nitrate_grid.drain(amount=used_nitrate, roots=self.plant.root)
 
-        self.plant.update_max_nitrate_pool()
+        #self.plant.update_max_nitrate_pool()
         self.plant.nitrate.nitrate_intake = nitrate
+        '''
         amount = self.plant.nitrate.missing_amount
         logger.debug(
             f"FIND ME NITRATE:  , {amount}, nitrate_pool: {self.plant.nitrate.nitrate_pool},  MAX nitrate_pool: {self.plant.nitrate.max_nitrate_pool}")
         available = environment.nitrate_grid.available_absolute(roots=self.plant.root)
         diff = min(amount, available)
         environment.nitrate_grid.drain(amount=diff, roots=self.plant.root)
-        self.plant.nitrate.nitrate_pool += diff
+        self.plant.nitrate.nitrate_pool += diff'''
 
         # update starch pool
 

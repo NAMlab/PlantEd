@@ -163,7 +163,7 @@ class Client:
         await self.websocket.send(message)
 
     def close_stomata(self):
-        task = self.__open_stomata()
+        task = self.__close_stomata()
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __close_stomata(self):

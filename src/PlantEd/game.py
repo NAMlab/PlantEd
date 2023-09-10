@@ -16,7 +16,7 @@ from PlantEd.camera import Camera
 from PlantEd.client.client import Client
 from PlantEd.client.growth_percentage import GrowthPercent
 from PlantEd.client.growth_rates import GrowthRates
-from PlantEd.constants import MAX_NITRATE_PER_CELL, MAX_WATER_PER_CELL
+from PlantEd.constants import MAX_NITRATE_PER_CELL, MAX_WATER_PER_CELL, Vmax, Km
 from PlantEd.data import assets
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.bee import Hive
@@ -557,9 +557,10 @@ class DefaultGameScene(object):
 
                 self.log.append_model_row(
                     ticks=ticks,
+                    timeframe=delta_time_in_h*3600,
                     leaf_mass=self.plant.organs[0].get_mass(),
-                    stem_mass=self.plant.organs[1].mass,
-                    root_mass=self.plant.organs[2].mass,
+                    stem_mass=self.plant.organs[1].get_mass(),
+                    root_mass=self.plant.organs[2].get_mass(),
                     seed_mass=self.plant.organs[3].get_mass(),
                     leaf_percentage=growth_percent.leaf,
                     stem_percentage=growth_percent.stem,
@@ -572,14 +573,17 @@ class DefaultGameScene(object):
                     nitrate_intake=self.server_plant.nitrate.nitrate_intake,
                     nitrate_pool_plant=self.server_plant.nitrate.nitrate_pool,
                     nitrate_available_env_abs=self.server_environment.nitrate_grid.available_absolute(self.server_plant.root),
-                    nitrate_available_env_michalis_menten=0, #self.server_environment.nitrate_grid.available_relative_mm(self.server_plant.root),
+                    nitrate_available_env_michalis_menten=self.server_environment.nitrate_grid.available_relative_mm(time_seconds=delta_time_in_h * 3600,
+                                                                                                                     g_root=self.server_plant.root_biomass,
+                                                                                                                     v_max=Vmax,
+                                                                                                                     k_m=Km,
+                                                                                                                     roots=self.server_plant.root),
                     starch_intake=self.server_plant.starch_pool.starch_in,
                     starch_out=self.server_plant.starch_pool.starch_out,
                     starch_pool=self.server_plant.starch_pool.available_starch_pool,
 
                     photon_intake=self.server_plant.photon,
                     co2_intake=self.server_plant.co2,
-
 
                     temperature=self.server_environment.weather.get_latest_weather_state().temperature,
                     humidity=self.server_environment.weather.get_latest_weather_state().humidity,

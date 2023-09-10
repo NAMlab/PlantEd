@@ -8,6 +8,7 @@ class Log:
         self.model_writer.writerow(
             [
                 "ticks",
+                "timeframe",
                 "leaf_mass",
                 "stem_mass",
                 "root_mass",
@@ -38,6 +39,7 @@ class Log:
     def append_model_row(
         self,
             ticks,
+            timeframe,
             leaf_mass,
             stem_mass,
             root_mass,
@@ -66,6 +68,7 @@ class Log:
         self.model_writer.writerow(
             [
                 ticks,
+                timeframe,
                 leaf_mass,
                 stem_mass,
                 root_mass,

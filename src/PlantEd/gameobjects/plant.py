@@ -14,6 +14,7 @@ from PlantEd import config
 from PlantEd import constants
 from PlantEd.camera import Camera
 from PlantEd.client.client import Client
+from PlantEd.constants import START_SUM_BIOMASS_GRAM
 from PlantEd.data import assets
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.shop import FloatingShop
@@ -170,7 +171,7 @@ class Plant:
             camera=self.camera
         )
 
-        self.seedling = Seedling(self.x, self.y, beans, 0.2)
+        self.seedling = Seedling(self.x, self.y, beans, START_SUM_BIOMASS_GRAM)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_flower]
         # Fix env constraints
 

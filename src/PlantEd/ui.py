@@ -5,7 +5,7 @@ import pygame
 from PlantEd import config
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.server.plant.plant import Plant as serverPlant
-from PlantEd.client.client import Client
+from PlantEd.client.client import Client, logger
 from PlantEd.camera import Camera
 from PlantEd.gameobjects.plant import Plant, Organ
 from PlantEd.utils.gametime import GameTime
@@ -381,12 +381,14 @@ class UI:
             self.button_array.go_red()
 
     def open_stomata(self):
+        logger.debug("open stomata UI")
         self.client.open_stomata()
         self.plant.organs[0].stomata_open = True
         self.open_stomata_particle_in.activate()
         self.open_stomata_particle_out.activate()
 
     def close_stomata(self):
+        logger.debug("close stomata UI")
         self.client.close_stomata()
         self.plant.organs[0].stomata_open = False
         self.open_stomata_particle_in.deactivate()
@@ -1002,8 +1004,6 @@ class UI:
 
         width = 140
 
-        # Water is updated every second via Growth event.
-
         pygame.draw.rect(
             s,
             config.WHITE_TRANSPARENT,
@@ -1018,7 +1018,7 @@ class UI:
             border_radius=3,
         )  # exp
         text_water_pool = config.FONT.render(
-            "{:.0f} µMol".format(self.server_plant.water.water_pool), True, (0, 0, 0)
+            "{:.0f} MMol".format(self.server_plant.water.water_pool/1000), True, (0, 0, 0)
         )
         s.blit(
             text_water_pool,
