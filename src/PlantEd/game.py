@@ -672,6 +672,16 @@ class DefaultGameScene(object):
         hours = (ticks % day) / hour
         self.check_game_end(days)
         if 8 < hours < 20:
+            if self.ui.active_preset["type"] == "night":
+                preset = {
+                    "type": "night",
+                    "leaf_slider": self.plant.organs[0].percentage,
+                    "stem_slider": self.plant.organs[1].percentage,
+                    "root_slider": self.plant.organs[2].percentage,
+                    "starch_slider": self.plant.organ_starch.percentage,
+                }
+                self.ui.switch_preset(preset)
+
             (
                 shadow_map,
                 resolution,
@@ -684,6 +694,15 @@ class DefaultGameScene(object):
             self.plant.organs[0].shadow_resolution = resolution
             self.plant.organs[0].max_shadow = max_shadow
         else:
+            if self.ui.active_preset["type"] == "day":
+                preset = {
+                    "type": "day",
+                    "leaf_slider": self.plant.organs[0].percentage,
+                    "stem_slider": self.plant.organs[1].percentage,
+                    "root_slider": self.plant.organs[2].percentage,
+                    "starch_slider": self.plant.organ_starch.percentage,
+                }
+                self.ui.switch_preset(preset)
             self.environment.shadow_map = None
             self.plant.organs[0].shadow_map = None
         # get root grid, water grid
@@ -931,13 +950,13 @@ class EndScene(object):
         '''
 
         df = pandas.read_csv(path_to_logs + "/model_logs.csv")
-        self.image = plot.generate_png_from_vec([df.Leaf_mass, df.Stem_mass, df.Root_mass, df.Seed_mass],
+        self.image = plot.generate_png_from_vec([df.leaf_mass, df.stem_mass, df.root_mass, df.seed_mass],
                                                 name_list=["Leaf", "Stem", "Root", "Seed"],
                                                 colors=[config.hex_color_to_float(config.GREEN),
                                                         config.hex_color_to_float(config.WHITE),
                                                         config.hex_color_to_float(config.RED),
                                                         config.hex_color_to_float(config.YELLOW)],
-                                                ticks=df.Ticks,
+                                                ticks=df.ticks,
                                                 xlabel="Time",
                                                 ylabel="Organ Mass",
                                                 path_to_logs=path_to_logs,

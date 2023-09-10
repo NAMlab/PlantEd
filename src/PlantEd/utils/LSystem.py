@@ -6,15 +6,15 @@ import numpy as np
 
 
 short_root = [
-    {"max_length": 150, "duration": 1, "tries": 5, "max_branches": 5},
-    {"max_length": 100, "duration": 0.5, "tries": 4, "max_branches": 5},
-    {"max_length": 30, "duration": 0.5, "tries": 1, "max_branches": 0},
+    {"max_length": 150, "duration": 0.03, "tries": 5, "max_branches": 5},
+    {"max_length": 100, "duration": 0.04, "tries": 4, "max_branches": 5},
+    {"max_length": 30, "duration": 0.03, "tries": 1, "max_branches": 0},
 ]
 
 medium_root = [
-    {"max_length": 600, "duration": 0.5, "tries": 5, "max_branches": 5},
-    {"max_length": 250, "duration": 0.3, "tries": 4, "max_branches": 3},
-    {"max_length": 50, "duration": 0.2, "tries": 1, "max_branches": 0},
+    {"max_length": 600, "duration": 0.05, "tries": 5, "max_branches": 5},
+    {"max_length": 250, "duration": 0.03, "tries": 4, "max_branches": 3},
+    {"max_length": 50, "duration": 0.02, "tries": 1, "max_branches": 0},
 ]
 
 long_root = [
@@ -289,6 +289,9 @@ class LSystem:
         delta_mass = 0.02 -> 1
         """
         #delta_mass = mass_end - mass_start
+
+
+        #mass_per_letter = mass/max(0,len(self.first_letters))
 
         for letter in self.first_letters:
             self.apply_rules(letter, mass)

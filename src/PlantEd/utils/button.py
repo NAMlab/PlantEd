@@ -1098,12 +1098,14 @@ class Slider:
             self.set_percentage(delta)
             return 0
 
-    def draw(self, screen):
+    def draw(self, screen, slider_color=None):
         if not self.visible:
             return
-        slider_color = (
-            self.slider_color if self.active else (150, 150, 150, 128)
-        )
+        if not slider_color:
+            slider_color = self.slider_color
+        #slider_color = (
+        #    self.slider_color if self.active else (150, 150, 150, 128)
+        #)
         w = self.w if self.w >= self.slider_w else self.slider_w
         border = pygame.Surface((w, self.h), pygame.SRCALPHA)
         # line
@@ -1235,12 +1237,12 @@ class NegativeSlider:
             self.set_percentage((delta / 2) + 50)
             return 0
 
-    def draw(self, screen):
+    def draw(self, screen, slider_color):
         if not self.visible:
             return
-        slider_color = (
-            self.slider_color if self.active else (150, 150, 150, 128)
-        )
+        #slider_color = (
+        #    self.slider_color if self.active else (150, 150, 150, 128)
+        #)
         w = self.w if self.w >= self.slider_w else self.slider_w
         border = pygame.Surface((w, self.h), pygame.SRCALPHA)
         # line

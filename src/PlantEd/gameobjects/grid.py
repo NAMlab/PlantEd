@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 from numpy import ndarray
 
-MINIMUM_CELL_AMOUNT_TO_DRAW: int = 20
+MINIMUM_CELL_AMOUNT_TO_DRAW: int = 1
 MAX_TO_DRAW: int = 20
 
 
@@ -11,7 +11,7 @@ class Grid:
             self,
             pos: tuple[int, int] = (0, 900),
             grid_size: tuple[int, int] = (20, 6),
-            max_cell: int = 100000
+            max_cell: int = 100
     ):
 
         self.pos = pos

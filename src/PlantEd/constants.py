@@ -44,13 +44,17 @@ MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY = 0.00336
 # michaelis menten
 # 0.00336 * 1000000 / (24*60*60) = 0.03888888888 RIGHT  ,mikromol g DW⁻¹s⁻¹
 # Vmax ~ 0.00336 mol g DW−1 day−1 -> 3.36 mikromol g DW⁻¹ day⁻¹ -> 3.36 / (24/60/60) mikromol g DW⁻¹s⁻¹
-MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY * 1000000 / (24 * 60 *60)
+
+#depending on paper
+#MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY / 1000000 * (24 * 60 *60)
+MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = 0.00027
+
 
 # guiding paper has 50 mmol high /0.4 mmol low for a complete growth -> 5 per cell maybe? -> 50000 mikromol
-MAX_NITRATE_PER_CELL = 50     # 20*6 cells overall -> 600000 -> 600 millimol, to much?
+MAX_NITRATE_PER_CELL = 100     # 20*6 cells overall ->
 
 Vmax = MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
-Km = 40  # mikromol, Substrate density at which intake is 50% of max
+Km = 400  # mikromol, Substrate density at which intake is 50% of max
 
 
 ###############################################################################
@@ -72,17 +76,17 @@ PEAK_PHOTON = 2000
 # Plant initialization values
 ###############################################################################
 
-START_LEAF_BIOMASS_GRAM = 0.02
+START_LEAF_BIOMASS_GRAM = 0.01
 START_STEM_BIOMASS_GRAM = 0.02
 START_ROOT_BIOMASS_GRAM = 0.02
 START_SEED_BIOMASS_GRAM = 0.001
-START_SUM_BIOMASS_GRAM = 0.06
+START_SUM_BIOMASS_GRAM = 0.05
 
 
-MAXIMUM_LEAF_BIOMASS_GRAM = 1
-MAXIMUM_STEM_BIOMASS_GRAM = 1
-MAXIMUM_ROOT_BIOMASS_GRAM = 2
-MAXIMUM_SEED_BIOMASS_GRAM = 1
+MAXIMUM_LEAF_BIOMASS_GRAM = 0.1
+MAXIMUM_STEM_BIOMASS_GRAM = 0.2
+MAXIMUM_ROOT_BIOMASS_GRAM = 0.1
+MAXIMUM_SEED_BIOMASS_GRAM = 0.1
 
 
 # ↓ if negative set to multiple of max_{molecule}_pool

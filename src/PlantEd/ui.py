@@ -41,14 +41,6 @@ Below: 4 Organs, Production
             
 """
 
-preset = {
-    "leaf_slider": 0,
-    "stem_slider": 0,
-    "root_slider": 100,
-    "starch_slider": 0,
-    "consume_starch": False,
-}
-
 
 class UI:
     def __init__(
@@ -270,10 +262,38 @@ class UI:
             select_sound=self.sound_control.play_select_sfx
         )
 
-        self.presets = [preset for i in range(0, 3)]
+        self.preset_day = {
+            "type": "day",
+            "leaf_slider": 0,
+            "stem_slider": 0,
+            "root_slider": 100,
+            "starch_slider": 0,
+        }
+        self.preset_night = {
+            "type": "night",
+            "leaf_slider": 0,
+            "stem_slider": 0,
+            "root_slider": 100,
+            "starch_slider": 0,
+        }
+
+        self.active_preset = self.preset_night
+
         self.init_production_ui()
         self.init_pause_ui()
         # self.gradient = self.init_gradient()
+
+    def switch_preset(self, preset):
+        if preset["type"] == "night":
+            self.preset_night = preset
+            self.active_preset = self.preset_day
+        else:
+            self.preset_day = preset
+            self.active_preset = self.preset_night
+        self.leaf_slider.set_percentage(self.active_preset["leaf_slider"])
+        self.stem_slider.set_percentage(self.active_preset["stem_slider"])
+        self.root_slider.set_percentage(self.active_preset["root_slider"])
+        self.starch_slider.set_percentage((self.active_preset["starch_slider"])/2+50)
 
     def toggle_pause(self):
         self.pause = not self.pause
@@ -339,7 +359,9 @@ class UI:
         # screen.blit(self.gradient,(0,0))
         self.button_array.draw(screen)
         self.button_sprites.draw(screen)
-        [slider.draw(screen) for slider in self.sliders]
+        days, hours, minutes = self.get_day_time()
+        slider_color = config.YELLOW if 8 < hours < 20 else config.BLUE
+        [slider.draw(screen, slider_color) for slider in self.sliders]
         self.draw_ui(screen)
         # self.draw_energy_meter(screen)
         for element in self.floating_elements:
@@ -559,7 +581,7 @@ class UI:
                     ),
                 )
 
-    def draw_plant_details(self, s):
+    def draw_plant_details(self, s, factor=100):
         # details
         topleft = self.plant_details_topleft
         pygame.draw.rect(
@@ -570,7 +592,7 @@ class UI:
         biomass_text = config.FONT.render("Mass:", True, (0, 0, 0))
         s.blit(biomass_text, dest=(topleft[0] + 10, topleft[1] + 6))
         biomass = config.FONT.render(
-            "{:.2f} g".format(self.plant.get_biomass()), True, (0, 0, 0)
+            "{:.2f} x10⁻² gDW".format(self.plant.get_biomass()*factor), True, (0, 0, 0)
         )  # title
         s.blit(
             biomass,
@@ -578,7 +600,7 @@ class UI:
         )
 
         # name
-        s.blit(self.name_label, (topleft[0] + 300, topleft[1] + 6))
+        s.blit(self.name_label, (topleft[0] + 460 - self.name_label.get_width(), topleft[1] + 6))
 
     def get_day_time(self):
         ticks = self.gametime.get_time()
@@ -765,6 +787,8 @@ class UI:
 
     def apply_options(self):
         config.write_options(self.get_options())
+        self.name = config.load_options()["name"]
+        self.name_label = config.FONT.render(self.name, True, config.BLACK)
 
     def get_options(self):
         upload_score = config.load_options()["upload_score"]
@@ -888,7 +912,7 @@ class UI:
         self.apply_button.draw(s)
 
     def draw_organ_detail_temp(
-        self, s, organ: Organ, pos, label, show_amount=True, factor=1
+        self, s, organ: Organ, pos, label, show_amount=True, factor=100
     ):
         topleft = pos
         pygame.draw.rect(
@@ -941,8 +965,8 @@ class UI:
             border_radius=3,
         )  # exp
         text_organ_mass = config.SMALL_FONT.render(
-            "{:.2f} / {:.2f}".format(
-                organ.get_mass() / factor, organ.get_maximum_growable_mass() / factor
+            "{:.1f} / {:.1f}".format(
+                organ.get_mass() * factor, organ.get_maximum_growable_mass() * factor
             ),
             True,
             (0, 0, 0),

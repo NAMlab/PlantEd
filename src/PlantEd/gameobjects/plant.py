@@ -51,17 +51,20 @@ beans = [
 
 
 def from_dict(plant_dict, camera=None):
+    sound_control = SoundControl()
     plant = Plant(
         pos=plant_dict["pos"],
         water_grid_shape=plant_dict["water_grid_shape"],
         water_grid_pos=plant_dict["water_grid_pos"],
+        sound_control=sound_control,
         camera=camera
     )
+
     plant.organs[0].mass = plant_dict["leaf"]["mass"]
     plant.organs[0].leaves = plant_dict["leaf"]["leaves"]
     for leaf in plant.organs[0].leaves:
         leaf["image"] = leaves[int(random.random() * len(leaves))][0]
-    plant.organs[0].update_image_size()
+        plant.organs[0].update_leaf_image(leaf)
     branches: list[Cubic] = []
     branches_dict_list = plant_dict["stem"]["curve"]["branches"]
     for branch in branches_dict_list:
@@ -711,7 +714,7 @@ class Root(Organ):
 
     def get_maximum_growable_mass(self):
         return (
-            max(1, constants.MAXIMUM_ROOT_BIOMASS_GRAM * self.get_organ_amount())
+            constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1,self.get_organ_amount())
         )
 
     def get_mass(self):
@@ -776,7 +779,7 @@ class Stem(Organ):
         self.dist_to_stem: float = 1000
         self.can_add_branch: bool = False
         self.play_reward: callable = play_reward
-        self.size = 0
+        self.size = 2
 
         super().__init__(
             x=x,

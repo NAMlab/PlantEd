@@ -243,7 +243,7 @@ def apply_volume(options):
 # DYNAMIC MODEL
 
 # NITRATE RATE
-NITRATE_FILL_CELL = 2000    # mikromol
+NITRATE_FILL_CELL = 50    # mikromol
 
 # WATERING CAN AMOUNT
 WATERING_CAN_AMOUNT = 3000000   # mikromol

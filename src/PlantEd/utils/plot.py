@@ -9,7 +9,7 @@ from PlantEd.data import assets
 
 def generate_png_from_vec(vector_list, name_list, colors, ticks, xlabel, ylabel, path_to_logs, filename, color="dark_background") -> pygame.Surface:
     # make a Figure and attach it to a canvas.
-    #plt.style.use(color)
+    plt.style.use(color)
 
     fig, ax = plt.subplots()
     ax.set_xlabel(xlabel)

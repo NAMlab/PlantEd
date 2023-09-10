@@ -17,8 +17,8 @@ from PlantEd.constants import MAX_NITRATE_PER_CELL
 
 class Environment:
     water_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_WATER_PER_CELL, preset_fill_amount=MAX_WATER_PER_CELL/20)
-    nitrate_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_NITRATE_PER_CELL, preset_fill_amount=0)
-    nitrate_grid.add2cell(500, 9, 0)
+    nitrate_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_NITRATE_PER_CELL, preset_fill_amount=MAX_NITRATE_PER_CELL/10)
+    #nitrate_grid.add2cell(100, 9, 0)
 
     weather_data = importlib.resources.files(data) / "weather"
     df_weather_spring: pd.DataFrame = pd.read_csv(
