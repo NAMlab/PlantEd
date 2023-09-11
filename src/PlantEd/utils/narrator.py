@@ -25,7 +25,7 @@ class Narrator:
             assets.sfx("attenborough/{}.mp3".format(i)) for i in range(12)
         ]
         self.voicelines = []
-        self.talking_times = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        self.talking_times = [0, 2, 4, 6, 8, 11, 14, 17, 20, 23, 27, 31]
         for i in range(len(self.lines)):
             self.voicelines.append(
                 VoiceLine(

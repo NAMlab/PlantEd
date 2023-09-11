@@ -12,7 +12,7 @@ class Spraycan:
                  pos,
                  amount,
                  cost=1,
-                 callback=None,
+                 callbacks=[],
                  play_sound=None
                  ):  # take from config
         self.pos = pos
@@ -21,9 +21,9 @@ class Spraycan:
         self.image = self.image_inactive
         self.default_amount = amount
         self.amount = amount
-        self.hitbox = pygame.Rect(self.pos[0]-100,self.pos[1],100,100)
+        self.hitbox = pygame.Rect(self.pos[0]-125,self.pos[1]-25,150,150)
         self.max_amount = amount
-        self.callback = callback
+        self.callbacks = callbacks
         self.play_sound = play_sound
         self.cost = cost
         self.active = False
@@ -70,8 +70,8 @@ class Spraycan:
             self.image = self.image_active
             self.can_particle_system.activate()
             self.play_sound()
-            if self.callback:
-                self.callback(self.hitbox)
+            for callback in self.callbacks:
+                callback(self.hitbox)
         if e.type == MOUSEBUTTONUP:
             self.amount -= 1
             self.image = self.image_inactive
@@ -79,11 +79,12 @@ class Spraycan:
             x, y = pygame.mouse.get_pos()
             self.pos = (x, y)
             self.can_particle_system.spawn_box = Rect(x, y, 0, 0)
-            self.hitbox = pygame.Rect(self.pos[0] - 100, self.pos[1], 100, 100)
+            self.hitbox = pygame.Rect(self.pos[0] - 125, self.pos[1]-25, 150, 150)
 
     def draw(self, screen):
         self.can_particle_system.draw(screen)
         if self.active:
+            # pygame.draw.rect(screen, config.GREEN, self.hitbox, width=5)
             w = self.image.get_width()
             line_width = w / self.max_amount
             for i in range(0, self.amount):

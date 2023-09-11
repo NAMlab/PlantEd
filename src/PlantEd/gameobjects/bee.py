@@ -45,6 +45,10 @@ class Hive:
             self.image.get_height(),
         )
 
+    def spray_bees(self, rect):
+        for bee in self.bees:
+            bee.kill(rect)
+
     def spawn_bee(self, pos=None):
         if not pos:
             pos = (190 * random.randint(0, 10), random.randint(0, 800))
@@ -67,6 +71,12 @@ class Hive:
     def update(self, dt):
         for bee in self.bees:
             bee.update(dt)
+            if bee.dead:
+                if bee.death_timer > 0:
+                    bee.death_timer -= dt
+                else:
+                    bee.death_timer = 0
+
         if random.random() > 0.99 and self.amount > len(self.bees):
             self.spawn_bee(
                 (
@@ -75,6 +85,9 @@ class Hive:
                 )
             )
         for i in range(len(self.bees)):
+            if self.bees[i].dead and self.bees[i].death_timer == 0:
+                self.bees.pop(i)
+                break
             if self.get_rect().collidepoint(self.bees[i].pos):
                 if self.bees[i].lifetime <= 0:
                     self.bees.pop(i)
@@ -122,23 +135,31 @@ class Bee:
         self.timer = 0
         self.max_timer = 10
         self.set_random_direction()
+        self.dead = False
+        self.death_timer = 0
 
     def update(self, dt):
+        if self.dead:
+            if self.death_timer > 0:
+                self.death_timer -= dt
+            else:
+                self.death_timer = 0
         if (
             self.lifetime <= 0
-            and not self.return_home
+            and not self.return_home and not self.dead
         ):
             self.set_target_home()
         else:
             self.lifetime -= dt
         self.move(dt)
-        if self.animation:
-            self.animation.update(dt)
+        if not self.dead:
+            if self.animation:
+                self.animation.update(dt)
 
     def handle_event(self, e):
         if e.type == pygame.MOUSEBUTTONDOWN:
             if self.get_rect().collidepoint(pygame.mouse.get_pos()):
-                if not self.target:
+                if not self.target or self.dead:
                     self.set_random_direction()
                     self.speed = 4
                     self.play_bee_clicked()
@@ -153,6 +174,13 @@ class Bee:
             self.rect[2],
             self.rect[3],
         )
+
+    def kill(self, rect):
+        if rect.collidepoint(self.pos):
+            self.target = None
+            self.dir = (0,-1)
+            self.death_timer = 2
+            self.dead = True
 
     def move(self, dt):
         self.check_boundaries()

@@ -50,6 +50,7 @@ class GameTime:
         self.starttime = pygame.time.get_ticks()
         self.currenttime = self.starttime
         self.GAMESPEED = 360
+        self.paused_speed = -1
         self.timediff = (
             0  # used to add sped up or slowed time to the current time
         )
@@ -60,6 +61,7 @@ class GameTime:
         self.starttime = pygame.time.get_ticks()
         self.currenttime = self.starttime
         self.GAMESPEED = 360
+        self.paused_speed = -1
         self.timediff = (
             0  # used to add sped up or slowed time to the current time
         )
@@ -75,19 +77,20 @@ class GameTime:
         self.GAMESPEED = speed
 
     def pause(self):
+        self.paused_speed = self.GAMESPEED
         self.set_speed(-1)
 
     def unpause(self):
-        self.set_speed(360)
+        self.set_speed(self.paused_speed)
 
     def play(self):
         self.set_speed(360)
 
     def faster(self):
-        self.set_speed(3600)
+        self.set_speed(4800)
 
     def fastest(self):
-        self.set_speed(7200)
+        self.set_speed(9600)
 
     def forward(self):
         self.set_speed(9600 * 4)

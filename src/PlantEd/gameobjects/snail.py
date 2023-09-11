@@ -63,6 +63,8 @@ class SnailSpawner:
     def update(self, dt):
         for snail in self.snails:
             snail.update(dt)
+            if snail.dead:
+                self.snails.remove(snail)
         #self.remove_dead_snails()
         if random.random() > 0.9 and len(self.snails) < self.max_amount:
             self.spawn_snail()
@@ -86,7 +88,7 @@ class Snail:
             callback,
             image=None,
             eat_rate=0.00001,
-            speed=3,
+            speed=1,
             snail_clicked=None
     ):
         self.state = LEFT
@@ -127,7 +129,7 @@ class Snail:
         elif random.random() > 0.999:
             self.set_random_direction()
         if self.target is None:
-            if random.random() > 0.999:
+            if random.random() > 0.9999:
                 self.target_plant((config.SCREEN_WIDTH/2, 0))
 
         self.move(dt)
@@ -195,16 +197,12 @@ class Snail:
 
     def check_boundaries(self):
         if self.pos[0] < self.bounding_rect[0]:
-            self.dir = (self.dir[0] * -1, self.dir[1])
+            self.dir = (abs(self.dir[0]), self.dir[1])
             self.state = RIGHT
             self.speed = self.base_speed
         if self.pos[0] > self.bounding_rect[0] + self.bounding_rect[2]:
-            self.dir = (self.dir[0] * -1, self.dir[1])
+            self.dir = (abs(self.dir[0]) * -1, self.dir[1])
             self.state = LEFT
-        if self.pos[1] < self.bounding_rect[1]:
-            self.dir = (self.dir[0], self.dir[1] * -1)
-        if self.pos[1] > self.bounding_rect[1] + self.bounding_rect[3]:
-            self.dir = (self.dir[0], self.dir[1] * -1)
 
     def draw(self, screen):
         if self.dead:

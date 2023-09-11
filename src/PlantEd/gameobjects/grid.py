@@ -52,7 +52,7 @@ class Grid:
                         pygame.draw.circle(
                             surface=screen,
                             # color variations
-                            color=(90, 40 + int(offset_x / 4), 10 + int(offset_y / 4)),
+                            color=(120, 40 + int(offset_x / 4), 20 + int(offset_y / 4)),
                             center=(
                                 self.pos[0] + i * 100 + offset_x,
                                 self.pos[1] + j * 100 + offset_y,

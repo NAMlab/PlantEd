@@ -435,6 +435,7 @@ class UI:
         self.draw_plant_details(self.s)
         self.draw_clock(self.s)
         self.draw_production(self.s)
+        #self.draw_input_info(self.s)
         # self.draw_organ_details(self.s)
         # self.draw_starch_details(s)
         # name plant, make textbox
@@ -580,6 +581,27 @@ class UI:
                         110,
                     ),
                 )
+
+    def draw_input_info(self, s, topleft=(1700,800)):
+
+        pygame.draw.rect(s, config.WHITE, (topleft[0],topleft[1]+5,200,40), border_radius=3)
+        pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0],topleft[1]+50,200,200), border_radius=3)
+
+
+
+        res_header = config.BIGGER_FONT.render("Plant Intake", True, config.BLACK)
+        s.blit(res_header, (topleft[0]+10,topleft[1]+5))
+
+        nitrate_intake_label = config.BIG_FONT.render(f"nitrate: {self.server_plant.nitrate.nitrate_intake}", True, config.BLACK)
+        water_intake_label = config.BIG_FONT.render(f"water: {self.server_plant.water.water_intake}", True, config.BLACK)
+        photon_intake_label = config.BIG_FONT.render(f"photon: {self.server_plant.photon}", True, config.BLACK)
+        co2_intake_label = config.BIG_FONT.render(f"co2: {self.server_plant.co2}", True, config.BLACK)
+
+        s.blit(nitrate_intake_label, (topleft[0]+10,topleft[1]+60))
+        s.blit(water_intake_label, (topleft[0]+10,topleft[1]+90))
+        s.blit(photon_intake_label, (topleft[0]+10,topleft[1]+120))
+        s.blit(co2_intake_label, (topleft[0]+10,topleft[1]+150))
+
 
     def draw_plant_details(self, s, factor=100):
         # details

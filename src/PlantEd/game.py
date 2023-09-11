@@ -460,7 +460,8 @@ class DefaultGameScene(object):
         )
 
         self.shop.add_shop_item(["watering", "blue_grain", "spraycan"])
-        self.shop.spraycan.callback = self.snail_spawner.spray_snails
+        self.shop.spraycan.callbacks.append(self.snail_spawner.spray_snails)
+        self.shop.spraycan.callbacks.append(self.hive.spray_bees)
 
         self.floating_shop = FloatingShop(self.camera, (0, 0))
         add_leaf_item_floating = FloatingShopItem(
