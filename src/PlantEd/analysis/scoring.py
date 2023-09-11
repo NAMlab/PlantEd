@@ -3,7 +3,7 @@ import json
 
 def upload_score(name, score, path_to_logs):
 
-    files = {'model_logs': open(path_to_logs + '/model_logs.csv', 'rb'),
+    files = {"logfile": open(path_to_logs + '/model_logs.csv', 'rb')#,
   #           'plant_json': open(path_to_logs + '/plant.json', 'rb'),
   #           'plant_jpeg': open(path_to_logs + '/plant.jpeg', 'rb'),
              }

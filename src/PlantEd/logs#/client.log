@@ -1,7 +1,0 @@
-2023-09-04 14:59:24,367 PlantEd.client.water DEBUG:Setting new_max_water_pool to 17.76713989457838 µmol.Based on a biomass of 0.4001 grams.
-2023-09-04 14:59:24,405 PlantEd.client.water DEBUG:Within a time of 1 seconds, an organ with 0.2 grams of biomass has a maximum of 1.776713989457838 µmol/(second * gram) of water available.
-2023-09-04 14:59:24,406 PlantEd.client.water DEBUG:Setting transpiration_factor to 44.93489760000001.
-2023-09-04 14:59:24,406 PlantEd.client.water DEBUG:Setting transpiration to 0. Based on CO2 intake of 0 and a transpiration_factor of 44.93489760000001
-2023-09-04 14:59:25,028 PlantEd.client.water DEBUG:Setting new_max_water_pool to 17.76713989457838 µmol.Based on a biomass of 0.4001 grams.
-2023-09-04 14:59:25,028 PlantEd.client.water DEBUG:Setting transpiration_factor to 44.93489760000001.
-2023-09-04 14:59:25,028 PlantEd.client.water DEBUG:Setting transpiration to 0. Based on CO2 intake of 0.0 and a transpiration_factor of 44.93489760000001
