@@ -33,13 +33,14 @@ class WeatherSimulatorMinimal:
 
     def get_weather_state(self, time: int) -> WeatherState:
         try:
-
             state: WeatherState = self.state[time]
 
             return state
 
         except KeyError as e:
-            raise KeyError(f"Weather state for hour: {time} does not exist") from e
+            raise KeyError(
+                f"Weather state for hour: {time} does not exist"
+            ) from e
 
     def get_latest_weather_state(self):
         return self.state[self.latest_hour]
@@ -64,7 +65,7 @@ class WeatherSimulatorMinimal:
         for hour, state in states_as_dic.items():
             w_sim.state[int(hour)] = WeatherState(
                 temperature=state["temperature"],
-                humidity= state["humidity"],
-                precipitation=state["precipitation"]
+                humidity=state["humidity"],
+                precipitation=state["precipitation"],
             )
         return w_sim

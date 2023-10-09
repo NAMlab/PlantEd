@@ -27,7 +27,7 @@ class TestServer(TestCase):
         port: Optional[int] = self.manager.Value(Optional[int], None)
         ip_address: Optional[str] = self.manager.Value(Optional[str], None)
         self.ready: Event = multiprocessing.Event()
-        
+
         self.server = Server(
             shutdown_signal=self.shutdown_signal,
             ready=self.ready,
@@ -35,7 +35,7 @@ class TestServer(TestCase):
             port=port,
             ip_adress=ip_address,
         )
-        
+
         self.thread = threading.Thread(target=self.server.start)
         self.thread.start()
         self.ready.wait()
@@ -53,25 +53,26 @@ class TestServer(TestCase):
 
     def test_ip_address(self):
         self.assertIsInstance(self.server.ip_address, str)
-        self.assertNotEquals(self.server.ip_address,"")
+        self.assertNotEquals(self.server.ip_address, "")
 
     def test_open_connection(self):
-        client = Client(port= self.server.port)
+        client = Client(port=self.server.port)
 
         self.assertEqual(1, len(self.server.clients))
 
-        thing = self.server.clients.pop() # remove single client
-        self.server.clients.add(thing) # add it back
+        thing = self.server.clients.pop()  # remove single client
+        self.server.clients.add(thing)  # add it back
         self.assertIsInstance(thing, WebSocketServerProtocol)
 
         client_2 = Client(port=self.server.port)
+        self.assertIsInstance(client_2, Client)
 
         self.assertEqual(2, len(self.server.clients))
         for client in self.server.clients:
             self.assertIsInstance(client, WebSocketServerProtocol)
 
     def test_close_connection(self):
-        client_1 = Client(port= self.server.port)
+        client_1 = Client(port=self.server.port)
         client_2 = Client(port=self.server.port)
         time.sleep(0)
 

@@ -23,10 +23,13 @@ MICROMOL_STARCH_PER_GRAM_STARCH: Final[float] = (
 ###############################################################################
 # ToDo source
 # ↓ according to ?
-# 18 gram/mol -> mol = 1/18 -> 0.05550843506179199 mol/gramm -> 0.05550843506179199 * 1000000 mikromol/gram, 80% water in plant
+# 18 gram/mol -> mol = 1/18 -> 0.05550843506179199 mol/gramm
+# -> 0.05550843506179199 * 1000000 mikromol/gram, 80% water in plant
 MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000000
 
-# 1.5 Tons of soil in one m³ -> PlantEd has exactly one -> 30% water, 500Kg -> 500 Litre -> 500000 Gram /18 -> 8333.333 Mol -> 8333.333/(20*6) = 70 Mol -> 70000000 Mikromol
+# 1.5 Tons of soil in one m³ -> PlantEd has exactly one -> 30% water, 500Kg
+# -> 500 Litre -> 500000 Gram /18 -> 8333.333 Mol
+# -> 8333.333/(20*6) = 70 Mol -> 70000000 Mikromol
 MAX_WATER_PER_CELL = 1000000
 
 ###############################################################################
@@ -43,15 +46,18 @@ MICROMOL_NITRATE_PER_GRAMM_FRESH_WEIGHT = 7.9
 MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY = 0.00336
 # michaelis menten
 # 0.00336 * 1000000 / (24*60*60) = 0.03888888888 RIGHT  ,mikromol g DW⁻¹s⁻¹
-# Vmax ~ 0.00336 mol g DW−1 day−1 -> 3.36 mikromol g DW⁻¹ day⁻¹ -> 3.36 / (24/60/60) mikromol g DW⁻¹s⁻¹
+# Vmax ~ 0.00336 mol g DW−1 day−1
+# -> 3.36 mikromol g DW⁻¹ day⁻¹ -> 3.36 / (24/60/60) mikromol g DW⁻¹s⁻¹
 
-#depending on paper
-#MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY / 1000000 * (24 * 60 *60)
+# depending on paper
+# MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
+# = MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY / 1000000 * (24 * 60 *60)
 MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = 0.00027
 
 
-# guiding paper has 50 mmol high /0.4 mmol low for a complete growth -> 5 per cell maybe? -> 50000 mikromol
-MAX_NITRATE_PER_CELL = 100     # 20*6 cells overall ->
+# guiding paper has 50 mmol high /0.4 mmol low for a complete growth
+# -> 5 per cell maybe? -> 50000 mikromol
+MAX_NITRATE_PER_CELL = 100  # 20*6 cells overall ->
 
 Vmax = MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
 Km = 400  # mikromol, Substrate density at which intake is 50% of max
@@ -66,10 +72,11 @@ Km = 400  # mikromol, Substrate density at which intake is 50% of max
 LMA_IN_GRAM_PER_SQUARE_METER: Final[float] = 40
 
 # ↓ Specific leaf Area (SLA)
-SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1/LMA_IN_GRAM_PER_SQUARE_METER
+SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1 / LMA_IN_GRAM_PER_SQUARE_METER
 
 
-# photon availability according to https://doi.org/10.1146/annurev-arplant-070221-024745
+# photon availability according to
+# https://doi.org/10.1146/annurev-arplant-070221-024745
 PEAK_PHOTON = 2000
 
 ###############################################################################

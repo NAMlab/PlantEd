@@ -9,7 +9,8 @@ from PlantEd.server.server import ServerContainer
 logger = logging.getLogger(__name__)
 
 global server
-server:ServerContainer
+server: ServerContainer
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -29,29 +30,29 @@ def main():
         default="",
         metavar="",
         help="The folder where all log files will be stored. "
-             "The log files inside this folder will be overwritten. "
-             "The Folder will be created automatically. "
-             "By default, no folders or logfiles are created.",
+        "The log files inside this folder will be overwritten. "
+        "The Folder will be created automatically. "
+        "By default, no folders or logfiles are created.",
     )
 
     parser.add_argument(
         "--windowed",
-        action='store_true',
+        action="store_true",
         help="Should start the PlantEd full screen or windowed. "
-             "Setting this flag results in a windowed start.",
+        "Setting this flag results in a windowed start.",
     )
 
     parser.add_argument(
         "--noUI",
-        action='store_true',
+        action="store_true",
         help="noUI flag ensures that only the server is started. Please "
-             "refer to the console for the port and interface used.",
+        "refer to the console for the port and interface used.",
     )
 
     args = parser.parse_args()
 
     # Default Logger to console and if requested to file
-    log_file_defined = (args.logFile != "")
+    log_file_defined = args.logFile != ""
     log_handlers = [logging.StreamHandler(sys.stdout)]
 
     if log_file_defined:
@@ -60,7 +61,7 @@ def main():
             path.mkdir()
 
         log_handlers.append(
-            logging.FileHandler(filename= path / "complete.log", mode="w+")
+            logging.FileHandler(filename=path / "complete.log", mode="w+")
         )
 
     for handler in log_handlers:
@@ -70,42 +71,44 @@ def main():
         level=args.logLevel,
         format="%(asctime)s %(name)s %(levelname)s:%(message)s",
         datefmt="%H:%M:%S",
-        handlers= log_handlers,
+        handlers=log_handlers,
     )
 
     if log_file_defined:
-        FORMAT = logging.Formatter("%(asctime)s %(name)s %(levelname)s:%(message)s")
+        FORMAT = logging.Formatter(
+            "%(asctime)s %(name)s %(levelname)s:%(message)s"
+        )
 
         logger_ui = logging.getLogger("PlantEd.ui")
         handler_ui = logging.FileHandler(
-                filename=path / "ui.log",
-                mode="w+",
-                encoding="utf-8",
-                delay=False,
-                errors=None,
-            )
+            filename=path / "ui.log",
+            mode="w+",
+            encoding="utf-8",
+            delay=False,
+            errors=None,
+        )
         handler_ui.setFormatter(FORMAT)
         logger_ui.addHandler(handler_ui)
 
         logger_client = logging.getLogger("PlantEd.client")
         handler_client = logging.FileHandler(
-                filename= path / "client.log",
-                mode= "w+",
-                encoding="utf-8",
-                delay= False,
-                errors= None,
-            )
+            filename=path / "client.log",
+            mode="w+",
+            encoding="utf-8",
+            delay=False,
+            errors=None,
+        )
         handler_client.setFormatter(FORMAT)
         logger_client.addHandler(handler_client)
 
         logger_server = logging.getLogger("PlantEd.server")
         handler_server = logging.FileHandler(
-                filename=path / "server.log",
-                mode="w+",
-                encoding="utf-8",
-                delay=False,
-                errors=None,
-            )
+            filename=path / "server.log",
+            mode="w+",
+            encoding="utf-8",
+            delay=False,
+            errors=None,
+        )
         handler_server.setFormatter(FORMAT)
         logger_server.addHandler(handler_server)
 
@@ -123,20 +126,16 @@ def main():
     else:
         try:
             from PlantEd import game
-            game.main(
-                windowed=args.windowed,
-                port=server.port)
+
+            game.main(windowed=args.windowed, port=server.port)
         finally:
             server.stop()
 
-            # make sure that the server stops whether the ui has an error or not
-            #server.stop()
-
 
 def __stop_server_process():
+    global server
     server.stop()
 
 
 if __name__ == "__main__":
-    #multiprocessing.set_start_method("spawn")
     main()
