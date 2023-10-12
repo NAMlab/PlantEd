@@ -174,7 +174,7 @@ class DynamicModel:
         if new_growth_percentages.starch < 0:
             # consume
             self.plant.starch_pool.allowed_starch_pool_consumption = abs(
-                new_growth_percentages.starch / 100
+                new_growth_percentages.starch
             )
             new_growth_percentages.starch = 0
         else:
@@ -265,9 +265,9 @@ class DynamicModel:
         self.set_bounds(WATER, water_bounds)
 
         photon_upper_bound = (
-            self.plant.leafs.specific_leaf_area_in_square_meter  # m^2
+            self.plant.leafs.specific_leaf_area_in_square_meter  # m^2/ g_dry_leaf
             * self.micromol_photon_per_square_meter  # mikromol / (s * m^2)
-        ) / self.plant.leafs_biomass  # g_organ TOdo fix this
+        )
 
         photon_bounds = (0, photon_upper_bound)
         logger.debug(f"Bounds for photons are {photon_bounds}")
