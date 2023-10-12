@@ -4,7 +4,6 @@ import dataclasses
 import json
 import logging
 from dataclasses import dataclass
-from typing import Final
 
 from pydantic import confloat
 
@@ -77,7 +76,9 @@ class Water:
         if START_WATER_POOL_IN_MICROMOL > 0:
             water_pool = START_WATER_POOL_IN_MICROMOL
         else:
-            water_pool = abs(START_WATER_POOL_IN_MICROMOL) * self.__max_water_pool
+            water_pool = (
+                abs(START_WATER_POOL_IN_MICROMOL) * self.__max_water_pool
+            )
 
         self.__water_pool: float = water_pool
         self.transpiration: float = 0
@@ -89,8 +90,10 @@ class Water:
     def __repr__(self):
         string = (
             f"Water object with following values:"
-            f" water_pool is {self.water_pool} µmol, water_intake is {self.water_intake} µmol"
-            f" water_intake_pool is {self.water_intake_pool} µmol, transpiration is {self.transpiration} µmol"
+            f" water_pool is {self.water_pool} µmol, "
+            f"water_intake is {self.water_intake} µmol"
+            f" water_intake_pool is {self.water_intake_pool} µmol, "
+            f"transpiration is {self.transpiration} µmol"
             f" max_water_pool is {self.max_water_pool} µmol."
         )
 
@@ -107,8 +110,8 @@ class Water:
     @water_pool.setter
     def water_pool(self, value: float):
         if value < self.water_pool:
-            self.__water_pool  = value
-        else :
+            self.__water_pool = value
+        else:
             upper_limit = max(self.max_water_pool, self.water_pool)
             self.__water_pool = min(value, upper_limit)
 
@@ -134,7 +137,9 @@ class Water:
                 f"{self.max_water_pool} µmol."
             )
 
-        logger.debug(f"Calculated water percentage is {percentage} from {self}")
+        logger.debug(
+            f"Calculated water percentage is {percentage} from {self}"
+        )
         return percentage
 
     @property
@@ -143,7 +148,8 @@ class Water:
         Provides the amount of water that can still be added to the pool.
 
         Returns:
-            float: Amount of water that can still be added to the pool in micromol.
+            float: Amount of water that can still be added to the pool in
+            micromol.
         """
         if self.max_water_pool < self.water_pool:
             return 0
@@ -197,12 +203,15 @@ class Water:
 
         """
         if plant_biomass < 0:
-            raise NegativeBiomassError("The given biomass of the plant is negative.")
+            raise NegativeBiomassError(
+                "The given biomass of the plant is negative."
+            )
 
         new_max_water_pool = plant_biomass * MAX_WATER_POOL_PER_GRAMM
 
         logger.debug(
-            f"Setting new_max_water_pool to {new_max_water_pool} µmol.Based on a biomass of {plant_biomass} grams."
+            f"Setting new_max_water_pool to {new_max_water_pool} µmol. "
+            f"Based on a biomass of {plant_biomass} grams."
         )
 
         self.__max_water_pool = new_max_water_pool
@@ -215,7 +224,8 @@ class Water:
         # Pool usage factors (see constants.py)
         value = min(
             self.water_pool * PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
-            self.__max_water_pool * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
+            self.__max_water_pool
+            * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
         )
 
         try:
@@ -246,11 +256,14 @@ class Water:
         if stomata_open:
             if co2_uptake_in_micromol_per_second_and_gram > 0:
                 transpiration = (
-                    co2_uptake_in_micromol_per_second_and_gram * transpiration_factor
+                    co2_uptake_in_micromol_per_second_and_gram
+                    * transpiration_factor
                 )
 
         logger.debug(
-            f"Setting transpiration to {transpiration}. Based on CO2 intake of {co2_uptake_in_micromol_per_second_and_gram} and a transpiration_factor of {transpiration_factor}"
+            f"Setting transpiration to {transpiration}. Based on CO2 "
+            f"intake of {co2_uptake_in_micromol_per_second_and_gram} "
+            f"and a transpiration_factor of {transpiration_factor}"
         )
         self.transpiration = transpiration
 
@@ -261,8 +274,12 @@ class Water:
 
         In_Concentration = water_concentration_at_temp[int(T + 2)]
         Out_Concentration = water_concentration_at_temp[int(T)]
-        new_transpiration_factor = K * (In_Concentration - Out_Concentration * RH / 100)
+        new_transpiration_factor = K * (
+            In_Concentration - Out_Concentration * RH / 100
+        )
 
-        logger.debug(f"Setting transpiration_factor to {new_transpiration_factor}.")
+        logger.debug(
+            f"Setting transpiration_factor to {new_transpiration_factor}."
+        )
 
         self.transpiration_factor = new_transpiration_factor

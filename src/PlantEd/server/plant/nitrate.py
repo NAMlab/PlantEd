@@ -4,7 +4,6 @@ import dataclasses
 import json
 import logging
 from dataclasses import dataclass
-from typing import Final
 
 from PlantEd.constants import (
     MICROMOL_NITRATE_PER_GRAMM_FRESH_WEIGHT,
@@ -19,7 +18,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Nitrate:
-    # ToDo environment where the plant gets the nitrate from at the moment nitrate directly goes into the pool
+    # ToDo environment where the plant gets the nitrate from at the
+    #  moment nitrate directly goes into the pool
 
     def __init__(self, plant_weight_gram: float):
         self.__max_nitrate_pool: int = 0
@@ -30,7 +30,9 @@ class Nitrate:
         if START_NITRATE_POOL_IN_MICROMOL > 0:
             nitrate_pool = START_NITRATE_POOL_IN_MICROMOL
         else:
-            nitrate_pool = abs(START_NITRATE_POOL_IN_MICROMOL) * self.__max_nitrate_pool
+            nitrate_pool = (
+                abs(START_NITRATE_POOL_IN_MICROMOL) * self.__max_nitrate_pool
+            )
 
         self.nitrate_pool: int = nitrate_pool
 
@@ -56,7 +58,8 @@ class Nitrate:
         Provides the amount of water that can still be added to the pool.
 
         Returns:
-            float: Amount of water that can still be added to the pool in micromol.
+            float: Amount of water that can still be added to the pool
+             in micromol.
         """
         if self.nitrate_pool > self.__max_nitrate_pool:
             return 0
@@ -114,7 +117,8 @@ class Nitrate:
         # Pool usage factors (see constants.py)
         value = min(
             self.nitrate_pool * PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
-            self.__max_nitrate_pool * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
+            self.__max_nitrate_pool
+            * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
         )
 
         try:
@@ -130,7 +134,8 @@ class Nitrate:
         logger.debug(
             f"Within a time of {time_in_seconds} seconds, an organ "
             f"with {gram_of_organ} grams of biomass has a "
-            f"maximum of {value} µomol/(second * gram) of nitrate available_absolute."
+            f"maximum of {value} µomol/(second * gram) of"
+            f" nitrate available_absolute."
         )
 
         return value
@@ -145,10 +150,13 @@ class Nitrate:
         )
 
     def update_nitrate_pool_based_on_plant_weight(self, plant_weight_gram):
-        new_max_pool = MICROMOL_NITRATE_PER_GRAMM_FRESH_WEIGHT * plant_weight_gram
+        new_max_pool = (
+            MICROMOL_NITRATE_PER_GRAMM_FRESH_WEIGHT * plant_weight_gram
+        )
 
         logger.debug(
-            f"Setting max_nitrate_pool to {new_max_pool} µmol. Based on a biomass of {plant_weight_gram} grams."
+            f"Setting max_nitrate_pool to {new_max_pool} µmol."
+            f" Based on a biomass of {plant_weight_gram} grams."
         )
 
         self.__max_nitrate_pool = new_max_pool

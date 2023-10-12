@@ -1,6 +1,5 @@
 import logging
 import random
-import sys
 from unittest import TestCase
 import numpy as np
 
@@ -14,6 +13,7 @@ logging.basicConfig(
     format="%(asctime)s %(name)s %(levelname)s:%(message)s",
     datefmt="%H:%M:%S",
 )
+
 
 class TestMetaboliteGrid(TestCase):
     def setUp(self) -> None:
@@ -376,199 +376,247 @@ class TestMetaboliteGrid(TestCase):
     def test_available_absolute(self):
         grid = MetaboliteGrid()
         grid.add2cell(
-            rate= 500,
-            x = 4,
-            y = 3,
+            rate=500,
+            x=4,
+            y=3,
         )
 
         grid.add2cell(
-            rate= 500,
-            x = 1,
-            y = 2,
+            rate=500,
+            x=1,
+            y=2,
         )
 
-        root = LSystem(
-            root_grid=np.ones((20,6)),
-            water_grid_pos= (0,900)
-            )
+        root = LSystem(root_grid=np.ones((20, 6)), water_grid_pos=(0, 900))
 
-        self.assertEqual(grid.available_absolute(roots= root), 1000)
+        self.assertEqual(grid.available_absolute(roots=root), 1000)
 
-        root.root_grid[1,2] = 0
-        self.assertEqual(grid.available_absolute(roots= root), 500)
+        root.root_grid[1, 2] = 0
+        self.assertEqual(grid.available_absolute(roots=root), 500)
 
     def test_drain(self):
         grid = MetaboliteGrid()
 
         grid.add2cell(
-            rate= 500,
-            x = 4,
-            y = 3,
+            rate=500,
+            x=4,
+            y=3,
         )
 
         grid.add2cell(
-            rate= 500,
-            x = 1,
-            y = 2,
+            rate=500,
+            x=1,
+            y=2,
         )
 
-        root = LSystem(
-            root_grid=np.ones((20,6)),
-            water_grid_pos= (0,900)
-            )
+        root = LSystem(root_grid=np.ones((20, 6)), water_grid_pos=(0, 900))
 
-        self.assertEqual(grid.available_absolute(roots= root), 1000)
+        self.assertEqual(grid.available_absolute(roots=root), 1000)
 
-        grid.drain(amount= 500, roots= root)
-        self.assertEqual(grid.available_absolute(roots= root), 500)
-        self.assertEqual(grid.grid[4,3], 250)
-        self.assertEqual(grid.grid[1,2], 250)
+        grid.drain(amount=500, roots=root)
+        self.assertEqual(grid.available_absolute(roots=root), 500)
+        self.assertEqual(grid.grid[4, 3], 250)
+        self.assertEqual(grid.grid[1, 2], 250)
 
         grid.add2cell(
-            rate= 1000,
-            x = 10,
-            y = 0,
+            rate=1000,
+            x=10,
+            y=0,
         )
 
-        self.assertEqual(grid.available_absolute(roots= root), 1500)
-        grid.drain(amount= 300, roots= root)
-        self.assertEqual(grid.available_absolute(roots= root), 1200)
-        self.assertEqual(grid.grid[4,3], 150)
-        self.assertEqual(grid.grid[1,2], 150)
-        self.assertEqual(grid.grid[10,0], 900)
+        self.assertEqual(grid.available_absolute(roots=root), 1500)
+        grid.drain(amount=300, roots=root)
+        self.assertEqual(grid.available_absolute(roots=root), 1200)
+        self.assertEqual(grid.grid[4, 3], 150)
+        self.assertEqual(grid.grid[1, 2], 150)
+        self.assertEqual(grid.grid[10, 0], 900)
 
-        grid.drain(amount=900, roots= root)
-        self.assertEqual(grid.available_absolute(roots= root), 300)
-        self.assertEqual(grid.grid[4,3], 0)
-        self.assertEqual(grid.grid[1,2], 0)
-        self.assertEqual(grid.grid[10,0], 300)
+        grid.drain(amount=900, roots=root)
+        self.assertEqual(grid.available_absolute(roots=root), 300)
+        self.assertEqual(grid.grid[4, 3], 0)
+        self.assertEqual(grid.grid[1, 2], 0)
+        self.assertEqual(grid.grid[10, 0], 300)
 
     def test_to_dict(self):
         grid = MetaboliteGrid()
         grid.add2cell(
-            rate= 500,
-            x = 7,
-            y = 0,
+            rate=500,
+            x=7,
+            y=0,
         )
 
         grid.add2cell(
-            rate= 500,
-            x = 10,
-            y = 4,
+            rate=500,
+            x=10,
+            y=4,
         )
 
         dic = grid.to_dict()
-        expected = {'grid_size': (20, 6), 'grid': [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [500.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 500.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], 'max_metabolite_cell': 1000000}
+        expected = {
+            "grid_size": (20, 6),
+            "grid": [
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [500.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 500.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            ],
+            "max_metabolite_cell": 1000000,
+        }
 
         self.assertEqual(dic, expected)
 
-        grid.add2cell(rate= 47, x= 4, y = 1)
+        grid.add2cell(rate=47, x=4, y=1)
 
         dic = grid.to_dict()
-        expected = {'grid_size': (20, 6), 'grid': [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 47.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [500.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 500.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], 'max_metabolite_cell': 1000000}
-        
-        self.assertEqual(dic, expected)
+        expected = {
+            "grid_size": (20, 6),
+            "grid": [
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 47.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [500.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 500.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            ],
+            "max_metabolite_cell": 1000000,
+        }
 
+        self.assertEqual(dic, expected)
 
     def test_to_json(self):
         grid = MetaboliteGrid()
         grid.add2cell(
-            rate= 500,
-            x = 7,
-            y = 0,
+            rate=500,
+            x=7,
+            y=0,
         )
 
         grid.add2cell(
-            rate= 500,
-            x = 10,
-            y = 4,
+            rate=500,
+            x=10,
+            y=4,
         )
 
         json = grid.to_json()
-        expected = "{\"grid_size\": [20, 6], \"grid\": [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [500.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 500.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], \"max_metabolite_cell\": 1000000}"
+        expected = '{"grid_size": [20, 6], "grid": [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [500.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 500.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], "max_metabolite_cell": 1000000}'  # noqa: E501
         self.assertEqual(json, expected)
 
-        grid.add2cell(rate= 47, x= 4, y = 1)
+        grid.add2cell(rate=47, x=4, y=1)
         json = grid.to_json()
-        expected = "{\"grid_size\": [20, 6], \"grid\": [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 47.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [500.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 500.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], \"max_metabolite_cell\": 1000000}"
-        
+        expected = '{"grid_size": [20, 6], "grid": [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 47.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [500.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 500.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], "max_metabolite_cell": 1000000}'  # noqa: E501
+
         self.assertEqual(json, expected)
 
     def test_from_dict(self):
         grid = MetaboliteGrid()
         grid.add2cell(
-            rate= 500,
-            x = 7,
-            y = 0,
+            rate=500,
+            x=7,
+            y=0,
         )
 
         grid.add2cell(
-            rate= 500,
-            x = 10,
-            y = 4,
+            rate=500,
+            x=10,
+            y=4,
         )
 
         dic = grid.to_dict()
 
         restored_grid = MetaboliteGrid.from_dict(dic)
 
-
         self.assertTrue(restored_grid == grid)
 
     def test_from_json(self):
         grid = MetaboliteGrid()
         grid.add2cell(
-            rate= 500,
-            x = 7,
-            y = 0,
+            rate=500,
+            x=7,
+            y=0,
         )
 
         grid.add2cell(
-            rate= 500,
-            x = 10,
-            y = 4,
+            rate=500,
+            x=10,
+            y=4,
         )
 
         json = grid.to_json()
         restored_grid = MetaboliteGrid.from_json(json)
-        
+
         self.assertTrue(grid == restored_grid)
 
     def test_available_relative_mm(self):
         met = MetaboliteGrid()
         root = LSystem(root_grid=np.ones((20, 6)), water_grid_pos=(0, 900))
-        met.add2cell(20, 1,1)
+        met.add2cell(20, 1, 1)
         met.add2cell(7, 5, 5)
         v_max = 0.038
         k_m = 4000
 
         mm_limit = 0.0002547802334243854
 
-        self.assertEqual(mm_limit, met.available_relative_mm(
-            roots=root,
-            g_root= 1,
-            time_seconds= 20,
-            v_max= v_max,
-            k_m=k_m,
+        self.assertEqual(
+            mm_limit,
+            met.available_relative_mm(
+                roots=root,
+                g_root=1,
+                time_seconds=20,
+                v_max=v_max,
+                k_m=k_m,
+            ),
         )
-        )
-        self.assertEqual(mm_limit,met.available_relative_mm(
-            roots=root,
-            g_root= 1,
-            time_seconds= 30,
-            v_max= v_max,
-            k_m=k_m,
+        self.assertEqual(
+            mm_limit,
+            met.available_relative_mm(
+                roots=root,
+                g_root=1,
+                time_seconds=30,
+                v_max=v_max,
+                k_m=k_m,
+            ),
         )
 
-        )
-
-        self.assertEqual(27/500000, met.available_relative_mm(
+        self.assertEqual(
+            27 / 500000,
+            met.available_relative_mm(
                 roots=root,
                 g_root=1,
                 time_seconds=500000,
                 v_max=v_max,
                 k_m=k_m,
-            ))
+            ),
+        )
 
         self.assertEqual(
             27 / (500000 * 57),
@@ -580,5 +628,3 @@ class TestMetaboliteGrid(TestCase):
                 k_m=k_m,
             ),
         )
-
-

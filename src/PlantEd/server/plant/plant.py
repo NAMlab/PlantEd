@@ -19,6 +19,7 @@ from PlantEd.utils.LSystem import LSystem, DictToRoot
 
 logger = logging.getLogger(__name__)
 
+
 class Plant:
     """
 
@@ -43,7 +44,7 @@ class Plant:
 
     def __init__(self, ground_grid_resolution: tuple[int, int]):
         self.leafs: Leafs = Leafs()
-        self.leafs.new_leaf(Leaf(mass= START_LEAF_BIOMASS_GRAM, max_mass= START_LEAF_BIOMASS_GRAM*5))
+        self.leafs.new_leaf(Leaf(mass=START_LEAF_BIOMASS_GRAM))
 
         self.stem_biomass: float = START_STEM_BIOMASS_GRAM
         self.__root_biomass: float = START_ROOT_BIOMASS_GRAM
@@ -142,9 +143,9 @@ class Plant:
         return dic
 
     @classmethod
-    def from_dict(cls, dic:dict) -> Plant:
+    def from_dict(cls, dic: dict) -> Plant:
         # Todo dirty hardcoded change
-        plant = Plant((20,6))
+        plant = Plant((20, 6))
 
         plant.stem_biomass = dic["stem_biomass"]
         plant.root_biomass = dic["root_biomass"]
@@ -188,7 +189,7 @@ class Plant:
     def root_biomass(self, value):
         diff = value - self.root_biomass
         if diff < 0:
-            logger.error(f"Root mass is decreasing. This is ignored! ")
+            logger.error("Root mass is decreasing. This is ignored!")
             return
 
         self.root.update(value)
@@ -257,12 +258,14 @@ class Plant:
         self.water.update_max_water_pool(plant_biomass=self.biomass_total_gram)
 
     def update_max_starch_pool(self):
-        self.starch_pool.scale_pool_via_biomass(biomass_in_gram=self.biomass_total_gram)
+        self.starch_pool.scale_pool_via_biomass(
+            biomass_in_gram=self.biomass_total_gram
+        )
 
     def update_transpiration(self):
         self.water.update_transpiration(
             stomata_open=self.stomata_open,
-            co2_uptake_in_micromol_per_second_and_gram=self.co2_uptake_in_micromol_per_second_and_gram,
+            co2_uptake_in_micromol_per_second_and_gram=self.co2_uptake_in_micromol_per_second_and_gram,  # noqa: E501
             transpiration_factor=self.water.transpiration_factor,
         )
 

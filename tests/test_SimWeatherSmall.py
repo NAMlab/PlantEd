@@ -18,9 +18,9 @@ class TestWeatherSimulatorMinimal(TestCase):
             w_sim.get_weather_state(5)
 
         weather_state = WeatherState(
-            temperature= 20,
-            humidity= 30,
-            precipitation= 176,
+            temperature=20,
+            humidity=30,
+            precipitation=176,
         )
         w_sim.state = {5: weather_state}
 
@@ -70,7 +70,13 @@ class TestWeatherSimulatorMinimal(TestCase):
         w_sim.latest_hour = 1
 
         dic = w_sim.to_dict()
-        expected = {'states': {0: {'temperature': 20, 'humidity': 30, 'precipitation': 176}, 1: {'temperature': 8, 'humidity': 17, 'precipitation': 348}}, 'latest_hour': 1}
+        expected = {
+            "states": {
+                0: {"temperature": 20, "humidity": 30, "precipitation": 176},
+                1: {"temperature": 8, "humidity": 17, "precipitation": 348},
+            },
+            "latest_hour": 1,
+        }
 
         self.assertEqual(dic, expected)
 

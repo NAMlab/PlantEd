@@ -13,21 +13,35 @@ from PlantEd.server.environment.weather import WeatherSimulator, WeatherState
 
 
 class Environment:
-    water_grid: MetaboliteGrid = MetaboliteGrid()
-    nitrate_grid: MetaboliteGrid = MetaboliteGrid()
+    water_grid: MetaboliteGrid = MetaboliteGrid(
+        max_metabolite_cell=MAX_WATER_PER_CELL,
+        preset_fill_amount=MAX_WATER_PER_CELL / 20,
+    )
+    nitrate_grid: MetaboliteGrid = MetaboliteGrid(
+        max_metabolite_cell=MAX_NITRATE_PER_CELL,
+        preset_fill_amount=MAX_NITRATE_PER_CELL / 10,
+    )
 
     weather_data = importlib.resources.files(data) / "weather"
     df_weather_spring: pd.DataFrame = pd.read_csv(
         (weather_data / "cleaned_weather_spring.csv").open()
     )
 
-    weather: Union[WeatherSimulator, WeatherSimulatorMinimal] = WeatherSimulator(
-        data=df_weather_spring
-    )
+    weather: Union[
+        WeatherSimulator, WeatherSimulatorMinimal
+    ] = WeatherSimulator(data=df_weather_spring)
     time_in_s: int = 0
 
     def __str__(self):
-        string = f"Water Grid:\n{self.water_grid}\n----------\nNitrate Grid\n{self.nitrate_grid}\n----------\nWeather\n{self.weather}"
+        string = (
+            f"Water Grid:\n{self.water_grid}\n"
+            f"----------\n"
+            f"Nitrate Grid\n"
+            f"{self.nitrate_grid}\n"
+            f"----------\n"
+            f"Weather\n"
+            f"{self.weather}"
+        )
         return string
 
     def simulate(self, time_in_s):
@@ -41,9 +55,12 @@ class Environment:
         seconds_missing_for_full_h = 3600 - self.time_in_s % 3600
         state_hour = int(start_time // 3600)
 
-        weather_state: WeatherState = self.weather.get_weather_state(state_hour)
+        weather_state: WeatherState = self.weather.get_weather_state(
+            state_hour
+        )
         self.water_grid.rain_linke_increase(
-            time_in_s=seconds_missing_for_full_h, rain=weather_state.precipitation
+            time_in_s=seconds_missing_for_full_h,
+            rain=weather_state.precipitation,
         )
 
         state_hour = state_hour + 1

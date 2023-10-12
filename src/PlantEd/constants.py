@@ -48,7 +48,7 @@ MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = MAX_NITRATE_INTAKE_PER
 LMA_IN_GRAM_PER_SQUARE_METER: Final[float] = 40
 
 # ↓ Specific leaf Area (SLA)
-SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1/LMA_IN_GRAM_PER_SQUARE_METER
+SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1 / LMA_IN_GRAM_PER_SQUARE_METER
 
 ###############################################################################
 # Plant initialization values

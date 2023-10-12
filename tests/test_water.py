@@ -10,8 +10,12 @@ logging.basicConfig(level=logging.DEBUG)
 
 class TestWater(TestCase):
     @patch("PlantEd.client.water.START_WATER_POOL_IN_MICROMOL", 0)
-    @patch("PlantEd.client.water.PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP", 1)
-    @patch("PlantEd.client.water.PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP", 1)
+    @patch(
+        "PlantEd.client.water.PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP", 1
+    )
+    @patch(
+        "PlantEd.client.water.PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP", 1
+    )
     def test_fill_percentage(self):
         water = Water(plant_weight_gram=1)
         maximum = water.max_water_pool
@@ -135,7 +139,15 @@ class TestWater(TestCase):
     def test_to_json(self):
         water = Water(plant_weight_gram=1)
 
-        expected = '{"water_pool": 0.0, "water_intake": 0, "water_intake_pool": 0, "transpiration": 0, "max_water_pool": 44.406748049433595}'
+        expected = (
+            "{"
+            '"water_pool": 0.0, '
+            '"water_intake": 0, '
+            '"water_intake_pool": 0, '
+            '"transpiration": 0, '
+            '"max_water_pool": 44.406748049433595'
+            "}"
+        )
 
         calculated = water.to_json()
 
@@ -147,14 +159,30 @@ class TestWater(TestCase):
         water.transpiration = 95
         water.update_max_water_pool(50)
 
-        expected = '{"water_pool": 3, "water_intake": 7, "water_intake_pool": 57, "transpiration": 95, "max_water_pool": 2220.33740247168}'
+        expected = (
+            "{"
+            '"water_pool": 3, '
+            '"water_intake": 7, '
+            '"water_intake_pool": 57, '
+            '"transpiration": 95, '
+            '"max_water_pool": 2220.33740247168'
+            "}"
+        )
 
         calculated = water.to_json()
 
         self.assertEqual(expected, calculated)
 
     def test_from_json(self):
-        string = '{"water_pool": 5, "water_intake": 47, "water_intake_pool": 238, "transpiration": 47, "max_water_pool": 348}'
+        string = (
+            "{"
+            '"water_pool": 5, '
+            '"water_intake": 47, '
+            '"water_intake_pool": 238, '
+            '"transpiration": 47, '
+            '"max_water_pool": 348'
+            "}"
+        )
         water = Water.from_json(string=string)
 
         self.assertEqual(5, water.water_pool)
@@ -163,7 +191,15 @@ class TestWater(TestCase):
         self.assertEqual(47, water.transpiration)
         self.assertEqual(348, water.max_water_pool)
 
-        string = '{"water_pool": 37, "water_intake": 147, "water_intake_pool": 7, "transpiration": 64, "max_water_pool": 297}'
+        string = (
+            "{"
+            '"water_pool": 37, '
+            '"water_intake": 147, '
+            '"water_intake_pool": 7, '
+            '"transpiration": 64, '
+            '"max_water_pool": 297'
+            "}"
+        )
         water = Water.from_json(string=string)
 
         self.assertEqual(37, water.water_pool)
@@ -201,8 +237,13 @@ class TestWater(TestCase):
 
     @patch("PlantEd.client.water.START_WATER_POOL_IN_MICROMOL", 60)
     @patch("PlantEd.client.water.MAX_WATER_POOL_PER_GRAMM", 10)
-    @patch("PlantEd.client.water.PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP", 1)
-    @patch("PlantEd.client.water.PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP", 1)
+    @patch(
+        "PlantEd.client.water.PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP", 1
+    )
+    @patch(
+        "PlantEd.client.water.PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP",
+        1,
+    )
     def test_calc_available_water_in_mol_per_gram_and_time(self):
         water = Water(plant_weight_gram=5)
 
@@ -221,14 +262,24 @@ class TestWater(TestCase):
         )
 
         water.water_pool = 40
-        self.assertEqual(40, water.calc_available_water_in_mol_per_gram_and_time(gram_of_organ= 1, time_in_seconds= 1))
-        self.assertEqual(20, water.calc_available_water_in_mol_per_gram_and_time(gram_of_organ=2, time_in_seconds= 1))
         self.assertEqual(
-           10,
-           water.calc_available_water_in_mol_per_gram_and_time(
-               gram_of_organ=2, time_in_seconds=2
-           ),
-       )
+            40,
+            water.calc_available_water_in_mol_per_gram_and_time(
+                gram_of_organ=1, time_in_seconds=1
+            ),
+        )
+        self.assertEqual(
+            20,
+            water.calc_available_water_in_mol_per_gram_and_time(
+                gram_of_organ=2, time_in_seconds=1
+            ),
+        )
+        self.assertEqual(
+            10,
+            water.calc_available_water_in_mol_per_gram_and_time(
+                gram_of_organ=2, time_in_seconds=2
+            ),
+        )
         self.assertEqual(
             10,
             water.calc_available_water_in_mol_per_gram_and_time(
@@ -242,7 +293,11 @@ class TestWater(TestCase):
             ),
         )
 
-        with patch("PlantEd.client.water.PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP", 2):
+        with patch(
+            "PlantEd.client.water."
+            "PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP",
+            2,
+        ):
             with patch("PlantEd.client.water.Water.water_pool", 60):
                 self.assertEqual(
                     60,
@@ -265,10 +320,14 @@ class TestWater(TestCase):
                     ),
                 )
         with self.assertRaises(ValueError):
-            water.calc_available_water_in_mol_per_gram_and_time(gram_of_organ=0, time_in_seconds=1)
+            water.calc_available_water_in_mol_per_gram_and_time(
+                gram_of_organ=0, time_in_seconds=1
+            )
 
         with self.assertRaises(ValueError):
-            water.calc_available_water_in_mol_per_gram_and_time(gram_of_organ=1, time_in_seconds=0)
+            water.calc_available_water_in_mol_per_gram_and_time(
+                gram_of_organ=1, time_in_seconds=0
+            )
 
     @patch("PlantEd.client.water.START_WATER_POOL_IN_MICROMOL", 60)
     @patch("PlantEd.client.water.MAX_WATER_POOL_PER_GRAMM", 10)

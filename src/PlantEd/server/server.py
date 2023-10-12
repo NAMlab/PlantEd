@@ -23,12 +23,15 @@ from PlantEd.server.plant.nitrate import Nitrate
 
 logger = logging.getLogger(__name__)
 
+
 class ServerContainer:
     def __init__(self, sock: Optional[socket.socket] = None, only_local=True):
         self.shutdown_signal: Event = multiprocessing.Event()
         self.manager: Manager = multiprocessing.Manager()
         self.__port: Optional[int] = self.manager.Value(Optional[int], None)
-        self.__ip_address: Optional[str] = self.manager.Value(Optional[str], None)
+        self.__ip_address: Optional[str] = self.manager.Value(
+            Optional[str], None
+        )
         self.__ready: Event = multiprocessing.Event()
 
         process = multiprocessing.Process(
@@ -40,7 +43,7 @@ class ServerContainer:
                 "only_local": only_local,
                 "port": self.__port,
                 "ip_adress": self.__ip_address,
-            }
+            },
         )
 
         self.process = process
@@ -76,22 +79,22 @@ class ServerContainer:
         self.process.join()
         logger.debug("Process closed")
 
-def start_server(
-        shutdown_signal: Event,
-        ready: Event,
-        sock: Optional[socket.socket] = None,
-        only_local=True,
-        port: Optional[int] = None,
-        ip_adress: Optional[int] = None,
-):
 
+def start_server(
+    shutdown_signal: Event,
+    ready: Event,
+    sock: Optional[socket.socket] = None,
+    only_local=True,
+    port: Optional[int] = None,
+    ip_adress: Optional[int] = None,
+):
     server = Server(
-        shutdown_signal = shutdown_signal,
-        ready= ready,
-        sock= sock,
-        only_local= only_local,
-        port = port,
-        ip_adress= ip_adress,
+        shutdown_signal=shutdown_signal,
+        ready=ready,
+        sock=sock,
+        only_local=only_local,
+        port=port,
+        ip_adress=ip_adress,
     )
     server.start()
 
@@ -102,22 +105,22 @@ class Server:
     """
 
     def __init__(
-            self,
-            shutdown_signal: Event,
-            ready: Event,
-            sock: Optional[socket.socket] = None,
-            only_local = True,
-            port: Optional[int] = None,
-            ip_adress: Optional[int] = None,
+        self,
+        shutdown_signal: Event,
+        ready: Event,
+        sock: Optional[socket.socket] = None,
+        only_local=True,
+        port: Optional[int] = None,
+        ip_adress: Optional[int] = None,
     ):
         self.shutdown_signal: Event = shutdown_signal
         self.ready: Event = ready
         self.clients: set[WebSocketServerProtocol] = set()
         self.sock: Optional[socket.socket] = sock
         self.websocket: websockets.WebSocketServer = None
-        self.environment : Environment = Environment()
+        self.environment: Environment = Environment()
         self.model: DynamicModel = DynamicModel(
-            enviroment= self.environment,
+            enviroment=self.environment,
         )
 
         self.__future: asyncio.Future = None
@@ -126,7 +129,6 @@ class Server:
 
         self.__port: Optional[int] = port
         self.__ip_address: Optional[str] = ip_adress
-
 
     @property
     def port(self):
@@ -145,10 +147,17 @@ class Server:
                 asyncio.set_event_loop(loop)
 
         try:
-            signal.signal(signal.SIGINT, lambda *args: self.shutdown_signal.set)
-            signal.signal(signal.SIGTERM, lambda *args: self.shutdown_signal.set)
+            signal.signal(
+                signal.SIGINT, lambda *args: self.shutdown_signal.set
+            )
+            signal.signal(
+                signal.SIGTERM, lambda *args: self.shutdown_signal.set
+            )
         except ValueError as e:
-            if "signal only works in main thread of the main interpreter" == str(e):
+            if (
+                "signal only works in main thread of the main interpreter"
+                == str(e)
+            ):
                 pass
             else:
                 raise e
@@ -172,14 +181,15 @@ class Server:
         sock = self.sock
 
         if sock is None:
-
             if self.only_local is True:
                 addr = ("localhost", 0)
             else:
                 addr = ("", 0)
 
             if socket.has_dualstack_ipv6():
-                sock: socket.socket = socket.create_server(addr, family=socket.AF_INET6, dualstack_ipv6=True)
+                sock: socket.socket = socket.create_server(
+                    addr, family=socket.AF_INET6, dualstack_ipv6=True
+                )
             else:
                 sock: socket.socket = socket.create_server(addr)
 
@@ -189,7 +199,8 @@ class Server:
 
         async with websockets.serve(
             self.main_handler,
-            sock = sock,
+            sock=sock,
+            logger=logging.getLogger(__name__ + ".websocket"),
             ping_interval=10,
             ping_timeout=30,
         ) as websocket:
@@ -203,7 +214,9 @@ class Server:
                 max_workers=1,
             )
             self.ready.set()
-            await self.loop.run_in_executor(executor= executor, func = self.shutdown_signal.wait)
+            await self.loop.run_in_executor(
+                executor=executor, func=self.shutdown_signal.wait
+            )
 
     def open_connection(self, ws: WebSocketServerProtocol):
         """
@@ -255,12 +268,17 @@ class Server:
         logger.info(f"Calculating growth rates from {growth_percent}")
 
         if growth_percent.time_frame == 0:
-            logger.debug("The passed TimeFrame is 0. Returning plant objects without simulation.")
+            logger.debug(
+                "The passed TimeFrame is 0."
+                " Returning plant objects without simulation."
+            )
             return self.model.plant.to_json()
 
-        self.environment.simulate(time_in_s= growth_percent.time_frame)
+        self.environment.simulate(time_in_s=growth_percent.time_frame)
 
-        self.model.calc_growth_rate(new_growth_percentages= growth_percent, environment= self.environment)
+        self.model.calc_growth_rate(
+            new_growth_percentages=growth_percent, environment=self.environment
+        )
         logger.info(f"Calculated growth rates: {self.model.growth_rates}")
 
         message = self.model.plant.to_json()
@@ -356,15 +374,15 @@ class Server:
         return self.environment.to_json()
 
     def create_new_first_letter(
-            self,
-            dir,
-            pos,
-            mass,
-            dist,
+        self,
+        dir,
+        pos,
+        mass,
+        dist,
     ):
         self.model.plant.root.create_new_first_letter(
             dir=dir,
-            pos= pos,
+            pos=pos,
             mass=mass,
             dist=dist,
         )
@@ -390,9 +408,7 @@ class Server:
                 )
 
             case _:
-                logger.error(
-                    "Unknown grid"
-                )
+                logger.error("Unknown grid")
 
     async def main_handler(self, ws: WebSocketServerProtocol):
         """
@@ -408,7 +424,9 @@ class Server:
                 request = await ws.recv()
             except websockets.ConnectionClosed as e:
                 self.close_connection(ws)
-                logger.debug(f"{ws.remote_address} unregistered. Closing Trace: {e}")
+                logger.debug(
+                    f"{ws.remote_address} unregistered. Closing Trace: {e}"
+                )
                 break
 
             logger.info(f"Received {request}")
@@ -468,14 +486,16 @@ class Server:
 
                         case "get_water_pool":
                             logger.debug(
-                                "Received command identified as get_water_pool."
+                                "Received command identified as"
+                                " get_water_pool."
                             )
 
                             response["get_water_pool"] = self.get_water_pool()
 
                         case "increase_nitrate":
                             logger.debug(
-                                "Received command identified as increase_nitrate."
+                                "Received command identified as "
+                                "increase_nitrate."
                             )
                             amount = payload["increase_nitrate"]
 
@@ -483,7 +503,8 @@ class Server:
 
                         case "get_nitrate_pool":
                             logger.debug(
-                                "Received command identified as get_nitrate_pool."
+                                "Received command identified as "
+                                "get_nitrate_pool."
                             )
 
                             response[
@@ -492,7 +513,8 @@ class Server:
 
                         case "create_leaf":
                             logger.debug(
-                                f"Received command identified as create_leaf. Payload: {payload}"
+                                f"Received command identified as create_leaf."
+                                f" Payload: {payload}"
                             )
 
                             leaf: Leaf = Leaf.from_dict(payload)
@@ -501,21 +523,24 @@ class Server:
 
                         case "stop_water_intake":
                             logger.debug(
-                                "Received command identified as stop_water_intake."
+                                "Received command identified as "
+                                "stop_water_intake."
                             )
 
                             self.stop_water_intake()
 
                         case "enable_water_intake":
                             logger.debug(
-                                "Received command identified as enable_water_intake."
+                                "Received command identified as "
+                                "enable_water_intake."
                             )
 
                             self.enable_water_intake()
 
                         case "set_water_pool":
                             logger.debug(
-                                "Received command identified as set_water_pool."
+                                "Received command identified as "
+                                "set_water_pool."
                             )
 
                             water = Water.from_json(payload)
@@ -533,7 +558,8 @@ class Server:
 
                         case "get_environment":
                             logger.debug(
-                                "Received command identified as get_environment."
+                                "Received command identified as "
+                                "get_environment."
                             )
 
                             response[
@@ -542,22 +568,27 @@ class Server:
 
                         case "create_new_first_letter":
                             logger.debug(
-                                "Received command identified as create_new_first_letter."
+                                "Received command identified as "
+                                "create_new_first_letter."
                             )
 
                             self.create_new_first_letter(
-                                dir= payload["dir"],
-                                pos= payload["pos"],
-                                mass= payload["mass"],
-                                dist= payload["dist"],
+                                dir=payload["dir"],
+                                pos=payload["pos"],
+                                mass=payload["mass"],
+                                dist=payload["dist"],
                             )
 
                         case "add2grid":
-                            logger.debug("Received command identified as add2grid.")
+                            logger.debug(
+                                "Received command identified as add2grid."
+                            )
                             self.add2grid(payload=payload)
 
                         case "load_level":
-                            logger.debug("Received command identified as load_level.")
+                            logger.debug(
+                                "Received command identified as load_level."
+                            )
                             await self.__load_level()
                             response["load_level"] = "None"
 

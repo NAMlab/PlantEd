@@ -83,7 +83,7 @@ class TestDynamicModel(TestCase):
         self.fail()
 
     def test_objective_value_not_zero(self):
-        dyn_model = DynamicModel(enviroment= Environment())
+        dyn_model = DynamicModel(enviroment=Environment())
 
         dyn_model.set_bounds(NITRATE, (-1000, 1000))
         dyn_model.set_bounds(CO2, (-1000, 1000))
@@ -98,7 +98,7 @@ class TestDynamicModel(TestCase):
         self.assertAlmostEqual(1000, ideal_objective_value, places=3)
 
     def test_update_constraints(self):
-        dyn_model = DynamicModel(enviroment= Environment())
+        dyn_model = DynamicModel(enviroment=Environment())
         growth_percent = GrowthPercent(
             leaf=0.5,
             stem=0,
@@ -135,7 +135,9 @@ class TestDynamicModel(TestCase):
             dyn_model.plant.starch_pool.max_starch_pool
         )
         dyn_model.plant.water.water_pool = dyn_model.plant.water.max_water_pool
-        dyn_model.plant.nitrate.nitrate_pool = dyn_model.plant.nitrate.max_nitrate_pool
+        dyn_model.plant.nitrate.nitrate_pool = (
+            dyn_model.plant.nitrate.max_nitrate_pool
+        )
 
         leaf_old = dyn_model.plant.leafs_biomass_gram
         stem_old = dyn_model.plant.stem_biomass_gram
@@ -163,15 +165,20 @@ class TestDynamicModel(TestCase):
         seed_diff = seed_new - seed_old
         starch = dyn_model.plant.starch_pool.starch_production_in_gram
 
-        msg = f"Growth of leaf ({leaf_diff}), stem ({stem_diff}), root ({root_diff}) and starch ({starch}) is unequal"
+        msg = (
+            f"Growth of leaf ({leaf_diff}), "
+            f"stem ({stem_diff}), "
+            f"root ({root_diff}) "
+            f"and starch ({starch}) is unequal"
+        )
+
         self.assertEqual(0, seed_diff)
         self.assertAlmostEqual(leaf_diff, stem_diff, msg=msg)
         self.assertAlmostEqual(stem_diff, root_diff, msg=msg)
         self.assertAlmostEqual(root_diff, starch, msg=msg)
 
-
     def test_photosynthesis(self):
-        dyn_model = DynamicModel(enviroment= Environment())
+        dyn_model = DynamicModel(enviroment=Environment())
 
         dyn_model.plant.root_biomass = 100
         dyn_model.plant.stem_biomass = 100
@@ -186,7 +193,9 @@ class TestDynamicModel(TestCase):
 
         dyn_model.plant.starch_pool.available_starch_pool = 0
         dyn_model.plant.water.water_pool = dyn_model.plant.water.max_water_pool
-        dyn_model.plant.nitrate.nitrate_pool = dyn_model.plant.nitrate.max_nitrate_pool
+        dyn_model.plant.nitrate.nitrate_pool = (
+            dyn_model.plant.nitrate.max_nitrate_pool
+        )
 
         leaf_old = dyn_model.plant.leafs_biomass_gram
         stem_old = dyn_model.plant.stem_biomass_gram
@@ -214,7 +223,13 @@ class TestDynamicModel(TestCase):
         seed_diff = seed_new - seed_old
         starch = dyn_model.plant.starch_pool.starch_production_in_gram
 
-        msg = f"Growth of leaf ({leaf_diff}), stem ({stem_diff}), root ({root_diff}) and starch ({starch}) is unequal"
+        msg = (
+            f"Growth of leaf ({leaf_diff}), "
+            f"stem ({stem_diff}), "
+            f"root ({root_diff}) "
+            f"and starch ({starch}) is unequal"
+        )
+
         self.assertEqual(0, seed_diff)
         self.assertAlmostEqual(leaf_diff, stem_diff, msg=msg)
         self.assertAlmostEqual(stem_diff, root_diff, msg=msg)
@@ -243,6 +258,8 @@ class TestDynamicModel(TestCase):
         self.assertEqual(0, growth_rate.seed_rate)
 
         self.assertTrue(dyn_model._objective_value > 0)
-        self.assertTrue(dyn_model.plant.starch_pool.starch_production_in_gram > 0)
+        self.assertTrue(
+            dyn_model.plant.starch_pool.starch_production_in_gram > 0
+        )
         self.assertTrue(dyn_model.plant.co2 > 0)
         self.assertTrue(dyn_model.plant.photon > 0)

@@ -20,11 +20,15 @@ class TestLeaf(TestCase):
             leaf = Leaf(max_mass=3, mass=10)
 
     def test_equal(self):
-        with patch.object(Leaf, "_Leaf__max_id", new_callable=PropertyMock) as mock:
+        with patch.object(
+            Leaf, "_Leaf__max_id", new_callable=PropertyMock
+        ) as mock:
             mock.return_value = 1
             leaf = Leaf(mass=6, max_mass=13)
 
-        with patch.object(Leaf, "_Leaf__max_id", new_callable=PropertyMock) as mock:
+        with patch.object(
+            Leaf, "_Leaf__max_id", new_callable=PropertyMock
+        ) as mock:
             mock.return_value = 1
             leaf_2 = Leaf(mass=7, max_mass=13)
 
@@ -43,7 +47,9 @@ class TestLeaf(TestCase):
         self.assertEqual(6, leaf.space_left)
 
     def test_to_dict(self):
-        with patch.object(Leaf, "_Leaf__max_id", new_callable=PropertyMock) as mock:
+        with patch.object(
+            Leaf, "_Leaf__max_id", new_callable=PropertyMock
+        ) as mock:
             mock.return_value = 6
             leaf = Leaf(mass=0, max_mass=10)
 
@@ -75,7 +81,9 @@ class TestLeaf(TestCase):
         self.assertEqual(8, leaf.id)
 
     def test_to_json(self):
-        with patch.object(Leaf, "_Leaf__max_id", new_callable=PropertyMock) as mock:
+        with patch.object(
+            Leaf, "_Leaf__max_id", new_callable=PropertyMock
+        ) as mock:
             mock.return_value = 9
             leaf = Leaf(mass=4, max_mass=78)
         json = leaf.to_json()
@@ -86,7 +94,9 @@ class TestLeaf(TestCase):
     def test_from_json(self):
         json = '{"id": 8,"mass": 1, "max_mass": 20}'
 
-        with patch.object(Leaf, "_Leaf__max_id", new_callable=PropertyMock) as mock:
+        with patch.object(
+            Leaf, "_Leaf__max_id", new_callable=PropertyMock
+        ) as mock:
             mock.return_value = 1
             leaf = Leaf.from_json(json)
 

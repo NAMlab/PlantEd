@@ -2,7 +2,6 @@ import logging
 from unittest import TestCase
 
 from PlantEd.client.water import Water
-from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.plant import Plant
 from PlantEd.server.plant.starch import Starch
@@ -59,12 +58,6 @@ class TestPlant(TestCase):
         self.fail()
 
     def test_starch_out(self):
-        self.fail()
-
-    def test_starch_out(self):
-        self.fail()
-
-    def test_starch_in(self):
         self.fail()
 
     def test_starch_in(self):

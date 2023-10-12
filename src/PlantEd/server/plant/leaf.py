@@ -1,20 +1,28 @@
 from __future__ import annotations
 
-import itertools
 import json
 import logging
 
-from PlantEd.constants import SLA_IN_SQUARE_METER_PER_GRAM
+from PlantEd.constants import (
+    SLA_IN_SQUARE_METER_PER_GRAM,
+    MAXIMUM_LEAF_BIOMASS_GRAM,
+)
 
 logger = logging.getLogger(__name__)
+
 
 class Leaf:
     # not thread safe! class method creation might result in skipped ids
     __max_id = 1
 
-    def __init__(self, mass: float = 0.0, max_mass: float = 5.0):
+    def __init__(
+        self, mass: float = 0.0, max_mass: float = MAXIMUM_LEAF_BIOMASS_GRAM
+    ):
         if max_mass < mass:
-            raise ValueError(f"Max max mass ({max_mass}) of leaf is smaller than weight({mass}). ")
+            raise ValueError(
+                f"Max max mass ({max_mass}) of leaf"
+                f" is smaller than weight({mass}). "
+            )
 
         self.mass = mass
         self.max_mass = max_mass
@@ -22,7 +30,10 @@ class Leaf:
         Leaf.__max_id = Leaf.__max_id + 1
 
     def __repr__(self):
-        string = f"Leaf with id {self.id} a mass of {self.mass}g and a max mass of {self.max_mass}."
+        string = (
+            f"Leaf with id {self.id} a mass of {self.mass}g"
+            f" and a max mass of {self.max_mass}."
+        )
         return string
 
     def __eq__(self, other):
@@ -46,6 +57,7 @@ class Leaf:
     @property
     def id(self):
         return self.__id
+
     @property
     def space_left(self):
         return self.max_mass - self.mass
@@ -61,7 +73,6 @@ class Leaf:
 
     @classmethod
     def from_dict(cls, dic: dict) -> Leaf:
-
         leaf = Leaf(
             mass=dic["mass"],
             max_mass=dic["max_mass"],
@@ -84,6 +95,7 @@ class Leaf:
 
         return Leaf.from_dict(dic=dic)
 
+
 class Leafs:
     def __init__(self):
         self.__addable_leaf_biomass: float = 0
@@ -104,12 +116,13 @@ class Leafs:
             return False
 
         return True
+
     @property
     def leafs(self):
         return self.__leafs
 
-    def new_leaf(self, leaf:Leaf):
-        self.__addable_leaf_biomass += (leaf.max_mass - leaf.mass)
+    def new_leaf(self, leaf: Leaf):
+        self.__addable_leaf_biomass += leaf.max_mass - leaf.mass
         self.__biomass += leaf.mass
         self.__leafs.add(leaf)
 
@@ -120,6 +133,7 @@ class Leafs:
     @property
     def specific_leaf_area_in_square_meter(self):
         return SLA_IN_SQUARE_METER_PER_GRAM * self.biomass
+
     @property
     def biomass(self):
         return self.__biomass
@@ -130,14 +144,20 @@ class Leafs:
 
         if increase > self.addable_leaf_biomass:
             logger.error(
-                msg=f"Trying to add more Biomass to Leafs({increase}) than there is space in the Leaf objects left({self.addable_leaf_biomass}). {increase - self.addable_leaf_biomass}g Leaf Biomass will be lost/ignored"
+                msg=f"Trying to add more Biomass to Leafs({increase}) than"
+                f" there is space in the Leaf objects"
+                f" left({self.addable_leaf_biomass})."
+                f" {increase - self.addable_leaf_biomass}g Leaf Biomass"
+                f" will be lost/ignored"
             )
             increase = self.addable_leaf_biomass
 
         if increase == 0:
             return
 
-        leafs_ordered_by_space = sorted(self.__leafs, key=lambda x: x.space_left, reverse=False)
+        leafs_ordered_by_space = sorted(
+            self.__leafs, key=lambda x: x.space_left, reverse=False
+        )
         n_leafs = len(self.__leafs)
 
         if n_leafs == 1:
@@ -152,7 +172,7 @@ class Leafs:
 
                 if space_left < mass2add_per_leaf:
                     increase = increase - space_left
-                    n_leafs = n_leafs-1
+                    n_leafs = n_leafs - 1
                     mass2add_per_leaf = increase / n_leafs
 
                     leaf.mass = leaf.max_mass
@@ -162,8 +182,12 @@ class Leafs:
 
         new_leaf_biomass = self.__biomass + increase
         new_addable_leaf_biomass = self.__addable_leaf_biomass - increase
-        logger.debug(f"Adding {increase}g to leaf_biomass({self.__biomass}) resulting in {new_leaf_biomass}g."
-                     f"Addable Biomass set from {self.addable_leaf_biomass}g to {new_addable_leaf_biomass}g")
+        logger.debug(
+            f"Adding {increase}g to leaf_biomass({self.__biomass})"
+            f" resulting in {new_leaf_biomass}g."
+            f"Addable Biomass set from {self.addable_leaf_biomass}g"
+            f" to {new_addable_leaf_biomass}g"
+        )
 
         self.__biomass = new_leaf_biomass
         self.__addable_leaf_biomass = new_addable_leaf_biomass
@@ -183,7 +207,7 @@ class Leafs:
         return dic
 
     @classmethod
-    def from_dict(cls, dic:dict) -> Leafs:
+    def from_dict(cls, dic: dict) -> Leafs:
         leafs = Leafs()
         leafs.__addable_leaf_biomass = dic["addable_leaf_biomass"]
         leafs.__biomass = dic["biomass"]

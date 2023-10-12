@@ -6,9 +6,8 @@ import json
 import logging
 import multiprocessing
 import threading
-from asyncio import Future
+from asyncio import Future, InvalidStateError
 from multiprocessing import Event
-from pathlib import Path
 from typing import Callable, Literal
 
 import websockets
@@ -20,6 +19,7 @@ from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.plant import Plant
+from websockets.exceptions import ConnectionClosedOK
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,9 @@ class Client:
         logger.info("Connected to localhost")
 
     async def __connect(self):
-        self.websocket = await websockets.connect(self.url)
+        self.websocket = await websockets.connect(
+            self.url, logger=logging.getLogger(__name__ + ".websocket")
+        )
 
     async def __start(self, ready: Event):
         self.loop = asyncio.get_running_loop()
@@ -71,10 +73,8 @@ class Client:
         Method to stop the client.
         Does not need to run inside the same thread or process as the server.
         """
-        # self.__future.set_result("")
         asyncio.run_coroutine_threadsafe(self.__stop_client(), self.loop)
 
-        self.loop.call_soon_threadsafe(self.loop.stop)
         self.thread.join()
         logger.debug("Client thread closed")
 
@@ -89,7 +89,15 @@ class Client:
 
     async def __receive_handler(self):
         while True:
-            answer = await self.websocket.recv()
+            try:
+                answer = await self.websocket.recv()
+            except ConnectionClosedOK:
+                logger.info(
+                    "The server has been terminated and has closed the"
+                    " connection. The client will now be stopped."
+                )
+                await self.__stop_client()
+                break
 
             logger.info(f"Received {answer}")
 
@@ -100,15 +108,24 @@ class Client:
                     future = self.expected_receive[id_string]
                 except KeyError as e:
                     logger.error(
-                        f"Task {id_string} was not found. All expected are {self.expected_receive.keys()}",
+                        f"Task {id_string} was not found. "
+                        f"All expected are {self.expected_receive.keys()}",
                         exc_info=e,
                     )
                     continue
 
                 logger.debug(
-                    f"Setting future for {id_string} as done with result {payload}"
+                    f"Setting future for {id_string} "
+                    f"as done with result {payload}"
                 )
-                future.set_result(payload)
+                try:
+                    future.set_result(payload)
+                except InvalidStateError:
+                    logger.exception(
+                        msg=f"Since no one is waiting skipped: {answer}.",
+                        exc_info=True,
+                    )
+                    continue
 
     def growth_rate(
         self,
@@ -121,7 +138,9 @@ class Client:
         self.expected_receive["growth_rate"] = future_received
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
-        task = self.__receive_growth_rate(future=future_received, callback=callback)
+        task = self.__receive_growth_rate(
+            future=future_received, callback=callback
+        )
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __receive_growth_rate(
@@ -141,12 +160,13 @@ class Client:
         logger.debug("Callback executed.")
 
     async def __request_growth_rate(self, growth_percent: GrowthPercent):
-        if growth_percent.starch < 0:
-            growth_percent.starch = 0
+        message_dict = {
+            "growth_rate": {"GrowthPercent": growth_percent.to_json()}
+        }
 
-        message_dict = {"growth_rate": {"GrowthPercent": growth_percent.to_json()}}
-
-        logger.info(f"Sending Request for growth rates. Payload is : {message_dict}")
+        logger.info(
+            f"Sending Request for growth rates. Payload is : {message_dict}"
+        )
 
         message_str = json.dumps(message_dict)
 
@@ -244,7 +264,9 @@ class Client:
 
         self.expected_receive["get_water_pool"] = future_received
 
-        task = self.__receive_get_water_pool(future=future_received, callback=callback)
+        task = self.__receive_get_water_pool(
+            future=future_received, callback=callback
+        )
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
         task = self.__request_get_water_pool()
@@ -297,7 +319,9 @@ class Client:
         future_received = self.loop.create_future()
         self.expected_receive["get_nitrate_pool"] = future_received
 
-        task = self.__receive_nitrate_pool(future=future_received, callback=callback)
+        task = self.__receive_nitrate_pool(
+            future=future_received, callback=callback
+        )
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
         task = self.__request_nitrate_pool()
@@ -354,7 +378,9 @@ class Client:
 
         self.expected_receive["get_environment"] = future_received
 
-        task = self.__get_environment(future=future_received, callback=callback)
+        task = self.__get_environment(
+            future=future_received, callback=callback
+        )
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __get_environment(
@@ -368,7 +394,9 @@ class Client:
 
         await future
         payload = future.result()
-        logger.debug(f"Received following as answer for environment request: {payload}")
+        logger.debug(
+            f"Received following as answer for environment request: {payload}"
+        )
 
         env = Environment.from_json(payload)
 
@@ -418,8 +446,9 @@ class Client:
         grid: Literal["nitrate", "water"],
     ):
         """
-        The method allows access to both grids on the server. It thus enables the use of add2grid of the
-        MetaboliteGrid objects of the server-side environment.
+        The method allows access to both grids on the server.
+        It thus enables the use of add2grid of the MetaboliteGrid
+        objects of the server-side environment.
 
         Args:
             amount: Quantity in micromol to be added to the celle of the grid.

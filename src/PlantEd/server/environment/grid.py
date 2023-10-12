@@ -31,22 +31,27 @@ logger = logging.getLogger(__name__)
 #
 # acess grid like this grid[x,y]
 
+
 class MetaboliteGrid:
     """
-    The soil is split into a grid of cells. Each cell holds water, can be drained and filled.
-    Drainers are the plant and trickle
+    The soil is split into a grid of cells. Each cell holds water,
+    can be drained and filled. Drainers are the plant and trickle.
     Fillers are rain and the watering_can
 
-    The grid shape defines the resolution of the grid. The root_grid must be of the same shape as water_grid.
+    The grid shape defines the resolution of the grid.
+    The root_grid must be of the same shape as water_grid.
     """
 
     def __init__(
-            self,
-            grid_size: tuple[int, int] = (20, 6),
-            max_metabolite_cell: int = 1000000,
+        self,
+        grid_size: tuple[int, int] = (20, 6),
+        max_metabolite_cell: int = 1000000,
+        preset_fill_amount: int = 0,
     ):
         self.grid_size: tuple[int, int] = grid_size
-        self.grid: np.ndarray = np.zeros(grid_size)
+        self.grid: np.ndarray = np.full(
+            grid_size, fill_value=preset_fill_amount
+        )
 
         self.max_metabolite_cell = max_metabolite_cell
 
@@ -103,16 +108,31 @@ class MetaboliteGrid:
         sum = available_metabolite.sum()
 
         if sum < 0:
-            logger.error("The calculated absolute available value based on the occurrence of the metabolite in the soil and root is negative. Check the grid itself and the root.")
+            logger.error(
+                "The calculated absolute available value based on the "
+                "occurrence of the metabolite in the soil and root is "
+                "negative. Check the grid itself and the root."
+            )
 
-        logger.debug(f"The passed root has access to {sum} mMol of metabolites.")
+        logger.debug(
+            f"The passed root has access to {sum} mMol of metabolites."
+        )
         return sum
 
-    def available_relative_mm(self, time_seconds: int, g_root:float, v_max: float, k_m: float, roots:LSystem):
+    def available_relative_mm(
+        self,
+        time_seconds: int,
+        g_root: float,
+        v_max: float,
+        k_m: float,
+        roots: LSystem,
+    ):
         """
-        This method calculates the usable metabolites in [mMol] / ([gram] * [s]. Either the calculated value is limited
-        by the metabolites available in the soil or by the maximum uptake per second,
-        which in turn is calculated by a time-dependent Michaelis-Menten equation.
+        This method calculates the usable metabolites in
+        [mMol] / ([gram] * [s]. Either the calculated value is limited
+        by the metabolites available in the soil or by the maximum uptake
+        per second, which in turn is calculated by a time-dependent
+        Michaelis-Menten equation.
 
         Args:
             time_seconds:
@@ -122,21 +142,34 @@ class MetaboliteGrid:
             roots:
 
         Returns:
-            Relative availability of the Metabolite. The unit is [mMol] / ([gram] * [s]).
+            Relative availability of the Metabolite. The unit is
+            [mMol] / ([gram] * [s]).
         """
-        if any( x < 0 for x in [time_seconds, g_root, v_max, k_m]):
-            logger.error(f"One of the parameters is contrary to expectations, negative. Parameters: {time_seconds} s, {g_root} g, {v_max} mMol/(g*s), k_m mMol, ")
+        if any(x < 0 for x in [time_seconds, g_root, v_max, k_m]):
+            logger.error(
+                f"One of the parameters is contrary to expectations, negative."
+                f" Parameters: {time_seconds} s, {g_root} g, "
+                f"{v_max} mMol/(g*s), k_m mMol, "
+            )
 
-        amount_absolute = self.available_absolute(roots= roots)
-        max_uptake_per_second = amount_absolute / (time_seconds * g_root) # based on availability
+        amount_absolute = self.available_absolute(roots=roots)
+        max_uptake_per_second = amount_absolute / (
+            time_seconds * g_root
+        )  # based on availability
 
-        theoretical_uptake_per_second = (v_max * amount_absolute ) / (k_m + amount_absolute) # based on MM
+        theoretical_uptake_per_second = (v_max * amount_absolute) / (
+            k_m + amount_absolute
+        )  # based on MM
 
-        logger.info(f"Calculated max uptake based on the soil as {max_uptake_per_second} and based on the Michaelis-Menten equation is {theoretical_uptake_per_second} ")
+        logger.info(
+            f"Calculated max uptake based on the soil as"
+            f" {max_uptake_per_second} and based on the Michaelis-Menten"
+            f" equation is {theoretical_uptake_per_second} "
+        )
 
         return min(max_uptake_per_second, theoretical_uptake_per_second)
-    
-    def drain(self, amount: float ,roots: LSystem):
+
+    def drain(self, amount: float, roots: LSystem):
         if amount <= 0:
             return
 
@@ -145,11 +178,19 @@ class MetaboliteGrid:
 
         n_cells2drain_from = (available_water_grid > 0).sum()
 
-        average_cell_drain = amount / n_cells2drain_from if n_cells2drain_from is not 0 else 0
+        average_cell_drain = (
+            amount / n_cells2drain_from if n_cells2drain_from != 0 else 0
+        )
 
         # iterates over all cells ordered by key
-        # => here from the cell with the lowest concentration to the highest concentration 
-        for (x,y), value in sorted(np.ndenumerate(available_water_grid), key=itemgetter(1), reverse=False):
+        # => here from the cell with the lowest concentration to the
+        #    highest concentration
+
+        for (x, y), value in sorted(
+            np.ndenumerate(available_water_grid),
+            key=itemgetter(1),
+            reverse=False,
+        ):
             if value == 0:
                 continue
             if value < average_cell_drain:
@@ -181,7 +222,8 @@ class MetaboliteGrid:
         Over time water travels from the upper rows to the base.
         Drain starts at the bottom row. Water from above get reduced and added
         below.
-        The more water there is, the faster it trickles. Randomness makes it look less uniform.
+        The more water there is, the faster it trickles.
+         Randomness makes it look less uniform.
 
         Depending on gamespeed and TRICKLE_AMOUNT
         """
@@ -191,9 +233,10 @@ class MetaboliteGrid:
                 upper_cell = self.grid[x, y - 1]
                 if upper_cell > 0:
                     adjusted_trickle = (
-                            (TRICKLE_AMOUNT + TRICKLE_AMOUNT * upper_cell) / 1000
-                            * random.random()
-                            * dt
+                        (TRICKLE_AMOUNT + TRICKLE_AMOUNT * upper_cell)
+                        / 1000
+                        * random.random()
+                        * dt
                     )
                     # check if zero in upper cell
                     delta_trickle = self.grid[x, y - 1] - adjusted_trickle
@@ -214,12 +257,10 @@ class MetaboliteGrid:
         return dic
 
     def to_json(self) -> str:
-
         return json.dumps(self.to_dict())
 
     @classmethod
     def from_dict(cls, dic: dict) -> MetaboliteGrid:
-
         met_grid = MetaboliteGrid()
 
         met_grid.grid_size = tuple(dic["grid_size"])

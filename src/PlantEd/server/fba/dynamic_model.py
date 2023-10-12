@@ -11,12 +11,15 @@ import scipy.integrate as integrate
 from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.client.growth_percentage import GrowthPercent
 from PlantEd.constants import MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
+from PlantEd.constants import (
+    Vmax,
+    Km,
+)
 
 from PlantEd.server.fba.helpers import (
     normalize,
 )
 from PlantEd.server.environment.environment import Environment
-from PlantEd.server.plant.leaf import Leaf
 from PlantEd.server.plant.plant import Plant
 
 # states for objective
@@ -85,20 +88,20 @@ script_dir = fileDir.parent
 # interface and state holder of model --> dynamic wow
 class DynamicModel:
     def __init__(
-            self,
-            enviroment: Environment,
-            model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
+        self,
+        enviroment: Environment,
+        model=cobra.io.read_sbml_model(script_dir / "PlantEd_model.sbml"),
     ):
         self.model = model.copy()
         self.set_objective()
         self._objective_value: float = 0
 
-        self.plant: Plant = Plant(ground_grid_resolution=Environment.water_grid.grid_size)
+        self.plant: Plant = Plant(
+            ground_grid_resolution=Environment.water_grid.grid_size
+        )
 
         self.use_starch = False
-        self.temp = (
-            20  # degree ceclsius        # define init pool and rates in JSON or CONFIG
-        )
+        self.temp = 20  # degree ceclsius
 
         # based on paper
         # copies of intake rates to drain form pools
@@ -112,7 +115,9 @@ class DynamicModel:
         # growth rates for each objective
         self.growth_rates = GrowthRates("mol", 0, 0, 0, 0, 0, 0, 0)
 
-        self.percentages: GrowthPercent = GrowthPercent(0.25, 0.25, 0.25, 0, 0, 1)
+        self.percentages: GrowthPercent = GrowthPercent(
+            0.25, 0.25, 0.25, 0, 0, 1
+        )
         self.update_constraints()
 
         self.init_constraints()
@@ -129,10 +134,10 @@ class DynamicModel:
 
         objective = self.model.problem.Objective(
             expression=Add(leaf.flux_expression)
-                       + Add(root.flux_expression)
-                       + Add(seed.flux_expression)
-                       + Add(stem.flux_expression)
-                       + Add(starch.flux_expression),
+            + Add(root.flux_expression)
+            + Add(seed.flux_expression)
+            + Add(stem.flux_expression)
+            + Add(starch.flux_expression),
             direction="max",
             name="multi_objective",
         )
@@ -161,14 +166,36 @@ class DynamicModel:
         # Literature ATP NADPH: 7.27 and 2.56 mmol gDW−1 day−1
 
     def calc_growth_rate(
-            self, new_growth_percentages: GrowthPercent, environment: Environment
+        self, new_growth_percentages: GrowthPercent, environment: Environment
     ):
         time_frame = new_growth_percentages.time_frame
         weather_state = environment.weather.get_latest_weather_state()
 
+        logger.debug(f"STARCH SLIDER SERVER: {new_growth_percentages.starch}")
+        # handle negative starch
+        if new_growth_percentages.starch < 0:
+            # consume
+            self.plant.starch_pool.allowed_starch_pool_consumption = abs(
+                new_growth_percentages.starch / 100
+            )
+            new_growth_percentages.starch = 0
+        else:
+            # produce
+            self.plant.starch_pool.allowed_starch_pool_consumption = 0
+
+        starch_upper_bound = self.plant.starch_pool.calc_available_starch_in_mol_per_gram_and_time(  # noqa: E501
+            gram_of_organ=self.plant.stem_biomass_gram,
+            time_in_seconds=time_frame,
+        )
+        starch_bounds = (0, starch_upper_bound)
+        logger.debug(f"Bounds for starch intake are {starch_bounds}")
+        self.set_bounds(STARCH_IN, starch_bounds)
+
         self.seconds_passed += time_frame
 
-        logger.debug(f"Simulating the growth of the plant for {time_frame} seconds.")
+        logger.debug(
+            f"Simulating the growth of the plant for {time_frame} seconds."
+        )
 
         self.plant.update_nitrate_pool_intake(
             seconds=time_frame,
@@ -219,7 +246,9 @@ class DynamicModel:
             self.plant.root
         ) / (self.plant.root_biomass_gram * time_frame)
 
-        self.plant.water.update_transpiration_factor(weather_state=weather_state)
+        self.plant.water.update_transpiration_factor(
+            weather_state=weather_state
+        )
         self.plant.update_transpiration()
 
         transpiration = self.plant.get_transpiration_in_micromol(
@@ -227,20 +256,26 @@ class DynamicModel:
         )  # ToDo check with stomata
 
         max_usable_water = max(
-            water_upper_bound_plant_pool + water_upper_bound_env_pool - transpiration, 0
+            water_upper_bound_plant_pool
+            + water_upper_bound_env_pool
+            - transpiration,
+            0,
         )
 
         water_bounds = (-1000, max_usable_water)
         logger.debug(
-            f"Available Water from Plant pool is: {water_upper_bound_plant_pool}, available water from env pool is: {water_upper_bound_env_pool}, transpiration is {transpiration}. Bounds for water set to: {water_bounds}"
+            f"Available Water from Plant pool is:"
+            f" {water_upper_bound_plant_pool},"
+            f" available water from env pool is: {water_upper_bound_env_pool},"
+            f" transpiration is {transpiration}."
+            f" Bounds for water set to: {water_bounds}"
         )
         self.set_bounds(WATER, water_bounds)
 
         photon_upper_bound = (
-                self.plant.leafs.specific_leaf_area_in_square_meter # m^2
-                * self.micromol_photon_per_square_meter # mikromol / (s * m^2)
-        ) / self.plant.leafs_biomass # g_organ
-
+            self.plant.leafs.specific_leaf_area_in_square_meter  # m^2
+            * self.micromol_photon_per_square_meter  # mikromol / (s * m^2)
+        ) / self.plant.leafs_biomass  # g_organ TOdo fix this
 
         photon_bounds = (0, photon_upper_bound)
         logger.debug(f"Bounds for photons are {photon_bounds}")
@@ -248,19 +283,19 @@ class DynamicModel:
 
         # Nitrate
 
-        nitrate_upper_bound_plant_pool = (
-            self.plant.nitrate.calc_available_nitrate_in_micromol_per_gram_and_time(
-                gram_of_organ=self.plant.root_biomass_gram,
-                time_in_seconds=time_frame,
-            )
+        nitrate_upper_bound_plant_pool = self.plant.nitrate.calc_available_nitrate_in_micromol_per_gram_and_time(  # noqa: E501
+            gram_of_organ=self.plant.root_biomass_gram,
+            time_in_seconds=time_frame,
         )
 
-        nitrate_upper_bound_env_pool = environment.nitrate_grid.available_relative_mm(
-            roots= self.plant.root,
-            time_seconds= time_frame,
-            g_root= self.plant.root_biomass_gram,
-            v_max= Vmax,
-            k_m= Km,
+        nitrate_upper_bound_env_pool = (
+            environment.nitrate_grid.available_relative_mm(
+                roots=self.plant.root,
+                time_seconds=time_frame,
+                g_root=self.plant.root_biomass_gram,
+                v_max=Vmax,
+                k_m=Km,
+            )
         )
 
         nitrate_upper_bounds = (
@@ -268,14 +303,22 @@ class DynamicModel:
         )
 
         nitrate_bounds = (-1000, nitrate_upper_bounds)
-        logger.debug(f"Bounds for nitrate are  {nitrate_bounds}, Nitrate pool available is {nitrate_upper_bound_env_pool}")
+        logger.debug(
+            f"Bounds for nitrate are  {nitrate_bounds},"
+            f" Nitrate pool available is {nitrate_upper_bound_env_pool}"
+        )
         self.set_bounds(NITRATE, nitrate_bounds)
 
         # Limit Biomass output based on created organs
         if self.percentages.leaf != 0:
-            bounds_leaf = (0, self.plant.leafs.addable_leaf_biomass / (leaf_biomass * time_frame))
+            bounds_leaf = (
+                0,
+                self.plant.leafs.addable_leaf_biomass
+                / (leaf_biomass * time_frame),
+            )
             logger.debug(
-                f"Maximum addable biomass for leafs is {self.plant.leafs.addable_leaf_biomass},"
+                f"Maximum addable biomass for leafs is"
+                f" {self.plant.leafs.addable_leaf_biomass},"
                 f" bounds are therefore {bounds_leaf}"
             )
             self.set_bounds(BIOMASS_LEAF, bounds_leaf)
@@ -328,7 +371,11 @@ class DynamicModel:
         seed = seed * seed_biomass * time_frame
 
         logger.debug(
-            f"Absolute values of biomass increase are: Leaf({leaf}), Stem({stem}), Root({root}), Seed{seed}"
+            f"Absolute values of biomass increase are:"
+            f" Leaf({leaf}),"
+            f" Stem({stem}),"
+            f" Root({root}),"
+            f" Seed{seed}"
         )
 
         # Uptake and release
@@ -336,12 +383,17 @@ class DynamicModel:
         co2_uptake_in_micromol_per_second_and_gram = co2
         co2 = co2 * leaf_biomass * time_frame
         photon = photon * leaf_biomass * time_frame
-        logger.debug(f"CO2 uptake is {co2}, photon uptake is {photon}")
+        logger.debug(
+            f"CO2 uptake is {co2}, photon uptake is {photon} in a timeframe"
+            f" of {time_frame} and a leave mass of {self.plant.leafs_biomass}"
+        )
 
         # via stem
         starch_out = starch_out * stem_biomass * time_frame
         starch_in = starch_in * stem_biomass * time_frame
-        logger.debug(f"Starch_in is {starch_in} and starch_out is {starch_out}")
+        logger.debug(
+            f"Starch_in is {starch_in} and starch_out is {starch_out}"
+        )
 
         # via root
         water = water * root_biomass * time_frame
@@ -375,11 +427,15 @@ class DynamicModel:
         environment.water_grid.drain(amount=used_water, roots=self.plant.root)
 
         self.plant.update_max_water_pool()
-        self.plant.water.update_transpiration_factor(weather_state=weather_state)
+        self.plant.water.update_transpiration_factor(
+            weather_state=weather_state
+        )
         self.plant.update_transpiration()
 
         amount = self.plant.water.missing_amount
-        available = environment.water_grid.available_absolute(roots=self.plant.root)
+        available = environment.water_grid.available_absolute(
+            roots=self.plant.root
+        )
         diff = min(amount, available)
 
         environment.water_grid.drain(amount=diff, roots=self.plant.root)
@@ -413,7 +469,8 @@ class DynamicModel:
         self.plant.starch_in = starch_in
         self.plant.update_max_starch_pool()
         self.plant.starch_pool.available_starch_pool = (
-                self.plant.starch_pool.available_starch_pool + (starch_out - starch_in)
+            self.plant.starch_pool.available_starch_pool
+            + (starch_out - starch_in)
         )
 
         # ToDo remove growth_rates not needed anymore everything is in plant
@@ -497,7 +554,10 @@ class DynamicModel:
     def get_sun_intensity_for_duration(self, start, end):
         start = start / (3600 * 24)
         end = end / (3600 * 24)
-        f = lambda x: np.sin((2 * np.pi) * ((x) - (8 / 24)))
+
+        def f(x):
+            return np.sin((2 * np.pi) * ((x) - (8 / 24)))
+
         i = integrate.quad(f, start, end)
         return max(i[0] / (end - start), 0)
 
@@ -506,7 +566,9 @@ class DynamicModel:
         stem_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_STEM)
         leaf_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_LEAF)
         seed_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_SEED)
-        starch_out_reaction: Reaction = self.model.reactions.get_by_id(STARCH_OUT)
+        starch_out_reaction: Reaction = self.model.reactions.get_by_id(
+            STARCH_OUT
+        )
 
         names = ["root", "stem", "leaf", "seed", "starch_out"]
         reactions = [
@@ -541,7 +603,9 @@ class DynamicModel:
                 # cannot transfer molecule into pool
                 bounds = (0, 0)
                 reaction.bounds = bounds
-                logger.debug(f"Setting bounds for Reaction {reaction.id} to {bounds}")
+                logger.debug(
+                    f"Setting bounds for Reaction {reaction.id} to {bounds}"
+                )
 
                 # skip iteration since no constraint needs to be set
                 # since the bounds already take care of setting reaction to 0
@@ -550,7 +614,9 @@ class DynamicModel:
                 # => set bounds in a way that molecule can be exported
                 bounds = (0, 1000)
                 reaction.bounds = bounds
-                logger.debug(f"Setting bounds for Reaction {reaction.id} to {bounds}")
+                logger.debug(
+                    f"Setting bounds for Reaction {reaction.id} to {bounds}"
+                )
 
             for j in range(i + 1, n_reactions):
                 name = f"{names[i]}_and_{names[j]}"
@@ -561,15 +627,17 @@ class DynamicModel:
                     logger.debug(f"Removing the constraint with name {name}")
                     self.model.remove_cons_vars(old_cons)
 
-                # check if new constraint needs to be set in place (percentages != 0)
-                # and set them
+                # check if new constraint needs to be set in place
+                # (percentages != 0) and set them
                 if percentage[i] != 0 and percentage[j] != 0:
                     constraint = self.model.problem.Constraint(
                         (
-                                reactions[i].flux_expression * mass_organ[i] / percentage[i]
-                                - reactions[j].flux_expression
-                                * mass_organ[j]
-                                / percentage[j]
+                            reactions[i].flux_expression
+                            * mass_organ[i]
+                            / percentage[i]
+                            - reactions[j].flux_expression
+                            * mass_organ[j]
+                            / percentage[j]
                         ),
                         lb=0,
                         ub=0,

@@ -46,14 +46,16 @@ class TestWeatherState(TestCase):
         )
 
         self.assertEqual(
-            {"temperature": 20, "humidity": 64, "precipitation": 0}, w_state.to_dict()
+            {"temperature": 20, "humidity": 64, "precipitation": 0},
+            w_state.to_dict(),
         )
 
         w_state.humidity = 15
         w_state.temperature = 75
         w_state.precipitation = 200
         self.assertEqual(
-            {"temperature": 75, "humidity": 15, "precipitation": 200}, w_state.to_dict()
+            {"temperature": 75, "humidity": 15, "precipitation": 200},
+            w_state.to_dict(),
         )
 
     def test_from_dict(self):
@@ -63,5 +65,3 @@ class TestWeatherState(TestCase):
         self.assertEqual(75, recreated_weather_state.temperature)
         self.assertEqual(15, recreated_weather_state.humidity)
         self.assertEqual(200, recreated_weather_state.precipitation)
-
-

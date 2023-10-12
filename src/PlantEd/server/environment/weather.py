@@ -14,7 +14,8 @@ class WeatherSimulator(WeatherSimulatorMinimal):
     The amount of states can be controlled via bin. Reducing the amount,
     reduces size and increases performance
 
-    Add up all transitions happening between states and normalize them at the end
+    Add up all transitions happening between states and normalize them at
+     the end.
 
     Args:
         data: a pandas Dataframe that contains recorded weather data
@@ -23,13 +24,14 @@ class WeatherSimulator(WeatherSimulatorMinimal):
         precip_bins: number of precipitation bins
         seed: fixed probabilites of random behaviour
     """
+
     def __init__(
-            self,
-            data: pd.DataFrame,
-            temp_bins: int = 50,
-            hum_bins: int = 50,
-            precip_bins: int = 100,
-            seed: float = 15
+        self,
+        data: pd.DataFrame,
+        temp_bins: int = 50,
+        hum_bins: int = 50,
+        precip_bins: int = 100,
+        seed: float = 15,
     ):
         super().__init__()
         if not seed:
@@ -43,7 +45,7 @@ class WeatherSimulator(WeatherSimulatorMinimal):
         self.hum_step: float = 100 / hum_bins
         self.precip_step: float = 0.1
         self.precip_bins = precip_bins
-        self.state: Dict[int,WeatherState] = {}
+        self.state: Dict[int, WeatherState] = {}
         self.latest_hour: int = 0
 
         # Calculate transition probabilities
@@ -89,31 +91,36 @@ class WeatherSimulator(WeatherSimulatorMinimal):
         start_hum = data["humidity"][0]
         start_precip = data["precipitation"][0]
         self.state[0] = WeatherState(
-            temperature= start_temp,
-            humidity= start_hum,
-            precipitation= start_precip
+            temperature=start_temp,
+            humidity=start_hum,
+            precipitation=start_precip,
         )
 
         self.curr_temp_bin = int((start_temp - self.temp_min) / self.temp_step)
         self.curr_hum_bin = int(start_hum / self.hum_step)
         self.curr_precip_bin = int(start_precip / self.precip_step)
-        self.curr_state: tuple = (self.curr_temp_bin, self.curr_hum_bin, self.curr_precip_bin)
+        self.curr_state: tuple = (
+            self.curr_temp_bin,
+            self.curr_hum_bin,
+            self.curr_precip_bin,
+        )
 
     def simulate(
-            self,
-            end_hour: int,
+        self,
+        end_hour: int,
     ):
         """
         Computes the weather up to the specified hour.
 
         Args:
             end_hour: Last hour for which the weather is to be simulated.
-                If not already done, the weather will also be simulated for all previous hours.
+                If not already done, the weather will also be simulated
+                 for all previous hours.
         """
         random.seed(self.seed)
 
-        for hour in range(self.latest_hour +1, end_hour + 1 , 1):
-            self.latest_hour = self.latest_hour +1
+        for hour in range(self.latest_hour + 1, end_hour + 1, 1):
+            self.latest_hour = self.latest_hour + 1
 
             curr_temp = self.temp_min + self.curr_temp_bin * self.temp_step
             curr_hum = self.curr_hum_bin * self.hum_step
@@ -122,7 +129,7 @@ class WeatherSimulator(WeatherSimulatorMinimal):
             weather_state = WeatherState(
                 temperature=curr_temp,
                 humidity=curr_hum,
-                precipitation=curr_precip
+                precipitation=curr_precip,
             )
 
             self.state[hour] = weather_state
@@ -138,12 +145,15 @@ class WeatherSimulator(WeatherSimulatorMinimal):
 
             # Update current state
             self.curr_state = next_state
-            self.curr_temp_bin, self.curr_hum_bin, self.curr_precip_bin = self.curr_state
-    
-    def get_weather_state(self, time: int) -> WeatherState:
+            (
+                self.curr_temp_bin,
+                self.curr_hum_bin,
+                self.curr_precip_bin,
+            ) = self.curr_state
 
+    def get_weather_state(self, time: int) -> WeatherState:
         if time not in self.state:
-            self.simulate(end_hour= time)
+            self.simulate(end_hour=time)
 
         state: WeatherState = self.state.get(time)
 
@@ -151,4 +161,3 @@ class WeatherSimulator(WeatherSimulatorMinimal):
 
     def get_latest_weather_state(self):
         return self.state.get(self.latest_hour)
-
