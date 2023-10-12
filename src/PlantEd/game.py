@@ -4,6 +4,8 @@ import time
 from datetime import datetime
 from typing import List
 
+import numpy as np
+import pandas
 import pygame
 from pygame.locals import *
 
@@ -18,8 +20,9 @@ from PlantEd.data import assets
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.gameobjects.bee import Hive
 from PlantEd.gameobjects.bug import Bug
+from PlantEd.gameobjects.grid import Grid
 from PlantEd.gameobjects.level_card import Card
-from PlantEd.gameobjects.plant import Plant
+from PlantEd.gameobjects.plant import Plant, Root
 from PlantEd.gameobjects import plant
 from PlantEd.gameobjects.shop import (
     Shop,
@@ -31,10 +34,14 @@ from PlantEd.gameobjects.snail import SnailSpawner
 from PlantEd.gameobjects.tree import Tree
 from PlantEd.gameobjects.water_reservoir import Water_Grid, Base_water
 from PlantEd.server.plant.plant import Plant as ServerPlant
+from PlantEd.server.environment.environment import Environment as ServerEnvironment
 from PlantEd.ui import UI
+from PlantEd.utils import plot
+from PlantEd.utils.animation import Animation
 from PlantEd.utils.button import Button, Slider, ToggleButton, Textbox
 from PlantEd.utils.gametime import GameTime
 from PlantEd.utils.narrator import Narrator
+from PlantEd.utils.particle import ParticleSystem, ParticleExplosion
 from PlantEd.weather import Environment
 
 # currentdir = os.path.abspath('../..')
@@ -49,7 +56,6 @@ true_res = (
 temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 # screen_high = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT*2), pygame.SRCALPHA)
 GROWTH = 26
-RECALC = 25
 WIN = pygame.USEREVENT + 1
 
 # stupid, change dynamically
@@ -81,11 +87,6 @@ def shake():
         s *= -1
     while True:
         yield (0, 0)
-
-
-# Todo
-# unittests, dir that contains all tests, one test file for one class, secure class function
-# pipenv for git, enable cloners to see all depencies
 
 
 class OptionsScene:
@@ -288,7 +289,6 @@ class OptionsScene:
 
 class DefaultGameScene(object):
     def __init__(self):
-        self.end_initiated = False
         # get name and date
         name = config.load_options()["name"]
 
@@ -298,6 +298,7 @@ class DefaultGameScene(object):
         os.makedirs(self.path_to_logs)
         self.log = Log(self.path_to_logs)  # can be turned off
         global plant
+        pygame.mixer.set_reserved(2)
         self.sound_control = SoundControl()
         self.sound_control.play_music()
         self.sound_control.play_start_sfx()
@@ -305,11 +306,14 @@ class DefaultGameScene(object):
 
         self.camera = Camera(offset_y=0)
         self.gametime = GameTime.instance()
-        self.gametime.faster()
+        #self.gametime.fastest()
+        #self.gametime.faster()
 
         self.water_grid = Water_Grid(pos=(0, 900))
         self.client = Client(port=client_port)
-        self.server_plant = ServerPlant()
+        self.nitrate_grid = Grid()
+        self.server_plant = ServerPlant(ground_grid_resolution=(6, 20))
+        self.server_environment = ServerEnvironment()
         self.hours_since_start_where_growth_last_computed = 0
         self.plant = Plant(
             pos=(
@@ -335,23 +339,18 @@ class DefaultGameScene(object):
         )
         self.environment = Environment(
             plant=self.plant,
-            server_plant=self.server_plant,
             water_grid=self.water_grid,
-            gametime=self.gametime  # T
         )
 
         self.narrator = Narrator(self.environment)
 
-        growth_rates = GrowthRates("grams", 0, 0, 0, 0, 0, 0, 0)
         self.ui = UI(
             scale=1,
             plant=self.plant,
             narrator=self.narrator,
             client=self.client,
-            environment=self.environment,
             camera=self.camera,
             sound_control=self.sound_control,
-            growth_rates=growth_rates,
             server_plant=self.server_plant,
             quit=self.quit
         )
@@ -506,16 +505,15 @@ class DefaultGameScene(object):
         self.plant.organs[2].floating_shop = self.floating_shop
 
         # start plant growth timer
-        pygame.time.set_timer(GROWTH, 2000)
+        pygame.time.set_timer(GROWTH, 1000)
 
     def activate_add_leaf(self):
         # if there are funds, buy a leave will enable leave @ mouse pos until clicked again
         self.plant.organs[0].activate_add_leaf()
 
     def quit(self):
-
-        self.log.close_file()
         self.log.close_model_file()
+        self.plant.save_image(self.path_to_logs)
         plant_dict = self.plant.to_dict()
         config.write_dict(plant_dict, self.path_to_logs + "/plant")
         self.manager.go_to(EndScene(self.path_to_logs))
@@ -526,7 +524,6 @@ class DefaultGameScene(object):
             if self.ui.pause:
                 continue
             if e.type == GROWTH:
-
                 game_time_now = self.gametime.time_since_start_in_hours
                 delta_time_in_h = \
                     game_time_now \
@@ -556,6 +553,13 @@ class DefaultGameScene(object):
                     callback=self.update_growth_rates,
                 )
 
+                if self.shop.watering_can.pouring:
+                    for i in range(len(self.water_grid.poured_cells)):
+                        amount = self.water_grid.poured_cells[i]
+                        if amount > 0:
+                            self.client.add2grid(amount, i, 0, "water")
+                    self.water_grid.poured_cells.fill(0)
+
                 self.plant.get_PLA()
                 days, hours, minutes = self.environment.get_day_time()
 
@@ -579,19 +583,17 @@ class DefaultGameScene(object):
                     water_pool=0,
                     starch_pool=0,
                     nitrate_pool=0,
-                    leaf_rate=self.ui.growth_rates.leaf_rate,
-                    stem_rate=self.ui.growth_rates.stem_rate,
-                    root_rate=self.ui.growth_rates.root_rate,
-                    seed_rate=self.ui.growth_rates.seed_rate,
+                    leaf_rate=0,
+                    stem_rate=0,
+                    root_rate=0,
+                    seed_rate=0,
                 )
 
-            if e.type == KEYDOWN and e.key == K_e:
-                self.end_initiated = not self.end_initiated
-                self.plant.organs[5].pop_all_seeds(timeframe=2000)
+                # Request env and set it to self.server_environment
+                self.client.get_environment(callback= self.set_environment)
 
             if e.type == WIN:
                 if self.log:
-                    self.log.close_file()
                     self.log.close_model_file()
                 scoring.upload_score(
                     self.ui.name, self.plant.organs[3].get_mass()
@@ -609,6 +611,17 @@ class DefaultGameScene(object):
             self.narrator.handle_event(e)
             self.camera.handle_event(e)
 
+    def set_environment(self, environment: ServerEnvironment):
+        self.server_environment = environment
+
+        self.ui.latest_weather_state = self.server_environment.weather.get_latest_weather_state()
+        if not self.shop.watering_can.active:
+            self.water_grid.water_grid = self.server_environment.water_grid.grid
+        self.environment.precipitation = self.server_environment.weather.get_latest_weather_state().precipitation
+        self.nitrate_grid.grid = self.server_environment.nitrate_grid.grid
+        # setup local environment -> only to draw water, nitrate
+        # setup local ui -> to draw temp, hum, precipi, sun?
+
     def update_growth_rates(self, plant: ServerPlant):
         """
         Callback function for the client to update the GrowthRates
@@ -617,11 +630,9 @@ class DefaultGameScene(object):
             plant: The new Plant object.
 
         """
-
         logger.debug("Replacing the existing plant object of the UI with the "
                      f"new one. NEW: {plant}")
 
-        old_plant = self.server_plant
         self.server_plant = plant
 
         # max starch pool can be smaller in the beginning due to balancing
@@ -631,27 +642,24 @@ class DefaultGameScene(object):
         self.plant.organ_starch.update_starch_max(max_starch_pool)
 
         self.plant.organ_starch.mass = plant.starch_pool.available_starch_pool
-        # Todo, currently only pool is updated by server, not content?
 
         logger.debug("Calculating the delta of the growth in grams. ")
 
-        growth_rates: GrowthRates = GrowthRates(
-            unit="mol",
-            leaf_rate=(plant.leafs_biomass_gram - old_plant.leafs_biomass_gram),
-            stem_rate=(plant.stem_biomass_gram - old_plant.stem_biomass_gram),
-            root_rate=(plant.root_biomass_gram - old_plant.root_biomass_gram),
-            starch_rate=plant.starch_pool.starch_out,
-            starch_intake=plant.starch_pool.starch_in,
-            seed_rate=(plant.seed_biomass_gram - old_plant.seed_biomass_gram),
-            time_frame=-1,
-        )
+        masses = {
+            "leaf_mass": self.server_plant.leafs_biomass,
+            "stem_mass": self.server_plant.stem_biomass,
+            "root_mass": self.server_plant.root_biomass,
+            "seed_mass": self.server_plant.seed_biomass,
+            "starch_pool": self.server_plant.starch_pool,
+        }
 
-        logger.debug(f"Delta is as follows: {str(growth_rates)}")
-
-        self.ui.growth_rates = growth_rates
         self.ui.server_plant = plant
-        logger.debug("Updating the gram representation of the UI.")
-        self.plant.update_growth_rates(growth_rates)
+        logger.debug(f"Updating the gram representation of the UI. With the following values: Leaf: {self.server_plant.leafs_biomass}, Stem: {self.server_plant.stem_biomass}, Root: {self.server_plant.seed_biomass}, Starch: {self.server_plant.starch_pool}.")
+        self.plant.update_organ_masses(masses)
+
+        old_root: Root = self.plant.organs[2]
+        old_root.ls = plant.root # assigning root from server
+        self.plant.organs[2] = old_root
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
@@ -666,7 +674,6 @@ class DefaultGameScene(object):
         hours = (ticks % day) / hour
         self.check_game_end(days)
         if 8 < hours < 20:
-            # print(hours)
             (
                 shadow_map,
                 resolution,
@@ -685,9 +692,7 @@ class DefaultGameScene(object):
         self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
 
         # ToDo Does the Watergrid need that many updates? (sends everytime one request)
-        self.water_grid.update(
-            dt=dt, water=self.server_plant.water, client=self.client
-        )
+        self.water_grid.update(dt)
         self.snail_spawner.update(dt)
         for bug in self.bugs:
             bug.update(dt)
@@ -710,10 +715,6 @@ class DefaultGameScene(object):
         if self.ui.pause:
             self.ui.draw(screen)
             return
-        if self.end_initiated:
-            self.plant.draw(temp_surface)
-            screen.blit(temp_surface, (0, self.camera.offset_y))
-            return
 
         self.environment.draw_background(temp_surface)
         self.hive.draw(temp_surface)
@@ -727,6 +728,7 @@ class DefaultGameScene(object):
         self.environment.draw_shadows(temp_surface)
 
         self.water_grid.draw(temp_surface)
+        self.nitrate_grid.draw(temp_surface)
         self.floating_shop.draw(temp_surface)
 
         screen.blit(temp_surface, (0, self.camera.offset_y))
@@ -855,22 +857,103 @@ class TitleScene(object):
                 button.handle_event(e)
             # self.watering_can.handle_event(e)
 
+
 class EndScene(object):
     def __init__(self, path_to_logs):
+        self.path_to_logs = path_to_logs
         super(EndScene, self).__init__()
-        self.camera = Camera(offset_y=-200)
+        self.camera = Camera(offset_y=-50)
+        self.sound_control = SoundControl()
         dict_plant = config.load_dict(path_to_logs + "/plant.json")
         self.plant_object: Plant = plant.from_dict(dict_plant, self.camera)
+        positions = []
+        for flower in self.plant_object.organs[3].flowers:
+            positions.append((flower["x"], flower["y"] + self.camera.offset_y))
+
+        systems = []
+        for position in positions:
+            systems.append(
+                ParticleSystem(
+                    max_particles=50,
+                    spawn_box=(position[0], position[1], 0, 0),
+                    lifetime=10,
+                    color=(int(255 * random.random()), int(255 * random.random()), int(255 * random.random())),
+                    apply_gravity=2,
+                    speed=[(random.random() - 0.5) * 20, -80 * random.random()],
+                    spread=[50, 30],
+                    active=False,
+                    size_over_lifetime=True,
+                    size=10,
+                    once=True,
+                )
+            )
+        self.explosion: ParticleExplosion = ParticleExplosion(
+            systems=systems,
+            interval=0.5,
+            play_explosion_sound=self.sound_control.play_pop_seed_sfx,
+        )
+        self.explosion.start()
+
+        images = Animation.generate_counter(
+            start_number=1000,
+            end_number=2000,
+            resolution=10)
+
+        explosion_duration = 0.5 * len(self.plant_object.organs[3].flowers)
+
+        self.score_animation = Animation(
+            images=images,
+            duration=explosion_duration,
+            pos=(400, 400),
+            running=True,
+            once=True
+        )
+
+        self.score_header_label = config.MENU_SUBTITLE.render("Score", True, config.WHITE)
+        self.flower_score_list = []
+        score_sum = 0
+        for i in range(len(self.plant_object.organs[3].flowers)):
+            flowers = self.plant_object.organs[3].flowers
+            flower_score = config.BIGGER_FONT.render("Flower {}: {:.2f} mmol".format(i, float(flowers[i]["mass"])), True,
+                                                     config.WHITE)
+            self.flower_score_list.append(flower_score)
+            score_sum += flowers[i]["mass"]
+
+        self.score_sum_label = config.BIGGER_FONT.render("{:.2f} mmol".format(float(score_sum)), True, config.WHITE)
+        self.title = config.MENU_TITLE.render("Finished", True, config.WHITE)
+
+        self.plot_label = config.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
+
+        '''
+        Prepare plots
+        - Mass (Organs)
+        - Pools (Water, Nitrate, starch)
+        - Environment (Photon, Humidity, Precipitation, Temperature)
+        - Special (Transpiration, APS lol)
+        '''
+
+        df = pandas.read_csv(path_to_logs + "/model_logs.csv")
+        self.image = plot.generate_png_from_vec([df.Leaf_mass, df.Stem_mass, df.Root_mass, df.Seed_mass],
+                                                name_list=["Leaf", "Stem", "Root", "Seed"],
+                                                colors=[config.hex_color_to_float(config.GREEN),
+                                                        config.hex_color_to_float(config.WHITE),
+                                                        config.hex_color_to_float(config.RED),
+                                                        config.hex_color_to_float(config.YELLOW)],
+                                                time=[df.Hours],
+                                                xlabel="Time",
+                                                ylabel="VEC",
+                                                path_to_logs=path_to_logs,
+                                                filename="PLOT.png")
 
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
-            860,
+            config.SCREEN_WIDTH / 2 - 150,
             930,
-            200,
+            300,
             50,
-            [self.return_to_menu],
+            [self.sound_control.play_toggle_sfx, self.return_to_menu, self.upload_data],
             config.BIGGER_FONT,
-            "BACK",
+            "Upload Simulation",
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
@@ -878,22 +961,47 @@ class EndScene(object):
         self.button_sprites.add(self.back)
 
     def update(self, dt):
-        pass
+        self.explosion.update(dt)
+        self.score_animation.update(dt)
+
+    def handle_events(self, events):
+        for e in events:
+            if e.type == pygame.MOUSEBUTTONDOWN:
+                pass
+            for button in self.button_sprites:
+                button.handle_event(e)
+
+    def upload_data(self):
+        options = config.load_options()
+        scoring.upload_score(
+            options["name"], self.plant_object.organs[3].get_mass(), self.path_to_logs
+        )
 
     def render(self, screen):
-        screen.fill((0,0,0,0))
+        screen.fill((0, 0, 0, 0))
         temp_surface.fill((0, 0, 0))
         self.plant_object.draw(temp_surface)
         screen.blit(temp_surface, (0, self.camera.offset_y))
         self.button_sprites.draw(screen)
+        self.explosion.draw(screen)
+        self.score_animation.draw(screen)
 
-    def handle_events(self, events):
-        for e in events:
-            for button in self.button_sprites:
-                button.handle_event(e)
+
+        distance = self.flower_score_list[0].get_height() + 20
+        width = self.flower_score_list[0].get_width()
+        for i in range(len(self.flower_score_list)):
+            screen.blit(self.flower_score_list[i], (500 - width, 380 + (distance * i)))
+        pygame.draw.line(screen, config.WHITE, (150, 380 + (distance * len(self.flower_score_list))), (550, 380 + (distance * len(self.flower_score_list))))
+        screen.blit(self.score_sum_label, (500 - self.score_sum_label.get_width(), 400 + (distance * len(self.flower_score_list))))
+        screen.blit(self.score_header_label, (350 - self.score_header_label.get_width()/2, 270))
+        pygame.draw.rect(screen, config.WHITE, (100,360,500, int((len(self.flower_score_list)+2) * distance)), 1, 1)
+        screen.blit(self.image, (config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))
+        screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
+        screen.blit(self.title, (config.SCREEN_WIDTH / 2 - self.title.get_width() / 2, 100))
 
     def return_to_menu(self):
         self.manager.go_to(TitleScene(self.manager))
+
 
 class CustomScene(object):
     def __init__(self):
@@ -1168,7 +1276,6 @@ def main(windowed: bool, port: int):
 
         if pygame.event.get(QUIT):
             running = False
-            # print("pygame.event.get(QUIT):")
             break
 
         # manager handles the current scene
@@ -1178,6 +1285,7 @@ def main(windowed: bool, port: int):
         # screen.blit(fps_text, (500, 500))
         # camera.render(screen)
         pygame.display.update()
+        time.sleep(0)
 
 
 if __name__ == "__main__":

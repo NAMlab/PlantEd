@@ -6,7 +6,6 @@ from PlantEd import config
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.server.plant.plant import Plant as serverPlant
 from PlantEd.client.client import Client
-from PlantEd.client.growth_rates import GrowthRates
 from PlantEd.camera import Camera
 from PlantEd.gameobjects.plant import Plant
 from PlantEd.utils.gametime import GameTime
@@ -29,7 +28,6 @@ from PlantEd.utils.hover_message import Hover_Message
 
 # constants in dynamic model, beter in config? dont think so
 from PlantEd.data import assets
-from PlantEd.weather import Environment
 
 """
 UI: set up all UI elements, update them, link them to functions
@@ -60,8 +58,6 @@ class UI:
         server_plant: serverPlant,
         narrator: Narrator,
         client: Client,
-        growth_rates: GrowthRates,
-        environment: Environment,
         camera: Camera,
         sound_control: SoundControl,
         production_topleft: Tuple[int, int] = (10, 100),
@@ -78,8 +74,7 @@ class UI:
         self.server_plant = server_plant
 
         self.client = client
-        self.growth_rates: GrowthRates = growth_rates
-        self.environment = environment
+        self.latest_weather_state = None
         self.gametime = GameTime.instance()
 
         self.hover = Hover_Message(config.FONT, 30, 5)
@@ -242,7 +237,7 @@ class UI:
                 border_w=3,
             )
         )
-        '''
+
         # init speed control
         speed_options = [
             RadioButton(
@@ -276,12 +271,12 @@ class UI:
                 image=assets.img("fastest_speed.PNG"),
             ),
         ]
-         for rb in speed_options:
+        for rb in speed_options:
             rb.setRadioButtons(speed_options)
             self.button_sprites.add(rb)
         speed_options[0].button_down = True
 
-
+        '''
         self.skip_intro = Button_Once(
             440,
             config.SCREEN_HEIGHT - 50,
@@ -373,33 +368,6 @@ class UI:
         for animation in self.animations:
             animation.update()
         self.update_stomata_automation()
-
-        '''         
-        def apply_preset(self, id=0):
-        preset = self.presets[id]
-        self.leaf_slider.set_percentage(preset["leaf_slider"])
-        self.stem_slider.set_percentage(preset["stem_slider"])
-        self.root_slider.set_percentage(preset["root_slider"])
-        self.starch_slider.set_percentage(preset["starch_slider"])
-        if (
-            preset["consume_starch"]
-            and not self.plant.organs[2].toggle_button.button_down
-        ):
-            self.plant.organ_starch.toggle_button.activate()'''
-
-    '''def generate_preset(self, id=0):
-        active_consumption = False
-        """if self.plant.organs[2].toggle_button is not None:
-            active_consumption = self.plant.organs[2].toggle_button.active"""
-        preset = {
-            "leaf_slider": self.leaf_slider.get_percentage(),
-            "stem_slider": self.stem_slider.get_percentage(),
-            "root_slider": self.root_slider.get_percentage(),
-            "starch_slider": self.starch_slider.get_percentage(),
-            "consume_starch": active_consumption,
-        }
-        self.presets[id] = preset
-        return preset'''
 
     def draw(self, screen):
         if self.pause:
@@ -788,22 +756,24 @@ class UI:
             clock_text,
             (config.SCREEN_WIDTH / 2 - clock_text.get_width() / 2, 16),
         )
+        humidity = 0
+        temperature = 0
+        if self.latest_weather_state is not None:
+            humidity = self.latest_weather_state.humidity
+            temperature = self.latest_weather_state.temperature
 
-        RH = self.environment.humidity
-        T = self.environment.temperature
-
-        RH_label = config.FONT.render(
-            "{:.0f} %".format(RH), True, config.BLACK
+        humidity_label = config.FONT.render(
+            "{:.0f} %".format(humidity), True, config.BLACK
         )
-        T_label = config.FONT.render("{:.0f} °C".format(T), True, config.BLACK)
+        temperature_label = config.FONT.render("{:.0f} °C".format(temperature), True, config.BLACK)
 
         s.blit(
-            RH_label,
-            ((config.SCREEN_WIDTH / 2 - 110) - RH_label.get_width() / 2, 16),
+            humidity_label,
+            ((config.SCREEN_WIDTH / 2 - 110) - humidity_label.get_width() / 2, 16),
         )
         s.blit(
-            T_label,
-            ((config.SCREEN_WIDTH / 2 + 110) - T_label.get_width() / 2, 16),
+            temperature_label,
+            ((config.SCREEN_WIDTH / 2 + 110) - temperature_label.get_width() / 2, 16),
         )
 
     def init_gradient(self):
@@ -945,18 +915,18 @@ class UI:
             percent=self.options["music_volume"] * 100,
             active=True,
         )
-        self.sfx_slider = Slider(
+        self.narator_slider = Slider(
             (config.SCREEN_WIDTH/2-150-25, 350, 15, 200),
             config.FONT,
             (50, 20),
-            percent=self.options["sfx_volume"] * 100,
+            percent=self.options["narator_volume"] * 100,
             active=True,
         )
-        self.narator_slider = Slider(
+        self.sfx_slider = Slider(
             (config.SCREEN_WIDTH/2-25, 350, 15, 200),
             config.FONT,
             (50, 20),
-            percent=self.options["narator_volume"] * 100,
+            percent=self.options["sfx_volume"] * 100,
             active=True,
         )
 
@@ -977,7 +947,7 @@ class UI:
             460,
             200,
             50,
-            [self.apply_options, self.sound_control.reload_options],
+            [self.apply_options, self.sound_control.reload_options, self.narrator.reload_options],
             config.BIG_FONT,
             "APPLY",
             border_w=2,
@@ -1283,10 +1253,11 @@ class UI:
             (topleft[0], topleft[1] + 40, width, 30),
             border_radius=3,
         )
+
         pygame.draw.rect(
             s,
             config.BLUE,
-            (topleft[0], topleft[1] + 40, int(width * self.server_plant.water.fill_percentage), 30),
+            (topleft[0], topleft[1] + 40, int(width * min(self.server_plant.water.fill_percentage, 1)), 30),
             border_radius=3,
         )  # exp
         text_water_pool = config.FONT.render(

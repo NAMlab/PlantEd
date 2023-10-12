@@ -1,0 +1,39 @@
+name: Linter
+on:
+  workflow_dispatch:
+
+  pull_request:
+    types: [ opened, synchronize, reopened, closed ]
+
+jobs:
+  black-flake8:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-python@v4
+          with:
+            python-version: "3.10"
+        - name: Install dependencies
+          run: python -m pip install tox
+        - name: flake8
+          run: python -m tox -e flake8
+        - name: black
+          run: python -m tox -e black
+
+  mypy:
+    needs: [black-flake8]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [ "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        run: python -m pip install tox
+      - name: Run type-checking
+        continue-on-error: true
+        run: python -m tox -e mypy

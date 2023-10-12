@@ -1,12 +1,19 @@
 import logging
 from unittest import TestCase
+from unittest.mock import patch
 
-from PlantEd.constants import START_STARCH_POOL_IN_MICROMOL, GRAM_STARCH_PER_GRAM_FRESH_WEIGHT, \
-    MICROMOL_STARCH_PER_GRAM_STARCH, GRAM_STARCH_PER_MICROMOL_STARCH, GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT
+from PlantEd.constants import (
+    GRAM_STARCH_PER_GRAM_FRESH_WEIGHT,
+    MICROMOL_STARCH_PER_GRAM_STARCH,
+    GRAM_STARCH_PER_MICROMOL_STARCH,
+    GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT,
+)
 from PlantEd.exceptions.pools import NegativePoolError
 from PlantEd.server.plant.starch import (
     Starch,
 )
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class TestStarch(TestCase):
@@ -15,7 +22,7 @@ class TestStarch(TestCase):
         logging.getLogger().setLevel(logging.DEBUG)
 
     def test_create(self):
-        starch: Starch = Starch(plant_weight_gram= 6)
+        starch: Starch = Starch(plant_weight_gram=6)
         self.assertIsInstance(starch, Starch)
 
         self.assertIsInstance(starch.starch_out, float)
@@ -27,13 +34,12 @@ class TestStarch(TestCase):
         self.assertIsInstance(starch.allowed_starch_pool_consumption, float)
         self.assertEqual(starch.allowed_starch_pool_consumption, 1.0)
 
+    @patch("PlantEd.server.plant.starch.START_STARCH_POOL_IN_MICROMOL", 2500)
     def test_available_starch_pool(self):
-        starch: Starch = Starch(plant_weight_gram= 6)
+        starch: Starch = Starch(plant_weight_gram=6)
+        print(starch.available_starch_pool)
 
-        if START_STARCH_POOL_IN_MICROMOL > 0:
-            init_value = START_STARCH_POOL_IN_MICROMOL
-        else:
-            init_value = abs(START_STARCH_POOL_IN_MICROMOL) * starch.max_starch_pool
+        init_value = 2500
 
         self.assertEqual(starch.available_starch_pool, init_value)
 
@@ -45,7 +51,7 @@ class TestStarch(TestCase):
 
         # reduce pool while exceeding pool limit
         starch.available_starch_pool = 2400
-        self.assertEqual(starch.available_starch_pool, 2400)
+        self.assertEqual(2400, starch.available_starch_pool)
 
         # go under max value
         starch.scale_pool_via_biomass(20)  # 925.1230105229657
@@ -68,14 +74,11 @@ class TestStarch(TestCase):
         with self.assertRaises(NegativePoolError):
             starch.available_starch_pool = -5
 
+    @patch("PlantEd.server.plant.starch.START_STARCH_POOL_IN_MICROMOL", 2500)
     def test_available_starch_pool_gram(self):
-        starch: Starch = Starch(plant_weight_gram= 6)
+        starch: Starch = Starch(plant_weight_gram=6)
 
-        if START_STARCH_POOL_IN_MICROMOL > 0:
-            init_value = START_STARCH_POOL_IN_MICROMOL * GRAM_STARCH_PER_MICROMOL_STARCH
-        else:
-            init_value = abs(START_STARCH_POOL_IN_MICROMOL) * starch.max_starch_pool *GRAM_STARCH_PER_MICROMOL_STARCH
-
+        init_value = 2500 * GRAM_STARCH_PER_MICROMOL_STARCH
         # 24669.946947279088
         self.assertEqual(init_value, starch.available_starch_pool_gram)
 
@@ -87,6 +90,7 @@ class TestStarch(TestCase):
 
         # reduce pool while exceeding pool limit
         starch.available_starch_pool = 2400
+        print()
         self.assertEqual(starch.available_starch_pool_gram, 0.38913744)
 
         # go under max value
@@ -119,7 +123,7 @@ class TestStarch(TestCase):
         self.assertEqual(starch.available_starch_pool_gram, 0)
 
     def test_starch_usage_in_gram(self):
-        starch = Starch(plant_weight_gram= 6)
+        starch = Starch(plant_weight_gram=6)
 
         self.assertEqual(starch.starch_usage_in_gram, 0)
 
@@ -133,7 +137,7 @@ class TestStarch(TestCase):
             )
 
     def test_starch_production_in_gram(self):
-        starch = Starch(plant_weight_gram= 6)
+        starch = Starch(plant_weight_gram=6)
 
         self.assertEqual(starch.starch_production_in_gram, 0)
 
@@ -147,7 +151,7 @@ class TestStarch(TestCase):
             )
 
     def test_scale_pool_via_biomass(self):
-        starch = Starch(plant_weight_gram= 0)
+        starch = Starch(plant_weight_gram=0)
 
         self.assertEqual(starch.max_starch_pool, 0)
 
@@ -156,15 +160,23 @@ class TestStarch(TestCase):
         for value in values:
             starch.scale_pool_via_biomass(value)
             expected_max_pool = (
-                    value
-                    * GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT
-                    * GRAM_STARCH_PER_GRAM_FRESH_WEIGHT
-                    * MICROMOL_STARCH_PER_GRAM_STARCH
+                value
+                * GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT
+                * GRAM_STARCH_PER_GRAM_FRESH_WEIGHT
+                * MICROMOL_STARCH_PER_GRAM_STARCH
             )
             self.assertEqual(starch.max_starch_pool, expected_max_pool)
 
+    @patch(
+        "PlantEd.server.plant.starch.PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP",  # noqa: E501
+        1,
+    )
+    @patch(
+        "PlantEd.server.plant.starch.PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP",  # noqa: E501
+        1,
+    )
     def test_calc_available_starch_in_mol_per_gram_and_time(self):
-        starch = Starch(plant_weight_gram= 6)
+        starch = Starch(plant_weight_gram=6)
         starch.scale_pool_via_biomass(5000)
 
         times = [
@@ -223,7 +235,11 @@ class TestStarch(TestCase):
                         expected * starch.allowed_starch_pool_consumption
                     )
 
-                    self.assertEqual(expected, computed)
+                    msg = (
+                        f"Available {starch.available_starch_pool},"
+                        f" organ weight {organ_gram}g, time frame {time}s"
+                    )
+                    self.assertEqual(expected, computed, msg=msg)
 
         with self.assertRaises(ValueError):
             starch.calc_available_starch_in_mol_per_gram_and_time(

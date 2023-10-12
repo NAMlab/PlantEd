@@ -12,11 +12,13 @@ class Narrator:
     def __init__(self, environment):
         self.environment = environment
         self.active = True
-        self.volume = 100
         self.queue = []
         self.muted = False
-        self.channel = pygame.mixer.Channel(1)
+        self.channel = pygame.mixer.Channel(0)
         self.channel.set_endevent(END_LINE)
+        options = config.load_options()
+        self.volume = options["narator_volume"]
+        self.channel.set_volume(self.volume)
         self.written_lines = Written_Lines()
 
         self.lines = [
@@ -69,6 +71,12 @@ class Narrator:
     def unmute(self):
         self.muted = False
         self.channel.set_volume(self.volume)
+
+    def reload_options(self):
+        options = config.load_options()
+        self.volume = options["narator_volume"]
+        if not self.muted:
+            self.channel.set_volume(self.volume)
 
     def update(self, dt):
         if len(self.queue) > 0:

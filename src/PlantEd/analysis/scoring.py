@@ -1,9 +1,8 @@
 import requests
 import json
 
-
-def upload_score(name, score):
-    test_file = open("logfile.csv", "rb")
+def upload_score(name, score, path_to_logs):
+    test_file = open(path_to_logs + "/model_logs.csv", "rb")
     requests.post(
         "https://planted.ipk-gatersleben.de/highscores/post.php",
         files={"logfile": test_file},
@@ -15,7 +14,7 @@ def get_scores():
     scores = json.loads(
         requests.get(
             "https://planted.ipk-gatersleben.de/highscores/highscores.json",
-			headers={'Cache-Control': 'no-cache'}
+            headers={'Cache-Control': 'no-cache'}
         ).text
     )
     return scores

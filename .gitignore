@@ -9,3 +9,5 @@ build/__pycache__
 logs
 
 src/PlantEd/build/
+
+src/PlantEd/data/finished_games/

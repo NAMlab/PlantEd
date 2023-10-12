@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestServerContainer(TestCase):
-
     def test_start_stop(self):
         logger.info("Run tests for the creation and start of the server.")
 

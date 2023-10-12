@@ -1,0 +1,24 @@
+name: Tests
+on:
+  workflow_dispatch:
+
+  pull_request:
+    types: [ opened, synchronize, reopened, closed ]
+
+  workflow_run:
+    workflows: ["Linter"]
+    types:
+      - completed
+
+jobs:
+  test-dev:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-python@v4
+          with:
+            python-version: "3.10"
+        - name: Install dependencies
+          run: python -m pip install tox
+        - name: Run dev env test
+          run: python -m tox -e py310-req

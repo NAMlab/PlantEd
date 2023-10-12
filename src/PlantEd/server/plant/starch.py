@@ -4,12 +4,19 @@ import json
 import logging
 from dataclasses import dataclass
 
-from PlantEd.constants import GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT, GRAM_STARCH_PER_GRAM_FRESH_WEIGHT, \
-    MICROMOL_STARCH_PER_GRAM_STARCH, GRAM_STARCH_PER_MICROMOL_STARCH, START_STARCH_POOL_IN_MICROMOL, \
-    PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP, PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP
+from PlantEd.constants import (
+    GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT,
+    GRAM_STARCH_PER_GRAM_FRESH_WEIGHT,
+    MICROMOL_STARCH_PER_GRAM_STARCH,
+    GRAM_STARCH_PER_MICROMOL_STARCH,
+    START_STARCH_POOL_IN_MICROMOL,
+    PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
+    PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
+)
 from PlantEd.exceptions.pools import NegativePoolError
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class Starch:
@@ -25,7 +32,7 @@ class Starch:
 
     def __init__(self, plant_weight_gram: float):
         self.__max_starch_pool: float = 0.0
-        self.scale_pool_via_biomass( biomass_in_gram= plant_weight_gram)
+        self.scale_pool_via_biomass(biomass_in_gram=plant_weight_gram)
 
         self.starch_out: float = 0.0
         self.starch_in: float = 0.0
@@ -34,15 +41,20 @@ class Starch:
         if START_STARCH_POOL_IN_MICROMOL > 0:
             available_starch_pool = START_STARCH_POOL_IN_MICROMOL
         else:
-            available_starch_pool = abs(START_STARCH_POOL_IN_MICROMOL) * self.__max_starch_pool
+            available_starch_pool = (
+                abs(START_STARCH_POOL_IN_MICROMOL) * self.__max_starch_pool
+            )
         self.__available_starch_pool: float = available_starch_pool
 
     def __repr__(self):
-        string = f"Starch object with following values:" \
-                 f" available starch pool is {self.__available_starch_pool} micromol," \
-                 f" __max_starch_pool is {self.__max_starch_pool}," \
-                 f" starch_out is {self.starch_out}, starch_in is {self.starch_in}," \
-                 f" allowed_starch_pool_consumption is {self.allowed_starch_pool_consumption}"
+        string = (
+            f"Starch object with following values:"
+            f" available starch pool is {self.__available_starch_pool}"
+            f" micromol, __max_starch_pool is {self.__max_starch_pool},"
+            f" starch_out is {self.starch_out}, starch_in is {self.starch_in},"
+            f" allowed_starch_pool_consumption"
+            f" is {self.allowed_starch_pool_consumption}"
+        )
 
         return string
 
@@ -52,32 +64,35 @@ class Starch:
         dic["max_starch_pool"] = self.__max_starch_pool
         dic["starch_out"] = self.starch_out
         dic["starch_in"] = self.starch_in
-        dic["allowed_starch_pool_consumption"] = self.allowed_starch_pool_consumption
+        dic[
+            "allowed_starch_pool_consumption"
+        ] = self.allowed_starch_pool_consumption
         dic["available_starch_pool"] = self.__available_starch_pool
 
         return dic
 
     def to_json(self) -> str:
-
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_dict(cls, dic:dict) -> Starch:
-        starch = Starch(plant_weight_gram= 0)
+    def from_dict(cls, dic: dict) -> Starch:
+        starch = Starch(plant_weight_gram=0)
 
         starch.__max_starch_pool = dic["max_starch_pool"]
         starch.starch_out = dic["starch_out"]
         starch.starch_in = dic["starch_in"]
-        starch.allowed_starch_pool_consumption = dic["allowed_starch_pool_consumption"]
+        starch.allowed_starch_pool_consumption = dic[
+            "allowed_starch_pool_consumption"
+        ]
         starch.__available_starch_pool = dic["available_starch_pool"]
 
         return starch
 
     @classmethod
-    def from_json(cls, string:str) -> Starch:
+    def from_json(cls, string: str) -> Starch:
         dic = json.loads(string)
 
-        return Starch.from_dict(dic= dic)
+        return Starch.from_dict(dic=dic)
 
     @property
     def available_starch_pool(self) -> float:
@@ -155,11 +170,18 @@ class Starch:
 
         """
 
-        max_starch_pool_in_gram = biomass_in_gram * GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT * GRAM_STARCH_PER_GRAM_FRESH_WEIGHT
-        max_starch_pool_in_micromol = max_starch_pool_in_gram * MICROMOL_STARCH_PER_GRAM_STARCH
+        max_starch_pool_in_gram = (
+            biomass_in_gram
+            * GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT
+            * GRAM_STARCH_PER_GRAM_FRESH_WEIGHT
+        )
+        max_starch_pool_in_micromol = (
+            max_starch_pool_in_gram * MICROMOL_STARCH_PER_GRAM_STARCH
+        )
         logging.debug(
-            f"Setting max_starch_pool to {max_starch_pool_in_micromol} micromol."
-            f"Based on a biomass of {biomass_in_gram} grams."
+            f"Setting max_starch_pool to"
+            f" {max_starch_pool_in_micromol} micromol."
+            f" Based on a biomass of {biomass_in_gram} grams."
         )
 
         self.__max_starch_pool = max_starch_pool_in_micromol
@@ -181,17 +203,19 @@ class Starch:
             time_in_seconds: The time span over which the pool is accessed in
                 seconds.
 
-        Returns: Maximum usable starch in micromol / (second * gram_of_organ).
+        Returns: Maximum usable starch in micromol / (second * gram).
         """
 
         # Pool usage factors (see constants.py)
-        value = min(self.available_starch_pool * PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
-                    self.__max_starch_pool * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP)
+        value = min(
+            self.available_starch_pool
+            * PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
+            self.__max_starch_pool
+            * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
+        )
 
         try:
-            value = value / (
-                gram_of_organ * time_in_seconds
-            )
+            value = value / (gram_of_organ * time_in_seconds)
         except ZeroDivisionError as e:
             raise ValueError(
                 f"Either the given time ({time_in_seconds})or the organic "

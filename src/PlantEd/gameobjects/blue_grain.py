@@ -30,7 +30,7 @@ class Blue_grain:
             ),
             lifetime=25,
             size=10,
-            color=config.BROWN,
+            color=config.NITRATE_BROWN,
             apply_gravity=True,
             speed=[20, 70],
             spread=[60, 10],
@@ -72,9 +72,10 @@ class Blue_grain:
             )
             self.play_sound()
             self.particle_system.activate()
-            self.client.increase_nitrate(
-                µmol_nitrate= 1000
-            )
+            lower_limit = max(0, int(self.pos[0]/100)-3)
+            upper_limit = max(0, int(self.pos[0]/100)+3)
+            for i in range(lower_limit, upper_limit):
+                self.client.add2grid(config.NITRATE_FILL_CELL, i, 0, "nitrate")
             self.deactivate()
 
     def draw(self, screen):

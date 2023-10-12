@@ -4,45 +4,100 @@ import dataclasses
 import json
 import logging
 from dataclasses import dataclass
-from typing import Final
+from typing import Annotated
 
 from pydantic import confloat
 
-from PlantEd.constants import MAX_WATER_POOL_PER_GRAMM, START_WATER_POOL_IN_MICROMOL, \
-    PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP, PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP
+from PlantEd.constants import (
+    MAX_WATER_POOL_PER_GRAMM,
+    START_WATER_POOL_IN_MICROMOL,
+    PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
+    PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
+)
 from PlantEd.exceptions.pools import NegativeBiomassError
+from PlantEd.server.environment.weather import WeatherState
 
 logger = logging.getLogger(__name__)
 
+water_concentration_at_temp = [
+    0.269,
+    0.288,
+    0.309,
+    0.33,
+    0.353,
+    0.378,
+    0.403,
+    0.431,
+    0.459,
+    0.49,
+    0.522,
+    0.556,
+    0.592,
+    0.63,
+    0.67,
+    0.713,
+    0.757,
+    0.804,
+    0.854,
+    0.906,
+    0.961,
+    1.018,
+    1.079,
+    1.143,
+    1.21,
+    1.28,
+    1.354,
+    1.432,
+    1.513,
+    1.598,
+    1.687,
+    1.781,
+    1.879,
+    1.981,
+    2.089,
+    2.201,
+    2.318,
+    2.441,
+    2.569,
+    2.703,
+]
 
 
 @dataclass
 class Water:
     """
-    This class represents the water pool of the plant. All values
+    This class represents the water pool inside the plant. All values
     are in µmol unless otherwise stated.
     """
 
     def __init__(self, plant_weight_gram: float):
-
         self.__max_water_pool: float = 0
-        self.update_max_water_pool(plant_biomass= plant_weight_gram)
+        self.update_max_water_pool(plant_biomass=plant_weight_gram)
 
         if START_WATER_POOL_IN_MICROMOL > 0:
             water_pool = START_WATER_POOL_IN_MICROMOL
         else:
-            water_pool = abs(START_WATER_POOL_IN_MICROMOL) * self.__max_water_pool
+            water_pool = (
+                abs(START_WATER_POOL_IN_MICROMOL) * self.__max_water_pool
+            )
 
         self.__water_pool: float = water_pool
+        self.transpiration: float = 0
+        self.transpiration_factor: float = 0
+
+        # legacy will be removed
         self.water_intake: int = 0
         self.water_intake_pool: int = 0
-        self.transpiration: float = 0
 
     def __repr__(self):
-        string = f"Water object with following values:" \
-                 f" water_pool is {self.water_pool} µmol, water_intake is {self.water_intake} µmol" \
-                 f" water_intake_pool is {self.water_intake_pool} µmol, transpiration is {self.transpiration} µmol" \
-                 f" max_water_pool is {self.max_water_pool} µmol."
+        string = (
+            f"Water object with following values:"
+            f" water_pool is {self.water_pool} µmol, "
+            f"water_intake is {self.water_intake} µmol"
+            f" water_intake_pool is {self.water_intake_pool} µmol, "
+            f"transpiration is {self.transpiration} µmol"
+            f" max_water_pool is {self.max_water_pool} µmol."
+        )
 
         return string
 
@@ -56,11 +111,11 @@ class Water:
 
     @water_pool.setter
     def water_pool(self, value: float):
-        self.__water_pool = min(self.__max_water_pool, value)
-
-
-    def get_water_drain(self) -> float:
-        return self.water_intake + self.__max_water_pool
+        if value < self.water_pool:
+            self.__water_pool = value
+        else:
+            upper_limit = max(self.max_water_pool, self.water_pool)
+            self.__water_pool = min(value, upper_limit)
 
     @property
     def max_water_pool(self) -> float:
@@ -69,22 +124,39 @@ class Water:
         """
 
         return self.__max_water_pool
+
     @property
-    def fill_percentage(self) -> confloat(ge=0, le=1):
+    def fill_percentage(self) -> Annotated[float, confloat(gt=0, lt=1)]:
         """
         Returns the percentage level of the water supply as float.
         """
-        percentage = self.water_pool / self.__max_water_pool
+        percentage = self.water_pool / self.max_water_pool
         if percentage > 1 or percentage < 0:
             logger.warning(
                 f"The water pool is over 100% full or in the "
                 f"minus. It is {percentage}, where water_pool is "
                 f"{self.water_pool} µmol and max_water_pool is "
-                f"{self.__max_water_pool} µmol."
+                f"{self.max_water_pool} µmol."
             )
 
-        logger.debug(f"Calculated water percentage is {percentage} from {self}")
+        logger.debug(
+            f"Calculated water percentage is {percentage} from {self}"
+        )
         return percentage
+
+    @property
+    def missing_amount(self) -> float:
+        """
+        Provides the amount of water that can still be added to the pool.
+
+        Returns:
+            float: Amount of water that can still be added to the pool in
+            micromol.
+        """
+        if self.max_water_pool < self.water_pool:
+            return 0
+
+        return self.max_water_pool - self.water_pool
 
     def to_dict(self) -> dict:
         """
@@ -93,7 +165,7 @@ class Water:
         object can be created with the same variables as the original.
         """
 
-        dic =  {}
+        dic = {}
         dic["water_pool"] = self.water_pool
         dic["water_intake"] = self.water_intake
         dic["water_intake_pool"] = self.water_intake_pool
@@ -103,8 +175,7 @@ class Water:
         return dic
 
     @classmethod
-    def from_dict(cls, dic:dict) -> Water:
-
+    def from_dict(cls, dic: dict) -> Water:
         water = Water(plant_weight_gram=0)
 
         water.__water_pool = dic["water_pool"]
@@ -119,12 +190,10 @@ class Water:
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, string:str) -> Water:
+    def from_json(cls, string: str) -> Water:
         dic = json.loads(string)
 
-        return Water.from_dict(dic = dic)
-
-
+        return Water.from_dict(dic=dic)
 
     def update_max_water_pool(self, plant_biomass: float):
         """
@@ -136,11 +205,16 @@ class Water:
 
         """
         if plant_biomass < 0:
-            raise NegativeBiomassError("The given biomass of the plant is negative.")
+            raise NegativeBiomassError(
+                "The given biomass of the plant is negative."
+            )
 
         new_max_water_pool = plant_biomass * MAX_WATER_POOL_PER_GRAMM
 
-        logger.debug(f"Setting new_max_water_pool to {new_max_water_pool} µmol.Based on a biomass of {plant_biomass} grams.")
+        logger.debug(
+            f"Setting new_max_water_pool to {new_max_water_pool} µmol. "
+            f"Based on a biomass of {plant_biomass} grams."
+        )
 
         self.__max_water_pool = new_max_water_pool
 
@@ -149,15 +223,15 @@ class Water:
         gram_of_organ: float,
         time_in_seconds: float,
     ) -> float:
-
         # Pool usage factors (see constants.py)
-        value = min(self.water_pool * PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
-                    self.__max_water_pool * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP)
+        value = min(
+            self.water_pool * PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
+            self.__max_water_pool
+            * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
+        )
 
         try:
-            value = value / (
-                gram_of_organ * time_in_seconds
-            )
+            value = value / (gram_of_organ * time_in_seconds)
         except ZeroDivisionError as e:
             raise ValueError(
                 f"Either the given time ({time_in_seconds})or the organic "
@@ -174,11 +248,40 @@ class Water:
 
         return value
 
-    def update_transpiration(self, stomata_open: bool, co2_uptake_in_micromol: float, transpiration_factor:float):
-        transpiration = 0
+    def update_transpiration(
+        self,
+        stomata_open: bool,
+        co2_uptake_in_micromol_per_second_and_gram: float,
+        transpiration_factor: float,
+    ):
+        transpiration = 0.0
         if stomata_open:
-            if co2_uptake_in_micromol > 0:
-                transpiration = co2_uptake_in_micromol * transpiration_factor
+            if co2_uptake_in_micromol_per_second_and_gram > 0:
+                transpiration = (
+                    co2_uptake_in_micromol_per_second_and_gram
+                    * transpiration_factor
+                )
 
-        logger.debug(f"Setting transpiration to {transpiration}. Based on CO2 intake of {co2_uptake_in_micromol} and a transpiration_factor of {transpiration_factor}" )
+        logger.debug(
+            f"Setting transpiration to {transpiration}. Based on CO2 "
+            f"intake of {co2_uptake_in_micromol_per_second_and_gram} "
+            f"and a transpiration_factor of {transpiration_factor}"
+        )
         self.transpiration = transpiration
+
+    def update_transpiration_factor(self, weather_state: WeatherState):
+        K = 291.18
+        RH = weather_state.humidity
+        T = weather_state.temperature
+
+        In_Concentration = water_concentration_at_temp[int(T + 2)]
+        Out_Concentration = water_concentration_at_temp[int(T)]
+        new_transpiration_factor = K * (
+            In_Concentration - Out_Concentration * RH / 100
+        )
+
+        logger.debug(
+            f"Setting transpiration_factor to {new_transpiration_factor}."
+        )
+
+        self.transpiration_factor = new_transpiration_factor

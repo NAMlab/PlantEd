@@ -1,12 +1,42 @@
 import matplotlib.pyplot as plt
+import numpy
 import pandas as pd
+import pygame
+
+from PlantEd.data import assets
 
 
-def main(path="../logfile.csv", logname="log"):
-    df = pd.read_csv(path)
-    plot_all_single(df, logname)
-    # hourly_gr = df.gr / df.speed * 3600
+def generate_png_from_vec(vector_list, name_list, colors, time, xlabel, ylabel, path_to_logs, filename, color="black") -> pygame.Surface:
+    # make a Figure and attach it to a canvas.
+    plt.style.use('dark_background')
+    fig, ax = plt.subplots()
 
+    for vector, name, color in zip(vector_list, name_list, colors):
+        print(color)
+        ax.plot(time[0], vector, label="{}".format(name), color=color)
+    ax.legend(loc='upper right')
+    plt.xlabel = xlabel
+    plt.ylabel = ylabel
+    plt.savefig(path_to_logs + "/" + filename)
+    image = pygame.image.load(path_to_logs + "/" + filename).convert_alpha()
+
+    return image
+
+
+"""
+    seconds = time / 1000
+    minutes = seconds / 60
+    hours = minutes / 60
+    days = hours / 24
+    # print(seconds, minutes, hours, days)
+    plt.plot(days, vec, color=color)
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylabel:
+        plt.ylabel(ylabel)
+    plt.savefig(path_to_logs + "{}.png".format(ylabel))
+    plt.close()
+"""
 
 def plot_all_single(df, logname):
     plot_vec(
@@ -111,7 +141,6 @@ def plot_all_single(df, logname):
     )
     # plot_all(df)
 
-
 def plot_vec(
     logname,
     name,
@@ -147,7 +176,3 @@ def plot_all(df):
     plt.savefig("plot.png")
     plt.show()
     plt.close()
-
-
-if __name__ == "__main__":
-    main(path="../logs/6.csv", logname="6")

@@ -1,3 +1,9 @@
+![Dynamic TOML Badge](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FNAMlab%2FPlantEd%2Fmain%2Fpyproject.toml&query=%24.project.version&label=version)
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FNAMlab%2FPlantEd%2Fmain%2Fpyproject.toml)
+[![Linter](https://github.com/NAMlab/PlantEd/actions/workflows/lint.yml/badge.svg)](https://github.com/NAMlab/PlantEd/actions/workflows/lint.yml)
+[![Tests](https://github.com/NAMlab/PlantEd/actions/workflows/tests.yml/badge.svg)](https://github.com/NAMlab/PlantEd/actions/workflows/tests.yml)
+[![Build](https://github.com/NAMlab/PlantEd/actions/workflows/publish.yml/badge.svg)](https://github.com/NAMlab/PlantEd/actions/workflows/publish.yml)
+
 # PlantEd
 RTS Simulation, Plant Survival Game
 

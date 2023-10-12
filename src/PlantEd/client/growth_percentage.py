@@ -28,16 +28,15 @@ class GrowthPercent:
     time_frame: int
 
     @classmethod
-    def from_json(self, string:str) -> GrowthPercent:
+    def from_json(self, string: str) -> GrowthPercent:
         dic = json.loads(string)
 
-        return GrowthPercent.from_dict(dic = dic)
+        return GrowthPercent.from_dict(dic=dic)
 
     def to_json(self):
         return json.dumps(self.to_dict())
 
     def to_dict(self):
-
         dic = dict()
 
         dic["leaf"] = self.leaf
@@ -50,19 +49,17 @@ class GrowthPercent:
         return dic
 
     @classmethod
-    def from_dict(self, dic:dict) -> GrowthPercent:
-
+    def from_dict(self, dic: dict) -> GrowthPercent:
         growth_percent = GrowthPercent(
-            leaf = dic["leaf"],
-            stem = dic["stem"],
-            root = dic["root"],
-            starch = dic["starch"],
-            flower = dic["flower"],
-            time_frame = dic["time_frame"],
+            leaf=dic["leaf"],
+            stem=dic["stem"],
+            root=dic["root"],
+            starch=dic["starch"],
+            flower=dic["flower"],
+            time_frame=dic["time_frame"],
         )
 
         return growth_percent
-
 
     def __iter__(self):
         for field in dataclasses.fields(self):

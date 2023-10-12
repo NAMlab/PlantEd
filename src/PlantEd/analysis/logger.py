@@ -3,54 +3,8 @@ import csv
 
 class Log:
     def __init__(self, path):
-        self.file = open("logfile.csv", "w")
-        self.writer = csv.writer(self.file)
-        self.writer.writerow(
-            [
-                "leaf_rate",
-                "stem_rate",
-                "root_rate",
-                "sr",
-                "time",
-                "speed",
-                "water",
-                "nitrate",
-                "leaf_mass",
-                "stem_mass",
-                "root_mass",
-                "starch_mass",
-            ]
-        )
-
         self.model_file = open(path + "/model_logs.csv", "w")
         self.model_writer = csv.writer(self.model_file)
-        self.model_writer.writerow(
-            [
-                "Time",
-                "",
-                "",
-                "Percentage Sliders",
-                "",
-                "",
-                "",
-                "",
-                "Intake",
-                "Mikromol/Second",
-                "",
-                "",
-                "Masses",
-                "gramm DW",
-                "",
-                "",
-                "Pools",
-                "Mikromol",
-                "",
-                "Rates",
-                "MirkoMol/Second",
-                "",
-                "",
-            ]
-        )
         self.model_writer.writerow(
             [
                 "Days",
@@ -76,41 +30,6 @@ class Log:
                 "Stem_rate",
                 "Root_rate",
                 "Seed_rate",
-            ]
-        )
-
-    def close_file(self):
-        self.file.close()
-
-    def append_row(
-        self,
-        leaf_rate,
-        stem_rate,
-        root_rate,
-        sr,
-        time,
-        speed,
-        water,
-        nitrate,
-        leaf_mass,
-        stem_mass,
-        root_mass,
-        starch_mass,
-    ):
-        self.writer.writerow(
-            [
-                leaf_rate,
-                stem_rate,
-                root_rate,
-                sr,
-                time,
-                speed,
-                water,
-                nitrate,
-                leaf_mass,
-                stem_mass,
-                root_mass,
-                starch_mass,
             ]
         )
 

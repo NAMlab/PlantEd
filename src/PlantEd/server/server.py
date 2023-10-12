@@ -7,27 +7,32 @@ import logging
 import multiprocessing
 import signal
 import socket
-from multiprocessing import Manager, Event
+from multiprocessing.managers import ValueProxy, SyncManager
+from multiprocessing.synchronize import Event
 from typing import Optional
 
 import websockets
+from websockets.exceptions import ConnectionClosed
 from websockets.legacy.server import WebSocketServerProtocol, WebSocketServer
 
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.client.update import UpdateInfo
-from PlantEd.client.water import Water
-from PlantEd.fba.dynamic_model import DynamicModel
+from PlantEd.server.fba.dynamic_model import DynamicModel
+from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.leaf import Leaf
-from PlantEd.server.plant.nitrate import Nitrate
 
 logger = logging.getLogger(__name__)
+
 
 class ServerContainer:
     def __init__(self, sock: Optional[socket.socket] = None, only_local=True):
         self.shutdown_signal: Event = multiprocessing.Event()
-        self.manager: Manager = multiprocessing.Manager()
-        self.__port: Optional[int] = self.manager.Value(Optional[int], None)
-        self.__ip_address: Optional[str] = self.manager.Value(Optional[str], None)
+        self.manager: SyncManager = multiprocessing.Manager()
+        self.__port: ValueProxy[Optional[int]] = self.manager.Value(
+            Optional[int], None
+        )
+        self.__ip_address: ValueProxy[Optional[str]] = self.manager.Value(
+            Optional[str], None
+        )
         self.__ready: Event = multiprocessing.Event()
 
         process = multiprocessing.Process(
@@ -39,7 +44,7 @@ class ServerContainer:
                 "only_local": only_local,
                 "port": self.__port,
                 "ip_adress": self.__ip_address,
-            }
+            },
         )
 
         self.process = process
@@ -75,22 +80,22 @@ class ServerContainer:
         self.process.join()
         logger.debug("Process closed")
 
-def start_server(
-        shutdown_signal: Event,
-        ready: Event,
-        sock: Optional[socket.socket] = None,
-        only_local=True,
-        port: Optional[int] = None,
-        ip_adress: Optional[int] = None,
-):
 
+def start_server(
+    shutdown_signal: Event,
+    ready: Event,
+    sock: Optional[socket.socket] = None,
+    only_local=True,
+    port: Optional[ValueProxy[int]] = None,
+    ip_adress: Optional[ValueProxy[str]] = None,
+):
     server = Server(
-        shutdown_signal = shutdown_signal,
-        ready= ready,
-        sock= sock,
-        only_local= only_local,
-        port = port,
-        ip_adress= ip_adress,
+        shutdown_signal=shutdown_signal,
+        ready=ready,
+        sock=sock,
+        only_local=only_local,
+        port=port,
+        ip_adress=ip_adress,
     )
     server.start()
 
@@ -101,27 +106,30 @@ class Server:
     """
 
     def __init__(
-            self,
-            shutdown_signal: Event,
-            ready: Event,
-            sock: Optional[socket.socket] = None,
-            only_local = True,
-            port: Optional[int] = None,
-            ip_adress: Optional[int] = None,
+        self,
+        shutdown_signal: Event,
+        ready: Event,
+        sock: Optional[socket.socket] = None,
+        only_local=True,
+        port: Optional[ValueProxy[int]] = None,
+        ip_adress: Optional[ValueProxy[str]] = None,
     ):
         self.shutdown_signal: Event = shutdown_signal
         self.ready: Event = ready
-        self.clients = set()
+        self.clients: set[WebSocketServerProtocol] = set()
         self.sock: Optional[socket.socket] = sock
-        self.websocket: websockets.WebSocketServer = None
-        self.model: DynamicModel = DynamicModel()
-        self.__future: asyncio.Future = None
-        self.loop: asyncio.AbstractEventLoop = None
+        self.websocket: Optional[WebSocketServer] = None
+        self.environment: Environment = Environment()
+        self.model: DynamicModel = DynamicModel(
+            enviroment=self.environment,
+        )
+
+        self.__future: Optional[asyncio.Future] = None
+        self.loop: Optional[asyncio.AbstractEventLoop] = None
         self.only_local = only_local
 
-        self.__port: Optional[int] = port
-        self.__ip_address: Optional[str] = ip_adress
-
+        self.__port: Optional[ValueProxy[int]] = port
+        self.__ip_address: Optional[ValueProxy[str]] = ip_adress
 
     @property
     def port(self):
@@ -140,15 +148,28 @@ class Server:
                 asyncio.set_event_loop(loop)
 
         try:
-            signal.signal(signal.SIGINT, lambda *args: self.shutdown_signal.set)
-            signal.signal(signal.SIGTERM, lambda *args: self.shutdown_signal.set)
+            signal.signal(
+                signal.SIGINT, lambda *args: self.shutdown_signal.set
+            )
+            signal.signal(
+                signal.SIGTERM, lambda *args: self.shutdown_signal.set
+            )
         except ValueError as e:
-            if "signal only works in main thread of the main interpreter" == str(e):
+            if (
+                "signal only works in main thread of the main interpreter"
+                == str(e)
+            ):
                 pass
             else:
                 raise e
 
         loop.run_until_complete(self.__start_loop())
+
+    async def __load_level(self):
+        self.environment: Environment = Environment()
+        self.model: DynamicModel = DynamicModel(
+            enviroment=self.environment,
+        )
 
     async def __start_loop(self):
         """
@@ -161,14 +182,15 @@ class Server:
         sock = self.sock
 
         if sock is None:
-
             if self.only_local is True:
                 addr = ("localhost", 0)
             else:
                 addr = ("", 0)
 
             if socket.has_dualstack_ipv6():
-                sock: socket.socket = socket.create_server(addr, family=socket.AF_INET6, dualstack_ipv6=True)
+                sock: socket.socket = socket.create_server(
+                    addr, family=socket.AF_INET6, dualstack_ipv6=True
+                )
             else:
                 sock: socket.socket = socket.create_server(addr)
 
@@ -178,7 +200,8 @@ class Server:
 
         async with websockets.serve(
             self.main_handler,
-            sock = sock,
+            sock=sock,
+            logger=logging.getLogger(__name__ + ".websocket"),
             ping_interval=10,
             ping_timeout=30,
         ) as websocket:
@@ -192,7 +215,9 @@ class Server:
                 max_workers=1,
             )
             self.ready.set()
-            await self.loop.run_in_executor(executor= executor, func = self.shutdown_signal.wait)
+            await self.loop.run_in_executor(
+                executor=executor, func=self.shutdown_signal.wait
+            )
 
     def open_connection(self, ws: WebSocketServerProtocol):
         """
@@ -217,19 +242,6 @@ class Server:
         self.clients.remove(ws)
         logger.info(f"{ws.remote_address} disconnected.")
 
-    def get_growth_percent(self) -> str:
-        """
-        Function that queries the server-side growth_percent.
-
-        # ToDo needs to be the plant object complete
-        Returns: A GrowthPercent object encoded in JSON.
-
-        """
-
-        message = self.model.percentages.to_json()
-        logger.info(f"Sending {message}")
-        return message
-
     def calc_send_growth_rate(self, growth_percent: GrowthPercent) -> str:
         """
         Function that calculates the growth per specified time step.
@@ -244,10 +256,17 @@ class Server:
         logger.info(f"Calculating growth rates from {growth_percent}")
 
         if growth_percent.time_frame == 0:
-            logger.debug("The passed TimeFrame is 0. Returning plant objects without simulation.")
+            logger.debug(
+                "The passed TimeFrame is 0."
+                " Returning plant objects without simulation."
+            )
             return self.model.plant.to_json()
 
-        self.model.calc_growth_rate(growth_percent)
+        self.environment.simulate(time_in_s=growth_percent.time_frame)
+
+        self.model.calc_growth_rate(
+            new_growth_percentages=growth_percent, environment=self.environment
+        )
         logger.info(f"Calculated growth rates: {self.model.growth_rates}")
 
         message = self.model.plant.to_json()
@@ -273,73 +292,48 @@ class Server:
         logger.info("Closing stomata")
         self.model.close_stomata()
 
-    def deactivate_starch_resource(self):
-        """
-
-        Methode to disable the use of the starch pool.
-
-        """
-        logger.info("Deactivating starch use")
-        self.model.deactivate_starch_resource()
-
-    def activate_starch_resource(self):
-        """
-        Methode to enable the use of the starch pool.
-
-        """
-        logger.info("Activating starch use")
-        self.model.activate_starch_resource()
-
-    def get_water_pool(self) -> str:
-        """
-        Method to obtain the WaterPool defined in the DynamicModel.
-
-        Returns: The WaterPool object encoded in JSON.
-
-        """
-        logger.info("Creating Water Object and sending it back")
-
-        water: Water = self.model.plant.water
-
-        answer = water.to_json()
-
-        logger.debug(f"Responding to a water request with {answer}")
-
-        return answer
-
-    def get_nitrate_pool(self) -> str:
-        """
-        Method to retrieve the Nitrate Pool form the Plant defined inside the
-            DynamicModel.
-
-        Returns: Nitrate object as a string in JSON format.
-
-        """
-
-        nitrate: Nitrate = self.model.plant.nitrate
-        answer = nitrate.to_json()
-
-        return answer
-
     def create_leaf(self, leaf: Leaf):
-        self.model.plant.create_leaf(leaf)
+        self.model.plant.leafs.new_leaf(leaf)
 
-    def stop_water_intake(self):
-        self.model.stop_water_intake()
+    def get_environment(self) -> str:
+        return self.environment.to_json()
 
-    def enable_water_intake(self):
-        self.model.enable_water_intake()
+    def create_new_first_letter(
+        self,
+        dir,
+        pos,
+        mass,
+        dist,
+    ):
+        self.model.plant.root.create_new_first_letter(
+            dir=dir,
+            pos=pos,
+            mass=mass,
+            dist=dist,
+        )
 
-    def set_water_pool(self, water: Water):
-        water.transpiration = self.model.plant.water.transpiration
+    def add2grid(self, payload):
+        amount = payload["amount"]
+        x = payload["x"]
+        y = payload["y"]
 
-        self.model.plant.set_water(water)
-        logger.debug(f"Water set to {self.model.plant.water}")
+        match payload["grid"]:
+            case "nitrate":
+                self.environment.nitrate_grid.add2cell(
+                    rate=amount,
+                    x=x,
+                    y=y,
+                )
 
+            case "water":
+                self.environment.water_grid.add2cell(
+                    rate=amount,
+                    x=x,
+                    y=y,
+                )
 
-
-    def update(self, update_info: UpdateInfo):
-        self.model.update(update_info=update_info)
+            case _:
+                logger.error("Unknown grid")
 
     async def main_handler(self, ws: WebSocketServerProtocol):
         """
@@ -353,12 +347,14 @@ class Server:
         while True:
             try:
                 request = await ws.recv()
-            except websockets.ConnectionClosedOK:
+            except ConnectionClosed as e:
                 self.close_connection(ws)
-                logger.debug(f"{ws.remote_address} unregistered.")
+                logger.debug(
+                    f"{ws.remote_address} unregistered. Closing Trace: {e}"
+                )
                 break
 
-            logger.info(f"Received {request}")
+            logger.info(f"Received {str(request)}")
 
             commands: dict = json.loads(request)
             response = {}
@@ -397,86 +393,51 @@ class Server:
 
                             self.close_stomata()
 
-                        case "deactivate_starch_resource":
-                            logger.debug(
-                                "Received command identified as "
-                                "deactivate_starch_resource."
-                            )
-
-                            self.deactivate_starch_resource()
-
-                        case "activate_starch_resource":
-                            logger.debug(
-                                "Received command identified as "
-                                "activate_starch_resource."
-                            )
-
-                            self.activate_starch_resource()
-
-                        case "get_water_pool":
-                            logger.debug(
-                                "Received command identified as get_water_pool."
-                            )
-
-                            response["get_water_pool"] = self.get_water_pool()
-
-                        case "increase_nitrate":
-                            logger.debug(
-                                "Received command identified as increase_nitrate."
-                            )
-                            amount = payload["increase_nitrate"]
-
-                            self.model.increase_nitrate(amount=amount)
-
-                        case "get_nitrate_pool":
-                            logger.debug(
-                                "Received command identified as get_nitrate_pool."
-                            )
-
-                            response[
-                                "get_nitrate_pool"
-                            ] = self.get_nitrate_pool()
-
                         case "create_leaf":
                             logger.debug(
-                                "Received command identified as create_leaf."
+                                f"Received command identified as create_leaf."
+                                f" Payload: {payload}"
                             )
 
-                            leaf: Leaf = Leaf.from_json(payload["create_leaf"])
+                            leaf: Leaf = Leaf.from_dict(payload)
 
                             self.create_leaf(leaf=leaf)
 
-                        case "stop_water_intake":
+                        case "get_environment":
                             logger.debug(
-                                "Received command identified as stop_water_intake."
+                                "Received command identified as "
+                                "get_environment."
                             )
 
-                            self.stop_water_intake()
+                            response[
+                                "get_environment"
+                            ] = self.get_environment()
 
-                        case "enable_water_intake":
+                        case "create_new_first_letter":
                             logger.debug(
-                                "Received command identified as enable_water_intake."
+                                "Received command identified as "
+                                "create_new_first_letter."
                             )
 
-                            self.enable_water_intake()
-
-                        case "set_water_pool":
-                            logger.debug(
-                                "Received command identified as set_water_pool."
+                            self.create_new_first_letter(
+                                dir=payload["dir"],
+                                pos=payload["pos"],
+                                mass=payload["mass"],
+                                dist=payload["dist"],
                             )
 
-                            water = Water.from_json(payload)
-
-                            self.set_water_pool(water=water)
-
-                        case "update":
+                        case "add2grid":
                             logger.debug(
-                                "Received command identified as update."
+                                "Received command identified as add2grid."
                             )
+                            self.add2grid(payload=payload)
 
-                            update_info = UpdateInfo.from_json(payload)
-
-                            self.update(update_info=update_info)
+                        case "load_level":
+                            logger.debug(
+                                "Received command identified as load_level."
+                            )
+                            await self.__load_level()
+                            response["load_level"] = "None"
 
                         case _:
                             logger.error(
@@ -487,14 +448,14 @@ class Server:
                             continue
                 # ToDo change exception type
                 except Exception:
-                    logger.error(
+                    logger.exception(
                         msg=f"Unable to handle {command}, "
                         f"with payload {payload}",
                         exc_info=True,
                     )
 
             if response:
-                response = json.dumps(response)
+                response_str = json.dumps(response)
                 await asyncio.gather(
-                    *[client.send(response) for client in self.clients]
+                    *[client.send(response_str) for client in self.clients]
                 )

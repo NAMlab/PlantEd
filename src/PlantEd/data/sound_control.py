@@ -5,6 +5,9 @@ Use options to set volumes
 import os
 import random
 from pathlib import Path
+
+import pygame.mixer
+
 from PlantEd import config
 from PlantEd.data import assets
 
@@ -17,6 +20,7 @@ class SoundControl:
         options = config.load_options()
         self.music_volume = options["music_volume"]
         self.sfx_volume = options["sfx_volume"]
+        self.channel = pygame.mixer.Channel(1)
 
         self.start_sfx = self.fill_sfx_array(config.START_PATH, self.sfx_volume)
         self.ambience = self.fill_sfx_array(config.AMBIENCE_PATH, self.sfx_volume)
@@ -25,7 +29,7 @@ class SoundControl:
         self.snail_sfx = self.fill_sfx_array(config.SNAIL_SFX_PATH, self.sfx_volume)
         self.bug_sfx = self.fill_sfx_array(config.BUG_SFX_PATH, self.sfx_volume)
         self.select_sfx = self.fill_sfx_array(config.SELECT_SFX_PATH, self.sfx_volume)
-        self.confirm_sfx = self.fill_sfx_array(config.CONFIRM_SFX_PATH, self.sfx_volume)
+        # self.confirm_sfx = self.fill_sfx_array(config.CONFIRM_SFX_PATH, self.sfx_volume)
         self.buy_sfx = self.fill_sfx_array(config.BUY_SFX_PATH, self.sfx_volume)
         self.alert_sfx = self.fill_sfx_array(config.ALERT_SFX_PATH, self.sfx_volume)
         self.error_sfx = self.fill_sfx_array(config.ERROR_SFX_PATH, self.sfx_volume)
@@ -38,6 +42,7 @@ class SoundControl:
         self.level_up_sfx = self.fill_sfx_array(config.LEVEL_UP, self.sfx_volume)
         self.spraycan_sfx = self.fill_sfx_array(config.SPRAYCAN, self.sfx_volume)
         self.reward_sfx = self.fill_sfx_array(config.REWARD, self.sfx_volume)
+        self.pop_seed = self.fill_sfx_array(config.POP_SEED, self.sfx_volume)
 
         self.sfx = []
         self.sfx.append(self.start_sfx)
@@ -46,7 +51,7 @@ class SoundControl:
         self.sfx.append(self.snail_sfx)
         self.sfx.append(self.bug_sfx)
         self.sfx.append(self.select_sfx)
-        self.sfx.append(self.confirm_sfx)
+        # self.sfx.append(self.confirm_sfx)
         self.sfx.append(self.buy_sfx)
         self.sfx.append(self.alert_sfx)
         self.sfx.append(self.error_sfx)
@@ -59,10 +64,11 @@ class SoundControl:
         self.sfx.append(self.level_up_sfx)
         self.sfx.append(self.nitrogen_sfx)
         self.sfx.append(self.reward_sfx)
+        self.sfx.append(self.pop_seed)
 
     def play_music(self):
         i = int(random.random() * len(self.music))
-        self.music[i].play()
+        self.channel.play(self.music[i], -1)
 
     def play_start_sfx(self):
         i = int(random.random() * len(self.start_sfx))
@@ -137,6 +143,10 @@ class SoundControl:
     def play_reward_sfx(self):
         i = int(random.random() * len(self.reward_sfx))
         self.reward_sfx[i].play()
+
+    def play_pop_seed_sfx(self):
+        i = int(random.random() * len(self.pop_seed))
+        self.pop_seed[i].play()
 
     def fill_sfx_array(self, relative_path, volume=None):
         path = data_dir / "assets" / relative_path
