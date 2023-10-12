@@ -7,17 +7,14 @@ import logging
 import multiprocessing
 import threading
 from asyncio import Future, InvalidStateError
-from multiprocessing import Event
-from typing import Callable, Literal
+from multiprocessing.synchronize import Event
+from typing import Callable, Literal, Optional
 
 import websockets
 
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.client.update import UpdateInfo
-from PlantEd.client.water import Water
 from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.leaf import Leaf
-from PlantEd.server.plant.nitrate import Nitrate
 from PlantEd.server.plant.plant import Plant
 from websockets.exceptions import ConnectionClosedOK
 
@@ -36,10 +33,10 @@ class Client:
         self.url = f"ws://localhost:{port}"
         logger.debug(f"Connecting to server {self.url}")
 
-        self.__future: asyncio.Future = None
-        self.loop: asyncio.AbstractEventLoop = None
+        self.__future: Optional[asyncio.Future] = None
+        self.loop: Optional[asyncio.AbstractEventLoop] = None
         self.expected_receive: dict[str, Future] = dict()
-        ready: multiprocessing.Event = multiprocessing.Event()
+        ready: Event = multiprocessing.Event()
 
         thread = threading.Thread(
             target=asyncio.run, daemon=True, args=(self.__start(ready=ready),)
@@ -133,14 +130,20 @@ class Client:
         callback: Callable[[Plant], None],
     ):
         task = self.__request_growth_rate(growth_percent=growth_percent)
+
+        assert self.loop is not None
         future_received = self.loop.create_future()
 
         self.expected_receive["growth_rate"] = future_received
+
+        assert self.loop is not None
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
         task = self.__receive_growth_rate(
             future=future_received, callback=callback
         )
+
+        assert self.loop is not None
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __receive_growth_rate(
@@ -185,7 +188,7 @@ class Client:
         await self.websocket.send(message)
 
     def close_stomata(self):
-        task = self.__open_stomata()
+        task = self.__close_stomata()
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __close_stomata(self):
@@ -195,156 +198,8 @@ class Client:
 
         await self.websocket.send(message)
 
-    def deactivate_starch_resource(self):
-        task = self.__deactivate_starch_resource()
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __deactivate_starch_resource(self):
-        logger.debug("Sending request to deactivate_starch_resource")
-
-        message = '{"deactivate_starch_resource": "null"}'
-
-        await self.websocket.send(message)
-
-    def activate_starch_resource(self, percentage: float):
-        task = self.__activate_starch_resource(percentage=percentage)
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __activate_starch_resource(self, percentage: float):
-        logger.debug("Sending request to activate_starch_resource")
-
-        message = {"activate_starch_resource": percentage}
-        message = json.dumps(message)
-
-        await self.websocket.send(message)
-
-    def set_water_pool(self, water: Water):
-        """ """
-        task = self.__set_water_pool(water=water)
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __set_water_pool(self, water: Water):
-        logger.debug(f"Sending request to set_water_pool with payload {water}")
-
-        message = {"set_water_pool": water.to_json()}
-        message = json.dumps(message)
-
-        await self.websocket.send(message)
-
-    def stop_water_intake(self):
-        task = self.__stop_water_intake()
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __stop_water_intake(self):
-        logger.debug("Sending request to stop_water_intake")
-
-        message = '{"stop_water_intake": "null"}'
-
-        await self.websocket.send(message)
-
-    def enable_water_intake(self):
-        task = self.__enable_water_intake()
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __enable_water_intake(self):
-        logger.debug("Sending request to enable_water_intake")
-
-        message = '{"enable_water_intake": "null"}'
-
-        await self.websocket.send(message)
-
-    def get_water_pool(self, callback: Callable[[Water], None]):
-        """
-        Method to obtain the WaterPool defined in the DynamicModel.
-
-        Returns: A WaterPool object.
-        """
-
-        future_received = self.loop.create_future()
-
-        self.expected_receive["get_water_pool"] = future_received
-
-        task = self.__receive_get_water_pool(
-            future=future_received, callback=callback
-        )
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-        task = self.__request_get_water_pool()
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __receive_get_water_pool(
-        self, future: Future, callback: Callable[[Water], None]
-    ):
-        await future
-
-        water = Water.from_json(future.result())
-
-        callback(water)
-
-    async def __request_get_water_pool(self):
-        """
-        Method to obtain the WaterPool defined in the DynamicModel.
-
-        Returns: A WaterPool object.
-        """
-
-        logger.debug("Sending request for water_pool")
-
-        message = '{"get_water_pool": "null"}'
-
-        await self.websocket.send(message)
-
-    def increase_nitrate(self, µmol_nitrate: float):
-        """
-        Method that realizes the increase of the nitrate pool
-        through the store.
-
-        """
-
-        task = self.__increase_nitrate(µmol_nitrate=µmol_nitrate)
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __increase_nitrate(self, µmol_nitrate: float):
-        logger.debug("Sending request for nitrate increase.")
-
-        message = f'{{"increase_nitrate": "{µmol_nitrate}"}}'
-        await self.websocket.send(message)
-
-    def get_nitrate_pool(self, callback: Callable[[Nitrate], None]):
-        """
-        Method to request the NitratePool.
-        Returns: The available nitrates.
-
-        """
-        future_received = self.loop.create_future()
-        self.expected_receive["get_nitrate_pool"] = future_received
-
-        task = self.__receive_nitrate_pool(
-            future=future_received, callback=callback
-        )
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-        task = self.__request_nitrate_pool()
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __request_nitrate_pool(self):
-        logger.debug("Requesting the nitrate pool.")
-
-        message = '{"get_nitrate_pool": "null"}'
-
-        await self.websocket.send(message)
-
-        return
-
-    async def __receive_nitrate_pool(
-        self, future: Future, callback: Callable[[Nitrate], None]
-    ):
-        await future
-
-        nitrate = Nitrate.from_json(future.result())
-        callback(nitrate)
-
     def create_leaf(self, leaf: Leaf):
+        assert self.loop is not None
         future = asyncio.run_coroutine_threadsafe(
             self.__create_leaf(leaf=leaf), self.loop
         )
@@ -357,16 +212,6 @@ class Client:
         message = json.dumps({"create_leaf": leaf.to_dict()})
         await self.websocket.send(message)
 
-    def update(self, update_info: UpdateInfo):
-        task = self.__update(update_info=update_info)
-        asyncio.run_coroutine_threadsafe(task, self.loop)
-
-    async def __update(self, update_info: UpdateInfo):
-        logger.debug("Request update.")
-
-        message = {"update": update_info.to_json()}
-        await self.websocket.send(message)
-
     def get_environment(self, callback: Callable[[Environment], None]):
         """
         Method to obtain the WaterPool defined in the DynamicModel.
@@ -374,6 +219,7 @@ class Client:
         Returns: A WaterPool object.
         """
 
+        assert self.loop is not None
         future_received = self.loop.create_future()
 
         self.expected_receive["get_environment"] = future_received
@@ -381,6 +227,8 @@ class Client:
         task = self.__get_environment(
             future=future_received, callback=callback
         )
+
+        assert self.loop is not None
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __get_environment(
@@ -465,6 +313,8 @@ class Client:
             y=y,
             grid=grid,
         )
+
+        assert self.loop is not None
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
     async def __add2grid(
@@ -490,6 +340,7 @@ class Client:
         lock.acquire()
 
     async def __load_level(self, lock: threading.Lock):
+        assert self.loop is not None
         future_received = self.loop.create_future()
         self.expected_receive["load_level"] = future_received
 

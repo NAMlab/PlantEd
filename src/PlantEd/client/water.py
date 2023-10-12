@@ -4,6 +4,7 @@ import dataclasses
 import json
 import logging
 from dataclasses import dataclass
+from typing import Annotated
 
 from pydantic import confloat
 
@@ -82,6 +83,7 @@ class Water:
 
         self.__water_pool: float = water_pool
         self.transpiration: float = 0
+        self.transpiration_factor: float = 0
 
         # legacy will be removed
         self.water_intake: int = 0
@@ -124,7 +126,7 @@ class Water:
         return self.__max_water_pool
 
     @property
-    def fill_percentage(self) -> confloat(ge=0, le=1):
+    def fill_percentage(self) -> Annotated[float, confloat(gt=0, lt=1)]:
         """
         Returns the percentage level of the water supply as float.
         """
@@ -252,7 +254,7 @@ class Water:
         co2_uptake_in_micromol_per_second_and_gram: float,
         transpiration_factor: float,
     ):
-        transpiration = 0
+        transpiration = 0.0
         if stomata_open:
             if co2_uptake_in_micromol_per_second_and_gram > 0:
                 transpiration = (

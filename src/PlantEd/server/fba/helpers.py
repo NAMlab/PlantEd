@@ -334,7 +334,9 @@ def normalize(
 
     _normalize_reactions(root_stem, root, stem)
     _normalize_reactions(stem_leaf, stem, leaf)
-    _normalize_reactions(leaf_seed, leaf, seed) # ToDo leaf to seed or stem to seed
+    _normalize_reactions(
+        leaf_seed, leaf, seed
+    )  # ToDo leaf to seed or stem to seed
 
 
 def create_objective(model: Model, direction: str = "max") -> Objective:

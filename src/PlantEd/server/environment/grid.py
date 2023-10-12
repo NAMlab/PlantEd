@@ -46,7 +46,7 @@ class MetaboliteGrid:
         self,
         grid_size: tuple[int, int] = (20, 6),
         max_metabolite_cell: int = 1000000,
-        preset_fill_amount: int = 0,
+        preset_fill_amount: float = 0.0,
     ):
         self.grid_size: tuple[int, int] = grid_size
         self.grid: np.ndarray = np.full(
@@ -263,7 +263,7 @@ class MetaboliteGrid:
     def from_dict(cls, dic: dict) -> MetaboliteGrid:
         met_grid = MetaboliteGrid()
 
-        met_grid.grid_size = tuple(dic["grid_size"])
+        met_grid.grid_size = tuple(dic["grid_size"])  # type: ignore
         met_grid.grid = np.asarray(dic["grid"])
         met_grid.max_metabolite_cell = dic["max_metabolite_cell"]
 

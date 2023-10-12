@@ -7,19 +7,18 @@ import logging
 import multiprocessing
 import signal
 import socket
-from multiprocessing import Manager, Event
+from multiprocessing.managers import ValueProxy, SyncManager
+from multiprocessing.synchronize import Event
 from typing import Optional
 
 import websockets
+from websockets.exceptions import ConnectionClosed
 from websockets.legacy.server import WebSocketServerProtocol, WebSocketServer
 
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.client.update import UpdateInfo
-from PlantEd.client.water import Water
 from PlantEd.server.fba.dynamic_model import DynamicModel
 from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.leaf import Leaf
-from PlantEd.server.plant.nitrate import Nitrate
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +26,11 @@ logger = logging.getLogger(__name__)
 class ServerContainer:
     def __init__(self, sock: Optional[socket.socket] = None, only_local=True):
         self.shutdown_signal: Event = multiprocessing.Event()
-        self.manager: Manager = multiprocessing.Manager()
-        self.__port: Optional[int] = self.manager.Value(Optional[int], None)
-        self.__ip_address: Optional[str] = self.manager.Value(
+        self.manager: SyncManager = multiprocessing.Manager()
+        self.__port: ValueProxy[Optional[int]] = self.manager.Value(
+            Optional[int], None
+        )
+        self.__ip_address: ValueProxy[Optional[str]] = self.manager.Value(
             Optional[str], None
         )
         self.__ready: Event = multiprocessing.Event()
@@ -85,8 +86,8 @@ def start_server(
     ready: Event,
     sock: Optional[socket.socket] = None,
     only_local=True,
-    port: Optional[int] = None,
-    ip_adress: Optional[int] = None,
+    port: Optional[ValueProxy[int]] = None,
+    ip_adress: Optional[ValueProxy[str]] = None,
 ):
     server = Server(
         shutdown_signal=shutdown_signal,
@@ -110,25 +111,25 @@ class Server:
         ready: Event,
         sock: Optional[socket.socket] = None,
         only_local=True,
-        port: Optional[int] = None,
-        ip_adress: Optional[int] = None,
+        port: Optional[ValueProxy[int]] = None,
+        ip_adress: Optional[ValueProxy[str]] = None,
     ):
         self.shutdown_signal: Event = shutdown_signal
         self.ready: Event = ready
         self.clients: set[WebSocketServerProtocol] = set()
         self.sock: Optional[socket.socket] = sock
-        self.websocket: websockets.WebSocketServer = None
+        self.websocket: Optional[WebSocketServer] = None
         self.environment: Environment = Environment()
         self.model: DynamicModel = DynamicModel(
             enviroment=self.environment,
         )
 
-        self.__future: asyncio.Future = None
-        self.loop: asyncio.AbstractEventLoop = None
+        self.__future: Optional[asyncio.Future] = None
+        self.loop: Optional[asyncio.AbstractEventLoop] = None
         self.only_local = only_local
 
-        self.__port: Optional[int] = port
-        self.__ip_address: Optional[str] = ip_adress
+        self.__port: Optional[ValueProxy[int]] = port
+        self.__ip_address: Optional[ValueProxy[str]] = ip_adress
 
     @property
     def port(self):
@@ -241,19 +242,6 @@ class Server:
         self.clients.remove(ws)
         logger.info(f"{ws.remote_address} disconnected.")
 
-    def get_growth_percent(self) -> str:
-        """
-        Function that queries the server-side growth_percent.
-
-        # ToDo needs to be the plant object complete
-        Returns: A GrowthPercent object encoded in JSON.
-
-        """
-
-        message = self.model.percentages.to_json()
-        logger.info(f"Sending {message}")
-        return message
-
     def calc_send_growth_rate(self, growth_percent: GrowthPercent) -> str:
         """
         Function that calculates the growth per specified time step.
@@ -304,71 +292,8 @@ class Server:
         logger.info("Closing stomata")
         self.model.close_stomata()
 
-    def deactivate_starch_resource(self):
-        """
-
-        Methode to disable the use of the starch pool.
-
-        """
-        logger.info("Deactivating starch use")
-        self.model.deactivate_starch_resource()
-
-    def activate_starch_resource(self):
-        """
-        Methode to enable the use of the starch pool.
-
-        """
-        logger.info("Activating starch use")
-        self.model.activate_starch_resource()
-
-    def get_water_pool(self) -> str:
-        """
-        Method to obtain the WaterPool defined in the DynamicModel.
-
-        Returns: The WaterPool object encoded in JSON.
-
-        """
-        logger.info("Creating Water Object and sending it back")
-
-        water: Water = self.model.plant.water
-
-        answer = water.to_json()
-
-        logger.debug(f"Responding to a water request with {answer}")
-
-        return answer
-
-    def get_nitrate_pool(self) -> str:
-        """
-        Method to retrieve the Nitrate Pool form the Plant defined inside the
-            DynamicModel.
-
-        Returns: Nitrate object as a string in JSON format.
-
-        """
-
-        nitrate: Nitrate = self.model.plant.nitrate
-        answer = nitrate.to_json()
-
-        return answer
-
     def create_leaf(self, leaf: Leaf):
         self.model.plant.leafs.new_leaf(leaf)
-
-    def stop_water_intake(self):
-        self.model.stop_water_intake()
-
-    def enable_water_intake(self):
-        self.model.enable_water_intake()
-
-    def set_water_pool(self, water: Water):
-        water.transpiration = self.model.plant.water.transpiration
-
-        self.model.plant.set_water(water)
-        logger.debug(f"Water set to {self.model.plant.water}")
-
-    def update(self, update_info: UpdateInfo):
-        self.model.update(update_info=update_info)
 
     def get_environment(self) -> str:
         return self.environment.to_json()
@@ -422,14 +347,14 @@ class Server:
         while True:
             try:
                 request = await ws.recv()
-            except websockets.ConnectionClosed as e:
+            except ConnectionClosed as e:
                 self.close_connection(ws)
                 logger.debug(
                     f"{ws.remote_address} unregistered. Closing Trace: {e}"
                 )
                 break
 
-            logger.info(f"Received {request}")
+            logger.info(f"Received {str(request)}")
 
             commands: dict = json.loads(request)
             response = {}
@@ -468,49 +393,6 @@ class Server:
 
                             self.close_stomata()
 
-                        case "deactivate_starch_resource":
-                            logger.debug(
-                                "Received command identified as "
-                                "deactivate_starch_resource."
-                            )
-
-                            self.deactivate_starch_resource()
-
-                        case "activate_starch_resource":
-                            logger.debug(
-                                "Received command identified as "
-                                "activate_starch_resource."
-                            )
-
-                            self.activate_starch_resource()
-
-                        case "get_water_pool":
-                            logger.debug(
-                                "Received command identified as"
-                                " get_water_pool."
-                            )
-
-                            response["get_water_pool"] = self.get_water_pool()
-
-                        case "increase_nitrate":
-                            logger.debug(
-                                "Received command identified as "
-                                "increase_nitrate."
-                            )
-                            amount = payload["increase_nitrate"]
-
-                            self.model.increase_nitrate(amount=amount)
-
-                        case "get_nitrate_pool":
-                            logger.debug(
-                                "Received command identified as "
-                                "get_nitrate_pool."
-                            )
-
-                            response[
-                                "get_nitrate_pool"
-                            ] = self.get_nitrate_pool()
-
                         case "create_leaf":
                             logger.debug(
                                 f"Received command identified as create_leaf."
@@ -520,41 +402,6 @@ class Server:
                             leaf: Leaf = Leaf.from_dict(payload)
 
                             self.create_leaf(leaf=leaf)
-
-                        case "stop_water_intake":
-                            logger.debug(
-                                "Received command identified as "
-                                "stop_water_intake."
-                            )
-
-                            self.stop_water_intake()
-
-                        case "enable_water_intake":
-                            logger.debug(
-                                "Received command identified as "
-                                "enable_water_intake."
-                            )
-
-                            self.enable_water_intake()
-
-                        case "set_water_pool":
-                            logger.debug(
-                                "Received command identified as "
-                                "set_water_pool."
-                            )
-
-                            water = Water.from_json(payload)
-
-                            self.set_water_pool(water=water)
-
-                        case "update":
-                            logger.debug(
-                                "Received command identified as update."
-                            )
-
-                            update_info = UpdateInfo.from_json(payload)
-
-                            self.update(update_info=update_info)
 
                         case "get_environment":
                             logger.debug(
@@ -608,7 +455,7 @@ class Server:
                     )
 
             if response:
-                response = json.dumps(response)
+                response_str = json.dumps(response)
                 await asyncio.gather(
-                    *[client.send(response) for client in self.clients]
+                    *[client.send(response_str) for client in self.clients]
                 )

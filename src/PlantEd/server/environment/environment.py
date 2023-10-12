@@ -7,30 +7,31 @@ from typing import Union
 import pandas as pd
 from PlantEd import data
 from PlantEd.client.SimWeatherSmall import WeatherSimulatorMinimal
+from PlantEd.constants import MAX_WATER_PER_CELL, MAX_NITRATE_PER_CELL
 from PlantEd.server.environment.grid import MetaboliteGrid
 from PlantEd.server.environment.weather import WeatherSimulator, WeatherState
 
 
-
 class Environment:
-    water_grid: MetaboliteGrid = MetaboliteGrid(
-        max_metabolite_cell=MAX_WATER_PER_CELL,
-        preset_fill_amount=MAX_WATER_PER_CELL / 20,
-    )
-    nitrate_grid: MetaboliteGrid = MetaboliteGrid(
-        max_metabolite_cell=MAX_NITRATE_PER_CELL,
-        preset_fill_amount=MAX_NITRATE_PER_CELL / 10,
-    )
+    def __init__(self):
+        self.water_grid: MetaboliteGrid = MetaboliteGrid(
+            max_metabolite_cell=MAX_WATER_PER_CELL,
+            preset_fill_amount=MAX_WATER_PER_CELL / 20,
+        )
+        self.nitrate_grid: MetaboliteGrid = MetaboliteGrid(
+            max_metabolite_cell=MAX_NITRATE_PER_CELL,
+            preset_fill_amount=MAX_NITRATE_PER_CELL / 10,
+        )
 
-    weather_data = importlib.resources.files(data) / "weather"
-    df_weather_spring: pd.DataFrame = pd.read_csv(
-        (weather_data / "cleaned_weather_spring.csv").open()
-    )
+        weather_data = importlib.resources.files(data) / "weather"
+        df_weather_spring: pd.DataFrame = pd.read_csv(
+            (weather_data / "cleaned_weather_spring.csv").open()
+        )
 
-    weather: Union[
-        WeatherSimulator, WeatherSimulatorMinimal
-    ] = WeatherSimulator(data=df_weather_spring)
-    time_in_s: int = 0
+        self.weather: Union[
+            WeatherSimulator, WeatherSimulatorMinimal
+        ] = WeatherSimulator(data=df_weather_spring)
+        self.time_in_s: int = 0
 
     def __str__(self):
         string = (

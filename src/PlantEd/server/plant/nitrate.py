@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 from PlantEd.constants import (
     MICROMOL_NITRATE_PER_GRAMM_FRESH_WEIGHT,
-    MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND,
     START_NITRATE_POOL_IN_MICROMOL,
     PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
     PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
@@ -139,15 +138,6 @@ class Nitrate:
         )
 
         return value
-
-    def update_nitrate_pool_based_on_root_weight(
-        self, root_weight_in_gram: float, time_in_seconds: int
-    ):
-        self.nitrate_intake = (
-            MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
-            * root_weight_in_gram
-            * time_in_seconds
-        )
 
     def update_nitrate_pool_based_on_plant_weight(self, plant_weight_gram):
         new_max_pool = (

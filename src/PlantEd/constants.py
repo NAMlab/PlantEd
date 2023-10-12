@@ -24,9 +24,11 @@ MICROMOL_STARCH_PER_GRAM_STARCH: Final[float] = (
 # ToDo source
 # ↓ according to ?
 MAX_WATER_POOL_PER_GRAMM = 0.05550843506179199 * 1000 * 0.8
+MAX_WATER_PER_CELL = 1000000
+
 
 ###############################################################################
-# Water
+# Nitrate
 ###############################################################################
 
 # ↓ value according to https://doi.org/10.1104/pp.105.074385
@@ -37,7 +39,10 @@ MICROMOL_NITRATE_PER_GRAMM_FRESH_WEIGHT = 7.9
 # ↓ value according to https://doi.org/10.3389/fpls.2018.00884
 # ↓ Arabidopsis thaliana
 MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY = 0.00336
-MAX_NITRATE_INTALE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY / 1000000 * 24 * 60 *60
+Vmax = 0.0025 * 14.541188254263
+Km = 400  # mikromol, Substrate density at which intake is 50% of max
+
+MAX_NITRATE_PER_CELL = 100
 
 ###############################################################################
 # Photon
@@ -58,6 +63,10 @@ START_LEAF_BIOMASS_GRAM = 0.1
 START_STEM_BIOMASS_GRAM = 0.1
 START_ROOT_BIOMASS_GRAM = 0.2
 START_SEED_BIOMASS_GRAM = 0.0001
+
+
+MAXIMUM_LEAF_BIOMASS_GRAM = 0.1
+
 
 # ↓ if negative set to multiple of max_{molecule}_pool
 # ↓ => for starch : -2 = 2 * max_starch_pool

@@ -46,13 +46,11 @@ class WeatherSimulatorMinimal:
         return self.state[self.latest_hour]
 
     def to_dict(self) -> dict:
-        dic = {}
         all_states = {}
         for hour, state in self.state.items():
             all_states[hour] = state.to_dict()
 
-        dic["states"] = all_states
-        dic["latest_hour"] = self.latest_hour
+        dic = {"states": all_states, "latest_hour": self.latest_hour}
 
         return dic
 

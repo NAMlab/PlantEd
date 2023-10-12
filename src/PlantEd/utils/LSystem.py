@@ -34,22 +34,24 @@ Letters are part of a root. Each letter has an id, that indicates its state.
 Rules apply based on its id. Growth depends on duration (delta mass).
 Following branches or segments are stored in a list of branches.
 """
+
+
 class Letter:
     def __init__(
-            self,
-            id: int,
-            root_class: int,
-            tier: int,
-            dir: tuple[float, float],
-            max_length: float,
-            mass_start: float,
-            mass_end: float,
-            max_branches: int = None,
-            branches: list = [],
-            t: float = None,
-            branching_t: list[float] = None,
-            length: float = 0,
-            pos: tuple[float, float] = (0, 0)
+        self,
+        id: int,
+        root_class: int,
+        tier: int,
+        dir: tuple[float, float],
+        max_length: float,
+        mass_start: float,
+        mass_end: float,
+        max_branches: int = None,
+        branches: list = [],
+        t: float = None,
+        branching_t: list[float] = None,
+        length: float = 0,
+        pos: tuple[float, float] = (0, 0),
     ):
         self.id: int = id
         self.tier: int = tier
@@ -174,20 +176,26 @@ Initial roots can bew small, medium and long. Each type has a different architec
 Root tiers describe the degree of each branch. Once the lowest tier has been reached, 
 branching can no longer happen.
 """
+
+
 class LSystem:
     def __init__(
-            self,
-            root_grid: np.ndarray,
-            water_grid_pos: tuple[float, float],
-            directions: list[tuple[float, float]] = [],
-            positions: list[tuple[float, float]] = None,
-            mass: float = 0,
+        self,
+        root_grid: np.ndarray,
+        water_grid_pos: tuple[float, float],
+        directions: list[tuple[float, float]] = [],
+        positions: list[tuple[float, float]] = None,
+        mass: float = 0,
     ):
         self.root_grid: np.ndarray = root_grid
         self.water_grid_pos: tuple[float, float] = water_grid_pos
-        self.positions: list[tuple[float, float]] = positions if positions is not None else []
+        self.positions: list[tuple[float, float]] = (
+            positions if positions is not None else []
+        )
         self.first_letters: list[Letter] = []
-        self.directions: list[tuple[float,float]] = directions  # if directions is not None else []
+        self.directions: list[
+            tuple[float, float]
+        ] = directions  # if directions is not None else []
         self.root_classes: list[list[dict]] = root_classes
         for dir in directions:
             self.first_letters.append(self.create_root(dir, mass))
@@ -212,21 +220,32 @@ class LSystem:
         return True
 
     def to_dict(self) -> dict:
-        dic = {"root_grid": dict(enumerate(self.root_grid.flatten(), 1)),
-               "water_grid_pos": self.water_grid_pos,
-               "positions": self.positions,
-               "directions": self.directions,
-               "root_classes": self.root_classes,
-               "first_letters": [first_letter.to_dict() for first_letter in self.first_letters]}
+        dic = {
+            "root_grid": dict(enumerate(self.root_grid.flatten(), 1)),
+            "water_grid_pos": self.water_grid_pos,
+            "positions": self.positions,
+            "directions": self.directions,
+            "root_classes": self.root_classes,
+            "first_letters": [
+                first_letter.to_dict() for first_letter in self.first_letters
+            ],
+        }
         return dic
-
 
     """
     Make a root of basal, branching and apex letters
     Duration is staggered. Therefore each segment has to be 
     fully grown before the next one can grow
     """
-    def create_root(self, dir: tuple[float,float] = None, mass: float = 0, root_class: int = 0, tier: int = None, t: float = None):
+
+    def create_root(
+        self,
+        dir: tuple[float, float] = None,
+        mass: float = 0,
+        root_class: int = 0,
+        tier: int = None,
+        t: float = None,
+    ):
         dir = dir if dir is not None else (0, 1)
         next_tier = tier if tier else 0
         dic = self.root_classes[root_class][next_tier]
@@ -246,7 +265,10 @@ class LSystem:
             dir=self.get_random_dir(dic["tries"], dir),
             max_length=apex_length,
             mass_start=mass + basal_duration + branching_duration,
-            mass_end=mass + basal_duration + branching_duration + apex_duration,
+            mass_end=mass
+            + basal_duration
+            + branching_duration
+            + apex_duration,
             t=1,
         )
         branching = Letter(
@@ -278,8 +300,8 @@ class LSystem:
     """
     Apply rules to each letter
     """
-    def update(self, mass):
 
+    def update(self, mass):
         """
         mass should change from 0.00001 to 1
         rules should apply for each 0.1 step
@@ -288,7 +310,7 @@ class LSystem:
         delta_mass = 0.2 -> 2 apply_rules calls
         delta_mass = 0.02 -> 1
         """
-        #delta_mass = mass_end - mass_start
+        # delta_mass = mass_end - mass_start
 
         for letter in self.first_letters:
             self.apply_rules(letter, mass)
@@ -296,6 +318,7 @@ class LSystem:
     """
     
     """
+
     def apply_rules(self, letter, mass):
         if letter.max_length <= letter.length:
             letter.id = 99
@@ -392,7 +415,7 @@ class LSystem:
                 angle_growth_xy = self.angle_between(growth_dir, (x, y))
                 angle_growth_dir = self.angle_between(growth_dir, dir)
             if (angle_down_xy + angle_growth_xy * 3) < (
-                    angle_down_dir + angle_growth_dir * 3
+                angle_down_dir + angle_growth_dir * 3
             ):
                 dir = (x, y)
             # if self.angle_between(down, (x, y)) < self.angle_between(down, dir):  # downward directions get promoted
@@ -442,25 +465,29 @@ class DictToRoot:
         # maybe weird, but works
         result = dic["root_grid"].items()
         data = list(result)
-        npa = np.array(data, dtype= float)
+        npa = np.array(data, dtype=float)
         dela = np.delete(npa, 0, 1)
-        root_grid: np.ndarray = np.reshape(dela, (-1, 20))
+        root_grid: np.ndarray = np.reshape(dela, (20, 6))
 
         water_grid_pos: tuple[float, float] = tuple(dic["water_grid_pos"])
         directions = []
         positions: list[tuple[float, float]] = dic["positions"]
 
         # mass: float = dic["mass"]
-        root_system = LSystem(root_grid=root_grid,
-                              water_grid_pos=water_grid_pos,
-                              directions=directions,
-                              positions=positions)
+        root_system = LSystem(
+            root_grid=root_grid,
+            water_grid_pos=water_grid_pos,
+            directions=directions,
+            positions=positions,
+        )
 
         first_letters = dic["first_letters"]
         # root_system.apexes = dic["apexes"]
         root_system.directions = dic["directions"]
         for i in range(len(first_letters)):
-            root_system.first_letters.append(DictToRoot.dict2letter(first_letters[i]))
+            root_system.first_letters.append(
+                DictToRoot.dict2letter(first_letters[i])
+            )
 
         return root_system
 
@@ -481,6 +508,19 @@ class DictToRoot:
         t = dic_letter["t"]
         pos = dic_letter["pos"]
         dir = dic_letter["dir"]
-        letter = Letter(id, root_class, tier, dir, max_length, mass_start, mass_end, max_branches, branches, t,
-                        branching_t, length, pos)
+        letter = Letter(
+            id,
+            root_class,
+            tier,
+            dir,
+            max_length,
+            mass_start,
+            mass_end,
+            max_branches,
+            branches,
+            t,
+            branching_t,
+            length,
+            pos,
+        )
         return letter

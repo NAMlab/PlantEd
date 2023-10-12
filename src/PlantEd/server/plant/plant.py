@@ -42,7 +42,7 @@ class Plant:
         photon_upper (float):
     """
 
-    def __init__(self, ground_grid_resolution: tuple[int, int]):
+    def __init__(self, ground_grid_resolution: tuple[int, int] = (20, 6)):
         self.leafs: Leafs = Leafs()
         self.leafs.new_leaf(Leaf(mass=START_LEAF_BIOMASS_GRAM))
 
@@ -164,7 +164,7 @@ class Plant:
         plant.leafs = Leafs.from_dict(dic["leafs"])
 
         plant.root = DictToRoot.load_root_system(dic["root"])
-        plant.root.root_grid = plant.root.root_grid.transpose()
+        plant.root.root_grid = plant.root.root_grid
         return plant
 
     @classmethod
@@ -248,12 +248,6 @@ class Plant:
             + self.seed_biomass_gram
         )
 
-    def set_water(self, water: Water):
-        self.water = water
-
-    def set_nitrate(self, nitrate: Nitrate):
-        self.nitrate = nitrate
-
     def update_max_water_pool(self):
         self.water.update_max_water_pool(plant_biomass=self.biomass_total_gram)
 
@@ -271,11 +265,6 @@ class Plant:
 
     def get_transpiration_in_micromol(self, time_in_s: int):
         return self.water.transpiration * self.leafs_biomass_gram * time_in_s
-
-    def update_nitrate_pool_intake(self, seconds: int):
-        self.nitrate.update_nitrate_pool_based_on_root_weight(
-            root_weight_in_gram=self.root_biomass_gram, time_in_seconds=seconds
-        )
 
     def update_max_nitrate_pool(self):
         self.nitrate.update_nitrate_pool_based_on_plant_weight(
