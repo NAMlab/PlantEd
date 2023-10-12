@@ -1,6 +1,7 @@
 from unittest import TestCase
 from unittest.mock import patch, PropertyMock
 
+from PlantEd.constants import MAXIMUM_LEAF_BIOMASS_GRAM
 from PlantEd.server.plant.leaf import Leaf, Leafs
 
 
@@ -9,7 +10,7 @@ class TestLeaf(TestCase):
         leaf = Leaf()
         self.assertIsInstance(leaf, Leaf)
         self.assertEqual(0, leaf.mass)
-        self.assertEqual(5, leaf.max_mass)
+        self.assertEqual(MAXIMUM_LEAF_BIOMASS_GRAM, leaf.max_mass)
 
         leaf = Leaf(mass=7, max_mass=18)
         self.assertIsInstance(leaf, Leaf)

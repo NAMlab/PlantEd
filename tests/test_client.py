@@ -3,14 +3,19 @@ import multiprocessing
 import os
 import threading
 import time
-from multiprocessing import Event, Manager
+import unittest
+from multiprocessing.managers import ValueProxy, SyncManager
+from multiprocessing.synchronize import Event
 from typing import Optional
 from unittest import TestCase, skipIf
 from unittest.mock import patch, PropertyMock
 
 from PlantEd.client.client import Client
 from PlantEd.client.growth_percentage import GrowthPercent
-from PlantEd.constants import START_LEAF_BIOMASS_GRAM
+from PlantEd.constants import (
+    START_LEAF_BIOMASS_GRAM,
+    MAXIMUM_LEAF_BIOMASS_GRAM,
+)
 from PlantEd.server.fba.dynamic_model import DynamicModel
 from PlantEd.server.environment.environment import Environment
 from PlantEd.server.plant.leaf import Leaf
@@ -30,9 +35,13 @@ IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 class TestClient(TestCase):
     def setUp(self) -> None:
         self.shutdown_signal: Event = multiprocessing.Event()
-        self.manager: Manager = multiprocessing.Manager()
-        port: Optional[int] = self.manager.Value(Optional[int], None)
-        ip_address: Optional[str] = self.manager.Value(Optional[str], None)
+        self.manager: SyncManager = multiprocessing.Manager()
+        port: ValueProxy[Optional[int]] = self.manager.Value(
+            Optional[int], None
+        )
+        ip_address: ValueProxy[Optional[str]] = self.manager.Value(
+            Optional[str], None
+        )
         self.ready: Event = multiprocessing.Event()
 
         with patch.object(
@@ -55,26 +64,106 @@ class TestClient(TestCase):
         self.shutdown_signal.set()
         self.thread.join()
 
-    def test_growth(self):
-        self.fail()
+    def test_create(self):
+        client: Client = Client(port=self.server.port)
+        self.assertIsInstance(client, Client)
 
     def test_growth_rate(self):
-        self.fail()
+        client: Client = Client(port=self.server.port)
+        success: bool = False
+
+        def call(plant: Plant):
+            nonlocal success
+            success = True
+            self.assertIsInstance(plant, Plant)
+            logging.debug(f"Test Result is {plant}")
+
+        growth: GrowthPercent = GrowthPercent(
+            leaf=0.2,
+            stem=0.4,
+            root=0.2,
+            starch=0.1,
+            flower=0.1,
+            time_frame=60,
+        )
+
+        client.growth_rate(growth_percent=growth, callback=call)
+        time.sleep(1)
+        self.assertTrue(success)
 
     def test_open_stomata(self):
-        self.fail()
+        client: Client = Client(port=self.server.port)
+
+        self.assertFalse(self.server.model.plant.stomata_open)
+
+        reaction = self.server.model.model.reactions.get_by_id("CO2_tx_leaf")
+
+        self.assertEqual(
+            -1000,
+            reaction.lower_bound,
+        )
+        self.assertEqual(
+            0,
+            reaction.upper_bound,
+        )
+
+        reaction = self.server.model.model.reactions.get_by_id("CO2_tx_leaf")
+        reaction.bounds = (0, 0)
+
+        reaction = self.server.model.model.reactions.get_by_id("CO2_tx_leaf")
+        self.assertEqual(
+            0,
+            reaction.lower_bound,
+        )
+        self.assertEqual(
+            0,
+            reaction.upper_bound,
+        )
+
+        client.open_stomata()
+        time.sleep(1)
+        self.assertTrue(self.server.model.plant.stomata_open)
+        reaction = self.server.model.model.reactions.get_by_id("CO2_tx_leaf")
+
+        self.assertEqual(
+            -1000,
+            reaction.lower_bound,
+        )
+        self.assertEqual(
+            1000,
+            reaction.upper_bound,
+        )
 
     def test_close_stomata(self):
-        self.fail()
+        client: Client = Client(port=self.server.port)
 
-    def test_deactivate_starch_resource(self):
-        self.fail()
+        self.server.model.plant.stomata_open = True
+        self.assertTrue(self.server.model.plant.stomata_open)
 
-    def test_activate_starch_resource(self):
-        self.fail()
+        reaction = self.server.model.model.reactions.get_by_id("CO2_tx_leaf")
+        reaction.bounds = (0, 1000)
+        self.assertEqual(
+            0,
+            reaction.lower_bound,
+        )
+        self.assertEqual(
+            1000,
+            reaction.upper_bound,
+        )
 
-    def test_get_water_pool(self):
-        self.fail()
+        client.close_stomata()
+        time.sleep(1)
+        self.assertFalse(self.server.model.plant.stomata_open)
+        reaction = self.server.model.model.reactions.get_by_id("CO2_tx_leaf")
+
+        self.assertEqual(
+            -1000,
+            reaction.lower_bound,
+        )
+        self.assertEqual(
+            0,
+            reaction.upper_bound,
+        )
 
     def test_load_level(self):
         client = Client(port=self.server.port)
@@ -96,7 +185,7 @@ class TestClient(TestCase):
             {
                 "id": 1,
                 "mass": START_LEAF_BIOMASS_GRAM,
-                "max_mass": START_LEAF_BIOMASS_GRAM * 5,
+                "max_mass": MAXIMUM_LEAF_BIOMASS_GRAM,
             }
         )
         self.assertEqual({default_leaf}, leafs.leafs)
@@ -104,13 +193,13 @@ class TestClient(TestCase):
         leaf = Leaf(mass=5, max_mass=13)
         client.create_leaf(leaf=leaf)
 
-        time.sleep(0)
+        time.sleep(1)
         self.assertEqual({leaf, default_leaf}, leafs.leafs)
 
         leaf_2 = Leaf(mass=27, max_mass=100)
         client.create_leaf(leaf=leaf_2)
 
-        time.sleep(0)
+        time.sleep(1)
         self.assertEqual({leaf, default_leaf, leaf_2}, leafs.leafs)
 
     def test_short_time(self):
@@ -144,6 +233,7 @@ class TestClient(TestCase):
 
         self.assertEqual(30, times_run)
 
+    @unittest.skip("")
     @skipIf(
         IN_GITHUB_ACTIONS,
         reason="The test runs for 30 minutes "

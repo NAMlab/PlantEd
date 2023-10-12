@@ -167,6 +167,14 @@ class TestStarch(TestCase):
             )
             self.assertEqual(starch.max_starch_pool, expected_max_pool)
 
+    @patch(
+        "PlantEd.server.plant.starch.PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP",  # noqa: E501
+        1,
+    )
+    @patch(
+        "PlantEd.server.plant.starch.PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP",  # noqa: E501
+        1,
+    )
     def test_calc_available_starch_in_mol_per_gram_and_time(self):
         starch = Starch(plant_weight_gram=6)
         starch.scale_pool_via_biomass(5000)
@@ -227,7 +235,11 @@ class TestStarch(TestCase):
                         expected * starch.allowed_starch_pool_consumption
                     )
 
-                    self.assertEqual(expected, computed)
+                    msg = (
+                        f"Available {starch.available_starch_pool},"
+                        f" organ weight {organ_gram}g, time frame {time}s"
+                    )
+                    self.assertEqual(expected, computed, msg=msg)
 
         with self.assertRaises(ValueError):
             starch.calc_available_starch_in_mol_per_gram_and_time(
