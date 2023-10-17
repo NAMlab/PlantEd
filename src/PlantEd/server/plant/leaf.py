@@ -4,7 +4,6 @@ import json
 import logging
 
 from PlantEd.constants import (
-    SLA_IN_SQUARE_METER_PER_GRAM,
     MAXIMUM_LEAF_BIOMASS_GRAM,
 )
 
@@ -129,10 +128,6 @@ class Leafs:
     @property
     def addable_leaf_biomass(self):
         return self.__addable_leaf_biomass
-
-    @property
-    def specific_leaf_area_in_square_meter(self):
-        return SLA_IN_SQUARE_METER_PER_GRAM * self.biomass
 
     @property
     def biomass(self):

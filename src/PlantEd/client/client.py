@@ -44,6 +44,7 @@ class Client:
         self.thread: threading.Thread = thread
         self.thread.start()
         self.lock = asyncio.Lock()
+        self.flush_lock = threading.Semaphore(value=0)
         ready.wait()
 
         logger.info("Connected to localhost")
@@ -164,7 +165,7 @@ class Client:
 
     async def __request_growth_rate(self, growth_percent: GrowthPercent):
         message_dict = {
-            "growth_rate": {"GrowthPercent": growth_percent.to_json()}
+            "growth_rate": {"GrowthPercent": growth_percent.to_dict()}
         }
 
         logger.info(
@@ -348,3 +349,50 @@ class Client:
 
         await future_received
         lock.release()
+
+    def flush(self, timeout: Optional[float] = 0.015):
+        """
+        Method to force the execution of scheduled tasks.
+        For this purpose, the calling thread is blocked
+        until the specified timeout has been reached
+        or until all tasks have been processed.
+
+        Note:
+            Setting the timeout parameters to None can lead to a deadlock
+            if a task cannot be processed. This can happen for example
+            if a response that is expected does not reach the client.
+
+        Args:
+            timeout (Optional[float]): The timeout time. If it is set to None,
+             the thread is blocked until all tasks have been processed.
+
+        """
+
+        task = self.__flush(timeout=timeout)
+        assert self.loop is not None
+        asyncio.run_coroutine_threadsafe(task, self.loop)
+
+        logger.debug(
+            f"Forcing the execution of pending tasks."
+            f" The calling thread will be blocked for the"
+            f" next {timeout} seconds."
+        )
+        self.flush_lock.acquire()
+
+    async def __flush(self, timeout: Optional[float] = 0.015):
+        try:
+            if timeout is not None:
+                async with asyncio.timeout(timeout):
+                    while len(asyncio.all_tasks(self.loop)) > 6:
+                        await asyncio.sleep(0)
+            else:
+                while len(asyncio.all_tasks(self.loop)) > 6:
+                    await asyncio.sleep(0)
+
+        except TimeoutError:
+            logger.warning(
+                "Could not successfully execute all tasks until the timeout"
+                f" ({timeout}) was reached. Calling thread will be released."
+            )
+
+        self.flush_lock.release()

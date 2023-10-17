@@ -14,6 +14,7 @@ from PlantEd.constants import (
     Vmax,
     Km,
     GRAM_STARCH_PER_MICROMOL_STARCH,
+    SLA_IN_SQUARE_METER_PER_GRAM,
 )
 
 from PlantEd.server.fba.helpers import (
@@ -189,16 +190,21 @@ class DynamicModel:
         logger.debug(f"Bounds for starch intake are {starch_bounds}")
         self.set_bounds(STARCH_IN, starch_bounds)
 
+        time_old = self.seconds_passed
         self.seconds_passed += time_frame
+        logger.debug(
+            f"Seconds since start are {time_old}."
+            f" Seconds to be simulated are {time_frame}."
+            f" Setting seconds since start to {self.seconds_passed}."
+        )
 
         logger.debug(
             f"Simulating the growth of the plant for {time_frame} seconds."
         )
 
-        if new_growth_percentages != self.percentages:
-            logger.info("Updating the model objectives.")
-            self.percentages = new_growth_percentages
-            self.update_constraints()
+        logger.info("Updating the model objectives.")
+        self.percentages = new_growth_percentages
+        self.update_constraints()
 
         # ToDo only approx since only current weather is taken into account
 
@@ -265,7 +271,7 @@ class DynamicModel:
         self.set_bounds(WATER, water_bounds)
 
         photon_upper_bound = (
-            self.plant.leafs.specific_leaf_area_in_square_meter  # m^2/ g_dry_leaf
+            SLA_IN_SQUARE_METER_PER_GRAM  # m^2/ g_dry_leaf
             * self.micromol_photon_per_square_meter  # mikromol / (s * m^2)
         )
 
@@ -344,8 +350,8 @@ class DynamicModel:
         photon = solution.fluxes[PHOTON]
 
         # via stem
-        starch_out = solution.fluxes.get(STARCH_OUT)
-        starch_in = solution.fluxes[STARCH_IN]
+        starch_out_flux = solution.fluxes.get(STARCH_OUT)
+        starch_in_flux = solution.fluxes[STARCH_IN]
 
         # via root
         water = solution.fluxes[WATER]
@@ -381,10 +387,14 @@ class DynamicModel:
         )
 
         # via stem
-        starch_out = starch_out * stem_biomass * time_frame
-        starch_in = starch_in * stem_biomass * time_frame
+        starch_out = starch_out_flux * stem_biomass * time_frame
+        starch_in = starch_in_flux * stem_biomass * time_frame
         logger.debug(
-            f"Starch_in is {starch_in} and starch_out is {starch_out}"
+            f"Starch production flux is {starch_out_flux} "
+            f"(absolute is {starch_out}μmol),"
+            f" Starch consumption flux is {starch_in_flux}"
+            f" (absolute is {starch_in}μmol) and"
+            f" starch production is {starch_out} μmol"
         )
 
         # via root

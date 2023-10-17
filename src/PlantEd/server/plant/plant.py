@@ -47,12 +47,20 @@ class Plant:
         self.leafs.new_leaf(Leaf(mass=START_LEAF_BIOMASS_GRAM))
 
         self.stem_biomass: float = START_STEM_BIOMASS_GRAM
-        self.__root_biomass: float = START_ROOT_BIOMASS_GRAM
         self.seed_biomass: float = START_SEED_BIOMASS_GRAM
 
         self.co2: float = 0
         self.co2_uptake_in_micromol_per_second_and_gram: float = 0
         self.photon: float = 0
+
+        self.__root_biomass = 0
+        self.root: LSystem = LSystem(
+            root_grid=np.zeros(
+                ground_grid_resolution
+            ),  # same resolution as environment grids
+            water_grid_pos=(0, 900),  # hardcoded at ui [game.py 310]
+        )
+        self.root_biomass: float = START_ROOT_BIOMASS_GRAM
 
         biomass = self.biomass_total_gram
         self.starch_pool: Starch = Starch(plant_weight_gram=biomass)
@@ -60,13 +68,6 @@ class Plant:
         self.nitrate: Nitrate = Nitrate(plant_weight_gram=biomass)
 
         self.stomata_open: bool = False
-
-        self.root: LSystem = LSystem(
-            root_grid=np.zeros(
-                ground_grid_resolution
-            ),  # same resolution as environment grids
-            water_grid_pos=(0, 900),  # hardcoded at ui [game.py 310]
-        )
 
     def __repr__(self):
         string = (

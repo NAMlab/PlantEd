@@ -1,13 +1,13 @@
+import asyncio
 import logging
 import multiprocessing
 import os
 import threading
 import time
-import unittest
 from multiprocessing.managers import ValueProxy, SyncManager
 from multiprocessing.synchronize import Event
 from typing import Optional
-from unittest import TestCase, skipIf
+from unittest import TestCase
 from unittest.mock import patch, PropertyMock
 
 from PlantEd.client.client import Client
@@ -233,39 +233,43 @@ class TestClient(TestCase):
 
         self.assertEqual(30, times_run)
 
-    @unittest.skip("")
-    @skipIf(
-        IN_GITHUB_ACTIONS,
-        reason="The test runs for 30 minutes "
-        "and therefore consumes a lot of runtime.",
-    )
-    def test_long_time(self):
-        # Requests one simulation per second for 30 minutes
-
+    def test_flush(self):
         client = Client(port=self.server.port)
-        success: bool
-        times_run = 0
+        self.assertEqual(5, len(asyncio.all_tasks(client.loop)))
+        lock: threading.RLock = threading.RLock()
+        lock.acquire()
+        tasks_running: threading.Semaphore = threading.Semaphore(0)
 
-        def call(plant: Plant):
-            nonlocal success
-            nonlocal times_run
-            success = True
-            self.assertIsInstance(plant, Plant)
-            logging.debug(f"Test Result is {plant}")
-            times_run = times_run + 1
-
-        for _ in range(0, 60 * 30):
-            success = False
-            growth: GrowthPercent = GrowthPercent(
-                leaf=0.2,
-                stem=0.4,
-                root=0.2,
-                starch=0.1,
-                flower=0.1,
-                time_frame=60,
-            )
-            client.growth_rate(growth_percent=growth, callback=call)
+        async def running_task(
+            lock: threading.RLock, tasks_running: threading.Semaphore
+        ):
+            tasks_running.release()
+            await asyncio.sleep(0)
+            lock.acquire(timeout=10)
             time.sleep(1)
-            self.assertTrue(success)
+            lock.release()
 
-        self.assertEqual(times_run, 30 * 60)
+        task1 = running_task(lock=lock, tasks_running=tasks_running)
+        task2 = running_task(lock=lock, tasks_running=tasks_running)
+        task3 = running_task(lock=lock, tasks_running=tasks_running)
+        task4 = running_task(lock=lock, tasks_running=tasks_running)
+        task5 = running_task(lock=lock, tasks_running=tasks_running)
+
+        assert client.loop is not None
+        asyncio.run_coroutine_threadsafe(task1, client.loop)
+        asyncio.run_coroutine_threadsafe(task2, client.loop)
+        asyncio.run_coroutine_threadsafe(task3, client.loop)
+        asyncio.run_coroutine_threadsafe(task4, client.loop)
+        asyncio.run_coroutine_threadsafe(task5, client.loop)
+
+        for _ in range(5):
+            tasks_running.acquire(timeout=10)
+
+        self.assertGreater(len(asyncio.all_tasks(client.loop)), 5)
+        lock.release()
+
+        client.flush()
+        self.assertEqual(5, len(asyncio.all_tasks(client.loop)))
+
+        logging.debug("FINISHED THIS")
+        del lock, tasks_running

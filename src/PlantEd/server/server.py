@@ -370,7 +370,7 @@ class Server:
                                 "of growth_rates."
                             )
 
-                            growth_percent = GrowthPercent.from_json(
+                            growth_percent = GrowthPercent.from_dict(
                                 payload["GrowthPercent"]
                             )
 
