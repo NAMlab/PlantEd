@@ -38,14 +38,14 @@ def main():
     parser.add_argument(
         "--windowed",
         action="store_true",
-        help="Should start the PlantEd full screen or windowed. "
+        help="Starts PlantEd full screen or windowed. "
         "Setting this flag results in a windowed start.",
     )
 
     parser.add_argument(
         "--noUI",
         action="store_true",
-        help="noUI flag ensures that only the server is started. Please "
+        help="The noUI flag ensures that only the server is started. Please "
         "refer to the console for the port and interface used.",
     )
 

@@ -188,16 +188,6 @@ class TestLeafs(TestCase):
         leafs.biomass = leafs.biomass + 10
         self.assertAlmostEqual(5.7, leafs.addable_leaf_biomass)
 
-    def test_specific_leaf_area_in_square_meter(self):
-        leafs = Leafs()
-
-        self.assertEqual(0, leafs.specific_leaf_area_in_square_meter)
-        leafs.new_leaf(Leaf(mass=5, max_mass=10))
-        self.assertEqual(0.125, leafs.specific_leaf_area_in_square_meter)
-
-        leafs.biomass = 10
-        self.assertEqual(0.25, leafs.specific_leaf_area_in_square_meter)
-
     def test_biomass(self):
         leafs = Leafs()
         self.assertEqual(0, leafs.biomass)

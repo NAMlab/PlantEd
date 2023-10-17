@@ -524,15 +524,18 @@ class DefaultGameScene(object):
             if self.ui.pause:
                 continue
             if e.type == GROWTH:
-                game_time_now = self.gametime.time_since_start_in_hours
-                delta_time_in_h = \
-                    game_time_now \
-                    - self.hours_since_start_where_growth_last_computed
-                self.hours_since_start_where_growth_last_computed = game_time_now
+                self.client.flush()
 
-                growing_flowers = self.plant.organs[
-                    3
-                ].get_growing_flowers()
+                game_time_now = self.gametime.time_since_start_in_hours
+                delta_time_in_h = (
+                    game_time_now
+                    - self.hours_since_start_where_growth_last_computed
+                )
+                self.hours_since_start_where_growth_last_computed = (
+                    game_time_now
+                )
+
+                growing_flowers = self.plant.organs[3].get_growing_flowers()
                 flower_percent = 0
                 # Todo fix percentages
                 for flower in growing_flowers:
@@ -540,12 +543,12 @@ class DefaultGameScene(object):
                 self.plant.organs[3].percentage = flower_percent
 
                 growth_percent = GrowthPercent(
-                    leaf=self.plant.organs[0].percentage,
-                    stem=self.plant.organs[1].percentage,
-                    root=self.plant.organs[2].percentage,
-                    starch=self.plant.organ_starch.percentage,
-                    flower=self.plant.organs[3].percentage,
-                    time_frame=delta_time_in_h * 3600
+                    leaf=self.plant.organs[0].percentage / 100,
+                    stem=self.plant.organs[1].percentage / 100,
+                    root=self.plant.organs[2].percentage / 100,
+                    starch=self.plant.organ_starch.percentage / 100,
+                    flower=self.plant.organs[3].percentage / 100,
+                    time_frame=delta_time_in_h * 3600,
                 )
 
                 self.client.growth_rate(
@@ -590,7 +593,9 @@ class DefaultGameScene(object):
                 )
 
                 # Request env and set it to self.server_environment
-                self.client.get_environment(callback= self.set_environment)
+                self.client.get_environment(callback=self.set_environment)
+
+                self.client.flush(timeout=0.01)
 
             if e.type == WIN:
                 if self.log:
@@ -1247,15 +1252,13 @@ def main(windowed: bool, port: int):
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 
-    screen = pygame.display.set_mode(
-        true_res, pygame.NOFRAME | pygame.FULLSCREEN | pygame.DOUBLEBUF, 16
-    )
-
     size = None
     if windowed:
         size = pygame.RESIZABLE
     else:
         size = pygame.FULLSCREEN
+
+    screen = pygame.display.set_mode(true_res, size | pygame.DOUBLEBUF, 16)
 
     # pygame.display.set_mode((0, 0), size)
 
@@ -1285,7 +1288,7 @@ def main(windowed: bool, port: int):
         # screen.blit(fps_text, (500, 500))
         # camera.render(screen)
         pygame.display.update()
-        time.sleep(0)
+        # time.sleep(0)
 
 
 if __name__ == "__main__":

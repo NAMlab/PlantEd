@@ -13,6 +13,39 @@ https://danielkoch.itch.io/planted
 
 ![Image of Plant](src/PlantEd/data/assets/plant_complete.png)
 
+## Usage
+
+After installation using pip, PlantEd can be started as a command line program. The exact usage can be seen in the following.
+```commandline
+$ PlantEd --help
+
+usage: PlantEd [-h] [-v] [--logFile] [--windowed] [--noUI]
+
+options:
+  -h, --help        show this help message and exit
+  -v , --logLevel   Set the detail of the log events (default: WARNING)
+  --logFile         The folder where all log files will be stored. The log files inside this folder will be overwritten. The Folder will be created automatically. By default, no folders or logfiles are created.
+  --windowed        Should start the PlantEd full screen or windowed. Setting this flag results in a windowed start.
+  --noUI            noUI flag ensures that only the server is started. Please refer to the console for the port and interface used.
+
+```
+
+## Development 
+PlantEd can be installed as an editable package using pip for development
+purposes. To do this, execute the following command in the cloned repository: 
+
+```commandline
+pip install -e .
+```
+The requirements.txt contains all necessary packages for the development. Using conda, a new enviroment can be easily created:
+```commandline
+conda create --name PlantEd
+```
+and all listed packages can be installed in this environment:
+```commandline
+pip install -r requirements.txt
+```
+
 ## Troubleshooting
 #### libGL error
 If you receive a message that says something like the following :
