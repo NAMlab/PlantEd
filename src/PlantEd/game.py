@@ -1288,7 +1288,6 @@ def main(windowed: bool, port: int):
         # screen.blit(fps_text, (500, 500))
         # camera.render(screen)
         pygame.display.update()
-        # time.sleep(0)
 
 
 if __name__ == "__main__":
