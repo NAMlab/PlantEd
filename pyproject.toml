@@ -3,11 +3,11 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "PlantEd"
-version = "0.4.0"
-description = "Lovely Spam! Wonderful Spam!"
+name = "PlantEd_Server"
+version = "0.0.1"
+description = "Server Client Application of the game PlantEd"
 readme = "README.md"
-requires-python = "~=3.11"
+requires-python = ">=3.10"
 
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -15,27 +15,23 @@ classifiers = [
 ]
 
 dependencies = [
+  "numpy",
   "cobra",
+  "sympy",
   "websockets",
   "dataclasses-json",
   "pygame",
-  "requests",
   "scipy",
   "matplotlib",
-]
-
-[project.optional-dependencies]
-test = [
-  "pytest < 5.0.0",
-  "pytest-cov[all]"
+  "requests",
 ]
 
 [project.urls]
-homepage = "https://github.com/NAMlab/PlantEd"
-repository = "https://github.com/NAMlab/PlantEd"
+homepage = "https://github.com/NAMlab/PlantEd_Server"
+repository = "https://github.com/NAMlab/PlantEd_Server"
 
 [project.scripts]
-PlantEd = "PlantEd.start:main"
+PlantEd_Server = "PlantEd_Server.server:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

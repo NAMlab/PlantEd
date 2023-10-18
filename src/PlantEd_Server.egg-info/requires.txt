@@ -1,0 +1,8 @@
+numpy
+cobra
+sympy
+websockets
+dataclasses-json
+scipy
+matplotlib
+requests
