@@ -9,7 +9,7 @@ from pathlib import Path
 import pygame.mixer
 
 from PlantEd import config
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 
 
 fileDir = Path(__file__)
@@ -22,6 +22,8 @@ class SoundControl:
         self.sfx_volume = options["sfx_volume"]
         self.channel = pygame.mixer.Channel(1)
 
+        self.asset_handler = AssetHandler.instance()
+
         self.start_sfx = self.fill_sfx_array(config.START_PATH, self.sfx_volume)
         self.ambience = self.fill_sfx_array(config.AMBIENCE_PATH, self.sfx_volume)
         self.music = self.fill_music_array(config.MUSIC_PATH, self.music_volume)
@@ -29,7 +31,7 @@ class SoundControl:
         self.snail_sfx = self.fill_sfx_array(config.SNAIL_SFX_PATH, self.sfx_volume)
         self.bug_sfx = self.fill_sfx_array(config.BUG_SFX_PATH, self.sfx_volume)
         self.select_sfx = self.fill_sfx_array(config.SELECT_SFX_PATH, self.sfx_volume)
-        # self.confirm_sfx = self.fill_sfx_array(config.CONFIRM_SFX_PATH, self.sfx_volume)
+        #self.confirm_sfx = self.fill_sfx_array(config.CONFIRM_SFX_PATH, self.sfx_volume)
         self.buy_sfx = self.fill_sfx_array(config.BUY_SFX_PATH, self.sfx_volume)
         self.alert_sfx = self.fill_sfx_array(config.ALERT_SFX_PATH, self.sfx_volume)
         self.error_sfx = self.fill_sfx_array(config.ERROR_SFX_PATH, self.sfx_volume)
@@ -154,7 +156,7 @@ class SoundControl:
         sound_array: list = []
         for item in dir_list:
             path_to_file = relative_path + "/" + item
-            sound_array.append(assets.sfx(path_to_file, volume))
+            sound_array.append(self.asset_handler.sfx(path_to_file, volume))
         return sound_array
 
     def fill_music_array(self, relative_path, volume=None):
@@ -163,7 +165,7 @@ class SoundControl:
         sound_array: list = []
         for item in dir_list:
             path_to_file = relative_path + "/" + item
-            sound_array.append(assets.sfx(path_to_file, volume))
+            sound_array.append(self.asset_handler.sfx(path_to_file, volume))
         return sound_array
 
     def reload_options(self):

@@ -3,7 +3,6 @@ from pygame import Rect
 from pygame.locals import *
 
 from PlantEd import config
-from PlantEd.data import assets
 from PlantEd.client.gameobjects.water_reservoir import Water_Grid
 from PlantEd.client.utils.particle import ParticleSystem
 from PlantEd.client.utils.gametime import GameTime
@@ -13,6 +12,8 @@ class Watering_can:
     def __init__(
             self,
             pos,
+            image_active,
+            image_inactive,
             water_grid: Water_Grid = None,
             amount: int = config.WATERING_CAN_AMOUNT,
             active=False,
@@ -23,7 +24,9 @@ class Watering_can:
         self.gametime = GameTime.instance()
         self.pos = (pos[0] - 20, pos[1] - 120)
         self.water_grid = water_grid  # remove
-        self.image = assets.img("watering_can.PNG", (214, 147))
+        self.image_active = image_active
+        self.image_inactive = image_inactive
+        self.image = self.image_inactive
         self.default_amount = amount  # default gamespeed 3s
         self.amount = amount if amount else self.default_amount
         self.rate = int(self.default_amount / 2)
@@ -53,7 +56,7 @@ class Watering_can:
         self.can_particle_system.activate()
 
     def deactivate(self):
-        self.image = assets.img("watering_can.PNG", (214, 147))
+        self.image = self.image_inactive
         self.can_particle_system.deactivate()
         self.amount = 0
         self.active = False
@@ -80,12 +83,12 @@ class Watering_can:
         if not self.active:
             return
         if e.type == MOUSEBUTTONDOWN:
-            self.image = assets.img("watering_can_tilted.PNG", (182, 148))
+            self.image = self.image_active
             self.pouring = True
             self.can_particle_system.activate()
             self.play_sound()
         if e.type == MOUSEBUTTONUP:
-            self.image = assets.img("watering_can.PNG", (214, 147))
+            self.image = self.image_inactive
             self.can_particle_system.deactivate()
             self.stop_sound()
             self.pouring = False

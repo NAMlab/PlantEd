@@ -2,9 +2,9 @@ import json
 from pathlib import Path
 import pygame
 
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 
-pygame.font.init()
+
 # seconds per simulation
 resolution = 360
 # until end of game
@@ -61,10 +61,10 @@ def load_dict(path) -> dict:
     return plant_dict
 
 
-def apply_volume(options):
+'''def apply_volume(options):
     volume = options["effects"]
     for sound in assets._sound_library:
-        sound.set_volume(volume)
+        sound.set_volume(volume)'''
 
 
 FREE_SPOT = 00
@@ -84,7 +84,7 @@ BEE_SFX_PATH = "sound/bee"
 SNAIL_SFX_PATH = "sound/snail_clicked"
 BUG_SFX_PATH = "sound/bug"
 SELECT_SFX_PATH = "sound/select"
-CONFIRM_SFX_PATH = "sound/confirm"
+#CONFIRM_SFX_PATH = "sound/confirm"
 BUY_SFX_PATH = "sound/buy"
 ALERT_SFX_PATH = "sound/alert"
 ERROR_SFX_PATH = "sound/error"
@@ -98,17 +98,6 @@ SPRAYCAN = "sound/spraycan"
 NITROGEN = "sound/nitrogen"
 REWARD = "sound/reward"
 POP_SEED = "sound/pop_seed"
-
-###############################################################################
-# FONTS
-###############################################################################
-SMALL_FONT = pygame.font.SysFont("timesnewroman", 16)
-FONT = pygame.font.SysFont("timesnewroman", 24)
-TITLE_FONT = pygame.font.SysFont("timesnewroman", 24)
-BIG_FONT = pygame.font.SysFont("timesnewroman", 28)
-BIGGER_FONT = pygame.font.SysFont("timesnewroman", 36)
-MENU_TITLE = pygame.font.SysFont("timesnewroman", 72)
-MENU_SUBTITLE = pygame.font.SysFont("timesnewroman", 56)
 
 ###############################################################################
 # COLORS

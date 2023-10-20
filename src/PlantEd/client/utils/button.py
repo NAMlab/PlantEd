@@ -1,6 +1,7 @@
 import pygame
 
 from PlantEd import config
+from PlantEd.data.assets import AssetHandler
 
 BLACK = (0, 0, 0)
 WHITE_TRANSPARENT = (255, 255, 255, 128)
@@ -420,7 +421,7 @@ class Arrow_Button(pygame.sprite.Sprite):
         self.button_down = False
         if post_hover_message and hover_message:
             self.posted = False
-            hover_message = font.render(hover_message, True, text_color)
+            hover_message = font.render(hover_message, True, (0,0,0))
             w = hover_message.get_width() + 10
             if self.hover_message_image:
                 w += hover_message_image.get_width() + 10
@@ -1497,13 +1498,15 @@ class ButtonArray:
             end_color=None,
             select_sound=None,
     ):
+        self.asset_handler = AssetHandler.instance()
         self.toggle_buttons = []
         self.callback = callback
         self.set_hover_message = set_hover_message
         self.hours = 0
         self.color = config.RED
         self.border_w = border_w
-        self.label = config.BIG_FONT.render("Stomata:", True, config.BLACK)
+        self.button_font = self.asset_handler.BIG_FONT
+        self.label = self.asset_handler.BIG_FONT.render("Stomata:", True, config.BLACK)
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
         self.gradient = None
         if start_color and end_color:
@@ -1525,7 +1528,7 @@ class ButtonArray:
             set_all_width,
             30,
             [select_sound, self.toggle_all],
-            config.FONT,
+            self.button_font,
             "All",
             hover_message="Activate/Deactivate all buttons",
             border_w=border_w,
@@ -1542,7 +1545,7 @@ class ButtonArray:
                     rect[2],
                     rect[3],
                     [],
-                    font=config.FONT,
+                    font=self.button_font,
                     button_color=color,
                     text="{}".format(i * resolution),
                     pressed=pressed,
@@ -1637,9 +1640,9 @@ class ButtonArray:
             border_radius=3,
         )
         if self.color == config.GREEN:
-            open_closed = config.BIG_FONT.render("Open", True, self.color)
+            open_closed = self.asset_handler.BIG_FONT.render("Open", True, self.color)
         else:
-            open_closed = config.BIG_FONT.render("Closed", True, self.color)
+            open_closed = self.asset_handler.BIG_FONT.render("Closed", True, self.color)
         screen.blit(self.label, (self.rect[0] + 5, self.rect[1] + 5))
         screen.blit(open_closed, (self.rect[0] + 120, self.rect[1] + 5))
         self.set_all_button.draw(screen)

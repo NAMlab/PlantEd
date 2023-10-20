@@ -14,7 +14,7 @@ from PlantEd import config
 from PlantEd import constants
 from PlantEd.client.camera import Camera
 from PlantEd.constants import START_SUM_BIOMASS_GRAM
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.gameobjects.shop import FloatingShop
 from PlantEd.server.lsystem import DictToRoot
@@ -24,27 +24,6 @@ from PlantEd.client.utils.spline import Cubic_Tree, Cubic
 logger = logging.getLogger(__name__)
 
 WIN = pygame.USEREVENT + 1
-pivot_pos = [
-    (286, 113),
-    (76, 171),
-    (254, 78),
-    (19, 195),
-    (271, 114),
-    (47, 114),
-]
-leaves = [
-    (assets.img("leaves/{index}.PNG".format(index=i)), pivot_pos[i])
-    for i in range(0, 6)
-]
-flowers = [
-    (assets.img("sunflowers/{index}.PNG".format(index=i), (64, 64)))
-    for i in range(0, 3)
-]
-
-beans = [
-    assets.img("bean_growth/{}.PNG".format(index), (150, 150))
-    for index in range(0, 6)
-]
 
 
 class Plant:
@@ -56,6 +35,23 @@ class Plant:
 
     @staticmethod
     def from_dict(plant_dict, camera=None):
+        asset_handler = AssetHandler.instance()
+        pivot_pos = [
+            (286, 113),
+            (76, 171),
+            (254, 78),
+            (19, 195),
+            (271, 114),
+            (47, 114),
+        ]
+        leaves = [
+            (asset_handler.img("leaves/{index}.PNG".format(index=i)))
+            for i in range(0, 6)
+        ]
+        flowers = [
+            (asset_handler.img("sunflowers/{index}.PNG".format(index=i), (64, 64)))
+            for i in range(0, 3)
+        ]
         sound_control = SoundControl()
         plant = Plant(
             pos=plant_dict["pos"],
@@ -68,7 +64,7 @@ class Plant:
         plant.organs[0].mass = plant_dict["leaf"]["mass"]
         plant.organs[0].leaves = plant_dict["leaf"]["leaves"]
         for leaf in plant.organs[0].leaves:
-            leaf["image"] = leaves[int(random.random() * len(leaves))][0]
+            leaf["image"] = leaves[int(random.random() * len(leaves))]
             plant.organs[0].update_leaf_image(leaf)
         branches: list[Cubic] = []
         branches_dict_list = plant_dict["stem"]["curve"]["branches"]
@@ -96,6 +92,7 @@ class Plant:
     ):
         self.x: float = pos[0]
         self.y: float = pos[1]
+        self.asset_handler = AssetHandler.instance()
         self.water_grid_shape = water_grid_shape
         self.water_grid_pos = water_grid_pos
         self.max_water_pool = 1
@@ -104,6 +101,24 @@ class Plant:
         self.upgrade_points: int = upgrade_points
         self.camera: Camera = camera
         self.danger_mode: bool = False
+
+        pivot_pos = [
+            (286, 113),
+            (76, 171),
+            (254, 78),
+            (19, 195),
+            (271, 114),
+            (47, 114),
+        ]
+        leaves = [
+            (self.asset_handler.img("leaves/{index}.PNG".format(index=i)))
+            for i in range(0, 6)
+        ]
+        flowers = [
+            (self.asset_handler.img("sunflowers/{index}.PNG".format(index=i), (64, 64)))
+            for i in range(0, 3)
+        ]
+
         organ_leaf = Leaf(
             x=self.x,
             y=self.y,
@@ -111,6 +126,8 @@ class Plant:
             organ_type=self.LEAF,
             callback=self.set_target_organ_leaf,
             images=leaves,
+            pivot_positions = pivot_pos,
+            hover_leaf = self.asset_handler.img("leaf_small.PNG", (128, 128)),
             mass=constants.START_LEAF_BIOMASS_GRAM,
             active=False,
             camera=self.camera,
@@ -123,6 +140,7 @@ class Plant:
             organ_type=self.FLOWER,
             callback=self.set_target_organ_flower,
             images=flowers,
+            hover_image=self.asset_handler.img("sunflowers/2.PNG", (128, 128)),
             mass=constants.START_SEED_BIOMASS_GRAM,
             active=False,
             camera=self.camera,
@@ -165,6 +183,11 @@ class Plant:
             active=True,
             camera=self.camera
         )
+
+        beans = [
+            self.asset_handler.img("bean_growth/{}.PNG".format(index), (150, 150))
+            for index in range(0, 6)
+        ]
 
         self.seedling = Seedling(self.x, self.y, beans, START_SUM_BIOMASS_GRAM)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_flower]
@@ -393,6 +416,8 @@ class Leaf(Organ):
             organ_type: int,
             callback: callable,
             images: list[pygame.Surface],
+            pivot_positions: list[Tuple[float, float]],
+            hover_leaf: pygame.Surface,
             mass: float,
             active: bool,
             play_reward: callable,
@@ -412,6 +437,8 @@ class Leaf(Organ):
         )
         self.callback = callback
         self.images = images
+        self.pivot_positions = pivot_positions
+        self.hover_leaf = hover_leaf
         self.photon_intake: float = 0
         self.target_leaf: int = 0
         self.can_add_leaf: bool = False
@@ -511,13 +538,13 @@ class Leaf(Organ):
         pos = highlight[0]
         dir = pos[0] - pygame.mouse.get_pos()[0]
         if dir > 0:
-            image_id = random.randrange(0, len(leaves) - 1, 2)
-            image = leaves[image_id]
-            offset = pivot_pos[image_id]
+            image_id = random.randrange(0, len(self.images) - 1, 2)
+            image = self.images[image_id]
+            offset = self.pivot_positions[image_id]
         else:
-            image_id = random.randrange(1, len(leaves), 2)
-            image = leaves[image_id]
-            offset = pivot_pos[image_id]
+            image_id = random.randrange(1, len(self.images), 2)
+            image = self.images[image_id]
+            offset = self.pivot_positions[image_id]
 
         leaf = {
             "id": 0,
@@ -525,7 +552,7 @@ class Leaf(Organ):
             "y": pos[1],
             "t": (highlight[1], highlight[2]),
             "shadow_score": 0,
-            "image": image[0],
+            "image": image,
             "offset_x": offset[0],
             "offset_y": offset[1],
             "mass": constants.START_LEAF_BIOMASS_GRAM,
@@ -590,8 +617,8 @@ class Leaf(Organ):
 
     # Todo make new after server mass limit
     def update_leaf_image(self, leaf, factor=7, base=80):
-        base_image = leaves[leaf["base_image_id"]][0]
-        base_offset = leaves[leaf["base_image_id"]][1]
+        base_image = self.images[leaf["base_image_id"]]
+        base_offset = self.pivot_positions[leaf["base_image_id"]]
         ratio = base_image.get_height() / base_image.get_width()
         new_width = (leaf["size"] * factor) + base
         new_height = int(new_width * ratio)
@@ -610,7 +637,7 @@ class Leaf(Organ):
         if self.can_add_leaf:
             x, y = pygame.mouse.get_pos()
             screen.blit(
-                assets.img("leaf_small.PNG", (128, 128)),
+                self.hover_leaf,
                 (x, y - self.camera.offset_y),
             )
 
@@ -1022,6 +1049,7 @@ class Flower(Organ):
             organ_type: int,
             callback: callable,
             images: list[pygame.Surface],
+            hover_image: pygame.Surface,
             mass: float,
             active: bool,
             play_reward,
@@ -1041,6 +1069,8 @@ class Flower(Organ):
         )
         self.callback = callback
         self.images = images
+        self.asset_handler = AssetHandler.instance()
+        self.hover_image = hover_image
         self.can_add_flower: bool = False
         self.target_flower = None
 
@@ -1211,7 +1241,7 @@ class Flower(Organ):
         if self.can_add_flower:
             x, y = pygame.mouse.get_pos()
             screen.blit(
-                assets.img("sunflowers/2.PNG", (128, 128)),
+                self.hover_image,
                 (x, y - self.camera.offset_y),
             )
 
@@ -1268,7 +1298,7 @@ class Flower(Organ):
                     2,
                     3,
                 )
-                percentage_label = config.SMALL_FONT.render(
+                percentage_label = self.asset_handler.SMALL_FONT.render(
                     "{:.3f}".format(flower["mass"]), True, config.BLACK
                 )
                 screen.blit(

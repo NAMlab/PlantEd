@@ -3,7 +3,7 @@ import pygame
 from PlantEd import config
 from PlantEd.client.utils.grid import Grid
 from PlantEd.constants import NITRATE_COST, WATERING_CAN_COST, SPRAYCAN_COST
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.gameobjects.blue_grain import Blue_grain
 from PlantEd.client.gameobjects.root_item import Root_Item
@@ -24,6 +24,7 @@ shopitems have action and button and cost
 class FloatingShop:
     def __init__(self, camera, pos=(0, 0)):
         self.camera = camera
+        self.asset_handler = AssetHandler.instance()
         self.pos = pos
         self.shop_items = []
         self.visible_shop_items = []
@@ -44,11 +45,11 @@ class FloatingShop:
         )
 
         # Todo make dynamic and append to items or search for cost in buy
-        images = Animation.generate_rising_animation("-1", config.RED)
+        images = Animation.generate_rising_animation("-1", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-2", config.RED)
+        images = Animation.generate_rising_animation("-2", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-3", config.RED)
+        images = Animation.generate_rising_animation("-3", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
 
     def buy(self, cost):
@@ -158,6 +159,7 @@ class FloatingShopItem:
         self.shop_items = []
         self.floating_shop = None
         self.hover = False
+        self.asset_handler = AssetHandler.instance()
 
     def set_pos(self, pos):
         self.pos = pos
@@ -204,7 +206,7 @@ class FloatingShopItem:
                 )
             green_thumb_size = (16,16)
             margin = 3
-            cost_label = config.FONT.render(f"{self.cost}", True, config.BLACK)
+            cost_label = self.asset_handler.FONT.render(f"{self.cost}", True, config.BLACK)
 
 
             rect_with = cost_label.get_width() + green_thumb_size[0] + 6 * margin
@@ -236,9 +238,10 @@ class Shop:
             sound_control: SoundControl = None
     ):
         # performance improve test
+        self.asset_handler = AssetHandler.instance()
         self.s = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA)
-        self.shop_label = config.BIG_FONT.render("Shop", True, (0, 0, 0))
-        self.current_cost_label = config.BIG_FONT.render("0", False, (0, 0, 0))
+        self.shop_label = self.asset_handler.BIG_FONT.render("Shop", True, (0, 0, 0))
+        self.current_cost_label = self.asset_handler.BIG_FONT.render("0", False, (0, 0, 0))
 
         self.rect = rect
         self.shop_items = shop_items
@@ -250,9 +253,13 @@ class Shop:
         self.active = active
         self.animations = []
         self.sound_control = sound_control
-        self.green_thumbs_icon = assets.img("green_thumb.PNG", (26, 26))
+        self.asset_handler = AssetHandler.instance()
+        self.green_thumbs_icon = self.asset_handler.img("green_thumb.PNG", (26, 26))
         self.current_cost = 0
-        self.watering_can = Watering_can((0, 0), self.water_grid,
+        self.watering_can = Watering_can(pos=(0, 0),
+                                         image_active=self.asset_handler.img("watering_can_tilted.PNG", (182, 148)),
+                                         image_inactive=self.asset_handler.img("watering_can.PNG", (214, 147)),
+                                         water_grid=self.water_grid,
                                          play_sound=self.sound_control.play_watering_can_sfx,
                                          stop_sound=self.sound_control.stop_watering_can_sfx,
                                          )
@@ -262,7 +269,9 @@ class Shop:
                                      )
         self.spraycan = Spraycan(pos=(0, 0),
                                  amount=3,
-                                 play_sound=self.sound_control.play_spraycan_sfx
+                                 image_active=self.asset_handler.img("spraycan_active.PNG", (128, 128)),
+                                 image_inactive=self.asset_handler.img("spraycan.PNG", (128, 128)),
+                                 play_sound=self.sound_control.play_spraycan_sfx,
                                  )
         self.root_item = Root_Item(
             self.plant.organs[2].create_new_root, self.plant
@@ -273,17 +282,17 @@ class Shop:
             64,
             64,
             [self.buy],
-            config.FONT,
+            self.asset_handler.FONT,
             "BUY",
             offset=(rect[0], rect[1]),
         )
         self.init_layout()
 
-        images = Animation.generate_rising_animation("-1", config.RED)
+        images = Animation.generate_rising_animation("-1", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-2", config.RED)
+        images = Animation.generate_rising_animation("-2", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-3", config.RED)
+        images = Animation.generate_rising_animation("-3", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
 
     def init_layout(self):
@@ -325,7 +334,7 @@ class Shop:
             if keyword == "watering":
                 self.shop_items.append(
                     Shop_Item(
-                        assets.img("watering_can_tilted.PNG", (64, 64)),
+                        self.asset_handler.img("watering_can_tilted.PNG", (64, 64)),
                         self.watering_can.activate,
                         post_hover_message=self.post_hover_message,
                         message="Buy a watering can to increase availability.",
@@ -336,7 +345,7 @@ class Shop:
             elif keyword == "blue_grain":
                 self.shop_items.append(
                     Shop_Item(
-                        assets.img("blue_grain_0.PNG", (64, 64)),
+                        self.asset_handler.img("blue_grain_0.PNG", (64, 64)),
                         self.blue_grain.activate,
                         post_hover_message=self.post_hover_message,
                         message="Blue grain increases nitrate in the ground.",
@@ -347,7 +356,7 @@ class Shop:
             elif keyword == "spraycan":
                 self.shop_items.append(
                     Shop_Item(
-                        assets.img("spraycan.PNG", (64, 64)),
+                        self.asset_handler.img("spraycan.PNG", (64, 64)),
                         self.spraycan.activate,
                         post_hover_message=self.post_hover_message,
                         message="Spray em!",
@@ -398,7 +407,7 @@ class Shop:
         for item in self.shop_items:
             if item.selected:
                 self.current_cost += item.cost
-        self.current_cost_label = config.BIG_FONT.render(
+        self.current_cost_label = self.asset_handler.BIG_FONT.render(
             "{}".format(self.current_cost), False, (0, 0, 0)
         )
 
@@ -430,7 +439,7 @@ class Shop:
             self.s, config.WHITE, (0, 0, self.rect[2], 40), border_radius=3
         )
         self.s.blit(self.shop_label, (10, 5))
-        green_thumbs_label = config.BIG_FONT.render(
+        green_thumbs_label = self.asset_handler.BIG_FONT.render(
             "{}".format(self.plant.upgrade_points), True, config.BLACK
         )
         self.s.blit(
@@ -438,7 +447,7 @@ class Shop:
             (self.rect[2] - 90 - green_thumbs_label.get_width(), 5),
         )
         self.s.blit(
-            assets.img("green_thumb.PNG", (26, 26)), (self.rect[2] - 80, 6)
+            self.asset_handler.img("green_thumb.PNG", (26, 26)), (self.rect[2] - 80, 6)
         )
         for item in self.shop_items:
             item.draw(self.s)

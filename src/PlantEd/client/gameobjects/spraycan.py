@@ -3,7 +3,6 @@ from pygame import Rect
 from pygame.locals import *
 
 from PlantEd import config
-from PlantEd.data import assets
 from PlantEd.client.utils.particle import ParticleSystem
 
 
@@ -11,12 +10,14 @@ class Spraycan:
     def __init__(self,
                  pos,
                  amount,
+                 image_active,
+                 image_inactive,
                  callbacks=[],
                  play_sound=None
                  ):  # take from config
         self.pos = pos
-        self.image_active = assets.img("spraycan_active.PNG", (128, 128))
-        self.image_inactive = assets.img("spraycan.PNG", (128, 128))
+        self.image_active = image_active
+        self.image_inactive = image_inactive
         self.image = self.image_inactive
         self.default_amount = amount
         self.amount = amount

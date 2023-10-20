@@ -29,7 +29,7 @@ class Hover_Message:
 
         # init label and remember widest
         for i in range(len(lines)):
-            config.FONT.render("ls", True, config.BLACK)
+            self.font.render("ls", True, config.BLACK)
             label = self.font.render("{}".format(lines[i]), True, config.BLACK)
             self.w = (
                 label.get_width() if self.w < label.get_width() else self.w

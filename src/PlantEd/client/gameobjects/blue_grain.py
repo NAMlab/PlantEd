@@ -4,7 +4,7 @@ from pygame.locals import *
 
 from PlantEd import config
 from PlantEd.config import NITRATE_FILL_CELL
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 from PlantEd.client.utils.particle import ParticleSystem
 
 class Blue_grain:
@@ -14,7 +14,8 @@ class Blue_grain:
                  play_sound=None,
                  nitrate_grid=None
                  ):
-        self.image = assets.img("blue_grain_bag.PNG", (128, 128))
+        self.asset_handler = AssetHandler.instance()
+        self.image = self.asset_handler.img("blue_grain_bag.PNG", (128, 128))
         self.pos = pos
         self.amount = amount
         self.play_sound = play_sound

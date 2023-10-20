@@ -1,6 +1,6 @@
 import pygame
 from PlantEd import config
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 
 END_LINE = pygame.USEREVENT + 2
 
@@ -11,6 +11,7 @@ END_LINE = pygame.USEREVENT + 2
 class Narrator:
     def __init__(self, environment):
         self.environment = environment
+        self.asset_handler = AssetHandler.instance()
         self.active = True
         self.queue = []
         self.muted = False
@@ -19,10 +20,10 @@ class Narrator:
         options = config.load_options()
         self.volume = options["narator_volume"]
         self.channel.set_volume(self.volume)
-        self.written_lines = Written_Lines()
+        self.written_lines = Written_Lines(self.asset_handler.img("sir_david.jpeg", (100, 100)), self.asset_handler.FONT)
 
         self.lines = [
-            assets.sfx("attenborough/{}.mp3".format(i)) for i in range(12)
+            self.asset_handler.sfx("attenborough/{}.mp3".format(i)) for i in range(12)
         ]
         self.voicelines = []
         self.talking_times = [0, 2, 4, 6, 8, 11, 14, 17, 20, 23, 27, 31]
@@ -133,8 +134,8 @@ class VoiceLine:
 
 
 class Written_Lines:
-    def __init__(self):
-        self.sir_david = assets.img("sir_david.jpeg", (100, 100))
+    def __init__(self, david_image, font):
+        self.sir_david = david_image
         self.hide = False
         self.hide_timer = 1
         self.x = 10
@@ -142,6 +143,7 @@ class Written_Lines:
         self.hover = False
         self.width = 800
         self.height = 500
+        self.font = font
         all_labels = config.load_tooltipps()
         self.labels = self.make_labels(all_labels[0])
         self.rect_heigth = 0
@@ -193,7 +195,7 @@ class Written_Lines:
             lines = []
             for j in range(len(tipps[i]["lines"])):
                 lines.append(
-                    config.FONT.render(
+                    self.font.render(
                         tipps[i]["lines"][j], True, (255, 255, 255)
                     )
                 )

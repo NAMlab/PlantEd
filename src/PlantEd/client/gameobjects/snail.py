@@ -3,7 +3,6 @@ import pygame
 import random
 
 from PlantEd.client.utils.animation import Animation
-from PlantEd.data import assets
 from PlantEd import config
 
 LEFT = 0
@@ -15,8 +14,10 @@ class SnailSpawner:
             self,
             images_left,
             images_right,
+            skull_image,
             camera,
             callback,
+            nom_label,
             bounds=pygame.Rect(0, 0, 0, 0),
             max_amount=0,
             speed=3,
@@ -32,6 +33,8 @@ class SnailSpawner:
         self.callback = callback
         self.images_left = images_left
         self.images_right = images_right
+        self.skull_image = skull_image
+        self.nom_label = nom_label
 
     def spawn_snail(self):
         self.snails.append(
@@ -41,8 +44,10 @@ class SnailSpawner:
                 bounding_rect=self.bounds,
                 images_left=self.images_left,
                 images_right=self.images_right,
+                skull_image=self.skull_image,
                 camera=self.camera,
                 callback=self.callback,
+                nom_label=self.nom_label,
                 eat_rate=0.0001,
                 speed=self.speed,
                 snail_clicked=self.snail_clicked
@@ -85,8 +90,10 @@ class Snail:
             bounding_rect,
             images_left,
             images_right,
+            skull_image,
             camera,
             callback,
+            nom_label,
             eat_rate=0.00001,
             speed=1,
             snail_clicked=None
@@ -99,7 +106,7 @@ class Snail:
         self.camera = camera
         self.animation_left = Animation(self.images_left, 0.5)
         self.animation_right = Animation(self.images_right, 0.5)
-        skull_images = Animation.generate_rising_animation(image=assets.img("skull.png", (64, 64)), move_up=-1)
+        skull_images = Animation.generate_rising_animation(image=skull_image, move_up=-1)
         self.animation_death = Animation(images=skull_images, duration=1, running=False, once=True)
         self.speed = speed
         self.snail_clicked = snail_clicked
@@ -110,7 +117,7 @@ class Snail:
         self.set_random_direction()
         self.target = None
         self.eat_rate = eat_rate
-        self.nom_label = config.FONT.render("NOM NOM", True, (0, 0, 0))
+        self.nom_label = nom_label
         self.death_timer = 0
         self.dead = False
 

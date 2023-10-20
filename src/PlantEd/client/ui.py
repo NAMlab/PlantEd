@@ -10,7 +10,7 @@ from PlantEd.client.utils.gametime import GameTime
 from PlantEd.client.utils.particle import ParticleSystem, Inwards_Particle_System
 from PlantEd.client.utils.narrator import Narrator
 from PlantEd.client.utils.hover_message import Hover_Message
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 from PlantEd.client.utils.button import (
     RadioButton,
     ToggleButton,
@@ -47,16 +47,18 @@ class UI:
             dev_mode: bool = False,
             quit=None
     ):
+        self.asset_handler = AssetHandler.instance()
         self.name = config.load_options()["name"]
-        self.name_label = config.FONT.render(self.name, True, config.BLACK)
+        self.name_label = self.asset_handler.FONT.render(self.name, True, config.BLACK)
         self.plant = plant
         self.narrator = narrator
+
 
         self.humidity = 0
         self.temperature = 0
         self.gametime = GameTime.instance()
 
-        self.hover = Hover_Message(config.FONT, 30, 5)
+        self.hover = Hover_Message(self.asset_handler.FONT, 30, 5)
         self.camera = camera
         self.sound_control = sound_control
         self.dev_mode = dev_mode
@@ -66,22 +68,22 @@ class UI:
         self.pause = False
         self.danger_timer = 1
 
-        self.label_leaf = config.FONT.render("Leaf", True, (0, 0, 0))  # title
-        self.label_stem = config.FONT.render("Stem", True, (0, 0, 0))  # title
-        self.label_root = config.FONT.render("Root", True, (0, 0, 0))  # title
-        self.label_starch = config.FONT.render(
+        self.label_leaf = self.asset_handler.FONT.render("Leaf", True, (0, 0, 0))  # title
+        self.label_stem = self.asset_handler.FONT.render("Stem", True, (0, 0, 0))  # title
+        self.label_root = self.asset_handler.FONT.render("Root", True, (0, 0, 0))  # title
+        self.label_starch = self.asset_handler.FONT.render(
             "Starch", True, (0, 0, 0)
         )  # title
-        self.label_water = config.FONT.render(
+        self.label_water = self.asset_handler.FONT.render(
             "Water", True, (0, 0, 0)
         )  # title
-        self.label_producing = config.FONT.render(
+        self.label_producing = self.asset_handler.FONT.render(
             "producing", True, config.GREEN
         )  # title
         self.label_producing = pygame.transform.rotate(
             self.label_producing, 90
         )
-        self.label_consuming = config.FONT.render(
+        self.label_consuming = self.asset_handler.FONT.render(
             "consuming", True, config.RED
         )  # title
         self.label_consuming = pygame.transform.rotate(
@@ -165,7 +167,7 @@ class UI:
             )
         )
 
-        sfx_mute_icon = assets.img("sfx.png", (35, 35))
+        sfx_mute_icon = self.asset_handler.img("sfx.png", (35, 35))
         self.button_sprites.add(
             ToggleButton(
                 30,
@@ -173,7 +175,7 @@ class UI:
                 50,
                 50,
                 [self.sound_control.play_toggle_sfx, self.narrator.toggle_mute],
-                config.FONT,
+                self.asset_handler.FONT,
                 image=sfx_mute_icon,
                 border_w=3,
                 border_radius=25,
@@ -202,9 +204,9 @@ class UI:
                 32,
                 32,
                 [self.gametime.play],
-                config.FONT,
+                self.asset_handler.FONT,
                 border_w=2,
-                image=assets.img("normal_speed.PNG"),
+                image=self.asset_handler.img("normal_speed.PNG"),
             ),
             RadioButton(
                 160,
@@ -212,9 +214,9 @@ class UI:
                 32,
                 32,
                 [self.gametime.faster],
-                config.FONT,
+                self.asset_handler.FONT,
                 border_w=2,
-                image=assets.img("fast_speed.PNG"),
+                image=self.asset_handler.img("fast_speed.PNG"),
             ),
             RadioButton(
                 200,
@@ -222,9 +224,9 @@ class UI:
                 32,
                 32,
                 [self.gametime.fastest],
-                config.FONT,
+                self.asset_handler.FONT,
                 border_w=2,
-                image=assets.img("fastest_speed.PNG"),
+                image=self.asset_handler.img("fastest_speed.PNG"),
             ),
         ]
         for rb in speed_options:
@@ -401,9 +403,9 @@ class UI:
         )
 
         # biomass
-        biomass_text = config.FONT.render("Mass:", True, (0, 0, 0))
+        biomass_text = self.asset_handler.FONT.render("Mass:", True, (0, 0, 0))
         s.blit(biomass_text, dest=(topleft[0] + 10, topleft[1] + 6))
-        biomass = config.FONT.render(
+        biomass = self.asset_handler.FONT.render(
             "{:.2f} x10⁻² gDW".format(self.plant.get_biomass() * factor), True, (0, 0, 0)
         )  # title
         s.blit(
@@ -428,7 +430,7 @@ class UI:
         output_string = "Day {0}/45 {1:02}:{2:02}".format(
             days + 10, int(hours), int(minutes)
         )
-        clock_text = config.FONT.render(output_string, True, config.BLACK)
+        clock_text = self.asset_handler.FONT.render(output_string, True, config.BLACK)
         pygame.draw.rect(
             s,
             config.WHITE,
@@ -440,10 +442,10 @@ class UI:
             (config.SCREEN_WIDTH / 2 - clock_text.get_width() / 2, 16),
         )
 
-        humidity_label = config.FONT.render(
+        humidity_label = self.asset_handler.FONT.render(
             "{:.0f} %".format(self.humidity), True, config.BLACK
         )
-        temperature_label = config.FONT.render("{:.0f} °C".format(self.temperature), True, config.BLACK)
+        temperature_label = self.asset_handler.FONT.render("{:.0f} °C".format(self.temperature), True, config.BLACK)
 
         s.blit(
             humidity_label,
@@ -457,17 +459,17 @@ class UI:
     def init_pause_ui(self):
         self.options = config.load_options()
 
-        self.music_label = config.BIGGER_FONT.render(
+        self.music_label = self.asset_handler.BIGGER_FONT.render(
             "Music", True, config.WHITE
         )
-        self.sfx_label = config.BIGGER_FONT.render(
+        self.sfx_label = self.asset_handler.BIGGER_FONT.render(
             "SFX", True, config.WHITE
         )
-        self.narator_label = config.BIGGER_FONT.render(
+        self.narator_label = self.asset_handler.BIGGER_FONT.render(
             "Narator", True, config.WHITE
         )
 
-        self.pause_label = config.MENU_TITLE.render(
+        self.pause_label = self.asset_handler.MENU_TITLE.render(
             "Game Paused", True, config.WHITE
         )
         self.pause_button_resume = Button(
@@ -476,7 +478,7 @@ class UI:
             200,
             50,
             [self.sound_control.play_select_sfx, self.resume],
-            config.BIG_FONT,
+            self.asset_handler.BIG_FONT,
             "RESUME",
             border_w=2
         )
@@ -486,28 +488,28 @@ class UI:
             200,
             50,
             [self.quit],
-            config.BIG_FONT,
+            self.asset_handler.BIG_FONT,
             "QUIT GAME",
             border_w=2,
         )
 
         self.music_slider = Slider(
             (config.SCREEN_WIDTH / 2 - 300 - 25, 350, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             percent=self.options["music_volume"] * 100,
             active=True,
         )
         self.narator_slider = Slider(
             (config.SCREEN_WIDTH / 2 - 150 - 25, 350, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             percent=self.options["narator_volume"] * 100,
             active=True,
         )
         self.sfx_slider = Slider(
             (config.SCREEN_WIDTH / 2 - 25, 350, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             percent=self.options["sfx_volume"] * 100,
             active=True,
@@ -518,7 +520,7 @@ class UI:
             360,
             200,
             50,
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             self.options["name"],
             background_color=config.LIGHT_GRAY,
             textcolor=config.WHITE,
@@ -531,7 +533,7 @@ class UI:
             200,
             50,
             [self.apply_options, self.sound_control.reload_options, self.narrator.reload_options],
-            config.BIG_FONT,
+            self.asset_handler.BIG_FONT,
             "APPLY",
             border_w=2,
         )
@@ -539,7 +541,7 @@ class UI:
     def apply_options(self):
         config.write_options(self.get_options())
         self.name = config.load_options()["name"]
-        self.name_label = config.FONT.render(self.name, True, config.BLACK)
+        self.name_label = self.asset_handler.FONT.render(self.name, True, config.BLACK)
 
     def get_options(self):
         upload_score = config.load_options()["upload_score"]
@@ -566,8 +568,8 @@ class UI:
                 100,
                 100,
                 [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_leaf],
-                config.FONT,
-                image=assets.img("leaf_small.PNG", (100, 100)),
+                self.asset_handler.FONT,
+                image=self.asset_handler.img("leaf_small.PNG", (100, 100)),
             ),
             RadioButton(
                 topleft[0] + 110,
@@ -575,8 +577,8 @@ class UI:
                 100,
                 100,
                 [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_stem],
-                config.FONT,
-                image=assets.img("stem_small.PNG", (100, 100)),
+                self.asset_handler.FONT,
+                image=self.asset_handler.img("stem_small.PNG", (100, 100)),
             ),
             RadioButton(
                 topleft[0] + 220,
@@ -584,30 +586,19 @@ class UI:
                 100,
                 100,
                 [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_root],
-                config.FONT,
-                image=assets.img("root_deep.PNG", (100, 100)),
+                self.asset_handler.FONT,
+                image=self.asset_handler.img("root_deep.PNG", (100, 100)),
             ),
         ]
-
-        """RadioButton(topleft[0] + 540, topleft[1] + 0, 100, 100,
-                        [self.plant.set_target_organ_starch],
-                        config.FONT, image=assets.img("starch.PNG", (100, 100))),"""
 
         for rb in radioButtons:
             rb.setRadioButtons(radioButtons)
             self.button_sprites.add(rb)
         radioButtons[2].button_down = True
 
-        """stomata_toggle_button = ToggleButton(topleft[0] + 0, topleft[1] + 360, 200, 30,
-                                            [self.toggle_stomata], config.FONT,
-                                            "Open Stomata", vertical=False)
-        """
-        # self.button_sprites.add(starch_toggle_button, stomata_toggle_button)
-        # self.plant.organ_starch.toggle_button = starch_toggle_button
-
         self.leaf_slider = Slider(
             (topleft[0] + 25, topleft[1] + 150, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             organ=self.plant.organs[0],
             plant=self.plant,
@@ -615,7 +606,7 @@ class UI:
         )
         self.stem_slider = Slider(
             (topleft[0] + 25 + 110, topleft[1] + 150, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             organ=self.plant.organs[1],
             plant=self.plant,
@@ -623,7 +614,7 @@ class UI:
         )
         self.root_slider = Slider(
             (topleft[0] + 25 + 220, topleft[1] + 150, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             organ=self.plant.organs[2],
             plant=self.plant,
@@ -632,7 +623,7 @@ class UI:
         )
         self.starch_slider = NegativeSlider(
             (topleft[0] + 25 + 330, topleft[1] + 150, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             organ=self.plant.organ_starch,
             plant=self.plant,
@@ -688,7 +679,7 @@ class UI:
                 width=3,
             )
             amount = organ.get_organ_amount()
-            amount_label = config.FONT.render(
+            amount_label = self.asset_handler.FONT.render(
                 "{:.0f}".format(amount), True, (0, 0, 0)
             )
             s.blit(
@@ -715,7 +706,7 @@ class UI:
             (topleft[0], topleft[1] + 120, width, 16),
             border_radius=3,
         )  # exp
-        text_organ_mass = config.SMALL_FONT.render(
+        text_organ_mass = self.asset_handler.SMALL_FONT.render(
             "{:.1f} / {:.1f}".format(
                 organ.get_mass() * factor, organ.get_maximum_growable_mass() * factor
             ),
@@ -735,7 +726,7 @@ class UI:
             if organ.type == Plant.LEAF:
                 pygame.draw.rect(s, config.RED, (topleft[0], topleft[1], 100, 370), border_radius=3, width=3)
 
-                label = config.TITLE_FONT.render("LEAF GROWTH BLOCKED: Buy new leaves to grow", True, config.BLACK)
+                label = self.asset_handler.TITLE_FONT.render("LEAF GROWTH BLOCKED: Buy new leaves to grow", True, config.BLACK)
                 width = label.get_width() + 10
                 height = label.get_height() + 10
                 pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1] + 380, width, height),
@@ -793,7 +784,7 @@ class UI:
             (topleft[0], topleft[1] + 40, int(width * self.plant.water_pool/self.plant.max_water_pool), 30),
             border_radius=3,
         )  # exp
-        text_water_pool = config.FONT.render(
+        text_water_pool = self.asset_handler.FONT.render(
             "{:.0f} MMol".format(self.plant.water_pool / 1000), True, (0, 0, 0)
         )
         s.blit(

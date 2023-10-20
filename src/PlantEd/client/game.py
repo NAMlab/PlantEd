@@ -20,7 +20,7 @@ from PlantEd.client.camera import Camera
 from PlantEd.client.client import Client
 from PlantEd.constants import MAX_NITRATE_PER_CELL, MAX_WATER_PER_CELL, Vmax, Km, ROOT_COST, BRANCH_COST, \
     FLOWER_COST, LEAF_COST, MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.gameobjects.bee import Hive
 from PlantEd.client.gameobjects.bug import Bug
@@ -69,28 +69,29 @@ class OptionsScene:
     def __init__(self):
         self.options = config.load_options()
         self.sound_control = SoundControl()
-        self.option_label = config.MENU_TITLE.render(
+        self.asset_handler = AssetHandler.instance()
+        self.option_label = self.asset_handler.MENU_TITLE.render(
             "Options", True, config.WHITE
         )
-        self.sound_label = config.MENU_SUBTITLE.render(
+        self.sound_label = self.asset_handler.MENU_SUBTITLE.render(
             "Sound", True, config.WHITE
         )
-        self.music_label = config.BIGGER_FONT.render(
+        self.music_label = self.asset_handler.BIGGER_FONT.render(
             "Music", True, config.WHITE
         )
-        self.sfx_label = config.BIGGER_FONT.render(
+        self.sfx_label = self.asset_handler.BIGGER_FONT.render(
             "SFX", True, config.WHITE
         )
-        self.narator_label = config.BIGGER_FONT.render(
+        self.narator_label = self.asset_handler.BIGGER_FONT.render(
             "Narator", True, config.WHITE
         )
-        self.network_label = config.MENU_SUBTITLE.render(
+        self.network_label = self.asset_handler.MENU_SUBTITLE.render(
             "Network", True, config.WHITE
         )
-        self.upload_score_label = config.BIGGER_FONT.render(
+        self.upload_score_label = self.asset_handler.BIGGER_FONT.render(
             "Upload Score", True, config.WHITE
         )
-        self.name_label = config.MENU_SUBTITLE.render(
+        self.name_label = self.asset_handler.MENU_SUBTITLE.render(
             "Name", True, config.WHITE
         )
 
@@ -102,21 +103,21 @@ class OptionsScene:
 
         self.music_slider = Slider(
             (center_w - 475, 450, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             percent=self.options["music_volume"] * 100,
             active=True,
         )
         self.sfx_slider = Slider(
             (center_w - 325, 450, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             percent=self.options["sfx_volume"] * 100,
             active=True,
         )
         self.narator_slider = Slider(
             (center_w - 175, 450, 15, 200),
-            config.FONT,
+            self.asset_handler.FONT,
             (50, 20),
             percent=self.options["narator_volume"] * 100,
             active=True,
@@ -137,7 +138,7 @@ class OptionsScene:
             200,
             50,
             [self.cancel_return_to_menu],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "BACK",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -150,7 +151,7 @@ class OptionsScene:
             200,
             50,
             [self.return_to_menu],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "APPLY",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -167,7 +168,7 @@ class OptionsScene:
             600,
             280,
             50,
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             self.options["name"],
             background_color=config.LIGHT_GRAY,
             textcolor=config.WHITE,
@@ -224,7 +225,7 @@ class OptionsScene:
         )
 
         self.label_surface.blit(
-            assets.img("plant_growth_pod/plant_growth_10.PNG"), (1300, 400)
+            self.asset_handler.img("plant_growth_pod/plant_growth_10.PNG"), (1300, 400)
         )
 
     def update(self, dt):
@@ -270,6 +271,7 @@ class DefaultGameScene(object):
         task = asyncio.create_task(self.load_level())
         # self.server_game = Server_Game()
         since_epoch = time.time()
+        self.asset_handler = AssetHandler.instance()
         self.path_to_logs = "./data/finished_games/{}{}".format(name, since_epoch)
         os.makedirs(self.path_to_logs)
         self.log = Log(self.path_to_logs)  # can be turned off
@@ -337,7 +339,7 @@ class DefaultGameScene(object):
                         900 + random.randint(0, 200),
                     ),
                     bounding_rect=pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
-                    images=[assets.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 3)],
+                    images=[self.asset_handler.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 3)],
                     camera=self.camera,
                     play_clicked=self.sound_control.play_bug_sfx
                 )
@@ -346,17 +348,19 @@ class DefaultGameScene(object):
         self.tree = Tree(
             (1300, 100),
             [
-                (assets.img("tree/{index}.PNG".format(index=i), (800, 800)))
+                (self.asset_handler.img("tree/{index}.PNG".format(index=i), (800, 800)))
                 for i in range(0, 4)
             ],
             self.environment,
         )
 
         self.snail_spawner = SnailSpawner(
-            images_left=[assets.img("snail/0.png")],
-            images_right=[assets.img("snail/4.png")],
+            images_left=[self.asset_handler.img("snail/0.png")],
+            images_right=[self.asset_handler.img("snail/4.png")],
+            skull_image=self.asset_handler.img("skull.png", (64, 64)),
             camera=self.camera,
             callback=self.plant.eat_stem,
+            nom_label=self.asset_handler.FONT.render("NOM NOM", True, (0, 0, 0)),
             bounds=pygame.Rect(0, 870, 1920, 20),
             max_amount=2,
             speed=1,
@@ -366,7 +370,7 @@ class DefaultGameScene(object):
 
         # shop items are to be defined by the level
         add_leaf_item = Shop_Item(
-            image=assets.img("leaf_small.PNG", (64, 64)),
+            image=self.asset_handler.img("leaf_small.PNG", (64, 64)),
             callback=self.activate_add_leaf,
             condition=self.plant.organs[1].check_can_add_leaf,
             condition_not_met_message="Level up your stem to buy more leaves",
@@ -389,7 +393,7 @@ class DefaultGameScene(object):
 
         self.shop.shop_items.append(
             Shop_Item(
-                image=assets.img("root_lateral.PNG", (64, 64)),
+                image=self.asset_handler.img("root_lateral.PNG", (64, 64)),
                 callback=self.shop.root_item.activate,
                 condition=self.plant.organs[2].check_can_add_root,
                 condition_not_met_message="Level up any organ to get more green thumbs",
@@ -402,7 +406,7 @@ class DefaultGameScene(object):
 
         self.shop.shop_items.append(
             Shop_Item(
-                image=assets.img("branch.PNG", (64, 64)),
+                image=self.asset_handler.img("branch.PNG", (64, 64)),
                 callback=self.plant.organs[1].activate_add_branch,
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
@@ -414,7 +418,7 @@ class DefaultGameScene(object):
 
         self.shop.shop_items.append(
             Shop_Item(
-                image=assets.img("sunflowers/1.PNG", (64, 64)),
+                image=self.asset_handler.img("sunflowers/1.PNG", (64, 64)),
                 callback=self.plant.organs[3].activate_add_flower,
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
@@ -432,7 +436,7 @@ class DefaultGameScene(object):
         add_leaf_item_floating = FloatingShopItem(
             pos=(0, 0),
             callback=self.activate_add_leaf,
-            image=assets.img("leaf_small.PNG", (64, 64)),
+            image=self.asset_handler.img("leaf_small.PNG", (64, 64)),
             cost=LEAF_COST,
             plant=self.plant,
             play_buy_sfx=self.sound_control.play_buy_sfx,
@@ -440,7 +444,7 @@ class DefaultGameScene(object):
         add_branch_item_floating = FloatingShopItem(
             pos=(0, 0),
             callback=self.plant.organs[1].activate_add_branch,
-            image=assets.img("branch.PNG", (64, 64)),
+            image=self.asset_handler.img("branch.PNG", (64, 64)),
             cost=BRANCH_COST,
             plant=self.plant,
             play_buy_sfx=self.sound_control.play_buy_sfx
@@ -448,7 +452,7 @@ class DefaultGameScene(object):
         add_flower_item_floating = FloatingShopItem(
             pos=(0, 0),
             callback=self.plant.organs[3].activate_add_flower,
-            image=assets.img("sunflowers/1.PNG", (64, 64)),
+            image=self.asset_handler.img("sunflowers/1.PNG", (64, 64)),
             cost=FLOWER_COST,
             plant=self.plant,
             play_buy_sfx=self.sound_control.play_buy_sfx
@@ -723,12 +727,13 @@ class TitleScene(object):
     def __init__(self, manager=None):
         super(TitleScene, self).__init__()
         self.sound_control = SoundControl()
-        self.title = config.MENU_TITLE.render("PlantEd", True, config.WHITE)
+        self.asset_handler = AssetHandler.instance()
+        self.title = self.asset_handler.MENU_TITLE.render("PlantEd", True, config.WHITE)
         self.center_h = config.SCREEN_HEIGHT / 2 + 100
         self.center_w = config.SCREEN_WIDTH / 2
         self.card_0 = Card(
             (self.center_w, self.center_h - 100),
-            assets.img("menu/gatersleben.JPG", (512, 512)),
+            self.asset_handler.img("menu/gatersleben.JPG", (512, 512)),
             "Gatersleben",
             callback=manager.go_to,
             callback_var=DefaultGameScene,
@@ -742,7 +747,7 @@ class TitleScene(object):
             200,
             50,
             [self.go_to_credtis],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "CREDTIS",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -755,7 +760,7 @@ class TitleScene(object):
             200,
             50,
             [self.go_to_options],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "OPTIONS",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -768,7 +773,7 @@ class TitleScene(object):
             200,
             50,
             [self.go_to_scores],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "SCORES",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -781,7 +786,7 @@ class TitleScene(object):
             200,
             50,
             [self.quit],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "QUIT",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -842,6 +847,7 @@ class TitleScene(object):
 class EndScene(object):
     def __init__(self, path_to_logs):
         self.path_to_logs = path_to_logs
+        self.asset_handler = AssetHandler.instance()
         super(EndScene, self).__init__()
         self.camera = Camera(offset_y=-50)
         self.sound_control = SoundControl()
@@ -878,7 +884,9 @@ class EndScene(object):
         images = Animation.generate_counter(
             start_number=1000,
             end_number=2000,
-            resolution=10)
+            resolution=10,
+            font=self.asset_handler.BIGGER_FONT
+        )
 
         explosion_duration = 0.5 * len(self.plant_object.organs[3].flowers)
 
@@ -890,21 +898,21 @@ class EndScene(object):
             once=True
         )
 
-        self.score_header_label = config.MENU_SUBTITLE.render("Score", True, config.WHITE)
+        self.score_header_label = self.asset_handler.MENU_SUBTITLE.render("Score", True, config.WHITE)
         self.flower_score_list = []
         score_sum = 0
         for i in range(len(self.plant_object.organs[3].flowers)):
             flowers = self.plant_object.organs[3].flowers
-            flower_score = config.BIGGER_FONT.render("Flower {}: {:.2f} grams".format(i, float(flowers[i]["mass"])),
+            flower_score = self.asset_handler.BIGGER_FONT.render("Flower {}: {:.2f} grams".format(i, float(flowers[i]["mass"])),
                                                      True,
                                                      config.WHITE)
             self.flower_score_list.append(flower_score)
             score_sum += flowers[i]["mass"]
 
-        self.score_sum_label = config.BIGGER_FONT.render("{:.2f} grams".format(float(score_sum)), True, config.WHITE)
-        self.title = config.MENU_TITLE.render("Finished", True, config.WHITE)
+        self.score_sum_label = self.asset_handler.BIGGER_FONT.render("{:.2f} grams".format(float(score_sum)), True, config.WHITE)
+        self.title = self.asset_handler.MENU_TITLE.render("Finished", True, config.WHITE)
 
-        self.plot_label = config.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
+        self.plot_label = self.asset_handler.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
 
         '''
         Prepare plots
@@ -934,7 +942,7 @@ class EndScene(object):
             300,
             50,
             [self.sound_control.play_toggle_sfx, self.return_to_menu],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "Upload Simulation",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -992,19 +1000,20 @@ class EndScene(object):
 
 class CustomScene(object):
     def __init__(self):
+        self.asset_handler = AssetHandler.instance()
         super(CustomScene, self).__init__()
-        self.text1 = config.MENU_TITLE.render(
+        self.text1 = self.asset_handler.MENU_TITLE.render(
             "Top Plants", True, (255, 255, 255)
         )
         # self.text3 = config.BIGGER_FONT.render('> press any key to restart <', True, (255,255,255))
 
-        self.name_txt = config.BIGGER_FONT.render(
+        self.name_txt = self.asset_handler.BIGGER_FONT.render(
             "Name", True, (255, 255, 255)
         )
-        self.score_txt = config.BIGGER_FONT.render(
+        self.score_txt = self.asset_handler.BIGGER_FONT.render(
             "Score", True, (255, 255, 255)
         )
-        self.submit_txt = config.BIGGER_FONT.render(
+        self.submit_txt = self.asset_handler.BIGGER_FONT.render(
             "Submit Date", True, (255, 255, 255)
         )
 
@@ -1015,7 +1024,7 @@ class CustomScene(object):
             200,
             50,
             [self.return_to_menu],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "BACK",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -1033,15 +1042,15 @@ class CustomScene(object):
         for winner in reversed(self.winners):
             # print(winner["score"])
             score = winner["score"]
-            score_label = config.BIGGER_FONT.render(
+            score_label = self.asset_handler.BIGGER_FONT.render(
                 "Seed Mass {:.5f} gramms".format(score), True, (255, 255, 255)
             )
             self.scores.append(score_label)
-            name = config.BIGGER_FONT.render(
+            name = self.asset_handler.BIGGER_FONT.render(
                 winner["name"], True, (255, 255, 255)
             )
             self.names.append(name)
-            datetime_added = config.BIGGER_FONT.render(
+            datetime_added = self.asset_handler.BIGGER_FONT.render(
                 datetime.utcfromtimestamp(winner["datetime_added"]).strftime(
                     "%d/%m/%Y %H:%M"
                 ),
@@ -1118,6 +1127,7 @@ class Credits:
     def __init__(self):
         super(Credits, self).__init__()
         self.sound_control = SoundControl()
+        self.asset_handler = AssetHandler.instance()
         self.center_w, self.center_h = (
             config.SCREEN_WIDTH / 2,
             config.SCREEN_HEIGHT / 2,
@@ -1134,7 +1144,7 @@ class Credits:
             200,
             50,
             [self.return_to_menu],
-            config.BIGGER_FONT,
+            self.asset_handler.BIGGER_FONT,
             "BACK",
             config.LIGHT_GRAY,
             config.WHITE,
@@ -1148,25 +1158,25 @@ class Credits:
 
     def init_labels(self):
         self.label_surface.fill(config.BLACK)
-        self.made_by_label = config.MENU_TITLE.render(
+        self.made_by_label = self.asset_handler.MENU_TITLE.render(
             "MADE BY", True, config.WHITE
         )
-        self.daniel = config.MENU_SUBTITLE.render(
+        self.daniel = self.asset_handler.MENU_SUBTITLE.render(
             "Daniel Koch", True, config.WHITE
         )
-        self.jj = config.MENU_SUBTITLE.render(
+        self.jj = self.asset_handler.MENU_SUBTITLE.render(
             "Jedrzej J. Szymanski", True, config.WHITE
         )
-        self.nadine = config.MENU_SUBTITLE.render(
+        self.nadine = self.asset_handler.MENU_SUBTITLE.render(
             "Nadine Töpfer", True, config.WHITE
         )
-        self.stefano = config.MENU_SUBTITLE.render(
+        self.stefano = self.asset_handler.MENU_SUBTITLE.render(
             "Stefano A. Cruz", True, config.WHITE
         )
-        self.pouneh = config.MENU_SUBTITLE.render(
+        self.pouneh = self.asset_handler.MENU_SUBTITLE.render(
             "Pouneh Pouramini", True, config.WHITE
         )
-        self.jan = config.MENU_SUBTITLE.render(
+        self.jan = self.asset_handler.MENU_SUBTITLE.render(
             "Jan-Niklas Weder", True, config.WHITE
         )
 
@@ -1254,8 +1264,8 @@ async def main():
         # dt = timer.tick(60) / 1000.0
         dt = timer.tick(30) / 1000.0
 
-        fps = str(int(timer.get_fps()))
-        fps_text = config.FONT.render(fps, False, (255, 255, 255))
+        #fps = str(int(timer.get_fps()))
+        #fps_text = config.FONT.render(fps, False, (255, 255, 255))
 
         if pygame.event.get(QUIT):
             running = False
@@ -1265,7 +1275,7 @@ async def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
-        screen.blit(fps_text, (800, 500))
+        #screen.blit(fps_text, (800, 500))
         pygame.display.update()
         await asyncio.sleep(0)
 

@@ -5,13 +5,14 @@ import pygame
 
 from PlantEd import config
 from PlantEd.client.utils.animation import Animation
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 
 
 class Hive:
     def __init__(self, pos, amount, plant, camera, spawn_rate, play_hive_clicked, play_bee_clicked):
         self.pos = pos
-        self.image = assets.img("bee/hive.png", (128, 128))
+        self.asset_handler = AssetHandler.instance()
+        self.image = self.asset_handler.img("bee/hive.png", (128, 128))
         self.amount = amount
         self.plant = plant
         self.camera = camera
@@ -58,7 +59,7 @@ class Hive:
                     0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT - 200
                 ),
                 images=[
-                    assets.img("bee/{}.PNG".format(i), (64, 64))
+                    self.asset_handler.img("bee/{}.PNG".format(i), (64, 64))
                     for i in range(6)
                 ],
                 camera=self.camera,

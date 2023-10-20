@@ -47,7 +47,7 @@ class Animation:
             screen.blit(self.image, self.pos)
 
     @staticmethod
-    def generate_rising_animation(text=None, color=config.RED, image=None, move_up=-3):
+    def generate_rising_animation(text=None, font=None, color=config.RED, image=None, move_up=-3):
         images = []
         frames = 15
         width = 64
@@ -56,7 +56,7 @@ class Animation:
         move_up = move_up
 
         if text is not None:
-            currency_minus_one_label = config.BIGGER_FONT.render(text, True, color)
+            currency_minus_one_label = font.render(text, True, color)
             width = currency_minus_one_label.get_width() + 20
             scaleable_surface = pygame.Surface((width, height), pygame.SRCALPHA)
             scaleable_surface.blit(currency_minus_one_label, (10, 10))
@@ -82,9 +82,9 @@ class Animation:
         return images
 
     @staticmethod
-    def generate_counter(start_number: int, end_number: int, resolution: int, color=config.WHITE) -> list[pygame.Surface]:
+    def generate_counter(start_number: int, end_number: int, resolution: int, font, color=config.WHITE) -> list[pygame.Surface]:
         images = []
         delta = int((end_number - start_number)/10)
         for n in range(0, delta):
-            images.append(config.BIGGER_FONT.render("{}".format(start_number + n*10), True, color))
+            images.append(font.render("{}".format(start_number + n*10), True, color))
         return images

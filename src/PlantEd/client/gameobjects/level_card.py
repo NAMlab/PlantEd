@@ -1,6 +1,7 @@
 import pygame
 
 from PlantEd import config
+from PlantEd.data.assets import AssetHandler
 
 
 class Card:
@@ -19,6 +20,7 @@ class Card:
         play_select_sfx=None
     ):
         self.pos = pos
+        self.asset_handler = AssetHandler.instance()
         # images should be 24 iterations to increase an image
         self.image = image
         self.callback = callback
@@ -29,13 +31,13 @@ class Card:
         self.margin = margin
         self.play_select_sfx = play_select_sfx
 
-        self.name_label = config.BIGGER_FONT.render(
+        self.name_label = self.asset_handler.BIGGER_FONT.render(
             "{}".format(name), True, config.WHITE
         )
-        self.score_label = config.BIGGER_FONT.render(
+        self.score_label = self.asset_handler.BIGGER_FONT.render(
             "Score: {}".format(score), True, config.WHITE
         )
-        self.keyword_labels = config.BIG_FONT.render(
+        self.keyword_labels = self.asset_handler.BIG_FONT.render(
             "{}".format(keywords), True, config.WHITE
         )
 

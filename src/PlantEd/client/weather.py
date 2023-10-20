@@ -7,7 +7,7 @@ from PlantEd.client.gameobjects.water_reservoir import Water_Grid
 from PlantEd.client.utils.gametime import GameTime
 from PlantEd.client.utils.animation import Animation
 from PlantEd import config
-from PlantEd.data import assets
+from PlantEd.data.assets import AssetHandler
 from PlantEd.client.utils.spline import Beziere
 
 SUN_POS_SPLINE_RES: int = 10000
@@ -27,6 +27,7 @@ class Environment:
     ):
         self.plant = plant
         self.gametime = GameTime.instance()
+        self.asset_handler = AssetHandler.instance()
         self.water_grid = water_grid
         self.s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
         self.sun_pos_spline: list[tuple[float, float]] = Beziere(
@@ -38,7 +39,7 @@ class Environment:
 
         self.rain_animation = Animation(
             images=[
-                assets.img(
+                self.asset_handler.img(
                     "gif_rain/frame_{index}_delay-0.05s.png".format(index=i)
                 )
                 for i in range(0, 21)
@@ -55,9 +56,9 @@ class Environment:
         self.humidity: int = 0
         self.precipitation: float = 0
 
-        self.sun: pygame.Surface = assets.img("sun/sun.PNG", (256, 256))
-        self.cloud: pygame.Surface = assets.img("clouds/cloud_0.PNG", (402, 230))
-        self.cloud_dark: pygame.Surface = assets.img("clouds/cloud_dark_0.PNG", (402, 230))
+        self.sun: pygame.Surface = self.asset_handler.img("sun/sun.PNG", (256, 256))
+        self.cloud: pygame.Surface = self.asset_handler.img("clouds/cloud_0.PNG", (402, 230))
+        self.cloud_dark: pygame.Surface = self.asset_handler.img("clouds/cloud_dark_0.PNG", (402, 230))
 
 
     def update(self, dt):
@@ -177,7 +178,7 @@ class Environment:
         )
 
     def draw_foreground(self, screen):
-        screen.blit(assets.img("soil.PNG"), (0, -140))
+        screen.blit(self.asset_handler.img("soil.PNG"), (0, -140))
         self.rain_animation.draw(screen)
 
     def get_day_time(self) -> (int, float, float):
