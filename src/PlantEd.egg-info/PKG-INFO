@@ -1,0 +1,19 @@
+Metadata-Version: 2.1
+Name: PlantEd
+Version: 0.0.1
+Summary: Server Client Application of the game PlantEd
+Project-URL: homepage, https://github.com/NAMlab/PlantEd
+Project-URL: repository, https://github.com/NAMlab/PlantEd
+Classifier: Development Status :: 4 - Beta
+Classifier: Programming Language :: Python
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: cobra
+Requires-Dist: sympy
+Requires-Dist: websockets
+Requires-Dist: dataclasses-json
+Requires-Dist: pygame
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: requests

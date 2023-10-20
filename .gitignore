@@ -11,3 +11,5 @@ logs
 src/PlantEd/build/
 
 src/PlantEd/data/finished_games/
+
+src/PlantEd/client/data/finished_games/

@@ -1,2 +1,0 @@
-[console_scripts]
-PlantEd_Server = PlantEd_Server.server:main
