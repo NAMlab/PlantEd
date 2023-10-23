@@ -9,7 +9,16 @@ build/__pycache__
 logs
 
 src/PlantEd/build/
+src/PlantEd/dist/
+src/PlantEd/client/build
+src/PlantEd/client/dist
 
 src/PlantEd/data/finished_games/
 
 src/PlantEd/client/data/finished_games/
+src/PlantEd.egg-info/
+src/PlantEd.egg-info/dependency_links.txt
+src/PlantEd.egg-info/entry_points.txt
+src/PlantEd.egg-info/requires.txt
+src/PlantEd.egg-info/SOURCES.txt
+src/PlantEd.egg-info/top_level.txt

@@ -269,6 +269,7 @@ class DefaultGameScene(object):
         # get name and date
         name = config.load_options()["name"]
         task = asyncio.create_task(self.load_level())
+        self.fps = None
         # self.server_game = Server_Game()
         since_epoch = time.time()
         self.asset_handler = AssetHandler.instance()
@@ -632,6 +633,8 @@ class DefaultGameScene(object):
 
     def update(self, dt):
         # self.client.update()
+        #fps = 1/dt
+        #self.fps = self.asset_handler.FONT.render(f"{fps}", True, config.WHITE)
 
         task = asyncio.create_task(self.send_and_get_response())
 
@@ -701,6 +704,8 @@ class DefaultGameScene(object):
             self.ui.draw(screen)
             return
 
+
+
         self.environment.draw_background(temp_surface)
         self.hive.draw(temp_surface)
         self.tree.draw(temp_surface)
@@ -719,6 +724,8 @@ class DefaultGameScene(object):
         screen.blit(temp_surface, (0, self.camera.offset_y))
         self.shop.draw(screen)
         self.ui.draw(screen)
+        if self.fps:
+            screen.blit(self.fps, (1200,20))
 
         self.narrator.draw(screen)
 
@@ -821,7 +828,7 @@ class TitleScene(object):
         # self.card_2.update(dt)
 
     def quit(self):
-        pygame.quit()
+        pygame.event.post(pygame.event.Event(QUIT))
 
     def go_to_options(self):
         self.manager.go_to(OptionsScene())
@@ -1252,7 +1259,7 @@ async def main():
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 
     screen = pygame.display.set_mode(
-        true_res, pygame.NOFRAME | pygame.FULLSCREEN | pygame.DOUBLEBUF, 16
+        true_res, pygame.DOUBLEBUF, 16
     )
 
     timer = pygame.time.Clock()
@@ -1265,7 +1272,7 @@ async def main():
         dt = timer.tick(30) / 1000.0
 
         #fps = str(int(timer.get_fps()))
-        #fps_text = config.FONT.render(fps, False, (255, 255, 255))
+        #fps_text = AssetHandler.instance().FONT.render(fps, False, (255, 255, 255))
 
         if pygame.event.get(QUIT):
             running = False
@@ -1275,7 +1282,7 @@ async def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
-        #screen.blit(fps_text, (800, 500))
+        #screen.blit(fps_text, (true_res[0]-500, 20))
         pygame.display.update()
         await asyncio.sleep(0)
 
