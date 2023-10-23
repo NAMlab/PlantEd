@@ -27,16 +27,14 @@ class Blue_grain:
             boundary_box=Rect(
                 0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT - 220
             ),
-            lifetime=25,
+            lifetime=3,
             size=10,
             color=config.NITRATE_BROWN,
-            apply_gravity=True,
-            speed=[20, 70],
-            spread=[60, 10],
+            gravity=500,
+            vel=(-50, -150),
+            spread=(450, 50),
             active=False,
             once=True,
-            color_spectrum=10,
-            size_over_lifetime=False,
         )
 
     def activate(self, pos=None):
@@ -79,7 +77,6 @@ class Blue_grain:
                 for i in range(lower_limit_grid, upper_limit_grid):
                     cells_to_fill.append((i, 0, NITRATE_FILL_CELL))
                 self.nitrate_grid.fertilize(cells_to_fill)
-                print(cells_to_fill)
             self.deactivate()
 
     def draw(self, screen):

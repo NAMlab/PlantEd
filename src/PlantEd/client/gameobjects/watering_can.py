@@ -39,11 +39,11 @@ class Watering_can:
         self.can_particle_system = ParticleSystem(
             290,
             spawn_box=self.rect,
-            lifetime=12,
+            lifetime=1,
             color=config.BLUE,
-            apply_gravity=10,
-            speed=[-40, 0],
-            spread=[20, 20],
+            gravity=0.5,
+            vel=(-300, 300),
+            spread=(500, 500),
             active=False,
         )
 
@@ -53,7 +53,6 @@ class Watering_can:
         self.amount = self.default_amount if not amount else amount
         pygame.mouse.set_visible(False)
         self.can_particle_system.spawn_box = self.rect
-        self.can_particle_system.activate()
 
     def deactivate(self):
         self.image = self.image_inactive
@@ -66,8 +65,8 @@ class Watering_can:
         pygame.mouse.set_visible(True)
 
     def update(self, dt):
+        self.can_particle_system.update(dt)
         if self.active and self.pouring:
-            self.can_particle_system.update(dt)
             if self.water_grid:
                 # self.model.water_pool += self.rate
                 self.water_grid.pour(self.rate, dt, self.pos)

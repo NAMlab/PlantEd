@@ -7,7 +7,7 @@ from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.camera import Camera
 from PlantEd.client.gameobjects.plant import Plant, Organ
 from PlantEd.client.utils.gametime import GameTime
-from PlantEd.client.utils.particle import ParticleSystem, Inwards_Particle_System
+from PlantEd.client.utils.particle import ParticleSystem
 from PlantEd.client.utils.narrator import Narrator
 from PlantEd.client.utils.hover_message import Hover_Message
 from PlantEd.data.assets import AssetHandler
@@ -115,13 +115,12 @@ class UI:
             ),
             lifetime=10,
             color=config.WHITE,
-            apply_gravity=False,
-            speed=[-30, 0],
-            spread=[0, 0],
+            vel=(-30, 0),
+            spread=(0, 0),
             active=False,
         )
 
-        self.open_stomata_particle_in = Inwards_Particle_System(
+        '''self.open_stomata_particle_in = Inwards_Particle_System(
             20,
             spawn_box=Rect(
                 self.production_topleft[0] + 10,
@@ -133,7 +132,7 @@ class UI:
             color=config.GRAY,
             active=False,
             center=(50, 0),
-        )
+        )'''
 
         self.open_stomata_particle_out = ParticleSystem(
             20,
@@ -145,14 +144,13 @@ class UI:
             ),
             lifetime=10,
             color=config.WHITE,
-            apply_gravity=False,
-            speed=[0, -4],
-            spread=[5, 5],
+            vel=(0, -4),
+            spread=(5, 5),
             active=False,
         )
 
         self.particle_systems.append(self.drain_starch_particle)
-        self.particle_systems.append(self.open_stomata_particle_in)
+        #self.particle_systems.append(self.open_stomata_particle_in)
         self.particle_systems.append(self.open_stomata_particle_out)
 
         self.button_sprites.add(
@@ -380,13 +378,13 @@ class UI:
 
     def open_stomata(self):
         self.plant.organs[0].stomata_open = True
-        self.open_stomata_particle_in.activate()
-        self.open_stomata_particle_out.activate()
+        #self.open_stomata_particle_in.activate()
+        #self.open_stomata_particle_out.activate()
 
     def close_stomata(self):
         self.plant.organs[0].stomata_open = False
-        self.open_stomata_particle_in.deactivate()
-        self.open_stomata_particle_out.deactivate()
+        #self.open_stomata_particle_in.deactivate()
+        #self.open_stomata_particle_out.deactivate()
 
     def draw_ui(self, screen):
         self.s.fill((0, 0, 0, 0))

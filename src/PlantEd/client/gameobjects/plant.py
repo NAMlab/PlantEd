@@ -569,9 +569,8 @@ class Leaf(Organ):
                 spawn_box=Rect(leaf["x"], leaf["y"], 0, 0),
                 lifetime=6,
                 color=config.YELLOW,
-                apply_gravity=False,
-                speed=[0, -5],
-                spread=[5, 5],
+                vel=(0, -5),
+                spread=(5, 5),
                 active=False,
             )
         )

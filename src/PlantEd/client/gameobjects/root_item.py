@@ -17,9 +17,8 @@ class Root_Item:
             spawn_box=Rect(self.plant.x, self.plant.y + 45, 0, 0),
             lifetime=8,
             color=config.WHITE,
-            apply_gravity=False,
-            speed=[0, 0],
-            spread=[20, 20],
+            vel=(0, 0),
+            spread=(20, 20),
             active=False,
             once=True,
         )

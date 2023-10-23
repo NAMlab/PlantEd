@@ -869,12 +869,12 @@ class EndScene(object):
             systems.append(
                 ParticleSystem(
                     max_particles=50,
-                    spawn_box=(position[0], position[1], 0, 0),
+                    spawn_box=pygame.Rect(position[0], position[1], 0, 0),
                     lifetime=10,
                     color=(int(255 * random.random()), int(255 * random.random()), int(255 * random.random())),
-                    apply_gravity=2,
-                    speed=[(random.random() - 0.5) * 20, -80 * random.random()],
-                    spread=[50, 30],
+                    gravity=2,
+                    vel=((random.random() - 0.5) * 20, -80 * random.random()),
+                    spread=(50, 30),
                     active=False,
                     size_over_lifetime=True,
                     size=10,
