@@ -1259,7 +1259,7 @@ async def main():
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 
     screen = pygame.display.set_mode(
-        true_res, pygame.DOUBLEBUF, 16
+        true_res, pygame.FULLSCREEN | pygame.NOFRAME | pygame.DOUBLEBUF, 16
     )
 
     timer = pygame.time.Clock()

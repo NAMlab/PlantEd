@@ -1094,7 +1094,7 @@ class Flower(Organ):
         cleared_flowers = self.flowers.copy()
         for flower in cleared_flowers:
             flower.pop("image")
-        mass = 0
+
         flower_dict = {
             "mass": sum([flower["mass"] for flower in self.flowers]),
             "flowers": cleared_flowers
