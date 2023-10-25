@@ -30,10 +30,10 @@ class WeatherSimulator:
             temp_bins: int = 50,
             hum_bins: int = 50,
             precip_bins: int = 100,
-            seed: float = 15
+            seed: float = None
     ):
         super().__init__()
-        if not seed:
+        if seed is None:
             seed = random.randint(0, 100)
         self.seed = seed
 

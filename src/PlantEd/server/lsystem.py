@@ -299,10 +299,6 @@ class LSystem:
             self.apply_rules(letter, mass)
         self.calc_positions()
 
-    """
-
-    """
-
     def apply_rules(self, letter, mass):
         if letter.max_length <= letter.length:
             letter.id = 99

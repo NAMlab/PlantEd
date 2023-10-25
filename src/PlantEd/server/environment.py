@@ -5,7 +5,8 @@ import pandas as pd
 from scipy import integrate
 
 from PlantEd.grid import MetaboliteGrid
-from PlantEd.constants import MAX_WATER_PER_CELL, MAX_NITRATE_PER_CELL, PEAK_PHOTON
+from PlantEd.constants import MAX_WATER_PER_CELL, MAX_NITRATE_PER_CELL, PEAK_PHOTON, WATERING_CAN_AMOUNT, \
+    NITRATE_FERTILIZE_AMOUNT
 from PlantEd.server.weather import WeatherSimulator
 
 fileDir = Path(__file__)
@@ -13,7 +14,7 @@ script_dir = fileDir.parent.parent
 
 
 class Environment:
-    def __init__(self, start_time):
+    def __init__(self, start_time, seed):
         self.time = start_time  # seconds
         self.water_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_WATER_PER_CELL,
                                                          preset_fill_amount=MAX_WATER_PER_CELL / 20)
@@ -22,7 +23,8 @@ class Environment:
 
         df_weather_spring: pd.DataFrame = pd.read_csv(script_dir / "data/cleaned_weather_spring.csv")
         self.weather: WeatherSimulator = WeatherSimulator(
-            data=df_weather_spring
+            data=df_weather_spring,
+            seed=seed
         )
 
     def update(self, delta_t):
@@ -35,12 +37,12 @@ class Environment:
     def increase_water_grid(self, increase_water_grid):
         cells_to_fill = increase_water_grid["cells"]
         for i in range(len(cells_to_fill)):
-            self.water_grid.add2cell(cells_to_fill[i], i, 0)
+            self.water_grid.add2cell(cells_to_fill[i]*WATERING_CAN_AMOUNT, i, 0)
 
     def increase_nitrate_grid(self, increase_nitrate_grid):
         cells_to_fill = increase_nitrate_grid["cells"]
         for cell in cells_to_fill:
-            self.nitrate_grid.add2cell(cell[2], cell[0], cell[1])
+            self.nitrate_grid.add2cell(cell[2]*NITRATE_FERTILIZE_AMOUNT, cell[0], cell[1])
 
     def micromol_photon_per_square_meter(self, start, end):
         # maximum photon * 0..1 depending on time spent in sunlight

@@ -4,13 +4,14 @@ from pygame.locals import *
 
 from PlantEd import config
 from PlantEd.config import NITRATE_FILL_CELL
+from PlantEd.constants import NITRATE_FERTILIZE_AMOUNT
 from PlantEd.data.assets import AssetHandler
 from PlantEd.client.utils.particle import ParticleSystem
 
 class Blue_grain:
     def __init__(self,
                  pos,
-                 amount: int = 50000,
+                 amount: int = NITRATE_FERTILIZE_AMOUNT,
                  play_sound=None,
                  nitrate_grid=None
                  ):

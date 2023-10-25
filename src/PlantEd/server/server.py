@@ -5,44 +5,44 @@ import json
 from PlantEd.server.game import Game
 
 
-def load_game(game_name):
-    global game
-    game = Game()
-    print(f"Loading Game {game_name}")
-    # Load environment, weather etc.
+class Server:
+    def __init__(self):
+        self.game = None
 
+    def load_level(self, command) -> dict:
+        self.game = Game(
+            player_name=command["player_name"],
+            level_name=command["level_name"],
+        )
+        print(f"Loading Game {self.game.level_name}")
+        return {"message": f"Loading Game {self.game.level_name}"}
 
-def update(delta_t=None, growth_percentages=None, increase_water_grid=None, increase_nitrate_grid=None, buy_new_root=None, reset=False):
-    global game
-    # Update Plant, Environment, Water grid etc.
-    if reset:
-        print("Resetting Level Gatersleben")
-        game = Game()
-        return
-    game.update(delta_t, growth_percentages, increase_water_grid, increase_nitrate_grid, buy_new_root)
+    def update(self, message) -> dict:
+        # Update Plant, Environment, Water grid etc.
+        game_state = self.game.update(message)
+        return game_state
 
+    async def respond(self, websocket):
+        async for message in websocket:
+            command = json.loads(message)
+            response = {}
+            if command["type"] == "simulate":
+                response = self.update(command["message"])
 
-async def respond(websocket):
-    global game
-    async for message in websocket:
-        update(**json.loads(message))
-        response = {
-            'plant': game.plant.to_dict(),
-            'environment': game.environment.to_dict()
-        }
-        await websocket.send(json.dumps(response, indent=2))
+            elif command["type"] == "load_level":
+                response = self.load_level(command["message"])
 
+            await websocket.send(json.dumps(response, indent=2))
 
-async def main(port):
-    async with websockets.serve(respond, "localhost", port):
-        await asyncio.Future()  # run forever
+    async def main(self, port):
+        async with websockets.serve(self.respond, "localhost", port):
+            await asyncio.Future()  # run forever
 
 
 def start(port=8765):
-    load_game('Start Server')
-    asyncio.run(main(port))
+    server = Server()
+    asyncio.run(server.main(port))
 
 
 if __name__ == "__main__":
     start()
-

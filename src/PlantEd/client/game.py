@@ -573,7 +573,11 @@ class DefaultGameScene(object):
             async with websockets.connect("ws://localhost:8765") as websocket:
                 print(" --> Send Load Level...")
                 game_state = {
-                    "reset": True,
+                    "type": "load_level",
+                    "message": {
+                        "player_name": "NAME",
+                        "level_name": "LEVEL_NAME",
+                    }
                 }
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
@@ -589,24 +593,32 @@ class DefaultGameScene(object):
                 self.seconds_at_last_request = self.gametime.get_time()/1000
                 print(" --> Sending request...")
                 game_state = {
-                    "delta_t": delta_t,
-                    "growth_percentages": {
-                        "leaf_percent": self.plant.organs[0].percentage,
-                        "stem_percent": self.plant.organs[1].percentage,
-                        "root_percent": self.plant.organs[2].percentage,
-                        "seed_percent": self.plant.organs[3].percentage,
-                        "starch_percent": self.plant.organ_starch.percentage,
-                        "stomata": self.plant.organs[0].stomata_open,
-                    },
-                    "increase_water_grid": self.water_grid.pop_poured_cells(),
-                    "increase_nitrate_grid": self.nitrate_grid.pop_cells_to_add(),
-                    "buy_new_root": self.plant.organs[2].pop_new_root(),
+                    "type": "simulate",
+                    "message": {
+                        "delta_t": delta_t,
+                        "growth_percentages": {
+                            "leaf_percent": self.plant.organs[0].percentage,
+                            "stem_percent": self.plant.organs[1].percentage,
+                            "root_percent": self.plant.organs[2].percentage,
+                            "seed_percent": 0,
+                            "starch_percent": self.plant.organ_starch.percentage,
+                            "stomata": self.plant.organs[0].stomata_open,
+                        },
+                        "shop_actions": {
+                            "buy_watering_can": self.water_grid.pop_poured_cells(),
+                            "buy_nitrate": self.nitrate_grid.pop_cells_to_add(),
+                            "buy_leaf": self.plant.organs[0].pop_new_leaves(),
+                            "buy_stem": self.plant.organs[1].pop_new_branches(),
+                            "buy_root": self.plant.organs[2].pop_new_roots(),
+                            "buy_seed": self.plant.organs[3].pop_new_flowers(),
+                        }
+                    }
                 }
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
                 print(" --> Received response, updating state")
                 dic = json.loads(response)
-                #print(dic)
+                print(dic)
 
                 self.environment.precipitation = dic["environment"]["precipitation"]
                 self.ui.humidity = dic["environment"]["humidity"]
@@ -617,10 +629,10 @@ class DefaultGameScene(object):
                     self.water_grid.water_grid = np.asarray(dic["environment"]["water_grid"])
 
                 # update plant
-                self.plant.organs[0].update_masses(dic["plant"]["leaf_biomass"])
-                self.plant.organs[1].update_mass(dic["plant"]["stem_biomass"])
-                self.plant.organs[2].update_mass(dic["plant"]["root_biomass"])
-                self.plant.organs[3].update_masses(dic["plant"]["seed_biomass"])
+                self.plant.organs[0].update_masses(dic["plant"]["leafs_biomass"])
+                self.plant.organs[1].update_masses(dic["plant"]["stems_biomass"])
+                self.plant.organs[2].update_mass(dic["plant"]["roots_biomass"])
+                self.plant.organs[3].update_masses(dic["plant"]["seeds_biomass"])
                 self.plant.organ_starch.update_mass(dic["plant"]["starch_pool"])
                 self.plant.organ_starch.max_pool = dic["plant"]["max_starch_pool"]
                 self.plant.water_pool = dic["plant"]["water_pool"]

@@ -7,6 +7,7 @@ from typing import Final
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 PLANT_POS = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - SCREEN_HEIGHT / 5)
+MAX_DAYS = 35
 
 ###############################################################################
 # Starch
@@ -97,9 +98,13 @@ START_SUM_BIOMASS_GRAM = 0.05
 
 
 MAXIMUM_LEAF_BIOMASS_GRAM = START_LEAF_BIOMASS_GRAM  * 10
-MAXIMUM_STEM_BIOMASS_GRAM = START_STEM_BIOMASS_GRAM * 7
+MAXIMUM_STEM_BIOMASS_GRAM = START_STEM_BIOMASS_GRAM * 7 # base 3, plus 7 = 10 overall max
 MAXIMUM_ROOT_BIOMASS_GRAM = 0.1
 MAXIMUM_SEED_BIOMASS_GRAM = 0.1
+
+BRANCH_SPOTS_BASE = 3
+BRANCH_SPOTS_TOTAL = 7 + BRANCH_SPOTS_BASE
+BRANCH_MASS_PER_SPOT = MAXIMUM_STEM_BIOMASS_GRAM/BRANCH_SPOTS_TOTAL
 
 
 # ↓ if negative set to multiple of max_{molecule}_pool
@@ -137,6 +142,13 @@ FLOWER_COST = 3
 WATERING_CAN_COST = 1
 NITRATE_COST = 1
 SPRAYCAN_COST = 0
+
+
+###############################################################################
+# Shop Item Effect
+###############################################################################
+WATERING_CAN_AMOUNT = 3000000  # mikromol
+NITRATE_FERTILIZE_AMOUNT = 50000 # mikromol
 
 water_concentration_at_temp = [
     0.269,

@@ -1,20 +1,37 @@
 import json
+from collections import namedtuple
+
 import numpy as np
 
 from PlantEd.constants import PLANT_POS, START_LEAF_BIOMASS_GRAM, START_STEM_BIOMASS_GRAM, \
-    START_ROOT_BIOMASS_GRAM, START_SEED_BIOMASS_GRAM
+    START_ROOT_BIOMASS_GRAM, START_SEED_BIOMASS_GRAM, MAXIMUM_LEAF_BIOMASS_GRAM, MAXIMUM_ROOT_BIOMASS_GRAM, \
+    MAXIMUM_STEM_BIOMASS_GRAM, MAXIMUM_SEED_BIOMASS_GRAM, BRANCH_MASS_PER_SPOT
 from PlantEd.server.lsystem import LSystem
 from PlantEd.constants import MAX_WATER_POOL_PER_GRAMM, water_concentration_at_temp, \
     PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP, PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP, \
     MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT
 
+Leaf = namedtuple("Leaf", "id, mass")
+Branch = namedtuple("Branch", "id, mass")
+Root = namedtuple("Root", "id, mass")
+Seed = namedtuple("Seed", "id, mass")
+
 
 class Plant:
     def __init__(self, ground_grid_resolution):
-        self.leaf_biomass = START_LEAF_BIOMASS_GRAM
-        self.stem_biomass = START_STEM_BIOMASS_GRAM
-        self.root_biomass = START_ROOT_BIOMASS_GRAM
-        self.seed_biomass = START_SEED_BIOMASS_GRAM
+        self.leafs: list[Leaf] = [Leaf(0, START_LEAF_BIOMASS_GRAM)]
+        self.branches: list[Branch] = [Branch(0, START_STEM_BIOMASS_GRAM)]
+        self.roots: list[Root] = [Root(0, START_ROOT_BIOMASS_GRAM)]
+        self.seeds: list[Seed] = [Seed(0, START_SEED_BIOMASS_GRAM)]
+        self.lsystem: LSystem = LSystem(
+            root_grid=np.zeros(
+                ground_grid_resolution,
+            ),  # same resolution as environment grids
+            water_grid_pos=(0, 900),  # hardcoded at ui [game.py 310]
+        )
+        self.lsystem.create_new_first_letter((0, 1), PLANT_POS, self.get_total_plant_mass())
+
+
         self.max_starch_pool = (self.get_total_plant_mass() * MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT)
         self.starch_pool = self.max_starch_pool  # mikromol
         self.max_water_pool = MAX_WATER_POOL_PER_GRAMM * self.get_total_plant_mass()
@@ -22,13 +39,118 @@ class Plant:
         self.transpiration_factor = 0
         self.transpiration = 0
 
-        self.root: LSystem = LSystem(
-            root_grid=np.zeros(
-                ground_grid_resolution,
-            ),  # same resolution as environment grids
-            water_grid_pos=(0, 900),  # hardcoded at ui [game.py 310]
-        )
-        self.root.create_new_first_letter(dir=(0, 1), pos=PLANT_POS, mass=self.root_biomass)
+    ######################################################################
+    # LEAF OPERATIONS
+    ######################################################################
+    @property
+    def leaf_mass(self):
+        leaf_mass = sum([leaf.mass for leaf in self.leafs])
+        return leaf_mass
+
+    def update_leaf_mass(self, delta_leaf_mass):
+        pass
+
+    def get_leaf_mass_to_grow(self) -> float:
+        return MAXIMUM_LEAF_BIOMASS_GRAM*len(self.leafs) - self.leaf_mass
+
+    def create_new_leaf(self):
+        id: int = len(self.leafs)
+        self.leafs.append(Leaf(id, 0))
+
+    ######################################################################
+    # STEM OPERATIONS
+    ######################################################################
+    @property
+    def stem_mass(self):
+        stem_mass = sum([branch.mass for branch in self.branches])
+        return stem_mass
+
+    def update_stem_mass(self, delta_stem_mass):
+        pass
+
+    def get_stem_mass_to_grow(self) -> float:
+        return MAXIMUM_STEM_BIOMASS_GRAM*len(self.branches) - self.stem_mass
+
+    def create_new_branch(self):
+        id: int = len(self.branches)
+        self.branches.append(Branch(id, 0, 2))
+
+    ######################################################################
+    # ROOT OPERATIONS
+    ######################################################################
+    @property
+    def root_mass(self):
+        root_mass = sum([root.mass for root in self.roots])
+        return root_mass
+
+    def update_root_mass(self, delta_root_mass):
+        if delta_root_mass <= 0 or len(self.roots) <= 0:
+            return
+        growable_roots = []
+        for root in self.roots:
+            if root.mass < MAXIMUM_ROOT_BIOMASS_GRAM:
+                growable_roots.append(root)
+        n_roots_to_grow = len(growable_roots)
+        if n_roots_to_grow <= 0:
+            return
+        delta_each_root = delta_root_mass / n_roots_to_grow
+        growable_roots.sort(key=lambda root: root.mass)
+        for root in growable_roots:
+            if root.mass + delta_each_root > MAXIMUM_ROOT_BIOMASS_GRAM:
+                overflow_mass = MAXIMUM_ROOT_BIOMASS_GRAM - root.mass + delta_each_root
+                n_roots_to_grow -= 1
+                if n_roots_to_grow <= 0:
+                    break
+                delta_each_root = (delta_root_mass + overflow_mass) / n_roots_to_grow
+
+            else:
+                root.mass += delta_each_root
+
+        for i, first_letter in enumerate(self.lsystem.first_letters):
+            self.lsystem.apply_rules(first_letter, self.roots[i])
+
+    def get_root_mass_to_grow(self) -> float:
+        return MAXIMUM_ROOT_BIOMASS_GRAM*len(self.roots) - self.root_mass
+
+    def create_new_root(self, growth_targets):
+        for target in growth_targets:
+            direction = (PLANT_POS[0] - target[0], PLANT_POS[1] - target[1])
+            self.lsystem.create_new_first_letter(dir=direction,
+                                                 pos=PLANT_POS,
+                                                 mass=self.root_mass,
+                                                 )
+
+        self.lsystem.create_new_first_letter(dir=(0, 1), pos=PLANT_POS, mass=self.root_mass)
+        while len(self.lsystem.first_letters) > len(self.roots):
+            id: int = len(self.roots)
+            self.roots.append(Root(id, 0))
+
+    ######################################################################
+    # SEED OPERATIONS
+    ######################################################################
+    @property
+    def seed_mass(self):
+        seed_mass = sum([seed.mass for seed in self.seeds])
+        return seed_mass
+
+    def update_seed_mass(self, delta_seed_mass):
+        pass
+
+    def get_seed_mass_to_grow(self) -> float:
+        return MAXIMUM_SEED_BIOMASS_GRAM*len(self.seeds) - self.seed_mass
+
+    def create_new_seed(self):
+        id: int = len(self.seeds)
+        self.seeds.append(Seed(id, 0))
+
+    def get_free_branch_spots(self):
+        n_spots_occupied = sum([len(self.leafs), len(self.seeds), len(self.branches)-1])
+        n_spots = 0
+        for branch in self.branches:
+            base_spots = 3
+            n_spots += base_spots
+            n_spots += BRANCH_MASS_PER_SPOT * self.stem_mass
+        return n_spots - n_spots_occupied
 
     def to_json(self) -> str:
         """
@@ -54,13 +176,13 @@ class Plant:
 
         """
 
-        dic = {"leaf_biomass": self.leaf_biomass,
-               "stem_biomass": self.stem_biomass,
-               "root_biomass": self.root_biomass,
-               "seed_biomass": self.seed_biomass,
+        dic = {"leafs_biomass": [(leaf.id, leaf.mass) for leaf in self.leafs],
+               "stems_biomass": [(branch.id, branch.mass) for branch in self.branches],
+               "root_biomass": self.root_mass,
+               "seeds_biomass": [(seed.id, seed.mass) for seed in self.seeds],
                "starch_pool": self.starch_pool,
                "max_starch_pool": self.max_starch_pool,
-               "root": self.root.to_dict(),
+               "root": self.lsystem.to_dict(),
                "water_pool": self.water_pool,
                "max_water_pool": self.max_water_pool,
                }
@@ -68,16 +190,8 @@ class Plant:
         return dic
 
     def update(self, delta_t):
-        # {'directions': [{'dist': 671.7387885182752, 'dir': [648.0, 132.0]}]}
-        self.root.update(self.root_biomass)
+        pass
 
-    def create_new_root(self, buy_new_root):
-        directions = buy_new_root["directions"]
-        for direction in directions:
-            self.root.create_new_first_letter(dir=direction,
-                                              pos=PLANT_POS,
-                                              mass=self.root_biomass,
-                                              )
         # update root lsystem
     def update_starch_max(self, max_pool):
         if self.starch_pool > max_pool:
@@ -94,12 +208,12 @@ class Plant:
             starch_out_flux: float,
             starch_in_flux: float):
 
-        self.root_biomass += (root_flux * delta_t * self.root_biomass)
-        self.stem_biomass += (stem_flux * delta_t * self.stem_biomass)
-        self.leaf_biomass += (leaf_flux * delta_t * self.leaf_biomass)
-        self.seed_biomass += (seed_flux * delta_t * self.seed_biomass)
-        self.starch_pool -= (starch_in_flux * delta_t * self.stem_biomass)
-        self.starch_pool += (starch_out_flux * delta_t * self.stem_biomass)
+        self.update_root_mass(root_flux * delta_t * self.root_mass)
+        self.update_stem_mass(stem_flux * delta_t * self.stem_mass)
+        self.update_leaf_mass(leaf_flux * delta_t * self.leaf_mass)
+        self.update_seed_mass(seed_flux * delta_t * self.seed_mass)
+        self.starch_pool -= (starch_in_flux * delta_t * self.stem_mass)
+        self.starch_pool += (starch_out_flux * delta_t * self.stem_mass)
 
         self.update_starch_max(MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT * self.get_total_plant_mass())
 
@@ -135,12 +249,12 @@ class Plant:
 
         try:
             value = value / (
-                    self.root_biomass * time_in_seconds
+                    self.root_mass * time_in_seconds
             )
         except ZeroDivisionError as e:
             raise ValueError(
                 f"Either the given time ({time_in_seconds})or the organic "
-                f"mass ({self.root_biomass}) are 0. "
+                f"mass ({self.root_mass}) are 0. "
                 f"Therefore, the available micromole per time and "
                 f"gram cannot be calculated."
             ) from e
@@ -199,7 +313,9 @@ class Plant:
         self.max_water_pool = MAX_WATER_POOL_PER_GRAMM * self.get_total_plant_mass()
 
     def get_transpiration_in_micromol(self, delta_t: int):
-        return self.transpiration * self.leaf_biomass * delta_t
+        return self.transpiration * self.leaf_mass * delta_t
 
     def get_total_plant_mass(self):
-        return self.leaf_biomass + self.stem_biomass + self.root_biomass + self.seed_biomass
+        return self.leaf_mass + self.stem_mass + self.root_mass + self.seed_mass
+
+

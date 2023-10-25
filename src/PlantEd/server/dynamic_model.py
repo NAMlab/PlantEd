@@ -275,11 +275,10 @@ class DynamicModel:
         # percentage[4] = 0 if percentage[4] <= 0 else percentage[4]  # ensure starch is not below 0 -> consuming
 
         mass_organ = [
-            self.plant.root_biomass,
-            self.plant.stem_biomass,
-            self.plant.leaf_biomass,
-            self.plant.seed_biomass,
-            self.plant.stem_biomass,
+            self.plant.root_mass,
+            self.plant.stem_mass,
+            self.plant.leaf_mass,
+            self.plant.seed_mass,
         ]
 
         n_reactions = len(reactions)
