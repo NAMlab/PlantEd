@@ -74,10 +74,10 @@ class DynamicModel:
             self.set_bounds(STARCH_IN, (0, upper_bound_starch_in))
 
         # nitrate
-        root_grid = self.plant.root.root_grid
+        root_grid = self.plant.lsystem.root_grid
         nitrate_upper_bound_env_pool = self.environment.nitrate_grid.available_relative_mm(
             time_seconds=delta_t,
-            g_root=self.plant.root_biomass,
+            g_root=self.plant.root_mass,
             v_max=Vmax,
             k_m=Km,
             root_grid=root_grid,
@@ -85,9 +85,9 @@ class DynamicModel:
         self.set_bounds(NITRATE, (-1000, nitrate_upper_bound_env_pool))
 
         # photon
-        photon_upper_bound = (self.plant.leaf_biomass * SLA_IN_SQUARE_METER_PER_GRAM  # m^2
+        photon_upper_bound = (self.plant.leaf_mass * SLA_IN_SQUARE_METER_PER_GRAM  # m^2
                               * self.environment.micromol_photon_per_square_meter(self.time, self.time + delta_t)
-                              ) / self.plant.leaf_biomass  # g_organ -> normalize?
+                              ) / self.plant.leaf_mass  # g_organ -> normalize?
         self.set_bounds(PHOTON, (0, photon_upper_bound))
 
         # water
@@ -97,7 +97,7 @@ class DynamicModel:
 
         water_upper_bound_env_pool = self.environment.water_grid.available_absolute(
             root_grid=root_grid
-        ) / (self.plant.root_biomass * delta_t)
+        ) / (self.plant.root_mass * delta_t)
 
         transpiration = self.plant.get_transpiration_in_micromol(
             delta_t=delta_t
@@ -110,16 +110,16 @@ class DynamicModel:
         self.set_bounds(WATER, (-1000, max_usable_water))
 
     def normalize_model(self):
-        root_biomass = self.plant.root_biomass
-        stem_biomass = self.plant.stem_biomass
-        leaf_biomass = self.plant.leaf_biomass
-        seed_biomass = self.plant.seed_biomass
+        root_mass = self.plant.root_mass
+        stem_mass = self.plant.stem_mass
+        leaf_mass = self.plant.leaf_mass
+        seed_mass = self.plant.seed_mass
         normalize(
             model=self.model,
-            root=root_biomass,
-            stem=stem_biomass,
-            leaf=leaf_biomass,
-            seed=seed_biomass,
+            root=root_mass,
+            stem=stem_mass,
+            leaf=leaf_mass,
+            seed=seed_mass,
         )
 
     def simulate(self, delta_t, percentages):
@@ -173,7 +173,7 @@ class DynamicModel:
 
     def update_environment(self, delta_t, water_flux, nitrate_flux):
         # -> drain from ground, else take from pool -> try to fill pool
-        root_grid = self.plant.root.root_grid
+        root_grid = self.plant.lsystem.root_grid
 
         # update water
         water_intake = water_flux  # solution.fluxes[WATER] * delta_t * self.plant.root_biomass

@@ -71,12 +71,13 @@ class Blue_grain:
             self.play_sound()
             self.particle_system.activate()
             if self.nitrate_grid is not None:
-                lower_limit_grid = max(0, int(self.pos[0]/100)-3)
-                upper_limit_grid = max(0, int(self.pos[0]/100)+3)
+                lower_limit_grid = max(0, int(self.pos[0]/100)-1)
+                upper_limit_grid = max(0, int(self.pos[0]/100)+5)
                 # (x,y,value)
                 cells_to_fill = []
                 for i in range(lower_limit_grid, upper_limit_grid):
-                    cells_to_fill.append((i, 0, NITRATE_FILL_CELL))
+                    n_cells = upper_limit_grid - lower_limit_grid
+                    cells_to_fill.append((i, 0, 1/n_cells))
                 self.nitrate_grid.fertilize(cells_to_fill)
             self.deactivate()
 

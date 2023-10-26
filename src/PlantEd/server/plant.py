@@ -5,22 +5,43 @@ import numpy as np
 
 from PlantEd.constants import PLANT_POS, START_LEAF_BIOMASS_GRAM, START_STEM_BIOMASS_GRAM, \
     START_ROOT_BIOMASS_GRAM, START_SEED_BIOMASS_GRAM, MAXIMUM_LEAF_BIOMASS_GRAM, MAXIMUM_ROOT_BIOMASS_GRAM, \
-    MAXIMUM_STEM_BIOMASS_GRAM, MAXIMUM_SEED_BIOMASS_GRAM, BRANCH_MASS_PER_SPOT
+    MAXIMUM_STEM_BIOMASS_GRAM, MAXIMUM_SEED_BIOMASS_GRAM, BRANCH_MASS_PER_SPOT, BRANCH_SPOTS_BASE
 from PlantEd.server.lsystem import LSystem
 from PlantEd.constants import MAX_WATER_POOL_PER_GRAMM, water_concentration_at_temp, \
     PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP, PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP, \
     MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT
 
-Leaf = namedtuple("Leaf", "id, mass")
-Branch = namedtuple("Branch", "id, mass")
-Root = namedtuple("Root", "id, mass")
-Seed = namedtuple("Seed", "id, mass")
+
+class Leaf:
+    def __init__(self, id, mass):
+        self.id = id
+        self.mass = mass
+
+
+class Branch:
+    def __init__(self, id, mass, spots, free_spots):
+        self.id = id
+        self.mass = mass
+        self.spots = spots
+        self.free_spots = free_spots
+
+
+class Root:
+    def __init__(self, id, mass):
+        self.id = id
+        self.mass = mass
+
+
+class Seed:
+    def __init__(self, id, mass):
+        self.id = id
+        self.mass = mass
 
 
 class Plant:
     def __init__(self, ground_grid_resolution):
         self.leafs: list[Leaf] = [Leaf(0, START_LEAF_BIOMASS_GRAM)]
-        self.branches: list[Branch] = [Branch(0, START_STEM_BIOMASS_GRAM)]
+        self.branches: list[Branch] = [Branch(0, START_STEM_BIOMASS_GRAM, 3, BRANCH_SPOTS_BASE)]
         self.roots: list[Root] = [Root(0, START_ROOT_BIOMASS_GRAM)]
         self.seeds: list[Seed] = [Seed(0, START_SEED_BIOMASS_GRAM)]
         self.lsystem: LSystem = LSystem(
@@ -30,7 +51,7 @@ class Plant:
             water_grid_pos=(0, 900),  # hardcoded at ui [game.py 310]
         )
         self.lsystem.create_new_first_letter((0, 1), PLANT_POS, self.get_total_plant_mass())
-
+        self.lsystem.update(self.root_mass)
 
         self.max_starch_pool = (self.get_total_plant_mass() * MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT)
         self.starch_pool = self.max_starch_pool  # mikromol
@@ -48,14 +69,36 @@ class Plant:
         return leaf_mass
 
     def update_leaf_mass(self, delta_leaf_mass):
-        pass
+        if delta_leaf_mass <= 0 or len(self.leafs) <= 0:
+            return
+        growable_leafs = []
+        for leaf in self.leafs:
+            if leaf.mass < MAXIMUM_LEAF_BIOMASS_GRAM:
+                growable_leafs.append(leaf)
+        n_leafs_to_grow = len(growable_leafs)
+        if n_leafs_to_grow <= 0:
+            return
+        delta_each_leaf = delta_leaf_mass / n_leafs_to_grow
+        growable_leafs.sort(key=lambda leaf: leaf.mass)
+        for leaf in growable_leafs:
+            if leaf.mass + delta_each_leaf > MAXIMUM_LEAF_BIOMASS_GRAM:
+                overflow_mass = MAXIMUM_LEAF_BIOMASS_GRAM - leaf.mass + delta_each_leaf
+                n_leafs_to_grow -= 1
+                if n_leafs_to_grow <= 0:
+                    break
+                delta_each_leaf = (delta_leaf_mass + overflow_mass) / n_leafs_to_grow
+            else:
+                leaf.mass += delta_each_leaf
 
     def get_leaf_mass_to_grow(self) -> float:
         return MAXIMUM_LEAF_BIOMASS_GRAM*len(self.leafs) - self.leaf_mass
 
-    def create_new_leaf(self):
-        id: int = len(self.leafs)
-        self.leafs.append(Leaf(id, 0))
+    def create_new_leaf(self, branch_ids):
+        for branch_id in branch_ids:
+            if self.check_free_spots(branch_id):
+                id: int = len(self.leafs)
+                self.branches[branch_id].free_spots -= 1
+                self.leafs.append(Leaf(id, 0))
 
     ######################################################################
     # STEM OPERATIONS
@@ -66,14 +109,44 @@ class Plant:
         return stem_mass
 
     def update_stem_mass(self, delta_stem_mass):
-        pass
+        if delta_stem_mass <= 0 or len(self.branches) <= 0:
+            return
+        growable_branches = []
+        for branch in self.branches:
+            if branch.mass < MAXIMUM_STEM_BIOMASS_GRAM:
+                growable_branches.append(branch)
+        n_branches_to_grow = len(growable_branches)
+        if n_branches_to_grow <= 0:
+            return
+        delta_each_branch = delta_stem_mass / n_branches_to_grow
+        growable_branches.sort(key=lambda branch: branch.mass)
+        for branch in growable_branches:
+            if branch.mass + delta_each_branch > MAXIMUM_STEM_BIOMASS_GRAM:
+                overflow_mass = MAXIMUM_STEM_BIOMASS_GRAM - branch.mass + delta_each_branch
+                n_branches_to_grow -= 1
+                if n_branches_to_grow <= 0:
+                    break
+                delta_each_branch = (delta_stem_mass + overflow_mass) / n_branches_to_grow
+            else:
+                branch.mass += delta_each_branch
+            if branch.free_spots < (branch.mass * BRANCH_MASS_PER_SPOT + BRANCH_SPOTS_BASE):
+                branch.free_spots += 1
+                branch.spots += 1
+
+    def check_free_spots(self, branch_id):
+        print(f"CHECK BRANCH FREE SPOTS {branch_id}")
+        return True if self.branches[branch_id].free_spots > 0 else False
 
     def get_stem_mass_to_grow(self) -> float:
         return MAXIMUM_STEM_BIOMASS_GRAM*len(self.branches) - self.stem_mass
 
-    def create_new_branch(self):
-        id: int = len(self.branches)
-        self.branches.append(Branch(id, 0, 2))
+    def create_new_branch(self, branch_ids):
+        for branch_id in branch_ids:
+            if self.check_free_spots(branch_id):
+                print(f"SPOT IS FREE; CREATE NEW BRANCH")
+                id: int = len(self.branches)
+                self.branches[branch_id].free_spots -= 1
+                self.branches.append(Branch(id, 0, 3, BRANCH_SPOTS_BASE))
 
     ######################################################################
     # ROOT OPERATIONS
@@ -107,7 +180,7 @@ class Plant:
                 root.mass += delta_each_root
 
         for i, first_letter in enumerate(self.lsystem.first_letters):
-            self.lsystem.apply_rules(first_letter, self.roots[i])
+            self.lsystem.apply_rules(first_letter, self.roots[i].mass)
 
     def get_root_mass_to_grow(self) -> float:
         return MAXIMUM_ROOT_BIOMASS_GRAM*len(self.roots) - self.root_mass
@@ -120,7 +193,7 @@ class Plant:
                                                  mass=self.root_mass,
                                                  )
 
-        self.lsystem.create_new_first_letter(dir=(0, 1), pos=PLANT_POS, mass=self.root_mass)
+        #self.lsystem.create_new_first_letter(dir=(0, 1), pos=PLANT_POS, mass=self.root_mass)
         while len(self.lsystem.first_letters) > len(self.roots):
             id: int = len(self.roots)
             self.roots.append(Root(id, 0))
@@ -134,23 +207,39 @@ class Plant:
         return seed_mass
 
     def update_seed_mass(self, delta_seed_mass):
-        pass
+        if delta_seed_mass <= 0 or len(self.seeds) <= 0:
+            return
+        growable_seeds = []
+        for seed in self.seeds:
+            if seed.mass < MAXIMUM_SEED_BIOMASS_GRAM:
+                growable_seeds.append(seed)
+        n_seeds_to_grow = len(growable_seeds)
+        if n_seeds_to_grow <= 0:
+            return
+        delta_each_seed = delta_seed_mass / n_seeds_to_grow
+        growable_seeds.sort(key=lambda seed: seed.mass)
+        for seed in growable_seeds:
+            if seed.mass + delta_each_seed > MAXIMUM_SEED_BIOMASS_GRAM:
+                overflow_mass = MAXIMUM_SEED_BIOMASS_GRAM - seed.mass + delta_each_seed
+                n_seeds_to_grow -= 1
+                if n_seeds_to_grow <= 0:
+                    break
+                delta_each_seed = (delta_seed_mass + overflow_mass) / n_seeds_to_grow
+            else:
+                seed.mass += delta_each_seed
 
     def get_seed_mass_to_grow(self) -> float:
         return MAXIMUM_SEED_BIOMASS_GRAM*len(self.seeds) - self.seed_mass
 
-    def create_new_seed(self):
-        id: int = len(self.seeds)
-        self.seeds.append(Seed(id, 0))
+    def create_new_seed(self, branch_ids):
+        for branch_id in branch_ids:
+            if self.check_free_spots(branch_id):
+                id: int = len(self.seeds)
+                self.branches[branch_id].free_spots -= 1
+                self.seeds.append(Seed(id, 0))
 
     def get_free_branch_spots(self):
-        n_spots_occupied = sum([len(self.leafs), len(self.seeds), len(self.branches)-1])
-        n_spots = 0
-        for branch in self.branches:
-            base_spots = 3
-            n_spots += base_spots
-            n_spots += BRANCH_MASS_PER_SPOT * self.stem_mass
-        return n_spots - n_spots_occupied
+        return sum([branch.free_spots for branch in self.branches])
 
     def to_json(self) -> str:
         """
@@ -177,8 +266,8 @@ class Plant:
         """
 
         dic = {"leafs_biomass": [(leaf.id, leaf.mass) for leaf in self.leafs],
-               "stems_biomass": [(branch.id, branch.mass) for branch in self.branches],
-               "root_biomass": self.root_mass,
+               "stems_biomass": [(branch.id, branch.mass, branch.spots) for branch in self.branches],
+               "roots_biomass": self.root_mass,
                "seeds_biomass": [(seed.id, seed.mass) for seed in self.seeds],
                "starch_pool": self.starch_pool,
                "max_starch_pool": self.max_starch_pool,
@@ -186,6 +275,7 @@ class Plant:
                "water_pool": self.water_pool,
                "max_water_pool": self.max_water_pool,
                }
+        print(dic["stems_biomass"])
 
         return dic
 
@@ -208,6 +298,7 @@ class Plant:
             starch_out_flux: float,
             starch_in_flux: float):
 
+        print(f"flux {root_flux}, deltat: {delta_t}, rootmass: {self.root_mass}")
         self.update_root_mass(root_flux * delta_t * self.root_mass)
         self.update_stem_mass(stem_flux * delta_t * self.stem_mass)
         self.update_leaf_mass(leaf_flux * delta_t * self.leaf_mass)

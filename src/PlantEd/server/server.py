@@ -15,7 +15,7 @@ class Server:
             level_name=command["level_name"],
         )
         print(f"Loading Game {self.game.level_name}")
-        return {"message": f"Loading Game {self.game.level_name}"}
+        return {"running": self.game.running}
 
     def update(self, message) -> dict:
         # Update Plant, Environment, Water grid etc.

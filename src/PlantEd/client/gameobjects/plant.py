@@ -69,7 +69,7 @@ class Plant:
         branches: list[Cubic] = []
         branches_dict_list = plant_dict["stem"]["curve"]["branches"]
         for branch in branches_dict_list:
-            branches.append(Cubic(branch["branch"]))
+            branches.append(Cubic(branch["branch"], 0))
         plant.organs[1].mass = plant_dict["stem"]["mass"]
         plant.organs[1].curve = Cubic_Tree(branches=branches)
 
@@ -191,6 +191,8 @@ class Plant:
 
         self.seedling = Seedling(self.x, self.y, beans, START_SUM_BIOMASS_GRAM)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_flower]
+        self.organs[0].append_leaf(([0, 0], 0, 2))
+        self.organs[0].new_leaves = []
         # Fix env constraints
 
     def to_dict(self) -> dict:
@@ -449,7 +451,7 @@ class Leaf(Organ):
         self.max_shadow: int = 0
         self.stomata_open = False
         self.blocked_growth = False
-        self.new_leaves = 0
+        self.new_leaves = []
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -487,29 +489,8 @@ class Leaf(Organ):
         )
 
     def update_masses(self, new_leaf_masses):
-        pass
-        '''delta_mass = new_leaf_mass - self.get_mass()
-        if delta_mass <= 0 or len(self.leaves) <= 0:
-            return
-        growable_leaves = []
-        for leaf in self.leaves:
-            if leaf["mass"] < leaf["maximum_mass"]:
-                growable_leaves.append(leaf)
-        n_leaves_to_grow = len(growable_leaves)
-        if n_leaves_to_grow <= 0:
-            return
-        delta_each_leaf = delta_mass / n_leaves_to_grow
-        growable_leaves.sort(key=lambda leaf: leaf["mass"])
-        for leaf in growable_leaves:
-            if leaf["mass"] + delta_each_leaf > leaf["maximum_mass"]:
-                overflow_mass = leaf["maximum_mass"] - leaf["mass"] + delta_each_leaf
-                n_leaves_to_grow -= 1
-                if n_leaves_to_grow <= 0:
-                    break
-                delta_each_leaf = (delta_mass + overflow_mass) / n_leaves_to_grow
-
-            else:
-                leaf["mass"] += delta_each_leaf'''
+        for server_leaf, client_leaf in zip(new_leaf_masses, self.leaves):
+            client_leaf["mass"] = server_leaf[1]
 
         # adjust image sizes
         for leaf in self.leaves:
@@ -518,11 +499,11 @@ class Leaf(Organ):
                 leaf["size"] += 1
                 self.update_leaf_image(leaf)
 
-    def pop_new_leaves(self) -> int:
-        n_new_leaves = self.new_leaves
-        if n_new_leaves > 0:
-            self.new_leaves = 0
-            return n_new_leaves
+    def pop_new_leaves(self) -> list:
+        new_leaves = self.new_leaves
+        if len(new_leaves) > 0:
+            self.new_leaves = []
+            return new_leaves
         else:
             return None
 
@@ -542,8 +523,8 @@ class Leaf(Organ):
             sum([leaf["mass"] for leaf in self.leaves])
         )
 
-    def append_leaf(self, highlight: Tuple[list[int], int, int]):
-        self.new_leaves += 1
+    def append_leaf(self, highlight: Tuple[list[int, int], int, int]):
+        self.new_leaves.append(int(highlight[1]))
         self.play_reward()
         pos = highlight[0]
         dir = pos[0] - pygame.mouse.get_pos()[0]
@@ -557,7 +538,7 @@ class Leaf(Organ):
             offset = self.pivot_positions[image_id]
 
         leaf = {
-            "id": 0,
+            "id": len(self.leaves),
             "x": pos[0],
             "y": pos[1],
             "t": (highlight[1], highlight[2]),
@@ -805,14 +786,14 @@ class Stem(Organ):
         self.width: float = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
         self.curve = Cubic_Tree(
-            [Cubic([[955, 900], [960, 820], [940, 750]])], camera
+            [Cubic(points=[[955, 900], [960, 820], [940, 750]], id=0)], camera
         )
         self.timer: float = 0
         self.floating_shop: FloatingShop = None
         self.dist_to_stem: float = 1000
         self.can_add_branch: bool = False
         self.play_reward: callable = play_reward
-        self.new_branches = 0
+        self.new_branches = []
 
         super().__init__(
             x=x,
@@ -865,38 +846,10 @@ class Stem(Organ):
         )
 
     def update_masses(self, new_stem_masses):
-        pass
-        '''delta_mass = new_stem_mass - self.get_mass()
-        if delta_mass <= 0 or len(self.curve.branches) <= 0:
-            return
-        growable_branches = []
-        for branch in self.curve.branches:
-            if branch.mass < branch.maximum_mass:
-                growable_branches.append(branch)
-        n_branches_to_grow = len(growable_branches)
-        if n_branches_to_grow <= 0:
-            return
-        delta_each_branch = delta_mass / n_branches_to_grow
-        growable_branches.sort(key=lambda branch: branch.mass)
-        for branch in growable_branches:
-            if branch.mass + delta_each_branch > branch.maximum_mass:
-                overflow_mass = branch.maximum_mass - branch.mass + delta_each_branch
-
-                n_branches_to_grow -= 1
-                if n_branches_to_grow <= 0:
-                    break
-                delta_each_branch = (delta_mass + overflow_mass) / n_branches_to_grow
-
-            else:
-                branch.mass += delta_each_branch'''
-
-        # adjust image sizes
-        for branch in self.curve.branches:
-            relative_mass = branch.mass / branch.maximum_mass
-            if relative_mass * 10 > branch.size:
-                branch.size += 1
-                self.curve.grow(branch)
-
+        for server_branch, client_branch in zip(new_stem_masses, self.curve.branches):
+            client_branch.mass = server_branch[1]
+            if len(client_branch.points) < server_branch[2]:
+                client_branch.grow()
 
     def get_mass(self):
         return sum([branch.mass for branch in self.curve.branches])
@@ -908,11 +861,11 @@ class Stem(Organ):
         }
         return stem_dict
 
-    def pop_new_branches(self) -> int:
-        n_new_branches = self.new_branches
-        if n_new_branches > 0:
-            self.new_branches = 0
-            return n_new_branches
+    def pop_new_branches(self) -> list:
+        new_branches = self.new_branches
+        if len(new_branches) > 0:
+            self.new_branches = []
+            return new_branches
         else:
             return None
 
@@ -988,10 +941,10 @@ class Stem(Organ):
     def update_image_size(self, factor=3, base=5):
         pass
 
-    def add_branch(self, highlight, mouse_pos):
-        self.new_branches += 1
+    def add_branch(self, mouse_pos, highlight):
+        self.new_branches.append(highlight[1])
         self.play_reward()
-        self.curve.add_branch(mouse_pos, highlight)
+        self.curve.add_branch(highlight, mouse_pos)
 
     def draw(self, screen):
         if self.target:
@@ -1093,7 +1046,7 @@ class Flower(Organ):
         self.hover_image = hover_image
         self.can_add_flower: bool = False
         self.target_flower = None
-        self.new_flowers = 0
+        self.new_flowers = []
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -1122,11 +1075,11 @@ class Flower(Organ):
         }
         return flower_dict
 
-    def pop_new_flowers(self) -> int:
-        n_new_flowers = self.new_flowers
-        if n_new_flowers > 0:
-            self.new_flowers = 0
-            return n_new_flowers
+    def pop_new_flowers(self) -> list:
+        new_flowers = self.new_flowers
+        if len(new_flowers) > 0:
+            self.new_flowers = []
+            return new_flowers
         else:
             return None
 

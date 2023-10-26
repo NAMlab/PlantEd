@@ -583,7 +583,6 @@ class DefaultGameScene(object):
                 response = await websocket.recv()
                 request_running = False
 
-
     async def send_and_get_response(self):
         global request_running
         if not request_running:
@@ -608,18 +607,21 @@ class DefaultGameScene(object):
                             "buy_watering_can": self.water_grid.pop_poured_cells(),
                             "buy_nitrate": self.nitrate_grid.pop_cells_to_add(),
                             "buy_leaf": self.plant.organs[0].pop_new_leaves(),
-                            "buy_stem": self.plant.organs[1].pop_new_branches(),
+                            "buy_branch": self.plant.organs[1].pop_new_branches(),
                             "buy_root": self.plant.organs[2].pop_new_roots(),
                             "buy_seed": self.plant.organs[3].pop_new_flowers(),
                         }
                     }
                 }
+
+                print(f"REQUEST: {game_state}")
+
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
                 print(" --> Received response, updating state")
                 dic = json.loads(response)
-                print(dic)
 
+                print(f"RESPONSE: {dic}")
                 self.environment.precipitation = dic["environment"]["precipitation"]
                 self.ui.humidity = dic["environment"]["humidity"]
                 self.ui.temperature = dic["environment"]["temperature"]
@@ -641,6 +643,9 @@ class DefaultGameScene(object):
                 # make simple root strucure from root_dict
                 self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
 
+                if dic is not None:
+                    if not dic["running"]:
+                        pygame.event.post(pygame.event.Event(WIN))
                 request_running = False
 
     def update(self, dt):

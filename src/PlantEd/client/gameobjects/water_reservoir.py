@@ -64,10 +64,17 @@ class Water_Grid:
             self.poured_cells[int(pos[0] / 100)] += rate * dt
 
     def pop_poured_cells(self):
-        if self.poured_cells.sum() > 0 and not self.pouring:
+        poured_sum = self.poured_cells.sum()
+        if poured_sum > 0 and not self.pouring:
+            poured_cells = self.poured_cells.copy()
+            # normalize
+            for i in range(len(poured_cells)):
+                if poured_cells[i] > 0:
+                    poured_cells[i] = poured_cells[i]/poured_sum
             poured_cells = {
-                "cells": self.poured_cells.tolist()
+                "cells": poured_cells.tolist()
             }
+            print(poured_cells)
             self.poured_cells.fill(0)
             return poured_cells
         else:

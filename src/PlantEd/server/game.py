@@ -25,9 +25,6 @@ class Game:
     def check_sufficient_funds(self, action):
         return True
 
-    def check_free_spot(self):
-        return True if self.plant.get_free_branch_spots() > 0 else False
-
     # dt in seconds
     def update(self, message) -> dict:
         delta_t = message["delta_t"]
@@ -38,22 +35,21 @@ class Game:
         self.time_left_from_last_simulation = (delta_t + self.time_left_from_last_simulation) % self.resolution
         print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
 
-        for action in message["shop_actions"]:
-            if action["buy_waterin_can"] is not None:
-                self.environment.increase_water_grid(action["buy_watering_can"])
-            if action["buy_nitrate"] is not None:
-                self.environment.increase_nitrate_grid(action["buy_nitrate"])
-            if action["buy_root"] is not None:
-                self.plant.create_new_root(action["buy_root"])
-            if action["buy_branch"] is not None:
-                if self.check_free_spot():
-                    self.plant.create_new_branch()
-            if action["buy_leaf"] is not None:
-                if self.check_free_spot():
-                    self.plant.create_new_leaf()
-            if action["buy_seed"] is not None:
-                if self.check_free_spot():
-                    self.plant.create_new_seed()
+        for action, content in message["shop_actions"].items():
+            if content is not None:
+                match action:
+                    case ("buy_watering_can"):
+                        self.environment.increase_water_grid(content)
+                    case "buy_nitrate":
+                        self.environment.increase_nitrate_grid(content)
+                    case "buy_root":
+                        self.plant.create_new_root(content)
+                    case "buy_branch":
+                        self.plant.create_new_branch(content)
+                    case "buy_leaf":
+                        self.plant.create_new_leaf(content)
+                    case "buy_seed":
+                        self.plant.create_new_seed(content)
 
         for i in range(n_simulations):
             self.plant.update(self.resolution)
@@ -64,7 +60,7 @@ class Game:
                 "leaf_percent": growth_percentages["leaf_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0,
                 "stem_percent": growth_percentages["stem_percent"] if self.plant.get_stem_mass_to_grow() > 0 else 0,
                 "root_percent": growth_percentages["root_percent"] if self.plant.get_root_mass_to_grow() > 0 else 0,
-                "seed_percent": sum([10 for seed in self.plant.seeds]),
+                "seed_percent": len(self.plant.seeds) * 10,
                 "starch_percent": growth_percentages["starch_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0,
                 "stomata": growth_percentages["stomata"]
             }
@@ -75,4 +71,9 @@ class Game:
             "plant": self.plant.to_dict(),
             "environment": self.environment.to_dict()
         }
+        if not self.running:
+            pass
+            # create scores
+            # close logs
+            # upload data
         return game_state

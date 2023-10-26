@@ -30,6 +30,7 @@ class Grid:
             dict_cells_to_fill = {
                 "cells": self.cells_to_fill
             }
+            self.cells_to_fill = None
             return dict_cells_to_fill
         else:
             return None

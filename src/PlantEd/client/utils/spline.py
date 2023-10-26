@@ -14,7 +14,7 @@ from PlantEd.constants import START_STEM_BIOMASS_GRAM
 
 class Cubic_Tree:
     def __init__(self, branches, camera=None):
-        self.branches = branches
+        self.branches: list[Cubic] = branches
         self.camera = camera
         self.branches[0].main = True
 
@@ -65,7 +65,7 @@ class Cubic_Tree:
                 [point[0] + 100, point[1] - 100],
             ]
         self.branches[0].free_spots[highlight[2]] = config.BRANCH_SPOT
-        self.branches.append(Cubic(points))
+        self.branches.append(Cubic(points, id=len(self.branches)))
 
     def handle_event(self, e):
         for branch in self.branches:
@@ -114,7 +114,7 @@ class Cubic_Tree:
 
 
 class Cubic:
-    def __init__(self, points, color=config.GREEN, res=10, width=15, max_points=8):
+    def __init__(self, points, id, color=config.GREEN, res=10, width=15, max_points=8):
         self.mass = START_STEM_BIOMASS_GRAM
         self.maximum_mass = START_STEM_BIOMASS_GRAM * 7
         self.size = 0
@@ -132,7 +132,7 @@ class Cubic:
 
         self.move_offset = True
         self.drag = False
-        self.id = 0
+        self.id = id
 
         self.selected = False
         self.curve = self.get_curve()
