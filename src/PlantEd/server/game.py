@@ -1,4 +1,4 @@
-from PlantEd.constants import MAX_DAYS
+from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST
 from PlantEd.server.plant import Plant
 from PlantEd.server.dynamic_model import DynamicModel
 from PlantEd.server.environment import Environment
@@ -33,7 +33,7 @@ class Game:
         self.time += delta_t
         n_simulations = int((delta_t + self.time_left_from_last_simulation) / self.resolution)
         self.time_left_from_last_simulation = (delta_t + self.time_left_from_last_simulation) % self.resolution
-        print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
+        #print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
 
         for action, content in message["shop_actions"].items():
             if content is not None:
@@ -43,13 +43,26 @@ class Game:
                     case "buy_nitrate":
                         self.environment.increase_nitrate_grid(content)
                     case "buy_root":
-                        self.plant.create_new_root(content)
+                        for target in content:
+                            if self.green_thumbs - ROOT_COST >= 0:
+                                self.plant.create_new_root(target)
+                                self.green_thumbs -= ROOT_COST
                     case "buy_branch":
-                        self.plant.create_new_branch(content)
+                        for i in range(content):
+                            print(self.green_thumbs, BRANCH_COST)
+                            if self.green_thumbs - BRANCH_COST >= 0:
+                                self.plant.create_new_branch()
+                                self.green_thumbs -= BRANCH_COST
                     case "buy_leaf":
-                        self.plant.create_new_leaf(content)
+                        for i in range(content):
+                            if self.green_thumbs - LEAF_COST >= 0:
+                                self.plant.create_new_leaf()
+                                self.green_thumbs -= LEAF_COST
                     case "buy_seed":
-                        self.plant.create_new_seed(content)
+                        for i in range(content):
+                            if self.green_thumbs - FLOWER_COST >= 0:
+                                self.plant.create_new_seed()
+                                self.green_thumbs -= FLOWER_COST
 
         for i in range(n_simulations):
             self.plant.update(self.resolution)
@@ -69,7 +82,8 @@ class Game:
         game_state = {
             "running": self.running,
             "plant": self.plant.to_dict(),
-            "environment": self.environment.to_dict()
+            "environment": self.environment.to_dict(),
+            "green_thumbs": self.green_thumbs
         }
         if not self.running:
             pass

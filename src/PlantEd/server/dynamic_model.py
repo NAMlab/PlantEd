@@ -63,7 +63,6 @@ class DynamicModel:
         # starch
         # STARCH_OUT stays 1000, since the plant is allowed to produce it anytime
         sp = percentages["starch_percent"]
-        print(f"Percentage before sim: {sp}")
         if percentages["starch_percent"] > 0:
             self.set_bounds(STARCH_IN, (0, 0))
         else:
@@ -126,12 +125,6 @@ class DynamicModel:
         # slim optimize best case
         self.update_bounds(delta_t, percentages)
         self.update_constraints(percentages)
-        #print("before slimsim")
-        #print(f"Percentages: \n"
-        #      f"{percentages}")
-
-        # print(f"Reaction Bounds: \n"
-        # f"{self.model.}")
         print(f"Simulation: \n"
               f"Inputs: \n"
               f"Water: {self.get_bounds(WATER)} \n"
@@ -139,8 +132,7 @@ class DynamicModel:
               f"starch_in: {self.get_bounds(STARCH_IN)} with a pool of {self.plant.starch_pool} \n"
               f"co2: {self.get_bounds(CO2)} \n"
               )
-        self.model.optimize()
-        #print("after slimsim")
+        self.model.slim_optimize()
 
         water_flux = self.model.reactions.get_by_id(WATER).flux
         nitrate_flux = self.model.reactions.get_by_id(NITRATE).flux

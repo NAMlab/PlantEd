@@ -28,10 +28,8 @@ class Server:
             response = {}
             if command["type"] == "simulate":
                 response = self.update(command["message"])
-
             elif command["type"] == "load_level":
                 response = self.load_level(command["message"])
-
             await websocket.send(json.dumps(response, indent=2))
 
     async def main(self, port):

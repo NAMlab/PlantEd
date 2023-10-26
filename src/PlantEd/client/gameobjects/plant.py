@@ -192,7 +192,7 @@ class Plant:
         self.seedling = Seedling(self.x, self.y, beans, START_SUM_BIOMASS_GRAM)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_flower]
         self.organs[0].append_leaf(([0, 0], 0, 2))
-        self.organs[0].new_leaves = []
+        self.organs[0].new_leaves = 0
         # Fix env constraints
 
     def to_dict(self) -> dict:
@@ -451,7 +451,7 @@ class Leaf(Organ):
         self.max_shadow: int = 0
         self.stomata_open = False
         self.blocked_growth = False
-        self.new_leaves = []
+        self.new_leaves = 0
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -499,11 +499,11 @@ class Leaf(Organ):
                 leaf["size"] += 1
                 self.update_leaf_image(leaf)
 
-    def pop_new_leaves(self) -> list:
-        new_leaves = self.new_leaves
-        if len(new_leaves) > 0:
-            self.new_leaves = []
-            return new_leaves
+    def pop_new_leaves(self) -> int:
+        n_new_leaves = self.new_leaves
+        if n_new_leaves > 0:
+            self.new_leaves = 0
+            return n_new_leaves
         else:
             return None
 
@@ -524,7 +524,7 @@ class Leaf(Organ):
         )
 
     def append_leaf(self, highlight: Tuple[list[int, int], int, int]):
-        self.new_leaves.append(int(highlight[1]))
+        self.new_leaves += 1
         self.play_reward()
         pos = highlight[0]
         dir = pos[0] - pygame.mouse.get_pos()[0]
@@ -793,7 +793,7 @@ class Stem(Organ):
         self.dist_to_stem: float = 1000
         self.can_add_branch: bool = False
         self.play_reward: callable = play_reward
-        self.new_branches = []
+        self.new_branches = 0
 
         super().__init__(
             x=x,
@@ -861,11 +861,11 @@ class Stem(Organ):
         }
         return stem_dict
 
-    def pop_new_branches(self) -> list:
-        new_branches = self.new_branches
-        if len(new_branches) > 0:
-            self.new_branches = []
-            return new_branches
+    def pop_new_branches(self) -> int:
+        n_new_branches = self.new_branches
+        if n_new_branches > 0:
+            self.new_branches = 0
+            return n_new_branches
         else:
             return None
 
@@ -942,7 +942,7 @@ class Stem(Organ):
         pass
 
     def add_branch(self, mouse_pos, highlight):
-        self.new_branches.append(highlight[1])
+        self.new_branches += 1
         self.play_reward()
         self.curve.add_branch(highlight, mouse_pos)
 
@@ -1046,7 +1046,7 @@ class Flower(Organ):
         self.hover_image = hover_image
         self.can_add_flower: bool = False
         self.target_flower = None
-        self.new_flowers = []
+        self.new_flowers = 0
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -1075,11 +1075,11 @@ class Flower(Organ):
         }
         return flower_dict
 
-    def pop_new_flowers(self) -> list:
-        new_flowers = self.new_flowers
-        if len(new_flowers) > 0:
-            self.new_flowers = []
-            return new_flowers
+    def pop_new_flowers(self) -> int:
+        n_new_flowers = self.new_flowers
+        if n_new_flowers > 0:
+            self.new_flowers = 0
+            return n_new_flowers
         else:
             return None
 
@@ -1164,6 +1164,7 @@ class Flower(Organ):
 
     # Todo make correct maxima
     def append_flower(self, highlight):
+        self.new_flowers += 1
         pos = highlight[0]
         image = self.images[0]
         offset = (image.get_width() / 2, image.get_height() / 2)
