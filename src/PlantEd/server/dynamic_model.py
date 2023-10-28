@@ -264,13 +264,13 @@ class DynamicModel:
             float(percentages["seed_percent"]),
             float(constraint_starch_percentage),
         ]
-        # percentage[4] = 0 if percentage[4] <= 0 else percentage[4]  # ensure starch is not below 0 -> consuming
 
         mass_organ = [
             self.plant.root_mass,
             self.plant.stem_mass,
             self.plant.leaf_mass,
             self.plant.seed_mass,
+            self.plant.stem_mass,
         ]
 
         n_reactions = len(reactions)

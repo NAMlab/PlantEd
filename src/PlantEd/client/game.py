@@ -613,15 +613,16 @@ class DefaultGameScene(object):
                         }
                     }
                 }
+                print(game_state["message"]["growth_percentages"])
 
-                print(f"REQUEST: {game_state}")
+                #print(f"REQUEST: {game_state}")
 
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
                 print(" --> Received response, updating state")
                 dic = json.loads(response)
 
-                print(f"RESPONSE: {dic}")
+                #print(f"RESPONSE: {dic}")
                 self.environment.precipitation = dic["environment"]["precipitation"]
                 self.ui.humidity = dic["environment"]["humidity"]
                 self.ui.temperature = dic["environment"]["temperature"]

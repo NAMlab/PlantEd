@@ -49,7 +49,6 @@ class Game:
                                 self.green_thumbs -= ROOT_COST
                     case "buy_branch":
                         for i in range(content):
-                            print(self.green_thumbs, BRANCH_COST)
                             if self.green_thumbs - BRANCH_COST >= 0:
                                 self.plant.create_new_branch()
                                 self.green_thumbs -= BRANCH_COST
