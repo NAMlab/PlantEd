@@ -263,6 +263,7 @@ class Plant:
                "root": self.lsystem.to_dict(),
                "water_pool": self.water_pool,
                "max_water_pool": self.max_water_pool,
+               "open_spots": self.get_free_spots(),
                }
 
         return dic
