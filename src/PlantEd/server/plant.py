@@ -42,7 +42,7 @@ class Plant:
         self.leafs: list[Leaf] = [Leaf(0, START_LEAF_BIOMASS_GRAM)]
         self.branches: list[Branch] = [Branch(0, START_STEM_BIOMASS_GRAM, BRANCH_SPOTS_BASE)]
         self.roots: list[Root] = [Root(0, START_ROOT_BIOMASS_GRAM)]
-        self.seeds: list[Seed] = [Seed(0, START_SEED_BIOMASS_GRAM)]
+        self.seeds: list[Seed] = []
         self.lsystem: LSystem = LSystem(
             root_grid=np.zeros(
                 ground_grid_resolution,

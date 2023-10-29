@@ -2,6 +2,10 @@ from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWE
 from PlantEd.server.plant import Plant
 from PlantEd.server.dynamic_model import DynamicModel
 from PlantEd.server.environment import Environment
+import logging
+
+logger = logging.getLogger("server")
+logging.basicConfig(level=logging.ERROR)
 
 
 class Game:
@@ -34,6 +38,13 @@ class Game:
         n_simulations = int((delta_t + self.time_left_from_last_simulation) / self.resolution)
         self.time_left_from_last_simulation = (delta_t + self.time_left_from_last_simulation) % self.resolution
         #print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
+
+        logger.debug(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} "
+                     f"and time_left: {self.time_left_from_last_simulation}")
+
+        actions = [(action, content) for action, content in message["shop_actions"].items() if content is not None]
+        for action in actions:
+            logger.debug(f"shop actions from client: {action}")
 
         for action, content in message["shop_actions"].items():
             if content is not None:
