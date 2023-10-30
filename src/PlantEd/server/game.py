@@ -54,7 +54,7 @@ class Game:
                         if self.green_thumbs - NITRATE_COST >= 0:
                             self.environment.increase_nitrate_grid(content)
                     case "buy_root":
-                        for target in content:
+                        for target in content["directions"]:
                             if self.green_thumbs - ROOT_COST >= 0:
                                 self.plant.create_new_root(target)
                                 self.green_thumbs -= ROOT_COST

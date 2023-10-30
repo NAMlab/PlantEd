@@ -22,3 +22,9 @@ src/PlantEd.egg-info/entry_points.txt
 src/PlantEd.egg-info/requires.txt
 src/PlantEd.egg-info/SOURCES.txt
 src/PlantEd.egg-info/top_level.txt
+
+src/PlantEd/server/server.err
+
+src/PlantEd/server/CrashNBurn_run1.csv
+
+src/PlantEd/server/server.log
