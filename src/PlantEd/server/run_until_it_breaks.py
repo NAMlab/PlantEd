@@ -1,3 +1,5 @@
+# Script to run the server and prod it until it crashes
+# Taken and adapted from https://github.com/NAMlab/PlantEd-AI/blob/main/src/planted_env.py
 import csv
 import sys
 import os
@@ -24,13 +26,20 @@ Action = Enum('Action', [
     'GROW_ROOTS',
     'PRODUCE_STARCH',
     'OPEN_STOMATA',
-    'CLOSE_STOMATA'
+    'CLOSE_STOMATA',
+    'BUY_LEAF',
+    'BUY_STEM',
+    'BUY_ROOT',
+    'BUY_SEED'
 ], start=0)  # start at 0 because the gym action space starts at 0
 
 
+# @TODO add these next:
+# 10 - watering can
+# 11 - add fertilizer
+
 class PlantEdEnv():
     metadata = {"render_modes": ["ansi"], "render_fps": 30}
-    max_steps = 6 * 24 * 35  # @TODO this is how many steps the world lasts, should be determined by server not by me.
 
     def __init__(self, instance_name="PlantEd_instance", port=8765):
         self.port = port
@@ -39,9 +48,6 @@ class PlantEdEnv():
         self.server_process = None
         self.running = False
         self.game_counter = 0  # add 1 at each reset --> to save all the logs
-        # Remove previous game logs
-        for f in glob.glob('*.csv'):
-            os.remove(f)
 
     def __del__(self):
         self.close()
@@ -69,7 +75,6 @@ class PlantEdEnv():
         asyncio.run(self.load_level())
 
         self.running = True
-        self.current_step = 0
         self.last_step_biomass = -1
         self.stomata = True
         self.last_observation = None
@@ -99,8 +104,7 @@ class PlantEdEnv():
         server.start(self.port)
 
     def init_csv_logger(self):
-        self.csv_file = open('game_logs/' + self.instance_name + '_run' + str(self.game_counter) + '.csv', 'w',
-                             newline='')
+        self.csv_file = open(self.instance_name + '_run' + str(self.game_counter) + '.csv', 'w', newline='')
         self.csv_writer = csv.writer(self.csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         self.csv_writer.writerow(
             ["time", "temperature", "sun_intensity", "humidity", "precipitation", "accessible_water",
@@ -116,6 +120,14 @@ class PlantEdEnv():
         root = res["plant"]["roots_biomass"]
         seed = sum([x[1] for x in res["plant"]["seeds_biomass"]])
         return (Biomass(leaf, stem, root, seed))
+
+    def get_n_organs(self, res):
+        return ([
+            len(res["plant"]["leafs_biomass"]),
+            len(res["plant"]["stems_biomass"]),
+            len(res["plant"]["root"]["first_letters"]),
+            len(res["plant"]["seeds_biomass"]),
+        ])
 
     def step(self, action):
         return (asyncio.run(self._async_step(action)))
@@ -148,10 +160,11 @@ class PlantEdEnv():
                     "shop_actions": {
                         "buy_watering_can": None,
                         "buy_nitrate": None,
-                        "buy_leaf": None,
-                        "buy_branch": None,
+                        "buy_leaf": 1 if action == Action.BUY_LEAF else None,
+                        "buy_branch": 1 if action == Action.BUY_STEM else None,
                         "buy_root": None,
-                        "buy_seed": None
+                        # (random.gauss(0, 0.4), random.gauss(1, 0.3)) if action == Action.BUY_ROOT else None,
+                        "buy_seed": 1 if action == Action.BUY_SEED else None
                     }
                 }
             }
@@ -160,6 +173,7 @@ class PlantEdEnv():
                 response = await websocket.recv()
                 res = json.loads(response)
 
+                terminated = not res["running"]
                 root_grid = np.array(res["plant"]["root"]["root_grid"])
                 nitrate_grid = np.array(res["environment"]["nitrate_grid"])
                 water_grid = np.array(res["environment"]["water_grid"])
@@ -170,30 +184,29 @@ class PlantEdEnv():
                 res["environment"]["accessible_nitrate"] = (root_grid * nitrate_grid).sum()
 
                 observation = {
+                    # Environment
                     "temperature": np.array([res["environment"]["temperature"]]).astype(np.float32),
                     "sun_intensity": np.array([res["environment"]["sun_intensity"]]).astype(np.float32),
                     "humidity": np.array([res["environment"]["humidity"]]).astype(np.float32),
+                    "accessible_water": np.array([res["environment"]["accessible_water"]]).astype(np.float32),
+                    "accessible_nitrate": np.array([res["environment"]["accessible_nitrate"]]).astype(np.float32),
+                    "green_thumbs": np.array([res["green_thumbs"]]).astype(np.float32),
 
-                    # "accessible_water": np.array([res["environment"]["accessible_water"]]).astype(np.float32),
-                    # "accessible_nitrate": np.array([res["environment"]["accessible_nitrate"]]).astype(np.float32),
-
+                    # Plant
                     "biomasses": np.array([
                         biomasses.leaf,
                         biomasses.stem,
                         biomasses.root,
                         biomasses.seed,
                     ]).astype(np.float32),
+                    "n_organs": np.array(self.get_n_organs(res)).astype(np.float32),
                     "starch_pool": np.array([res["plant"]["starch_pool"]]).astype(np.float32),
                     "max_starch_pool": np.array([res["plant"]["max_starch_pool"]]).astype(np.float32),
-
                     "stomata_state": np.array([self.stomata])
                 }
                 self.last_observation = observation
 
                 reward = self.calc_reward(biomasses)
-                self.current_step += 1
-                if self.current_step > self.max_steps:
-                    terminated = True
                 self.write_log_row(res, message["message"], biomasses, action, reward)
             except websockets.exceptions.ConnectionClosedError:
                 print("SERVER CRASHED")
@@ -246,7 +259,7 @@ if __name__ == "__main__":
     env.reset()
     truncated = False
     while not truncated:
-        observation, reward, terminated, truncated, info = env.step(Action(random.randint(0, 5)))
+        observation, reward, terminated, truncated, info = env.step(Action(random.randint(0, 9)))
         if terminated:
             env.reset()
     env.close()

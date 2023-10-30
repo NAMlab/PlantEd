@@ -1,4 +1,4 @@
-from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST
+from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST, WATERING_CAN_COST, NITRATE_COST
 from PlantEd.server.plant import Plant
 from PlantEd.server.dynamic_model import DynamicModel
 from PlantEd.server.environment import Environment
@@ -48,9 +48,11 @@ class Game:
             if content is not None:
                 match action:
                     case ("buy_watering_can"):
-                        self.environment.increase_water_grid(content)
+                        if self.green_thumbs - WATERING_CAN_COST >= 0:
+                            self.environment.increase_water_grid(content)
                     case "buy_nitrate":
-                        self.environment.increase_nitrate_grid(content)
+                        if self.green_thumbs - NITRATE_COST >= 0:
+                            self.environment.increase_nitrate_grid(content)
                     case "buy_root":
                         for target in content:
                             if self.green_thumbs - ROOT_COST >= 0:
