@@ -1,0 +1,30 @@
+Process Process-9:
+Traceback (most recent call last):
+  File "/home/daniel/anaconda3/envs/plant/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/daniel/anaconda3/envs/plant/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/daniel/PlantEd/src/PlantEd/server/server.py", line 37, in main
+    await asyncio.Future()  # run forever
+    ^^^^^^^^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/daniel/anaconda3/envs/plant/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/home/daniel/anaconda3/envs/plant/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/daniel/PlantEd/src/PlantEd/server/run_until_it_breaks.py", line 99, in start_server
+    server.start(self.port)
+  File "/home/daniel/PlantEd/src/PlantEd/server/server.py", line 42, in start
+    asyncio.run(server.main(port))
+  File "/home/daniel/anaconda3/envs/plant/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/daniel/anaconda3/envs/plant/lib/python3.11/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt

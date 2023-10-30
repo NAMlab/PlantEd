@@ -43,6 +43,7 @@ class Plant:
         self.branches: list[Branch] = [Branch(0, START_STEM_BIOMASS_GRAM, BRANCH_SPOTS_BASE)]
         self.roots: list[Root] = [Root(0, START_ROOT_BIOMASS_GRAM)]
         self.seeds: list[Seed] = []
+        self.seed_mass_base = START_SEED_BIOMASS_GRAM
         self.lsystem: LSystem = LSystem(
             root_grid=np.zeros(
                 ground_grid_resolution,
@@ -197,7 +198,7 @@ class Plant:
     ######################################################################
     @property
     def seed_mass(self):
-        seed_mass = sum([seed.mass for seed in self.seeds])
+        seed_mass = sum([seed.mass for seed in self.seeds]) + self.seed_mass_base
         return seed_mass
 
     def update_seed_mass(self, delta_seed_mass):

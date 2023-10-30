@@ -26,11 +26,9 @@ class Game:
         if self.time/(60*60*24) >= MAX_DAYS:
             self.running = False
 
-    def check_sufficient_funds(self, action):
-        return True
-
     # dt in seconds
     def update(self, message) -> dict:
+        self.check_game_end()
         delta_t = message["delta_t"]
         growth_percentages = message["growth_percentages"]
 
@@ -87,8 +85,8 @@ class Game:
                 "starch_percent": growth_percentages["starch_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0,
                 "stomata": growth_percentages["stomata"]
             }
-
-            self.model.simulate(self.resolution, percentages)
+            if sum([value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) > 0:
+                self.model.simulate(self.resolution, percentages)
         game_state = {
             "running": self.running,
             "plant": self.plant.to_dict(),
