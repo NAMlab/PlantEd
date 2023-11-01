@@ -94,9 +94,8 @@ class Plant:
         return MAXIMUM_LEAF_BIOMASS_GRAM*len(self.leafs) - self.leaf_mass
 
     def create_new_leaf(self):
-        if self.get_free_spots() > 0:
-            id: int = len(self.leafs)
-            self.leafs.append(Leaf(id, 0))
+        id: int = len(self.leafs)
+        self.leafs.append(Leaf(id, 0))
 
     ######################################################################
     # STEM OPERATIONS
@@ -139,10 +138,8 @@ class Plant:
         return MAXIMUM_STEM_BIOMASS_GRAM*len(self.branches) - self.stem_mass
 
     def create_new_branch(self):
-        print(self.get_free_spots())
-        if self.get_free_spots() > 0:
-            id: int = len(self.branches)
-            self.branches.append(Branch(id, 0, BRANCH_SPOTS_BASE))
+        id: int = len(self.branches)
+        self.branches.append(Branch(id, 0, BRANCH_SPOTS_BASE))
 
     ######################################################################
     # ROOT OPERATIONS
@@ -227,9 +224,8 @@ class Plant:
         return MAXIMUM_SEED_BIOMASS_GRAM*len(self.seeds) - self.seed_mass
 
     def create_new_seed(self):
-        if self.get_free_spots():
-            id: int = len(self.seeds)
-            self.seeds.append(Seed(id, 0))
+        id: int = len(self.seeds)
+        self.seeds.append(Seed(id, 0))
 
     def to_json(self) -> str:
         """

@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.ERROR)
 
 
 class Game:
-    def __init__(self, player_name, level_name, start_time=0, resolution=600, green_thumbs=20, seed=15):
+    def __init__(self, player_name, level_name, start_time=0, resolution=3600, green_thumbs=20, seed=15):
         self.player_name = player_name
         self.level_name = level_name
         self.time = start_time
@@ -35,7 +35,7 @@ class Game:
         self.time += delta_t
         n_simulations = int((delta_t + self.time_left_from_last_simulation) / self.resolution)
         self.time_left_from_last_simulation = (delta_t + self.time_left_from_last_simulation) % self.resolution
-        #print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
+        print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
 
         logger.debug(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} "
                      f"and time_left: {self.time_left_from_last_simulation}")
@@ -61,18 +61,21 @@ class Game:
                     case "buy_branch":
                         for i in range(content):
                             if self.green_thumbs - BRANCH_COST >= 0:
-                                self.plant.create_new_branch()
-                                self.green_thumbs -= BRANCH_COST
+                                if self.plant.get_free_spots() > 0:
+                                    self.plant.create_new_branch()
+                                    self.green_thumbs -= BRANCH_COST
                     case "buy_leaf":
                         for i in range(content):
                             if self.green_thumbs - LEAF_COST >= 0:
-                                self.plant.create_new_leaf()
-                                self.green_thumbs -= LEAF_COST
+                                if self.plant.get_free_spots() > 0:
+                                    self.plant.create_new_leaf()
+                                    self.green_thumbs -= LEAF_COST
                     case "buy_seed":
                         for i in range(content):
                             if self.green_thumbs - FLOWER_COST >= 0:
-                                self.plant.create_new_seed()
-                                self.green_thumbs -= FLOWER_COST
+                                if self.plant.get_free_spots() > 0:
+                                    self.plant.create_new_seed()
+                                    self.green_thumbs -= FLOWER_COST
 
         for i in range(n_simulations):
             self.plant.update(self.resolution)
