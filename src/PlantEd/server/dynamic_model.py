@@ -35,6 +35,7 @@ class DynamicModel:
         self.environment: Environment = environment
         self.plant = plant
         self.model = model.copy()
+        self.model.solver.configuration.timeout = 2 # avoid getting stuck in an infinite loop of numerical instability when working with seeds
         self.time = start_time
         self.set_objective()
         # initial percentages to set constraints
@@ -132,6 +133,7 @@ class DynamicModel:
               f"starch_in: {self.get_bounds(STARCH_IN)} with a pool of {self.plant.starch_pool} \n"
               f"co2: {self.get_bounds(CO2)} \n"
               )
+        self.normalize_model()
         self.model.slim_optimize()
 
         water_flux = self.model.reactions.get_by_id(WATER).flux
