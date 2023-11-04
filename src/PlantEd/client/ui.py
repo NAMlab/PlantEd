@@ -68,6 +68,7 @@ class UI:
         self.stomata_hours = [False for i in range(12)]
         self.pause = False
         self.danger_timer = 1
+        self.used_fluxes = None
 
         self.label_leaf = self.asset_handler.FONT.render("Leaf", True, (0, 0, 0))  # title
         self.label_stem = self.asset_handler.FONT.render("Stem", True, (0, 0, 0))  # title
@@ -396,8 +397,55 @@ class UI:
         self.draw_plant_details(self.s)
         self.draw_clock(self.s)
         self.draw_production(self.s)
+        self.draw_used_fluxes(self.s)
         self.infobox_manager.draw(self.s)
         screen.blit(self.s, (0, 0))
+
+    def draw_used_fluxes(self, screen):
+        x = 1500
+        y = 900
+        width = 300
+        height = 20
+        margin = height/4
+        if self.used_fluxes is None:
+            return
+        '''self.used_fluxes = {
+            "water_used": water_used,
+            "nitrate_used": nitrate_used,
+            "starch_in_used": starch_in_used,
+            "co2_used": co2_used,
+            "photon_used": photon_used
+            }'''
+        water_used = self.used_fluxes["water_used"]
+        nitrate_used = self.used_fluxes["nitrate_used"]
+        starch_in_used = self.used_fluxes["starch_in_used"]
+        co2_used = self.used_fluxes["co2_used"]
+        photon_used = self.used_fluxes["photon_used"]
+
+        # water bar
+        #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y, 10 + width, height), border_radius=3)
+        pygame.draw.rect(screen, config.BLUE, (x, y, 10 + width*water_used, height), border_radius=3)
+        pygame.draw.rect(screen, config.WHITE, (x, y, 10 + width, height), width=2, border_radius=3)
+        # nitrate bar
+        #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + height+margin, 10 + width, height), border_radius=3)
+        pygame.draw.rect(screen, config.BROWN, (x, y + height+margin, 10 + width * nitrate_used, height))
+        pygame.draw.rect(screen, config.WHITE, (x, y + height+margin, 10 + width, height), width=2, border_radius=3)
+
+        # starch_in bar
+        #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*2, 10 + width, height), border_radius=3)
+        pygame.draw.rect(screen, config.WHITE, (x, y + (height+margin)*2, 10 + width * starch_in_used, height))
+        pygame.draw.rect(screen, config.WHITE, (x, y + (height+margin)*2, 10 + width, height), width=2, border_radius=3)
+
+        # co2 bar
+        #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*3, 10 + width, height), border_radius=3)
+        pygame.draw.rect(screen, config.GRAY, (x, y + (height+margin)*3, 10 + width * co2_used, height))
+        pygame.draw.rect(screen, config.WHITE, (x, y + (height+margin)*3, 10 + width, height), width=2, border_radius=3)
+
+        # photon bar
+        #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*4, 10 + width, height), border_radius=3)
+        pygame.draw.rect(screen, config.YELLOW, (x, y + (height+margin)*4, 10 + width * photon_used, height))
+        pygame.draw.rect(screen, config.WHITE, (x, y + (height+margin)*4, 10 + width, height), width=2, border_radius=3)
+
 
     def draw_plant_details(self, s, factor=100):
         # details

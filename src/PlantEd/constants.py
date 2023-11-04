@@ -36,12 +36,12 @@ WATER_MOL_PER_GRAM = 1/18
 WATER_MIKROMOL_PER_GRAM = WATER_MOL_PER_GRAM * 1000000
 MAX_WATER_POOL_PER_GRAMM = WATER_MIKROMOL_PER_GRAM * 0.8
 
-# rainwater mm to mikromol -> 1mm/m² = 1 Liter
-WATER_MIKROMOL_PER_LITER = WATER_MIKROMOL_PER_GRAM * 1000
+# rainwater mm to mikromol -> 1mm/m² = 1 Liter -> are is 1/4 m²
+WATER_MIKROMOL_PER_LITER = WATER_MIKROMOL_PER_GRAM * 1000 / 100
 
 # 1.5 Tons of soil in one m³ -> PlantEd has exactly one -> 30% water, 500Kg -> 500 Litre -> 500000 Gram /18 -> 8333.333 Mol -> 8333.333/(20*6) = 70 Mol -> 70000000 Mikromol
-MAX_WATER_PER_CELL = 1000000
-TRICKLE_AMOUNT: float = 1/100000
+MAX_WATER_PER_CELL = 10000
+TRICKLE_AMOUNT: float = 1/10000
 
 ###############################################################################
 # Nitrate
@@ -122,13 +122,13 @@ START_STARCH_POOL_IN_MICROMOL = -1
 # ↓ simulation step. The Plant can only use up to this percent
 # ↓ of the pool very step. (applies to Starch, Water and Nitrate)
 # ↓ value of 1 = 100% and a value of .3 = 30% of the available pool
-PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP = 1
+PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP = 0.01
 
 # ↓ Factor that limits how much of the pool the plant can use per
 # ↓ simulation step. This scales based on the maximum of the pool therefore
 # ↓ a value of 0.05 limits the uptake of the plant per step to 5%
 # ↓ of the max pool.
-PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 1
+PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.01
 
 
 ###############################################################################

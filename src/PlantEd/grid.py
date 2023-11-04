@@ -174,18 +174,17 @@ class MetaboliteGrid:
 
         for x in range(0, self.grid.shape[0]):
             for y in reversed(range(0, self.grid.shape[1])):
-                upper_cell = self.grid[x, y - 1]
-                if upper_cell > 0:
-                    adjusted_trickle = (TRICKLE_AMOUNT * upper_cell * dt)
+                upper_cell_content = self.grid[x, y - 1]
+                if upper_cell_content > 0:
+                    take_from_upper_cell = (TRICKLE_AMOUNT * upper_cell_content * dt)
                     # check if zero in upper cell
-                    delta_trickle = self.grid[x, y - 1] - adjusted_trickle
+                    delta_trickle = upper_cell_content - take_from_upper_cell
                     if delta_trickle <= 0:
                         self.grid[x, y - 1] = 0
-                        adjusted_trickle = adjusted_trickle - delta_trickle
+                        take_from_upper_cell = take_from_upper_cell - abs(delta_trickle)
                     else:
-                        # neat trick to keep cells under max
-                        self.grid[x, y - 1] = min(self.grid[x, y - 1] - adjusted_trickle, MAX_WATER_PER_CELL)
-                    self.grid[x, y] += adjusted_trickle
+                        self.grid[x, y - 1] -= take_from_upper_cell
+                    self.grid[x, y] = min(MAX_WATER_PER_CELL, take_from_upper_cell + self.grid[x, y])
         self.grid[:,5] = 0
 
     def to_dict(self):

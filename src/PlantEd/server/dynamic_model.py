@@ -38,6 +38,7 @@ class DynamicModel:
         self.model.solver.configuration.timeout = 2 # avoid getting stuck in an infinite loop of numerical instability when working with seeds
         self.time = start_time
         self.set_objective()
+        self.used_fluxes = None
 
         # initial percentages to set constraints
         percentages = {
@@ -107,6 +108,7 @@ class DynamicModel:
         max_usable_water = max(
             water_upper_bound_plant_pool + water_upper_bound_env_pool - transpiration_per_second_and_gram, 0
         )
+        print(f"MAX USABLE WATER: {max_usable_water}")
 
         self.set_bounds(WATER, (-1000, max_usable_water))
 
@@ -145,6 +147,7 @@ class DynamicModel:
 
 
         water_used = water_flux/self.get_bounds(WATER)[1] if self.get_bounds(WATER)[1] > 0 else 0
+        print(f"WATER BOUNDS: {self.get_bounds(WATER)[1]}, water FLUX: {water_flux}, used water: {water_used}, TRANSPIRATION: {self.plant.get_transpiration_in_micromol_per_second_and_gram()}")
         nitrate_used = nitrate_flux/self.get_bounds(NITRATE)[1] if self.get_bounds(NITRATE)[1] > 0 else 0
         starch_in_used = starch_in/self.get_bounds(STARCH_IN)[1] if self.get_bounds(STARCH_IN)[1] > 0 else 0
         co2_used = co2/self.get_bounds(CO2)[1] if self.get_bounds(CO2)[1] > 0 else 0
@@ -156,6 +159,14 @@ class DynamicModel:
               f"co2_used: {co2_used} \n"
               f"photon_used: {photon_used} \n"
               )
+
+        self.used_fluxes = {
+            "water_used": water_used,
+            "nitrate_used": nitrate_used,
+            "starch_in_used": starch_in_used,
+            "co2_used": co2_used,
+            "photon_used": photon_used
+            }
 
         root_flux = self.model.reactions.get_by_id(BIOMASS_ROOT).flux
         stem_flux = self.model.reactions.get_by_id(BIOMASS_STEM).flux

@@ -96,7 +96,9 @@ class Game:
             "running": self.running,
             "plant": self.plant.to_dict(),
             "environment": self.environment.to_dict(),
-            "green_thumbs": self.green_thumbs
+            "green_thumbs": self.green_thumbs,
+            "used_fluxes": self.model.used_fluxes,
+            "gametime": self.time
         }
         if not self.running:
             pass

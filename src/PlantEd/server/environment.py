@@ -30,7 +30,8 @@ class Environment:
     def update(self, delta_t):
         weather_state = self.weather.get_weather_state(int(self.time / 3600))
         self.water_grid.rain_like_increase(delta_t, weather_state.precipitation)
-        self.water_grid.trickle(delta_t)
+        for i in range(10):
+            self.water_grid.trickle(delta_t/10)
 
         self.time += delta_t
 
