@@ -4,7 +4,6 @@ import pygame
 
 from PlantEd.data.assets import AssetHandler
 
-
 # seconds per simulation
 resolution = 360
 # until end of game
@@ -20,7 +19,8 @@ PLANT_POS = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - SCREEN_HEIGHT / 5)
 WATERING_CAN_AMOUNT = 3000000  # mikromol
 
 # NITRATE RATE
-NITRATE_FILL_CELL = 50    # mikromol
+NITRATE_FILL_CELL = 50  # mikromol
+
 
 def hex_color_to_float(hex_color):
     float_color = [hex_color[0] / 255, hex_color[1] / 255, hex_color[2] / 255, hex_color[3] / 255]
@@ -41,6 +41,20 @@ def load_tooltipps():
     with open(fileDir) as convert_file:
         tooltipps = json.load(convert_file)
     return tooltipps
+
+
+def load_infoboxes():
+    fileDir = Path(__file__).parent / "infoboxes.json"
+
+    with open(fileDir) as convert_file:
+        infoboxes = json.load(convert_file)
+    return infoboxes
+
+
+def write_infobox(infoboxes):
+    fileDir = Path(__file__).parent / "infoboxes.json"
+    with open(fileDir, "w") as convert_file:
+        convert_file.write(json.dumps(infoboxes))
 
 
 def write_options(options):
@@ -66,7 +80,6 @@ def load_dict(path) -> dict:
     for sound in assets._sound_library:
         sound.set_volume(volume)'''
 
-
 FREE_SPOT = 00
 BASE_SPOT = 10
 LEAF_SPOT = 20
@@ -84,7 +97,7 @@ BEE_SFX_PATH = "sound/bee"
 SNAIL_SFX_PATH = "sound/snail_clicked"
 BUG_SFX_PATH = "sound/bug"
 SELECT_SFX_PATH = "sound/select"
-#CONFIRM_SFX_PATH = "sound/confirm"
+# CONFIRM_SFX_PATH = "sound/confirm"
 BUY_SFX_PATH = "sound/buy"
 ALERT_SFX_PATH = "sound/alert"
 ERROR_SFX_PATH = "sound/error"

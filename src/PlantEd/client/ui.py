@@ -3,6 +3,7 @@ import pygame
 from pygame import Rect, KEYDOWN, K_ESCAPE
 
 from PlantEd import config
+from PlantEd.client.gameobjects.infobox_manager import InfoBoxManager
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.camera import Camera
 from PlantEd.client.gameobjects.plant import Plant, Organ
@@ -94,6 +95,8 @@ class UI:
             (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA
         )
 
+        self.infobox_manager = InfoBoxManager()
+        self.infobox_manager.from_dict(config.load_infoboxes())
         self.sliders = []
         self.button_sprites = pygame.sprite.Group()
         self.particle_systems = []
@@ -299,6 +302,7 @@ class UI:
             return
         self.hover.handle_event(e)
         self.button_array.handle_event(e)
+        self.infobox_manager.handle_event(e)
 
         for button in self.button_sprites:
             # all button_sprites handle their events
@@ -358,6 +362,7 @@ class UI:
             screen.blit(self.danger_box, (1350, 750))
         self.hover.draw(screen)
 
+
     def set_stomata_automation(self, hours):
         self.stomata_hours = hours
 
@@ -391,6 +396,7 @@ class UI:
         self.draw_plant_details(self.s)
         self.draw_clock(self.s)
         self.draw_production(self.s)
+        self.infobox_manager.draw(self.s)
         screen.blit(self.s, (0, 0))
 
     def draw_plant_details(self, s, factor=100):

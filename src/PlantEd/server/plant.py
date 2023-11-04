@@ -391,6 +391,9 @@ class Plant:
     def get_transpiration_in_micromol(self, delta_t: int):
         return self.transpiration * self.leaf_mass * delta_t
 
+    def get_transpiration_in_micromol_per_second_and_gram(self):
+        return self.transpiration
+
     def get_total_plant_mass(self):
         return self.leaf_mass + self.stem_mass + self.root_mass + self.seed_mass
 

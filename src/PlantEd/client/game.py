@@ -17,10 +17,10 @@ from PlantEd import config
 from PlantEd.client.analysis import scoring
 from PlantEd.client.analysis.logger import Log
 from PlantEd.client.camera import Camera
-from PlantEd.client.client import Client
-from PlantEd.constants import MAX_NITRATE_PER_CELL, MAX_WATER_PER_CELL, Vmax, Km, ROOT_COST, BRANCH_COST, \
-    FLOWER_COST, LEAF_COST, MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT
+from PlantEd.constants import MAX_WATER_PER_CELL, ROOT_COST, BRANCH_COST, \
+    FLOWER_COST, LEAF_COST
 from PlantEd.data.assets import AssetHandler
+from PlantEd.client.gameobjects.infobox_manager import InfoBoxManager
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.gameobjects.bee import Hive
 from PlantEd.client.gameobjects.bug import Bug
@@ -549,7 +549,6 @@ class DefaultGameScene(object):
 
             self.shop.handle_event(e)
             self.floating_shop.handle_event(e)
-
             self.plant.handle_event(e)
             self.snail_spawner.handle_event(e)
             for bug in self.bugs:
@@ -557,10 +556,6 @@ class DefaultGameScene(object):
             self.hive.handle_event(e)
             self.narrator.handle_event(e)
             self.camera.handle_event(e)
-
-    def update_plant(self, response):
-        pass
-        #print(response)
 
     def check_game_end(self, days):
         if days > config.MAX_DAYS:
