@@ -640,8 +640,6 @@ class DefaultGameScene(object):
                 self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
 
                 self.ui.used_fluxes = dic["used_fluxes"]
-                server_time = dic["gametime"]/(60*60*24)
-                print(f"client time: {self.gametime.get_time()/(1000*60*60*24)} server time: {server_time}")
 
                 if dic is not None:
                     if not dic["running"]:

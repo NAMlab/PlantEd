@@ -3,6 +3,8 @@ import math
 import random
 import numpy as np
 
+from PlantEd.constants import MAXIMUM_ROOT_BIOMASS_GRAM
+
 short_root = [
     {"max_length": 150, "duration": 0.03, "tries": 5, "max_branches": 5},
     {"max_length": 100, "duration": 0.04, "tries": 4, "max_branches": 5},
@@ -10,8 +12,8 @@ short_root = [
 ]
 
 medium_root = [
-    {"max_length": 600, "duration": 0.05, "tries": 5, "max_branches": 5},
-    {"max_length": 250, "duration": 0.03, "tries": 4, "max_branches": 3},
+    {"max_length": 600, "duration": 0.05, "tries": 4, "max_branches": 5},
+    {"max_length": 250, "duration": 0.03, "tries": 3, "max_branches": 3},
     {"max_length": 50, "duration": 0.02, "tries": 1, "max_branches": 0},
 ]
 
@@ -234,13 +236,13 @@ class LSystem:
         next_tier = tier if tier else 0
         dic = self.root_classes[root_class][next_tier]
 
-        basal_length = dic["max_length"] / 10 * 2
-        branching_length = dic["max_length"] / 10 * 6
-        apex_length = dic["max_length"] / 10 * 2
+        basal_length = dic["max_length"] / 10 * 1
+        branching_length = dic["max_length"] / 10 * 8
+        apex_length = dic["max_length"] / 10 * 1
 
-        basal_duration = dic["duration"] / 10 * 2
-        branching_duration = dic["duration"] / 10 * 6
-        apex_duration = dic["duration"] / 10 * 2
+        basal_duration = dic["duration"] / 10 * 1
+        branching_duration = dic["duration"] / 10 * 8
+        apex_duration = dic["duration"] / 10 * 1
 
         apex = Letter(
             id=300,
@@ -296,7 +298,12 @@ class LSystem:
         # mass_per_letter = mass/max(0,len(self.first_letters))
 
         for letter in self.first_letters:
-            self.apply_rules(letter, mass)
+            resolution_mass = MAXIMUM_ROOT_BIOMASS_GRAM/10
+            n_steps = min(int(mass/resolution_mass), 1)
+            delta_mass = mass / n_steps
+            print(f"ROOT GROWTH, APPLY RULES. n_steps: {n_steps}, dleta_mass: {delta_mass}")
+            for i in range(n_steps):
+                self.apply_rules(letter, delta_mass)
         self.calc_positions()
 
     def apply_rules(self, letter, mass):

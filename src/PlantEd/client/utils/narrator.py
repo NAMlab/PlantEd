@@ -20,13 +20,18 @@ class Narrator:
         options = config.load_options()
         self.volume = options["narator_volume"]
         self.channel.set_volume(self.volume)
-        self.written_lines = Written_Lines(self.asset_handler.img("sir_david.jpeg", (100, 100)), self.asset_handler.FONT)
+        self.written_lines = Written_Lines(self.asset_handler.img("sir_david.jpeg", (100, 100)),
+                                           self.asset_handler.FONT)
 
-        self.lines = [
-            self.asset_handler.sfx("attenborough/{}.mp3".format(i)) for i in range(12)
-        ]
+        index_lines = [0, 4, 5, 7, 9, 11, 12]
+        self.lines = []
+
+        for i, line_number in enumerate(index_lines):
+            self.lines.append(
+                self.asset_handler.sfx("attenborough/{}.mp3".format(line_number))
+                )
         self.voicelines = []
-        self.talking_times = [0, 2, 4, 6, 8, 11, 14, 17, 20, 23, 27, 31]
+        self.talking_times = [0, 5, 6, 10, 15, 20, 30]
         for i in range(len(self.lines)):
             self.voicelines.append(
                 VoiceLine(
@@ -36,8 +41,8 @@ class Narrator:
                     self.check_date,
                     self.talking_times[i],
                     self.written_lines.get_line(i),
+                    )
                 )
-            )
         # surrender.mp3
         # warning.mp3
         # end.mp3
@@ -109,14 +114,14 @@ class Narrator:
 
 class VoiceLine:
     def __init__(
-        self,
-        voiceline,
-        queue_voiceline,
-        queue_written_lines,
-        condition,
-        condition_parameter,
-        written_line,
-    ):
+            self,
+            voiceline,
+            queue_voiceline,
+            queue_written_lines,
+            condition,
+            condition_parameter,
+            written_line,
+            ):
         self.voiceline = voiceline
         self.queue_voiceline = queue_voiceline
         self.queue_written_lines = queue_written_lines
@@ -170,16 +175,16 @@ class Written_Lines:
             self.hide = True
         if e.type == pygame.MOUSEMOTION:
             if pygame.Rect(
-                self.x, self.y - self.rect_heigth, self.width, self.rect_heigth
-            ).collidepoint(pygame.mouse.get_pos()):
+                    self.x, self.y - self.rect_heigth, self.width, self.rect_heigth
+                    ).collidepoint(pygame.mouse.get_pos()):
                 self.hover = True
             else:
                 self.hover = False
 
         if e.type == pygame.MOUSEBUTTONDOWN:
             if pygame.Rect(
-                self.x, self.y - self.rect_heigth, self.width, self.rect_heigth
-            ).collidepoint(pygame.mouse.get_pos()):
+                    self.x, self.y - self.rect_heigth, self.width, self.rect_heigth
+                    ).collidepoint(pygame.mouse.get_pos()):
                 self.toggle_hide()
 
     def get_line(self, index):
@@ -197,8 +202,8 @@ class Written_Lines:
                 lines.append(
                     self.font.render(
                         tipps[i]["lines"][j], True, (255, 255, 255)
+                        )
                     )
-                )
             labels.append(lines)
         return labels
 
@@ -208,7 +213,7 @@ class Written_Lines:
     def pop_queue(self):
         if len(self.queue) > 0:
             self.lines = self.queue.pop(0)
-            self.rect_heigth = len(self.lines) * 20 + 20
+            self.rect_heigth = len(self.lines) * 22 + 20
             self.s.fill((0, 0, 0, 0))
             self.hide = False
 
@@ -219,7 +224,7 @@ class Written_Lines:
                 (0, 0, 0, 150),
                 (0, 0, self.width, self.rect_heigth),
                 border_radius=5,
-            )
+                )
             if self.hover:
                 pygame.draw.rect(
                     self.s,
@@ -227,8 +232,8 @@ class Written_Lines:
                     (0, 0, self.width, self.rect_heigth),
                     border_radius=5,
                     width=2,
-                )
+                    )
             self.s.blit(self.sir_david, (10, 10))
             for i in range(len(self.lines)):
-                self.s.blit(self.lines[i], (120, 10 + i * 20))
+                self.s.blit(self.lines[i], (120, 10 + i * 22))
             screen.blit(self.s, (self.x, self.y - self.rect_heigth))

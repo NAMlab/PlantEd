@@ -9,43 +9,6 @@
       "about the wonders of nature and how plants grow and survive."
     ]
   },
-    {
-    "tag": "1",
-    "lines": [
-      "Now, let's talk about the features of PlantEd. Firstly, you have",
-      "the ability to direct the generated biomass of your plant across",
-      "three organs: leaves, stem, and roots. This feature allows you to",
-      "mimic the natural growth of plants in real life, as the biomass is",
-      "distributed differently based on the plant's needs. Growing more",
-      "leaves results in more area for photosynthesis, allowing the plant",
-      "to produce more energy. Growing more roots enables the plant to take",
-      "in more water and nitrate, which are essential for its growth. And",
-      "growing the stem provides more spots for leaves and flowers to grow,",
-      "allowing the plant to attract pollinators and reproduce."
-    ]
-  },
-  {
-    "tag": "2",
-    "lines": [
-      "Secondly, you can store generated starch for the night when there is",
-      "no sunlight. This feature is crucial for the survival of your plant, as",
-      "it allows it to continue growing and producing energy even in the",
-      "absence of sunlight. This is just like how real plants store energy",
-      "during the day through photosynthesis to use during the night."
-    ]
-  },
-  {
-    "tag": "3",
-    "lines": [
-      "Lastly, the shop feature allows you to buy items to help your plant",
-      "grow. This is an interesting feature that lets you experiment with",
-      "different ways of growing your plant, and see how it responds to",
-      "different conditions. You can buy leaves to increase the area for",
-      "photosynthesis, roots to help the plant take in more water and nutrients,",
-      "and water and nitrate to ensure that your plant has enough resources",
-      "to grow strong and healthy."
-    ]
-  },
   {
     "tag": "4",
     "lines": [
@@ -66,26 +29,6 @@
     ]
   },
   {
-    "tag": "6",
-    "lines": [
-      "As you continue to explore the fascinating world of plant growth",
-      "and development, it is important to remember the critical role that",
-      "sunlight plays in the process. One important consideration is the",
-      "positioning of the leaves themselves, as they can cast shadows on one",
-      "another and reduce the amount of light that each leaf is able to",
-      "absorb.To maximize photon intake and optimize your plant's growth,",
-      "it is essential to carefully observe the movement of the sun and the",
-      "resulting patterns of shadows that it creates throughout the day. By",
-      "adjusting the positioning of your leaves to minimize shadow overlap",
-      "and ensure that each leaf receives as much light as possible, you",
-      "can help to ensure that your plant is able to produce the maximum",
-      "amount of biomass and achieve its full potential. So, as you continue",
-      "your journey of discovery in the world of plants, remember to pay",
-      "close attention to the important details of light and shadow, and to",
-      "always seek out new ways to optimize growth and productivity."
-    ]
-  },
-  {
     "tag": "7",
     "lines": [
       "Plants also face a number of dangers in the natural world, including",
@@ -101,18 +44,6 @@
     ]
   },
   {
-    "tag": "8",
-    "lines": [
-      "But plants don't exist in isolation - they are part of a larger",
-      "ecosystem that includes other plants, animals, and microorganisms.",
-      "The flora around your plant can have a significant impact on its",
-      "growth and survival, as they compete for resources such as water,",
-      "nutrients, and sunlight. Some plants are even able to form symbiotic",
-      "relationships with other organisms, such as the mycorrhizal fungi",
-      "that help plants to take up nutrients from the soil."
-    ]
-  },
-  {
     "tag": "9",
     "lines": [
       "Climate change is one of the greatest threats facing our planet's",
@@ -125,22 +56,6 @@
     ]
   },
   {
-    "tag": "10",
-    "lines": [
-      "But seeds aren't the only means by which plants can ensure their",
-      "survival. Some plants are able to reproduce asexually, either by",
-      "sending out runners or by producing new plants from specialized",
-      "structures such as bulbs or rhizomes. Others are able to propagate",
-      "themselves by cloning, either through fragmentation or by producing",
-      "adventitious roots. Ultimately, the key to a plant's success lies",
-      "in its ability to adapt and evolve in response to changing",
-      "environmental conditions. As the world around us continues to change",
-      "at an unprecedented pace, it is more important than ever to study",
-      "and protect the natural world, and to work together to ensure a",
-      " healthy future for all living things."
-    ]
-  },
-  {
     "tag": "11",
     "lines": [
       "As you work to maximize the growth and seed production of your plant,",
@@ -148,8 +63,14 @@
       "environmental factors and resource allocation can make all the",
       "difference in the world."
     ]
+  },
+  {
+    "tag": "12",
+    "lines": [
+      "Well my friend, it seems that the time of growth for your plant has come to an end. Despite the challenges of the environment and the many obstacles that you faced along the way, you have done a truly remarkable job of nurturing this little seedling and guiding it towards maturity.\nAs you take stock of the results that you have been able to produce, I hope that you feel a sense of pride and accomplishment in all that you have achieved. From the delicate leaves and stems to the strong and sturdy roots, every aspect of this plant is a testament to your skill and dedication.\nOf course, there is always more to learn and discover when it comes to the fascinating world of plants, and I would encourage you to continue exploring and experimenting with new seeds and new growing techniques. Who knows what other wonders you might be able to create in the future?\nSo, congratulations on a job well done, and remember - even when the growth has ended, there is always more to discover and explore in the rich and complex world of nature.\n"
+    ]
   }
-  ],
+],
   [
   {
     "tag": "seeds",
@@ -186,19 +107,33 @@
   {
     "tag": "surrender",
     "lines": [
-      "I'm afraid to say, my dear friend, that it seems your efforts in the world of plant growth and development have not quite lived up to my lofty standards. But do not take this as a discouragement! Even the greatest scientists and naturalists in history have had their fair share of failures and setbacks along the way.\nI encourage you to take this experience as an opportunity to learn and grow, to carefully observe the intricacies of the natural world and to seek out new techniques and strategies for success. With each new attempt, you will undoubtedly come closer to achieving your goals and unlocking the full potential of your plants.\nSo do not be disheartened by this setback, my friend. Instead, take it as a challenge and an opportunity to rise to new heights of greatness in the fascinating and endlessly complex world of plant life. I have every confidence in your abilities, and I look forward to seeing all that you can achieve in the future.\n"
+      "I'm afraid to say, my dear friend, that it seems your efforts in the",
+      "world of plant growth and development have not quite lived up to my",
+      "lofty standards. But do not take this as a discouragement! Even the",
+      "greatest scientists and naturalists in history have had their fair",
+      "share of failures and setbacks along the way.I encourage you to",
+      "take this experience as an opportunity to learn and grow, to carefully",
+      "observe the intricacies of the natural world and to seek out new",
+      "techniques and strategies for success. With each new attempt, you",
+      "will undoubtedly come closer to achieving your goals and unlocking",
+      "the full potential of your plants. So do not be disheartened by this",
+      "setback, my friend. Instead, take it as a challenge and an opportunity",
+      "to rise to new heights of greatness in the fascinating and endlessly complex world of plant life. I have every confidence in your abilities, and I look forward to seeing all that you can achieve in the future.\n"
     ]
   },
   {
     "tag": "warning",
     "lines": [
-      "it seems that your plant is facing a most troubling and dire situation. You see, when a plant is not able to receive enough energy from its environment - whether from sunlight or other sources - it may be forced to turn to its own stored biomass in order to survive.\nThis is a most unfortunate situation indeed, as the plant will be forced to consume its own vital resources in order to stay alive, leading to a rapid decline in overall health and productivity. It is essential that we take swift action to remedy this situation, whether by providing additional sources of energy and nutrition or by adjusting the plant's environment to better suit its needs.\n"
-    ]
-  },
-  {
-    "tag": "end",
-    "lines": [
-      "Well my friend, it seems that the time of growth for your plant has come to an end. Despite the challenges of the environment and the many obstacles that you faced along the way, you have done a truly remarkable job of nurturing this little seedling and guiding it towards maturity.\nAs you take stock of the results that you have been able to produce, I hope that you feel a sense of pride and accomplishment in all that you have achieved. From the delicate leaves and stems to the strong and sturdy roots, every aspect of this plant is a testament to your skill and dedication.\nOf course, there is always more to learn and discover when it comes to the fascinating world of plants, and I would encourage you to continue exploring and experimenting with new seeds and new growing techniques. Who knows what other wonders you might be able to create in the future?\nSo, congratulations on a job well done, and remember - even when the growth has ended, there is always more to discover and explore in the rich and complex world of nature.\n"
+      "it seems that your plant is facing a most troubling and dire situation.",
+      "You see, when a plant is not able to receive enough energy from its",
+      "environment - whether from sunlight or other sources - it may be forced",
+      "to turn to its own stored biomass in order to survive. This is a most",
+      "unfortunate situation indeed, as the plant will be forced to consume its",
+      "own vital resources in order to stay alive, leading to a rapid decline",
+      "in overall health and productivity. It is essential that we take swift",
+      "action to remedy this situation, whether by providing additional sources",
+      "of energy and nutrition or by adjusting the plant's environment to better",
+      "suit its needs."
     ]
   }
   ]

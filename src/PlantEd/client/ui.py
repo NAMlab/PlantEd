@@ -425,26 +425,26 @@ class UI:
         # water bar
         #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y, 10 + width, height), border_radius=3)
         pygame.draw.rect(screen, config.BLUE, (x, y, 10 + width*water_used, height), border_radius=3)
-        pygame.draw.rect(screen, config.WHITE, (x, y, 10 + width, height), width=2, border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y, 10 + width, height), width=2, border_radius=3)
         # nitrate bar
         #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + height+margin, 10 + width, height), border_radius=3)
         pygame.draw.rect(screen, config.BROWN, (x, y + height+margin, 10 + width * nitrate_used, height))
-        pygame.draw.rect(screen, config.WHITE, (x, y + height+margin, 10 + width, height), width=2, border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + height+margin, 10 + width, height), width=2, border_radius=3)
 
         # starch_in bar
         #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*2, 10 + width, height), border_radius=3)
         pygame.draw.rect(screen, config.WHITE, (x, y + (height+margin)*2, 10 + width * starch_in_used, height))
-        pygame.draw.rect(screen, config.WHITE, (x, y + (height+margin)*2, 10 + width, height), width=2, border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*2, 10 + width, height), width=2, border_radius=3)
 
         # co2 bar
         #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*3, 10 + width, height), border_radius=3)
         pygame.draw.rect(screen, config.GRAY, (x, y + (height+margin)*3, 10 + width * co2_used, height))
-        pygame.draw.rect(screen, config.WHITE, (x, y + (height+margin)*3, 10 + width, height), width=2, border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*3, 10 + width, height), width=2, border_radius=3)
 
         # photon bar
         #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*4, 10 + width, height), border_radius=3)
         pygame.draw.rect(screen, config.YELLOW, (x, y + (height+margin)*4, 10 + width * photon_used, height))
-        pygame.draw.rect(screen, config.WHITE, (x, y + (height+margin)*4, 10 + width, height), width=2, border_radius=3)
+        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*4, 10 + width, height), width=2, border_radius=3)
 
 
     def draw_plant_details(self, s, factor=100):
@@ -759,7 +759,7 @@ class UI:
             border_radius=3,
         )  # exp
         text_organ_mass = self.asset_handler.SMALL_FONT.render(
-            "{:.1f} / {:.1f}".format(
+            "{:.2f} / {:.2f}".format(
                 organ.get_mass() * factor, organ.get_maximum_growable_mass() * factor
             ),
             True,
@@ -773,18 +773,7 @@ class UI:
                 topleft[1] + 120,
             ),
         )
-        # indicate blocked organ
-        if organ.blocked_growth:
-            if organ.type == Plant.LEAF:
-                pygame.draw.rect(s, config.RED, (topleft[0], topleft[1], 100, 370), border_radius=3, width=3)
 
-                label = self.asset_handler.TITLE_FONT.render("LEAF GROWTH BLOCKED: Buy new leaves to grow", True, config.BLACK)
-                width = label.get_width() + 10
-                height = label.get_height() + 10
-                pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1] + 380, width, height),
-                                 border_radius=3)
-                # pygame.draw.rect(s, config.WHITE, (topleft[0], topleft[1]+380, width, height), border_radius=3, width=3)
-                s.blit(label, (topleft[0] + 5, topleft[1] + 385))
 
     def draw_production(self, s):
         topleft = self.production_topleft
@@ -807,6 +796,28 @@ class UI:
             (topleft[0] + 220, topleft[1]),
             self.label_root,
         )
+
+        # check blocked organ
+        # indicate blocked organ
+        growth_blocked = False
+        if self.plant.organs[0].blocked_growth:
+            growth_blocked = True
+            pygame.draw.rect(s, config.RED, (topleft[0], topleft[1], 100, 370), border_radius=3, width=3)
+        if self.plant.organs[1].blocked_growth:
+            growth_blocked = True
+            pygame.draw.rect(s, config.RED, (topleft[0]+110, topleft[1], 100, 370), border_radius=3, width=3)
+        if self.plant.organs[2].blocked_growth:
+            growth_blocked = True
+            pygame.draw.rect(s, config.RED, (topleft[0]+220, topleft[1], 100, 370), border_radius=3, width=3)
+
+        if growth_blocked:
+            label = self.asset_handler.TITLE_FONT.render("GROWTH BLOCKED: Buy new organs to grow", True,
+                                                         config.BLACK)
+            width = label.get_width() + 10
+            height = label.get_height() + 10
+            pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1] + 380, width, height),
+                             border_radius=3)
+            s.blit(label, (topleft[0] + 5, topleft[1] + 385))
 
         # WATER
         topleft = (topleft[0] + 330, topleft[1])
@@ -836,8 +847,8 @@ class UI:
             (topleft[0], topleft[1] + 40, int(width * self.plant.water_pool/self.plant.max_water_pool), 30),
             border_radius=3,
         )  # exp
-        text_water_pool = self.asset_handler.FONT.render(
-            "{:.0f} MMol".format(self.plant.water_pool / 1000), True, (0, 0, 0)
+        text_water_pool = self.asset_handler.MEDIUM.render(
+            "{:.1f}/{:.1f} MMol".format(self.plant.water_pool / 1000, self.plant.max_water_pool / 1000), True, (0, 0, 0)
         )
         s.blit(
             text_water_pool,

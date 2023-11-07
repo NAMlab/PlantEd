@@ -30,6 +30,7 @@ class AssetHandler:
         # FONTS
         ###############################################################################
         self.SMALL_FONT = pygame.font.SysFont("timesnewroman", 16)
+        self.MEDIUM = pygame.font.SysFont("timesnewroman", 20)
         self.FONT = pygame.font.SysFont("timesnewroman", 24)
         self.TITLE_FONT = pygame.font.SysFont("timesnewroman", 24)
         self.BIG_FONT = pygame.font.SysFont("timesnewroman", 28)

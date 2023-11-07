@@ -87,10 +87,10 @@ class GameTime:
         self.set_speed(360)
 
     def faster(self):
-        self.set_speed(1800)
+        self.set_speed(2400)
 
     def fastest(self):
-        self.set_speed(3600)
+        self.set_speed(4800)
 
     def get_time(self):
         return (

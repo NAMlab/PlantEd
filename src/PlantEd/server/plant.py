@@ -82,6 +82,7 @@ class Plant:
         growable_leafs.sort(key=lambda leaf: leaf.mass)
         for leaf in growable_leafs:
             if leaf.mass + delta_each_leaf > MAXIMUM_LEAF_BIOMASS_GRAM:
+                leaf.mass = MAXIMUM_LEAF_BIOMASS_GRAM
                 overflow_mass = MAXIMUM_LEAF_BIOMASS_GRAM - leaf.mass + delta_each_leaf
                 n_leafs_to_grow -= 1
                 if n_leafs_to_grow <= 0:
@@ -91,7 +92,9 @@ class Plant:
                 leaf.mass += delta_each_leaf
 
     def get_leaf_mass_to_grow(self) -> float:
-        return MAXIMUM_LEAF_BIOMASS_GRAM*len(self.leafs) - self.leaf_mass
+        leaf_mass_to_grow = MAXIMUM_LEAF_BIOMASS_GRAM*len(self.leafs) - self.leaf_mass
+        print(f"LEAF MASS TO GROW: {leaf_mass_to_grow}")
+        return leaf_mass_to_grow
 
     def create_new_leaf(self):
         id: int = len(self.leafs)
@@ -119,6 +122,7 @@ class Plant:
         growable_branches.sort(key=lambda branch: branch.mass)
         for branch in growable_branches:
             if branch.mass + delta_each_branch > MAXIMUM_STEM_BIOMASS_GRAM:
+                branch.mass = MAXIMUM_STEM_BIOMASS_GRAM
                 overflow_mass = MAXIMUM_STEM_BIOMASS_GRAM - branch.mass + delta_each_branch
                 n_branches_to_grow -= 1
                 if n_branches_to_grow <= 0:
@@ -126,7 +130,7 @@ class Plant:
                 delta_each_branch = (delta_stem_mass + overflow_mass) / n_branches_to_grow
             else:
                 branch.mass += delta_each_branch
-            if branch.spots < (branch.mass * BRANCH_MASS_PER_SPOT + BRANCH_SPOTS_BASE) and branch.spots <= BRANCH_SPOTS_TOTAL:
+            if branch.spots < (branch.mass / BRANCH_MASS_PER_SPOT + BRANCH_SPOTS_BASE) and branch.spots <= BRANCH_SPOTS_TOTAL:
                 branch.spots += 1
 
     def get_free_spots(self):
@@ -163,6 +167,7 @@ class Plant:
         growable_roots.sort(key=lambda root: root.mass)
         for root in growable_roots:
             if root.mass + delta_each_root > MAXIMUM_ROOT_BIOMASS_GRAM:
+                root.mass = MAXIMUM_ROOT_BIOMASS_GRAM
                 overflow_mass = MAXIMUM_ROOT_BIOMASS_GRAM - root.mass + delta_each_root
                 n_roots_to_grow -= 1
                 if n_roots_to_grow <= 0:
@@ -174,13 +179,13 @@ class Plant:
 
         for i, first_letter in enumerate(self.lsystem.first_letters):
             self.lsystem.apply_rules(first_letter, self.roots[i].mass)
+        self.lsystem.calc_positions()
 
     def get_root_mass_to_grow(self) -> float:
         return MAXIMUM_ROOT_BIOMASS_GRAM*len(self.roots) - self.root_mass
 
     def create_new_root(self, target):
-        direction = (PLANT_POS[0] - target[0], PLANT_POS[1] - target[1])
-        self.lsystem.create_new_first_letter(dir=direction,
+        self.lsystem.create_new_first_letter(dir=target,
                                              pos=PLANT_POS,
                                              mass=self.root_mass,
                                              )
@@ -212,6 +217,7 @@ class Plant:
         growable_seeds.sort(key=lambda seed: seed.mass)
         for seed in growable_seeds:
             if seed.mass + delta_each_seed > MAXIMUM_SEED_BIOMASS_GRAM:
+                seed.mass = MAXIMUM_SEED_BIOMASS_GRAM
                 overflow_mass = MAXIMUM_SEED_BIOMASS_GRAM - seed.mass + delta_each_seed
                 n_seeds_to_grow -= 1
                 if n_seeds_to_grow <= 0:

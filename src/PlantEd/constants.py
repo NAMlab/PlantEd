@@ -103,7 +103,7 @@ MAXIMUM_ROOT_BIOMASS_GRAM = 0.1
 MAXIMUM_SEED_BIOMASS_GRAM = 0.1
 
 BRANCH_SPOTS_BASE = 3
-BRANCH_SPOTS_TOTAL = 7 + BRANCH_SPOTS_BASE
+BRANCH_SPOTS_TOTAL = 3 + BRANCH_SPOTS_BASE
 BRANCH_MASS_PER_SPOT = MAXIMUM_STEM_BIOMASS_GRAM/BRANCH_SPOTS_TOTAL
 
 
@@ -147,8 +147,8 @@ SPRAYCAN_COST = 0
 ###############################################################################
 # Shop Item Effect
 ###############################################################################
-WATERING_CAN_AMOUNT = 3000000  # mikromol
-NITRATE_FERTILIZE_AMOUNT = 50000 # mikromol
+WATERING_CAN_AMOUNT = 30000  # mikromol
+NITRATE_FERTILIZE_AMOUNT = 500 # mikromol
 
 water_concentration_at_temp = [
     0.269,

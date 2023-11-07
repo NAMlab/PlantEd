@@ -699,6 +699,7 @@ class Root(Organ):
 
         self.ls = None #LSystem = LSystem(root_grid, water_grid_pos)
         self.new_roots = []
+        self.blocked_growth = False
 
     def to_dict(self) -> dict:
         root_dict = {
@@ -711,7 +712,10 @@ class Root(Organ):
         return True
 
     def update(self, dt):
-        pass
+        if self.mass_to_grow() <= 0:
+            self.blocked_growth = True
+        else:
+            self.blocked_growth = False
 
     def pop_new_roots(self) -> dict:
         if len(self.new_roots) > 0:
@@ -794,6 +798,7 @@ class Stem(Organ):
         self.can_add_branch: bool = False
         self.play_reward: callable = play_reward
         self.new_branches = 0
+        self.blocked_growth = False
 
         super().__init__(
             x=x,
@@ -812,6 +817,10 @@ class Stem(Organ):
         self.curve.update(dt)
         self.update_leaf_positions()
         self.update_flower_positions()
+        if self.mass_to_grow() <= 0:
+            self.blocked_growth = True
+        else:
+            self.blocked_growth = False
 
     def update_leaf_positions(self):
         for leaf in self.leaf.leaves:
@@ -846,6 +855,7 @@ class Stem(Organ):
         )
 
     def update_masses(self, new_stem_masses):
+        # id, mass, spots
         for server_branch, client_branch in zip(new_stem_masses, self.curve.branches):
             client_branch.mass = server_branch[1]
             if len(client_branch.points) < server_branch[2]:
