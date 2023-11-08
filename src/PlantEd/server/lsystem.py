@@ -301,7 +301,6 @@ class LSystem:
             resolution_mass = MAXIMUM_ROOT_BIOMASS_GRAM/10
             n_steps = min(int(mass/resolution_mass), 1)
             delta_mass = mass / n_steps
-            print(f"ROOT GROWTH, APPLY RULES. n_steps: {n_steps}, dleta_mass: {delta_mass}")
             for i in range(n_steps):
                 self.apply_rules(letter, delta_mass)
         self.calc_positions()

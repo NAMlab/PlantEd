@@ -93,7 +93,6 @@ class Plant:
 
     def get_leaf_mass_to_grow(self) -> float:
         leaf_mass_to_grow = MAXIMUM_LEAF_BIOMASS_GRAM*len(self.leafs) - self.leaf_mass
-        print(f"LEAF MASS TO GROW: {leaf_mass_to_grow}")
         return leaf_mass_to_grow
 
     def create_new_leaf(self):

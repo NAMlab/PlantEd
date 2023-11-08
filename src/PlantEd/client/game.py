@@ -576,7 +576,6 @@ class DefaultGameScene(object):
                             }
                         }
                     }
-                print(game_state["message"]["growth_percentages"])
 
                 # print(f"REQUEST: {game_state}")
 
@@ -608,21 +607,23 @@ class DefaultGameScene(object):
                 self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
 
                 self.ui.used_fluxes = dic["used_fluxes"]
+                try:
+                    self.log.append_model_row(
+                        ticks=self.gametime.get_time(),
+                        leaf_mass=self.plant.organs[0].get_mass(),
+                        stem_mass=self.plant.organs[1].get_mass(),
+                        root_mass=self.plant.organs[2].get_mass(),
+                        seed_mass=self.plant.organs[3].get_mass(),
+                        water_pool_plant=self.plant.water_pool,
+                        nitrate_pool_plant=np.sum(self.nitrate_grid.grid),
+                        starch_pool=self.plant.organ_starch.mass,
+                        temperature=dic["environment"]["temperature"],
+                        humidity=dic["environment"]["humidity"],
+                        precipitation=dic["environment"]["precipitation"]
+                        )
 
-                self.log.append_model_row(
-                    ticks=self.gametime.get_time(),
-                    leaf_mass=self.plant.organs[0].get_mass(),
-                    stem_mass=self.plant.organs[1].get_mass(),
-                    root_mass=self.plant.organs[2].get_mass(),
-                    seed_mass=self.plant.organs[3].get_mass(),
-                    water_pool_plant=self.plant.water_pool,
-                    nitrate_pool_plant=np.sum(self.nitrate_grid.grid),
-                    starch_pool=self.plant.organ_starch.mass,
-                    temperature=dic["environment"]["temperature"],
-                    humidity=dic["environment"]["humidity"],
-                    precipitation=dic["environment"]["precipitation"]
-                    )
-
+                finally:
+                    print("Could not write to closed file")
 
                 if dic is not None:
                     if not dic["running"]:
@@ -968,11 +969,9 @@ class EndScene(object):
 
     def upload_data(self):
         options = config.load_options()
-        print(f"Uploading score: {self.plant_object.organs[3].get_mass()}")
         scoring.upload_score(
             options["name"], self.plant_object.organs[3].get_mass(), self.path_to_logs
             )
-        print(f"Score Up")
 
     def render(self, screen):
         screen.fill((0, 0, 0, 0))

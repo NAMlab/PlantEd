@@ -74,7 +74,6 @@ class Water_Grid:
             poured_cells = {
                 "cells": poured_cells.tolist()
             }
-            print(poured_cells)
             self.poured_cells.fill(0)
             return poured_cells
         else:

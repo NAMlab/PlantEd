@@ -43,4 +43,5 @@ def start(port=8765):
 
 
 if __name__ == "__main__":
+    print("Starting Server")
     start()

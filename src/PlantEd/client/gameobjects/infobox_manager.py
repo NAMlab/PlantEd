@@ -158,22 +158,6 @@ class InfoBox:
         }
 
     def handle_event(self, e):
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_e:
-            self.pos = pygame.mouse.get_pos()
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_1:
-            self.window_width += 1
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_2:
-            self.window_width += 5
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_3:
-            self.window_height += 1
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_4:
-            self.window_height += 5
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_5:
-            self.window_width -= 3
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_6:
-            self.window_height -= 3
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_p:
-            print(f"positions: {self.pos}, width: {self.window_width}, heihgt: {self.window_height} text: {self.lines}")
         for button in self.buttons:
             button.handle_event(e)
 

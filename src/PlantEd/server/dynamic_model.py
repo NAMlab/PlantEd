@@ -105,11 +105,9 @@ class DynamicModel:
             ) / (self.plant.root_mass * delta_t)
 
         transpiration_per_second_and_gram = self.plant.get_transpiration_in_micromol_per_second_and_gram()
-        print(f"TRANSPIRATION BEFORE SIM: {transpiration_per_second_and_gram}")
         max_usable_water = max(
             water_upper_bound_plant_pool + water_upper_bound_env_pool - transpiration_per_second_and_gram, 0
             )
-        print(f"MAX USABLE WATER: {max_usable_water}")
 
         self.set_bounds(WATER, (-1000, max_usable_water))
 
@@ -208,7 +206,6 @@ class DynamicModel:
         used_water = water_intake + self.plant.get_transpiration_in_micromol(delta_t=delta_t)
         if used_water > water_upper_bound_env_pool:
             taken_from_internal_pool = used_water - water_upper_bound_env_pool
-            print(f"NOT ENOUGH WATER IN POOL DAKING FROM PLANT: {taken_from_internal_pool}")
             if self.plant.water_pool - taken_from_internal_pool < 0:
                 taken_from_internal_pool -= self.plant.water_pool
                 self.plant.water_pool = 0
@@ -222,13 +219,11 @@ class DynamicModel:
             root_grid=root_grid
             )
         diff = min(missing_water, available_water)
-        print(f"WATER MISSING FORM INTERNAL POOL, replenish with: {diff}")
         self.environment.water_grid.drain(amount=diff, root_grid=root_grid)
         self.plant.water_pool += diff
 
         # update nitrate
         nitrate_intake = nitrate_per_second * delta_t  # solution.fluxes[NITRATE] * delta_t * self.plant.root_biomass
-        print(f"DRAIN NITRATE FROM GROUND: {nitrate_intake}")
         self.environment.nitrate_grid.drain(amount=nitrate_intake, root_grid=root_grid)
 
     def update_plant(self, delta_t, stomata_open, root_flux, stem_flux, leaf_flux, seed_flux, starch_out_flux,

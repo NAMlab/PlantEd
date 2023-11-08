@@ -90,7 +90,6 @@ class Game:
                 "starch_percent": growth_percentages["starch_percent"],
                 "stomata": growth_percentages["stomata"]
             }
-            print(percentages)
             sum_percentages = sum([value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) + max(0,percentages["starch_percent"])
             if sum_percentages > 0:
                 self.model.simulate(self.resolution, percentages)
