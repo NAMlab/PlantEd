@@ -124,7 +124,7 @@ class Water_Grid:
             for j in range(0, self.water_grid.shape[1]):
                 cell = self.water_grid[i, j]
 
-                if cell > MINIMUM_CELL_AMOUNT_TO_DRAW:
+                if cell >= MINIMUM_CELL_AMOUNT_TO_DRAW:
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]
                     pygame.draw.circle(
@@ -135,7 +135,7 @@ class Water_Grid:
                             self.pos[0] + i * 100 + offset_x,
                             self.pos[1] + j * 100 + offset_y,
                         ),
-                        radius=int(cell / (self.max_water_cell / 5) + 5),
+                        radius=min(10, int(cell / (self.max_water_cell / 5) + 5)),
                     )
 
                     n_drops = min(MAX_DROPS_TO_DRAW, int(cell / (self.max_water_cell / 20)))

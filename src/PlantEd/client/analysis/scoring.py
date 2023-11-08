@@ -2,7 +2,7 @@ import requests
 import json
 
 def upload_score(name, score, path_to_logs):
-
+    print(f"naem: {name}, score:{score}, path_to_logs{path_to_logs}")
     files = {"logfile": open(path_to_logs + '/model_logs.csv', 'rb')#,
   #           'plant_json': open(path_to_logs + '/plant.json', 'rb'),
   #           'plant_jpeg': open(path_to_logs + '/plant.jpeg', 'rb'),

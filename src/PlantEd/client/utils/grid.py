@@ -2,6 +2,8 @@ import numpy as np
 import pygame
 from numpy import ndarray
 
+from PlantEd.constants import MAX_NITRATE_PER_CELL
+
 MINIMUM_CELL_AMOUNT_TO_DRAW: int = 1
 MAX_TO_DRAW: int = 20
 
@@ -11,7 +13,7 @@ class Grid:
             self,
             pos: tuple[int, int] = (0, 900),
             grid_size: tuple[int, int] = (20, 6),
-            max_cell: int = 100
+            max_cell: int = MAX_NITRATE_PER_CELL
     ):
 
         self.pos = pos
@@ -45,7 +47,7 @@ class Grid:
             for j in range(0, self.grid.shape[1]):
                 cell = self.grid[i, j]
 
-                if cell > MINIMUM_CELL_AMOUNT_TO_DRAW:
+                if cell >= MINIMUM_CELL_AMOUNT_TO_DRAW:
                     offset_x = self.offset_grid[0, 0, i, j]
                     offset_y = self.offset_grid[1, 0, i, j]
                     pygame.draw.circle(
@@ -56,7 +58,7 @@ class Grid:
                             self.pos[0] + i * 100 + offset_x,
                             self.pos[1] + j * 100 + offset_y,
                         ),
-                        radius=min(15,int(cell / (self.max_cell / 5) + int(offset_x/10))),
+                        radius=min(15, int(cell / (self.max_cell / 5) + int(offset_x/10))),
                     )
 
                     n_drops = min(MAX_TO_DRAW, int(cell / (self.max_cell / 20)))

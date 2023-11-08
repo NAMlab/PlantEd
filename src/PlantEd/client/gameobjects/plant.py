@@ -192,6 +192,7 @@ class Plant:
         self.seedling = Seedling(self.x, self.y, beans, START_SUM_BIOMASS_GRAM)
         self.organs = [organ_leaf, organ_stem, organ_root, organ_flower]
         self.organs[0].append_leaf(([0, 0], 0, 2))
+        self.organs[1].curve.branches[0].free_spots[2] = config.LEAF_SPOT
         self.organs[0].new_leaves = 0
         # Fix env constraints
 
@@ -546,7 +547,7 @@ class Leaf(Organ):
             "image": image,
             "offset_x": offset[0],
             "offset_y": offset[1],
-            "mass": constants.START_LEAF_BIOMASS_GRAM,
+            "mass": 0,
             "maximum_mass": constants.MAXIMUM_LEAF_BIOMASS_GRAM,
             "base_image_id": image_id,
             "direction": dir,
@@ -606,7 +607,7 @@ class Leaf(Organ):
                 self.particle_systems[i].deactivate()
 
     # Todo make new after server mass limit
-    def update_leaf_image(self, leaf, factor=7, base=80):
+    def update_leaf_image(self, leaf, factor=4, base=80):
         base_image = self.images[leaf["base_image_id"]]
         base_offset = self.pivot_positions[leaf["base_image_id"]]
         ratio = base_image.get_height() / base_image.get_width()
@@ -842,6 +843,9 @@ class Stem(Organ):
     # Todo find out why always true is return
     def check_can_add_leaf(self):
         return True
+
+    def has_free_spots(self) -> bool:
+        return True if self.curve.get_free_spots() > 0 else False
 
     def get_organ_amount(self):
         return len(self.curve.branches)
@@ -1108,38 +1112,18 @@ class Flower(Organ):
         return closest_flower
 
     def update_masses(self, new_seed_masses):
-        pass
-        '''delta_mass = mass - self.get_mass()
-        if delta_mass <= 0 or len(self.flowers) <= 0:
-            return
-        growable_flowers = []
-        for flower in self.flowers:
-            if flower["mass"] < flower["maximum_mass"]:
-                growable_flowers.append(flower)
-        n_flowers_to_grow = len(growable_flowers)
-        if n_flowers_to_grow <= 0:
-            return
-        delta_each_flower = delta_mass / n_flowers_to_grow
-        growable_flowers.sort()
-        for flower in growable_flowers:
-            if flower["mass"] + delta_each_flower > flower["maximum_mass"]:
-                overflow_mass = flower["maximum_mass"] - flower["mass"] + delta_each_flower
 
-                n_flowers_to_grow -= 1
-                if n_flowers_to_grow <= 0:
-                    break
-                delta_each_flower = (delta_mass + overflow_mass) / n_flowers_to_grow
+        for server_flower, client_flower in zip(new_seed_masses, self.flowers):
+            client_flower["mass"] = server_flower[1]
 
-            else:
-                flower["mass"] += delta_each_flower'''
         # update image according to mass
         for flower in self.flowers:
             id = min(
                 int(
                     flower["mass"]
-                    /flower["maximum_mass"]
-                    *len(self.images)-1),
-                len(self.images)-1)
+                    / flower["maximum_mass"]
+                    * len(self.images) - 1),
+                len(self.images) - 1)
             flower["image"] = self.images[id]
 
     def get_random_flower_pos(self):
@@ -1185,7 +1169,7 @@ class Flower(Organ):
             "offset_x": offset[0],
             "offset_y": offset[1],
             "image": image,
-            "mass": constants.START_SEED_BIOMASS_GRAM,
+            "mass": 0,
             "maximum_mass": constants.MAXIMUM_SEED_BIOMASS_GRAM,
 
         }  # to get relative size, depending on current threshold - init threshold

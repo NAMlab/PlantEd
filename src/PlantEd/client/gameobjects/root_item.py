@@ -15,10 +15,11 @@ class Root_Item:
         self.particle_system = ParticleSystem(
             100,
             spawn_box=Rect(self.plant.x, self.plant.y + 45, 0, 0),
-            lifetime=8,
+            lifetime=1,
+            size_over_lifetime=True,
             color=config.WHITE,
-            vel=(0, 0),
-            spread=(20, 20),
+            vel=(200, 200),
+            spread=(-400, -400),
             active=False,
             once=True,
         )

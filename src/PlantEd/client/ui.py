@@ -479,7 +479,7 @@ class UI:
 
     def draw_clock(self, s):
         days, hours, minutes = self.get_day_time()
-        output_string = "Day {0}/45 {1:02}:{2:02}".format(
+        output_string = "Day {0}/35 {1:02}:{2:02}".format(
             days + 10, int(hours), int(minutes)
         )
         clock_text = self.asset_handler.FONT.render(output_string, True, config.BLACK)

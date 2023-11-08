@@ -87,9 +87,10 @@ class Game:
                 "stem_percent": growth_percentages["stem_percent"] if self.plant.get_stem_mass_to_grow() > 0 else 0,
                 "root_percent": growth_percentages["root_percent"] if self.plant.get_root_mass_to_grow() > 0 else 0,
                 "seed_percent": len(self.plant.seeds) * 10 if self.plant.get_seed_mass_to_grow() > 0 else 0,
-                "starch_percent": growth_percentages["starch_percent"] if self.plant.starch_pool < self.plant.max_starch_pool else 0,
+                "starch_percent": growth_percentages["starch_percent"],
                 "stomata": growth_percentages["stomata"]
             }
+            print(percentages)
             sum_percentages = sum([value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) + max(0,percentages["starch_percent"])
             if sum_percentages > 0:
                 self.model.simulate(self.resolution, percentages)

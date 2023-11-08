@@ -7,7 +7,7 @@ from typing import Final
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 PLANT_POS = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - SCREEN_HEIGHT / 5)
-MAX_DAYS = 35
+MAX_DAYS = 25
 
 ###############################################################################
 # Starch
@@ -61,14 +61,14 @@ MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY = 0.00336
 
 #depending on paper
 #MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = MAX_NITRATE_INTAKE_PER_GRAM_ROOT_PER_DAY / 1000000 * (24 * 60 *60)
-MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = 0.00027
+MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = 0.00027     #0.00027
 
 
 # guiding paper has 50 mmol high /0.4 mmol low for a complete growth -> 5 per cell maybe? -> 50000 mikromol
-MAX_NITRATE_PER_CELL = 100     # 20*6 cells overall ->
+MAX_NITRATE_PER_CELL = 10     # 20*6 cells overall ->
 
 Vmax = MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
-Km = 400  # mikromol, Substrate density at which intake is 50% of max
+Km = 10 #400  # mikromol, Substrate density at which intake is 50% of max
 
 
 ###############################################################################
@@ -84,7 +84,7 @@ SLA_IN_SQUARE_METER_PER_GRAM: Final[float] = 1/LMA_IN_GRAM_PER_SQUARE_METER
 
 
 # photon availability according to https://doi.org/10.1146/annurev-arplant-070221-024745
-PEAK_PHOTON = 2000
+PEAK_PHOTON = 2     # 1000 normally
 
 ###############################################################################
 # Plant initialization values
@@ -93,14 +93,14 @@ PEAK_PHOTON = 2000
 START_LEAF_BIOMASS_GRAM = 0.01
 START_STEM_BIOMASS_GRAM = 0.02
 START_ROOT_BIOMASS_GRAM = 0.02
-START_SEED_BIOMASS_GRAM = 0.001
+START_SEED_BIOMASS_GRAM = 0.01
 START_SUM_BIOMASS_GRAM = 0.05
 
 
-MAXIMUM_LEAF_BIOMASS_GRAM = START_LEAF_BIOMASS_GRAM  * 10
-MAXIMUM_STEM_BIOMASS_GRAM = START_STEM_BIOMASS_GRAM * 7 # base 3, plus 7 = 10 overall max
+MAXIMUM_LEAF_BIOMASS_GRAM = START_LEAF_BIOMASS_GRAM * 20
+MAXIMUM_STEM_BIOMASS_GRAM = START_STEM_BIOMASS_GRAM * 10     # base 3, plus 7 = 10 overall max
 MAXIMUM_ROOT_BIOMASS_GRAM = 0.1
-MAXIMUM_SEED_BIOMASS_GRAM = 0.1
+MAXIMUM_SEED_BIOMASS_GRAM = 1
 
 BRANCH_SPOTS_BASE = 3
 BRANCH_SPOTS_TOTAL = 3 + BRANCH_SPOTS_BASE
@@ -135,10 +135,10 @@ PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.01
 # Shop Item Cost
 ###############################################################################
 
-LEAF_COST = 1
-BRANCH_COST = 1
+LEAF_COST = 2
+BRANCH_COST = 2
 ROOT_COST = 2
-FLOWER_COST = 3
+FLOWER_COST = 0
 WATERING_CAN_COST = 1
 NITRATE_COST = 1
 SPRAYCAN_COST = 0
@@ -148,7 +148,7 @@ SPRAYCAN_COST = 0
 # Shop Item Effect
 ###############################################################################
 WATERING_CAN_AMOUNT = 30000  # mikromol
-NITRATE_FERTILIZE_AMOUNT = 500 # mikromol
+NITRATE_FERTILIZE_AMOUNT = 50 # mikromol
 
 water_concentration_at_temp = [
     0.269,

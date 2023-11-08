@@ -32,7 +32,7 @@ from PlantEd.client.gameobjects.shop import (
     Shop_Item,
     FloatingShopItem,
     FloatingShop,
-)
+    )
 from PlantEd.client.gameobjects.snail import SnailSpawner
 from PlantEd.client.gameobjects.tree import Tree
 from PlantEd.client.gameobjects.water_reservoir import Water_Grid, Base_water
@@ -50,7 +50,7 @@ from PlantEd.server.lsystem import DictToRoot
 true_res = (
     1920,
     1080,
-)  # (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
+    )  # (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 
 temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 GROWTH = 26
@@ -62,7 +62,7 @@ SCREEN_HEIGHT = 1080
 plant_pos = (
     SCREEN_WIDTH - SCREEN_WIDTH / 4,
     SCREEN_HEIGHT - SCREEN_HEIGHT / 5,
-)
+    )
 
 
 class OptionsScene:
@@ -72,32 +72,32 @@ class OptionsScene:
         self.asset_handler = AssetHandler.instance()
         self.option_label = self.asset_handler.MENU_TITLE.render(
             "Options", True, config.WHITE
-        )
+            )
         self.sound_label = self.asset_handler.MENU_SUBTITLE.render(
             "Sound", True, config.WHITE
-        )
+            )
         self.music_label = self.asset_handler.BIGGER_FONT.render(
             "Music", True, config.WHITE
-        )
+            )
         self.sfx_label = self.asset_handler.BIGGER_FONT.render(
             "SFX", True, config.WHITE
-        )
+            )
         self.narator_label = self.asset_handler.BIGGER_FONT.render(
             "Narator", True, config.WHITE
-        )
+            )
         self.network_label = self.asset_handler.MENU_SUBTITLE.render(
             "Network", True, config.WHITE
-        )
+            )
         self.upload_score_label = self.asset_handler.BIGGER_FONT.render(
             "Upload Score", True, config.WHITE
-        )
+            )
         self.name_label = self.asset_handler.MENU_SUBTITLE.render(
             "Name", True, config.WHITE
-        )
+            )
 
         self.label_surface = pygame.Surface(
             (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA
-        )
+            )
 
         center_w, center_h = config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2
 
@@ -107,21 +107,21 @@ class OptionsScene:
             (50, 20),
             percent=self.options["music_volume"] * 100,
             active=True,
-        )
+            )
         self.sfx_slider = Slider(
             (center_w - 325, 450, 15, 200),
             self.asset_handler.FONT,
             (50, 20),
             percent=self.options["sfx_volume"] * 100,
             active=True,
-        )
+            )
         self.narator_slider = Slider(
             (center_w - 175, 450, 15, 200),
             self.asset_handler.FONT,
             (50, 20),
             percent=self.options["narator_volume"] * 100,
             active=True,
-        )
+            )
         self.upload_score_button = ToggleButton(
             center_w + 300,
             400,
@@ -130,7 +130,7 @@ class OptionsScene:
             None,
             pressed=self.options["upload_score"],
             cross=True,
-        )
+            )
 
         self.back = Button(
             center_w - 200,
@@ -144,7 +144,7 @@ class OptionsScene:
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-        )
+            )
         self.apply = Button(
             center_w + 50,
             930,
@@ -156,12 +156,12 @@ class OptionsScene:
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
-        )
+            )
 
         self.button_sprites = pygame.sprite.Group()
         self.button_sprites.add(
             [self.upload_score_button, self.back, self.apply]
-        )
+            )
 
         self.textbox = Textbox(
             center_w + 160,
@@ -173,7 +173,7 @@ class OptionsScene:
             background_color=config.LIGHT_GRAY,
             textcolor=config.WHITE,
             highlight_color=config.WHITE,
-        )
+            )
 
         self.init_labels()
 
@@ -189,44 +189,44 @@ class OptionsScene:
 
         pygame.draw.line(
             self.label_surface, config.WHITE, (100, 900), (1820, 900)
-        )
+            )
 
         self.label_surface.blit(
             self.option_label,
             (center_w - self.option_label.get_width() / 2, 100),
-        )
+            )
         self.label_surface.blit(
             self.sound_label,
             (center_w - 300 - self.sound_label.get_width() / 2, 300),
-        )
+            )
         self.label_surface.blit(
             self.music_label,
             (center_w - 450 - self.music_label.get_width() / 2, 400),
-        )
+            )
         self.label_surface.blit(
             self.sfx_label,
             (center_w - 300 - self.sfx_label.get_width() / 2, 400),
-        )
+            )
         self.label_surface.blit(
             self.narator_label,
             (center_w - 150 - self.narator_label.get_width() / 2, 400),
-        )
+            )
         self.label_surface.blit(
             self.network_label,
             (center_w + 300 - self.network_label.get_width() / 2, 300),
-        )
+            )
         self.label_surface.blit(
             self.upload_score_label,
             (center_w + 150 - self.upload_score_label.get_width() / 2, 400),
-        )
+            )
         self.label_surface.blit(
             self.name_label,
             (center_w + 300 - self.name_label.get_width() / 2, 500),
-        )
+            )
 
         self.label_surface.blit(
             self.asset_handler.img("plant_growth_pod/plant_growth_10.PNG"), (1300, 400)
-        )
+            )
 
     def update(self, dt):
         self.textbox.update(dt)
@@ -251,7 +251,7 @@ class OptionsScene:
             "narator_volume": self.narator_slider.get_percentage() / 100,
             "upload_score": self.upload_score_button.button_down,
             "name": self.textbox.text,
-        }
+            }
         return options
 
     def render(self, screen):
@@ -293,12 +293,12 @@ class DefaultGameScene(object):
             pos=(
                 config.SCREEN_WIDTH / 2,
                 config.SCREEN_HEIGHT - config.SCREEN_HEIGHT / 5,
-            ),
+                ),
             camera=self.camera,
             water_grid_pos=self.water_grid.pos,
             water_grid_shape=self.water_grid.get_shape(),
             sound_control=self.sound_control
-        )
+            )
 
         self.water_grid.add_base_water(
             Base_water(
@@ -308,12 +308,12 @@ class DefaultGameScene(object):
                 config.SCREEN_HEIGHT + 450,
                 config.DARK_BLUE,
                 config.LIGHT_BLUE,
+                )
             )
-        )
         self.environment = Environment(
             plant=self.plant,
             water_grid=self.water_grid,
-        )
+            )
 
         self.narrator = Narrator(self.environment)
 
@@ -323,7 +323,7 @@ class DefaultGameScene(object):
             camera=self.camera,
             sound_control=self.sound_control,
             quit=self.quit
-        )
+            )
         self.hive = Hive((1500, 600),
                          10,
                          self.plant,
@@ -338,22 +338,22 @@ class DefaultGameScene(object):
                     pos=(
                         190 * random.randint(0, 10),
                         900 + random.randint(0, 200),
-                    ),
+                        ),
                     bounding_rect=pygame.Rect(0, 900, config.SCREEN_WIDTH, 240),
                     images=[self.asset_handler.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 3)],
                     camera=self.camera,
                     play_clicked=self.sound_control.play_bug_sfx
+                    )
                 )
-            )
 
         self.tree = Tree(
             (1300, 100),
             [
                 (self.asset_handler.img("tree/{index}.PNG".format(index=i), (800, 800)))
                 for i in range(0, 4)
-            ],
+                ],
             self.environment,
-        )
+            )
 
         self.snail_spawner = SnailSpawner(
             images_left=[self.asset_handler.img("snail/0.png")],
@@ -367,19 +367,19 @@ class DefaultGameScene(object):
             speed=1,
             snails=[],
             snail_clicked=self.sound_control.play_snail_sfx
-        )
+            )
 
         # shop items are to be defined by the level
         add_leaf_item = Shop_Item(
             image=self.asset_handler.img("leaf_small.PNG", (64, 64)),
             callback=self.activate_add_leaf,
-            condition=self.plant.organs[1].check_can_add_leaf,
+            condition=self.plant.organs[1].has_free_spots,
             condition_not_met_message="Level up your stem to buy more leaves",
             post_hover_message=self.ui.hover.set_message,
             message="Leaves enable your plant to produce energy.",
             play_selected=self.sound_control.play_select_sfx,
             cost=LEAF_COST
-        )
+            )
 
         self.shop = Shop(
             rect=Rect(1700, 120, 200, 450),
@@ -390,7 +390,7 @@ class DefaultGameScene(object):
             post_hover_message=self.ui.hover.set_message,
             active=False,
             sound_control=self.sound_control
-        )
+            )
 
         self.shop.shop_items.append(
             Shop_Item(
@@ -402,32 +402,34 @@ class DefaultGameScene(object):
                 message="Roots are grown to improve water and nitrate intake.",
                 play_selected=self.sound_control.play_select_sfx,
                 cost=ROOT_COST
+                )
             )
-        )
 
         self.shop.shop_items.append(
             Shop_Item(
                 image=self.asset_handler.img("branch.PNG", (64, 64)),
                 callback=self.plant.organs[1].activate_add_branch,
+                condition=self.plant.organs[1].has_free_spots,
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Branches will provide more spots for leaves or flowers.",
                 play_selected=self.sound_control.play_select_sfx,
                 cost=BRANCH_COST
+                )
             )
-        )
 
         self.shop.shop_items.append(
             Shop_Item(
                 image=self.asset_handler.img("sunflowers/1.PNG", (64, 64)),
                 callback=self.plant.organs[3].activate_add_flower,
+                condition=self.plant.organs[1].has_free_spots,
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Flowers will enable you to start seed production.",
                 play_selected=self.sound_control.play_select_sfx,
                 cost=FLOWER_COST
+                )
             )
-        )
 
         self.shop.add_shop_item(["watering", "blue_grain", "spraycan"])
         self.shop.spraycan.callbacks.append(self.snail_spawner.spray_snails)
@@ -441,7 +443,7 @@ class DefaultGameScene(object):
             cost=LEAF_COST,
             plant=self.plant,
             play_buy_sfx=self.sound_control.play_buy_sfx,
-        )
+            )
         add_branch_item_floating = FloatingShopItem(
             pos=(0, 0),
             callback=self.plant.organs[1].activate_add_branch,
@@ -449,7 +451,7 @@ class DefaultGameScene(object):
             cost=BRANCH_COST,
             plant=self.plant,
             play_buy_sfx=self.sound_control.play_buy_sfx
-        )
+            )
         add_flower_item_floating = FloatingShopItem(
             pos=(0, 0),
             callback=self.plant.organs[3].activate_add_flower,
@@ -457,7 +459,7 @@ class DefaultGameScene(object):
             cost=FLOWER_COST,
             plant=self.plant,
             play_buy_sfx=self.sound_control.play_buy_sfx
-        )
+            )
 
         self.floating_shop.add_item(add_leaf_item_floating)
         self.floating_shop.add_item(add_branch_item_floating)
@@ -494,7 +496,7 @@ class DefaultGameScene(object):
                     "seed_percent": 0,
                     "starch_percent": -10,
                     "stomata": False,
-                }
+                    }
                 # response = self.server_game.update(delta_t=delta_t, growth_percentages=growth_percentages)
                 # print(response)
                 '''if self.shop.watering_can.pouring:
@@ -505,41 +507,7 @@ class DefaultGameScene(object):
                     self.water_grid.poured_cells.fill(0)'''
 
                 '''ticks = self.gametime.get_time()
-                self.log.append_model_row(
-                    ticks=ticks,
-                    timeframe=delta_time_in_h * 3600,
-                    leaf_mass=self.plant.organs[0].get_mass(),
-                    stem_mass=self.plant.organs[1].get_mass(),
-                    root_mass=self.plant.organs[2].get_mass(),
-                    seed_mass=self.plant.organs[3].get_mass(),
-                    leaf_percentage=growth_percent.leaf,
-                    stem_percentage=growth_percent.stem,
-                    root_percentage=growth_percent.root,
-                    starch_percentage=growth_percent.starch,
-                    seed_percentage=flower_percent,
-                    water_intake=self.server_plant.water.water_intake,
-                    water_pool_plant=self.server_plant.water.water_pool,
-                    water_available_env_abs=0,#self.server_environment.water_grid.available_absolute(self.server_plant.root),
-                    nitrate_intake=self.server_plant.nitrate.nitrate_intake,
-                    nitrate_pool_plant=self.server_plant.nitrate.nitrate_pool,
-                    nitrate_available_env_abs=0,#self.server_environment.nitrate_grid.available_absolute(self.server_plant.root),
-                    nitrate_available_env_michalis_menten=self.server_environment.nitrate_grid.available_relative_mm(
-                        time_seconds=delta_time_in_h * 3600,
-                        g_root=self.server_plant.root_biomass,
-                        v_max=Vmax,
-                        k_m=Km,
-                        roots=self.server_plant.root),
-                    starch_intake=self.server_plant.starch_pool.starch_in,
-                    starch_out=self.server_plant.starch_pool.starch_out,
-                    starch_pool=self.server_plant.starch_pool.available_starch_pool,
-
-                    photon_intake=self.server_plant.photon,
-                    co2_intake=self.server_plant.co2,
-
-                    temperature=0,#latest_weather_state.temperature,
-                    humidity=0,#latest_weather_state.humidity,
-                    precipitation=0,#latest_weather_state.precipitation,
-                )'''
+                '''
 
             if e.type == WIN:
                 self.plant.save_image(self.path_to_logs)
@@ -572,8 +540,8 @@ class DefaultGameScene(object):
                     "message": {
                         "player_name": "NAME",
                         "level_name": "LEVEL_NAME",
+                        }
                     }
-                }
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
                 request_running = False
@@ -583,8 +551,8 @@ class DefaultGameScene(object):
         if not request_running:
             request_running = True
             async with websockets.connect("ws://localhost:8765") as websocket:
-                delta_t = self.gametime.get_time()/1000 - self.seconds_at_last_request
-                self.seconds_at_last_request = self.gametime.get_time()/1000
+                delta_t = self.gametime.get_time() / 1000 - self.seconds_at_last_request
+                self.seconds_at_last_request = self.gametime.get_time() / 1000
                 print(" --> Sending request...")
                 game_state = {
                     "type": "simulate",
@@ -597,7 +565,7 @@ class DefaultGameScene(object):
                             "seed_percent": 0,
                             "starch_percent": self.plant.organ_starch.percentage,
                             "stomata": self.plant.organs[0].stomata_open,
-                        },
+                            },
                         "shop_actions": {
                             "buy_watering_can": self.water_grid.pop_poured_cells(),
                             "buy_nitrate": self.nitrate_grid.pop_cells_to_add(),
@@ -605,19 +573,19 @@ class DefaultGameScene(object):
                             "buy_branch": self.plant.organs[1].pop_new_branches(),
                             "buy_root": self.plant.organs[2].pop_new_roots(),
                             "buy_seed": self.plant.organs[3].pop_new_flowers(),
+                            }
                         }
                     }
-                }
                 print(game_state["message"]["growth_percentages"])
 
-                #print(f"REQUEST: {game_state}")
+                # print(f"REQUEST: {game_state}")
 
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
                 print(" --> Received response, updating state")
                 dic = json.loads(response)
 
-                #print(f"RESPONSE: {dic}")
+                # print(f"RESPONSE: {dic}")
                 self.environment.precipitation = dic["environment"]["precipitation"]
                 self.ui.humidity = dic["environment"]["humidity"]
                 self.ui.temperature = dic["environment"]["temperature"]
@@ -641,6 +609,21 @@ class DefaultGameScene(object):
 
                 self.ui.used_fluxes = dic["used_fluxes"]
 
+                self.log.append_model_row(
+                    ticks=self.gametime.get_time(),
+                    leaf_mass=self.plant.organs[0].get_mass(),
+                    stem_mass=self.plant.organs[1].get_mass(),
+                    root_mass=self.plant.organs[2].get_mass(),
+                    seed_mass=self.plant.organs[3].get_mass(),
+                    water_pool_plant=self.plant.water_pool,
+                    nitrate_pool_plant=np.sum(self.nitrate_grid.grid),
+                    starch_pool=self.plant.organ_starch.mass,
+                    temperature=dic["environment"]["temperature"],
+                    humidity=dic["environment"]["humidity"],
+                    precipitation=dic["environment"]["precipitation"]
+                    )
+
+
                 if dic is not None:
                     if not dic["running"]:
                         pygame.event.post(pygame.event.Event(WIN))
@@ -648,8 +631,8 @@ class DefaultGameScene(object):
 
     def update(self, dt):
         # self.client.update()
-        #fps = 1/dt
-        #self.fps = self.asset_handler.FONT.render(f"{fps}", True, config.WHITE)
+        # fps = 1/dt
+        # self.fps = self.asset_handler.FONT.render(f"{fps}", True, config.WHITE)
 
         task = asyncio.create_task(self.send_and_get_response())
 
@@ -667,17 +650,17 @@ class DefaultGameScene(object):
                     "stem_slider": self.plant.organs[1].percentage,
                     "root_slider": self.plant.organs[2].percentage,
                     "starch_slider": self.plant.organ_starch.percentage,
-                }
+                    }
                 self.ui.switch_preset(preset)
 
             (
                 shadow_map,
                 resolution,
                 max_shadow,
-            ) = self.environment.calc_shadowmap(
+                ) = self.environment.calc_shadowmap(
                 self.plant.organs[0].leaves,
                 sun_dir=(((-(20 / 12) * hours) + 23.33), 1),
-            )
+                )
             self.plant.organs[0].shadow_map = shadow_map
             self.plant.organs[0].shadow_resolution = resolution
             self.plant.organs[0].max_shadow = max_shadow
@@ -689,7 +672,7 @@ class DefaultGameScene(object):
                     "stem_slider": self.plant.organs[1].percentage,
                     "root_slider": self.plant.organs[2].percentage,
                     "starch_slider": self.plant.organ_starch.percentage,
-                }
+                    }
                 self.ui.switch_preset(preset)
             self.environment.shadow_map = None
             self.plant.organs[0].shadow_map = None
@@ -719,8 +702,6 @@ class DefaultGameScene(object):
             self.ui.draw(screen)
             return
 
-
-
         self.environment.draw_background(temp_surface)
         self.hive.draw(temp_surface)
         self.tree.draw(temp_surface)
@@ -740,7 +721,7 @@ class DefaultGameScene(object):
         self.shop.draw(screen)
         self.ui.draw(screen)
         if self.fps:
-            screen.blit(self.fps, (1200,20))
+            screen.blit(self.fps, (1200, 20))
 
         self.narrator.draw(screen)
 
@@ -761,7 +742,7 @@ class TitleScene(object):
             callback_var=DefaultGameScene,
             keywords="Beginner, Medium Temperatures",
             play_select_sfx=self.sound_control.play_select_sfx
-        )
+            )
 
         self.credit_button = Button(
             self.center_w - 450,
@@ -775,7 +756,7 @@ class TitleScene(object):
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-        )
+            )
         self.options_button = Button(
             self.center_w - 200,
             930,
@@ -788,7 +769,7 @@ class TitleScene(object):
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-        )
+            )
         self.scores_button = Button(
             self.center_w + 50,
             930,
@@ -801,7 +782,7 @@ class TitleScene(object):
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-        )
+            )
         self.quit_button = Button(
             self.center_w + 300,
             930,
@@ -814,7 +795,7 @@ class TitleScene(object):
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-        )
+            )
 
         self.button_sprites = pygame.sprite.Group()
         self.button_sprites.add(
@@ -823,14 +804,14 @@ class TitleScene(object):
                 self.credit_button,
                 self.options_button,
                 self.scores_button,
-            ]
-        )
+                ]
+            )
 
     def render(self, screen):
         screen.fill(config.BLACK)
         screen.blit(
             self.title, (self.center_w - self.title.get_width() / 2, 100)
-        )
+            )
         self.card_0.draw(screen)
         # self.card_1.draw(screen)
         # self.card_2.draw(screen)
@@ -885,22 +866,22 @@ class EndScene(object):
                 ParticleSystem(
                     max_particles=50,
                     spawn_box=pygame.Rect(position[0], position[1], 0, 0),
-                    lifetime=10,
+                    lifetime=2,
                     color=(int(255 * random.random()), int(255 * random.random()), int(255 * random.random())),
                     gravity=2,
-                    vel=((random.random() - 0.5) * 20, -80 * random.random()),
-                    spread=(50, 30),
+                    vel=((random.random() - 0.5) * 500, (random.random() - 0.5) * 500),
+                    spread=((random.random() - 0.5) * 500, (random.random() - 0.5) * 500),
                     active=False,
                     size_over_lifetime=True,
                     size=10,
                     once=True,
+                    )
                 )
-            )
         self.explosion: ParticleExplosion = ParticleExplosion(
             systems=systems,
             interval=0.5,
             play_explosion_sound=self.sound_control.play_pop_seed_sfx,
-        )
+            )
         self.explosion.start()
 
         images = Animation.generate_counter(
@@ -908,7 +889,7 @@ class EndScene(object):
             end_number=2000,
             resolution=10,
             font=self.asset_handler.BIGGER_FONT
-        )
+            )
 
         explosion_duration = 0.5 * len(self.plant_object.organs[3].flowers)
 
@@ -918,20 +899,22 @@ class EndScene(object):
             pos=(400, 400),
             running=True,
             once=True
-        )
+            )
 
         self.score_header_label = self.asset_handler.MENU_SUBTITLE.render("Score", True, config.WHITE)
         self.flower_score_list = []
         score_sum = 0
         for i in range(len(self.plant_object.organs[3].flowers)):
             flowers = self.plant_object.organs[3].flowers
-            flower_score = self.asset_handler.BIGGER_FONT.render("Flower {}: {:.2f} grams".format(i, float(flowers[i]["mass"])),
-                                                     True,
-                                                     config.WHITE)
+            flower_score = self.asset_handler.BIGGER_FONT.render(
+                "Flower {}: {:.2f} grams".format(i, float(flowers[i]["mass"])),
+                True,
+                config.WHITE)
             self.flower_score_list.append(flower_score)
             score_sum += flowers[i]["mass"]
 
-        self.score_sum_label = self.asset_handler.BIGGER_FONT.render("{:.2f} grams".format(float(score_sum)), True, config.WHITE)
+        self.score_sum_label = self.asset_handler.BIGGER_FONT.render("{:.2f} grams".format(float(score_sum)), True,
+                                                                     config.WHITE)
         self.title = self.asset_handler.MENU_TITLE.render("Finished", True, config.WHITE)
 
         self.plot_label = self.asset_handler.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
@@ -963,13 +946,13 @@ class EndScene(object):
             930,
             300,
             50,
-            [self.sound_control.play_toggle_sfx, self.return_to_menu],
+            [self.sound_control.play_toggle_sfx, self.upload_data, self.return_to_menu],
             self.asset_handler.BIGGER_FONT,
             "Upload Simulation",
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
-        )
+            )
         self.button_sprites.add(self.back)
 
     def update(self, dt):
@@ -985,9 +968,11 @@ class EndScene(object):
 
     def upload_data(self):
         options = config.load_options()
+        print(f"Uploading score: {self.plant_object.organs[3].get_mass()}")
         scoring.upload_score(
             options["name"], self.plant_object.organs[3].get_mass(), self.path_to_logs
-        )
+            )
+        print(f"Score Up")
 
     def render(self, screen):
         screen.fill((0, 0, 0, 0))
@@ -1026,18 +1011,18 @@ class CustomScene(object):
         super(CustomScene, self).__init__()
         self.text1 = self.asset_handler.MENU_TITLE.render(
             "Top Plants", True, (255, 255, 255)
-        )
+            )
         # self.text3 = config.BIGGER_FONT.render('> press any key to restart <', True, (255,255,255))
 
         self.name_txt = self.asset_handler.BIGGER_FONT.render(
             "Name", True, (255, 255, 255)
-        )
+            )
         self.score_txt = self.asset_handler.BIGGER_FONT.render(
             "Score", True, (255, 255, 255)
-        )
+            )
         self.submit_txt = self.asset_handler.BIGGER_FONT.render(
             "Submit Date", True, (255, 255, 255)
-        )
+            )
 
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
@@ -1051,7 +1036,7 @@ class CustomScene(object):
             config.LIGHT_GRAY,
             config.WHITE,
             border_w=2,
-        )
+            )
         self.button_sprites.add(self.back)
 
         self.winners = scoring.get_scores()
@@ -1066,19 +1051,19 @@ class CustomScene(object):
             score = winner["score"]
             score_label = self.asset_handler.BIGGER_FONT.render(
                 "Seed Mass {:.5f} gramms".format(score), True, (255, 255, 255)
-            )
+                )
             self.scores.append(score_label)
             name = self.asset_handler.BIGGER_FONT.render(
                 winner["name"], True, (255, 255, 255)
-            )
+                )
             self.names.append(name)
             datetime_added = self.asset_handler.BIGGER_FONT.render(
                 datetime.utcfromtimestamp(winner["datetime_added"]).strftime(
                     "%d/%m/%Y %H:%M"
-                ),
+                    ),
                 True,
                 (255, 255, 255),
-            )
+                )
             self.datetimes.append(datetime_added)
 
     def return_to_menu(self):
@@ -1100,7 +1085,7 @@ class CustomScene(object):
         screen.fill(config.BLACK)
         screen.blit(
             self.text1, (SCREEN_WIDTH / 2 - self.text1.get_width() / 2, 100)
-        )
+            )
 
         pygame.draw.line(screen, config.WHITE, (100, 300), (1820, 300))
 
@@ -1114,22 +1099,22 @@ class CustomScene(object):
                 (
                     SCREEN_WIDTH / 4 - self.names[i].get_width() / 2,
                     SCREEN_HEIGHT / 3 + SCREEN_HEIGHT / 20 * i,
-                ),
-            )
+                    ),
+                )
             screen.blit(
                 self.scores[i],
                 (
                     SCREEN_WIDTH / 2 - self.scores[i].get_width() / 2,
                     SCREEN_HEIGHT / 3 + SCREEN_HEIGHT / 20 * i,
-                ),
-            )
+                    ),
+                )
             screen.blit(
                 self.datetimes[i],
                 (
                     SCREEN_WIDTH / 4 * 3 - self.datetimes[i].get_width() / 2,
                     SCREEN_HEIGHT / 3 + SCREEN_HEIGHT / 20 * i,
-                ),
-            )
+                    ),
+                )
 
         pygame.draw.line(screen, config.WHITE, (100, 900), (1820, 900))
         self.button_sprites.draw(screen)
@@ -1153,10 +1138,10 @@ class Credits:
         self.center_w, self.center_h = (
             config.SCREEN_WIDTH / 2,
             config.SCREEN_HEIGHT / 2,
-        )
+            )
         self.label_surface = pygame.Surface(
             (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA
-        )
+            )
 
         self.init_labels()
         self.button_sprites = pygame.sprite.Group()
@@ -1172,7 +1157,7 @@ class Credits:
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-        )
+            )
         self.button_sprites.add(self.back)
 
     def return_to_menu(self):
@@ -1182,52 +1167,52 @@ class Credits:
         self.label_surface.fill(config.BLACK)
         self.made_by_label = self.asset_handler.MENU_TITLE.render(
             "MADE BY", True, config.WHITE
-        )
+            )
         self.daniel = self.asset_handler.MENU_SUBTITLE.render(
             "Daniel Koch", True, config.WHITE
-        )
+            )
         self.jj = self.asset_handler.MENU_SUBTITLE.render(
             "Jedrzej J. Szymanski", True, config.WHITE
-        )
+            )
         self.nadine = self.asset_handler.MENU_SUBTITLE.render(
             "Nadine Töpfer", True, config.WHITE
-        )
+            )
         self.stefano = self.asset_handler.MENU_SUBTITLE.render(
             "Stefano A. Cruz", True, config.WHITE
-        )
+            )
         self.pouneh = self.asset_handler.MENU_SUBTITLE.render(
             "Pouneh Pouramini", True, config.WHITE
-        )
+            )
         self.jan = self.asset_handler.MENU_SUBTITLE.render(
             "Jan-Niklas Weder", True, config.WHITE
-        )
+            )
 
         pygame.draw.line(
             self.label_surface, config.WHITE, (100, 300), (1820, 300)
-        )
+            )
 
         self.label_surface.blit(
             self.made_by_label,
             (self.center_w - self.made_by_label.get_width() / 2, 100),
-        )
+            )
         self.label_surface.blit(
             self.daniel, (self.center_w - self.daniel.get_width() / 2, 400)
-        )
+            )
         self.label_surface.blit(
             self.jan, (self.center_w - self.jan.get_width() / 2, 480)
-        )
+            )
         self.label_surface.blit(
             self.stefano, (self.center_w - self.stefano.get_width() / 2, 560)
-        )
+            )
         self.label_surface.blit(
             self.pouneh, (self.center_w - self.pouneh.get_width() / 2, 640)
-        )
+            )
         self.label_surface.blit(
             self.nadine, (self.center_w - self.nadine.get_width() / 2, 720)
-        )
+            )
         self.label_surface.blit(
             self.jj, (self.center_w - self.jj.get_width() / 2, 800)
-        )
+            )
 
     def update(self, dt):
         pass
@@ -1275,7 +1260,7 @@ async def main():
 
     screen = pygame.display.set_mode(
         true_res, pygame.FULLSCREEN | pygame.NOFRAME | pygame.DOUBLEBUF, 16
-    )
+        )
 
     timer = pygame.time.Clock()
     running = True
@@ -1286,8 +1271,8 @@ async def main():
         # dt = timer.tick(60) / 1000.0
         dt = timer.tick(30) / 1000.0
 
-        #fps = str(int(timer.get_fps()))
-        #fps_text = AssetHandler.instance().FONT.render(fps, False, (255, 255, 255))
+        # fps = str(int(timer.get_fps()))
+        # fps_text = AssetHandler.instance().FONT.render(fps, False, (255, 255, 255))
 
         if pygame.event.get(QUIT):
             running = False
@@ -1297,9 +1282,10 @@ async def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
-        #screen.blit(fps_text, (true_res[0]-500, 20))
+        # screen.blit(fps_text, (true_res[0]-500, 20))
         pygame.display.update()
         await asyncio.sleep(0)
+
 
 def start():
     asyncio.run(main())

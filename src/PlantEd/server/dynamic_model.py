@@ -105,7 +105,7 @@ class DynamicModel:
             ) / (self.plant.root_mass * delta_t)
 
         transpiration_per_second_and_gram = self.plant.get_transpiration_in_micromol_per_second_and_gram()
-
+        print(f"TRANSPIRATION BEFORE SIM: {transpiration_per_second_and_gram}")
         max_usable_water = max(
             water_upper_bound_plant_pool + water_upper_bound_env_pool - transpiration_per_second_and_gram, 0
             )
@@ -146,8 +146,7 @@ class DynamicModel:
         starch_in = self.model.reactions.get_by_id(STARCH_IN).flux
         co2 = self.model.reactions.get_by_id(CO2).flux
 
-        water_used = (water_flux + self.plant.get_transpiration_in_micromol_per_second_and_gram()) / \
-                     self.get_bounds(WATER)[1] if self.get_bounds(WATER)[1] > 0 else 0
+        water_used = max(0, water_flux / self.get_bounds(WATER)[1]) if self.get_bounds(WATER)[1] > 0 else 0
         nitrate_used = nitrate_flux / self.get_bounds(NITRATE)[1] if self.get_bounds(NITRATE)[1] > 0 else 0
         starch_in_used = starch_in / self.get_bounds(STARCH_IN)[1] if self.get_bounds(STARCH_IN)[1] > 0 else 0
         co2_used = co2 / self.get_bounds(CO2)[1] if self.get_bounds(CO2)[1] > 0 else 0
@@ -229,6 +228,7 @@ class DynamicModel:
 
         # update nitrate
         nitrate_intake = nitrate_per_second * delta_t  # solution.fluxes[NITRATE] * delta_t * self.plant.root_biomass
+        print(f"DRAIN NITRATE FROM GROUND: {nitrate_intake}")
         self.environment.nitrate_grid.drain(amount=nitrate_intake, root_grid=root_grid)
 
     def update_plant(self, delta_t, stomata_open, root_flux, stem_flux, leaf_flux, seed_flux, starch_out_flux,
