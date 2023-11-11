@@ -19,7 +19,8 @@ class InfoBoxManager:
             h=32,
             callbacks=[self.show],
             text="Help",
-            font=self.asset_handler.FONT
+            font=self.asset_handler.FONT,
+            border_w=2
         )
 
     def to_dict(self) -> dict:

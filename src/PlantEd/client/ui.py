@@ -249,6 +249,17 @@ class UI:
             select_sound=self.sound_control.play_select_sfx
         )
 
+        self.button_sprites.add(Button(
+            x=350,
+            y=config.SCREEN_HEIGHT-50,
+            w=100,
+            h=32,
+            callbacks=[self.toggle_pause],
+            text="Menu",
+            font=self.asset_handler.FONT,
+            border_w=2
+            ))
+
         self.preset_day = {
             "type": "day",
             "leaf_slider": 0,
@@ -397,7 +408,7 @@ class UI:
         self.draw_plant_details(self.s)
         self.draw_clock(self.s)
         self.draw_production(self.s)
-        self.draw_used_fluxes(self.s)
+        #self.draw_used_fluxes(self.s)
         self.infobox_manager.draw(self.s)
         screen.blit(self.s, (0, 0))
 

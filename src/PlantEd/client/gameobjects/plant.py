@@ -86,7 +86,7 @@ class Plant:
             pos: tuple[float, float],
             water_grid_shape: tuple[int, int],
             water_grid_pos: tuple[float, float],
-            upgrade_points: int = 20,
+            upgrade_points: int = 25,
             sound_control: SoundControl = None,
             camera: Camera = None
     ):
@@ -1067,13 +1067,13 @@ class Flower(Organ):
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     self.callback()
-        if self.target:
+        '''if self.target:
             if event.type == pygame.MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
                 rects = self.get_rect()
                 for i in range(len(rects)):
                     if rects[i].collidepoint(mouse_pos):
-                        self.target_flower = i
+                        self.target_flower = i'''
 
     def activate_add_flower(self):
         self.can_add_flower = True

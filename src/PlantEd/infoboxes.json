@@ -1,1 +1,103 @@
-{"boxes": [{"pos": [778, 685], "window_width": 355, "window_height": 120, "margin": 10, "lines": ["Welcome to PlantEd!", "Grow your Plant in 35 Days to win."]}, {"pos": [0, 86], "window_width": 343, "window_height": 383, "margin": 10, "lines": ["The Plant consists of root, stem,", "leafs and flowers Grow each organ", "by adjusting the sliders."]}, {"pos": [324, 183], "window_width": 252, "window_height": 291, "margin": 10, "lines": ["Starch acts as an energy", "storage. Use it to grow", "when there is no Sunlight."]}, {"pos": [1392, 0], "window_width": 305, "window_height": 111, "margin": 10, "lines": ["Open Stomata to enable", "Photosynthesis Keep an", "eye on your Water supply."]}, {"pos": [1676, 157], "window_width": 245, "window_height": 177, "margin": 10, "lines": ["Buy more organs", "to grow further.", "Roots -> Water Nitrate", "Branches -> More Spots", "Leafs -> More Photons", "Seeds for SCORE."]}, {"pos": [1674, 309], "window_width": 247, "window_height": 113, "margin": 10, "lines": ["Water and Fertilizer", "can close resource gaps."]}, {"pos": [1486, 881], "window_width": 338, "window_height": 78, "margin": 10, "lines": ["Check out the percentage used", "of available resources", "Full bars indicate a shortage."]}, {"pos": [757, 0], "window_width": 405, "window_height": 78, "margin": 10, "lines": ["Humidity, Daytime and Temperature", "play a role in Water loss.", "Day 45 Will be your last chance to grow."]}]}
+{
+  "boxes": [
+    {
+      "pos": [
+        778,
+        685
+      ],
+      "window_width": 355,
+      "window_height": 120,
+      "margin": 10,
+      "lines": [
+        "Welcome to PlantEd!",
+        "Grow your Plant in 35 Days to win."
+      ]
+    },
+    {
+      "pos": [
+        0,
+        86
+      ],
+      "window_width": 343,
+      "window_height": 383,
+      "margin": 10,
+      "lines": [
+        "The Plant consists of root, stem,",
+        "leafs and flowers Grow each organ",
+        "by adjusting the sliders."
+      ]
+    },
+    {
+      "pos": [
+        324,
+        183
+      ],
+      "window_width": 252,
+      "window_height": 291,
+      "margin": 10,
+      "lines": [
+        "Starch acts as an energy",
+        "storage. Use it to grow",
+        "when there is no Sunlight."
+      ]
+    },
+    {
+      "pos": [
+        1392,
+        0
+      ],
+      "window_width": 305,
+      "window_height": 111,
+      "margin": 10,
+      "lines": [
+        "Open Stomata to enable",
+        "Photosynthesis Keep an",
+        "eye on your Water supply."
+      ]
+    },
+    {
+      "pos": [
+        1676,
+        157
+      ],
+      "window_width": 245,
+      "window_height": 177,
+      "margin": 10,
+      "lines": [
+        "Buy more organs",
+        "to grow further.",
+        "Roots -> Water Nitrate",
+        "Branches -> More Spots",
+        "Leafs -> More Photons",
+        "Seeds for SCORE."
+      ]
+    },
+    {
+      "pos": [
+        1674,
+        309
+      ],
+      "window_width": 247,
+      "window_height": 113,
+      "margin": 10,
+      "lines": [
+        "Water and Fertilizer",
+        "can close resource gaps."
+      ]
+    },
+    {
+      "pos": [
+        757,
+        0
+      ],
+      "window_width": 405,
+      "window_height": 78,
+      "margin": 10,
+      "lines": [
+        "Humidity, Daytime and Temperature",
+        "play a role in Water loss.",
+        "Day 45 Will be your last chance to grow."
+      ]
+    }
+  ]
+}

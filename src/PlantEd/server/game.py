@@ -14,7 +14,7 @@ class Game:
         self.level_name = level_name
         self.time = start_time
         self.resolution = resolution
-        self.green_thumbs = 20
+        self.green_thumbs = 25
         # Todo include level selection
         self.time_left_from_last_simulation = 0  # seconds
         self.plant = Plant(ground_grid_resolution=(20, 6))
