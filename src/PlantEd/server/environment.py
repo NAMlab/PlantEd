@@ -5,7 +5,7 @@ import pandas as pd
 from scipy import integrate
 
 from PlantEd.grid import MetaboliteGrid
-from PlantEd.constants import MAX_WATER_PER_CELL, MAX_NITRATE_PER_CELL, PEAK_PHOTON, WATERING_CAN_AMOUNT, \
+from PlantEd.constants import MAX_WATER_PER_CELL, MAX_NITRATE_PER_CELL, WATERING_CAN_AMOUNT, \
     NITRATE_FERTILIZE_AMOUNT
 from PlantEd.server.weather import WeatherSimulator
 
@@ -14,17 +14,18 @@ script_dir = fileDir.parent.parent
 
 
 class Environment:
-    def __init__(self, start_time, seed):
+    def __init__(self, start_time, scenario):
         self.time = start_time  # seconds
+        self.peak_photon = scenario["photon_peak"]
         self.water_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_WATER_PER_CELL,
                                                          preset_fill_amount=MAX_WATER_PER_CELL / 20)
         self.nitrate_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_NITRATE_PER_CELL,
-                                                           preset_fill_amount=MAX_NITRATE_PER_CELL / 10)
+                                                           preset_fill_amount=MAX_NITRATE_PER_CELL * (scenario["nitrate_percent"] / 100))
 
-        df_weather_spring: pd.DataFrame = pd.read_csv(script_dir / "data/cleaned_weather_spring.csv")
+        df_weather: pd.DataFrame = pd.read_csv(script_dir / scenario["filename"])
         self.weather: WeatherSimulator = WeatherSimulator(
-            data=df_weather_spring,
-            seed=seed
+            data=df_weather,
+            seed=scenario["weather_seed"]
         )
 
     def update(self, delta_t):
@@ -47,7 +48,7 @@ class Environment:
 
     def micromol_photon_per_square_meter(self, start, end):
         # maximum photon * 0..1 depending on time spent in sunlight
-        return PEAK_PHOTON * self.get_sun_intensity_for_duration(
+        return self.peak_photon * self.get_sun_intensity_for_duration(
             start, end
         )
 

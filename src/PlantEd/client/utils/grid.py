@@ -4,7 +4,7 @@ from numpy import ndarray
 
 from PlantEd.constants import MAX_NITRATE_PER_CELL
 
-MINIMUM_CELL_AMOUNT_TO_DRAW: int = 1
+MINIMUM_CELL_AMOUNT_TO_DRAW: float = 0.1
 MAX_TO_DRAW: int = 20
 
 

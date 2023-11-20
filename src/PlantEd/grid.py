@@ -63,6 +63,7 @@ class MetaboliteGrid:
         return True
 
     def rain_like_increase(self, time_in_s: float, rain: float):
+        return
         """_summary_
 
         weather simulates mm of precipitation per hour per m²

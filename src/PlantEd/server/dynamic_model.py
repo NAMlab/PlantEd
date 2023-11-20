@@ -203,7 +203,16 @@ class DynamicModel:
         water_upper_bound_env_pool = self.environment.water_grid.available_absolute(
             root_grid=root_grid
             )
+
+
         used_water = water_intake + self.plant.get_transpiration_in_micromol(delta_t=delta_t)
+
+        print(f"SOIL_AVAILABLE: {water_upper_bound_env_pool},\n"
+              f"WATER IN PLANT: {self.plant.water_pool}, \n"
+              f"WATER NEEDED: {used_water}\n"
+              f"PLANT NEEDS: {water_intake}\n"
+              f"TRANSPIRATION: {self.plant.get_transpiration_in_micromol(delta_t=delta_t)}")
+
         if used_water > water_upper_bound_env_pool:
             taken_from_internal_pool = used_water - water_upper_bound_env_pool
             if self.plant.water_pool - taken_from_internal_pool < 0:
@@ -215,12 +224,19 @@ class DynamicModel:
 
         self.environment.water_grid.drain(amount=used_water, root_grid=root_grid)
         missing_water = self.plant.max_water_pool - self.plant.water_pool
-        available_water = water_upper_bound_env_pool = self.environment.water_grid.available_absolute(
+        available_water = self.environment.water_grid.available_absolute(
             root_grid=root_grid
             )
         diff = min(missing_water, available_water)
         self.environment.water_grid.drain(amount=diff, root_grid=root_grid)
         self.plant.water_pool += diff
+
+        print(f"AFTER WATER CALCS \n"
+              f"SOIL_AVAILABLE: {water_upper_bound_env_pool},\n"
+              f"WATER IN PLANT: {self.plant.water_pool}, \n"
+              f"WATER NEEDED: {used_water}\n"
+              f"PLANT NEEDS: {water_intake}\n"
+              f"TRANSPIRATION: {self.plant.get_transpiration_in_micromol(delta_t=delta_t)}")
 
         # update nitrate
         nitrate_intake = nitrate_per_second * delta_t  # solution.fluxes[NITRATE] * delta_t * self.plant.root_biomass

@@ -41,7 +41,7 @@ WATER_MIKROMOL_PER_LITER = WATER_MIKROMOL_PER_GRAM * 1000 / 100
 
 # 1.5 Tons of soil in one m³ -> PlantEd has exactly one -> 30% water, 500Kg -> 500 Litre -> 500000 Gram /18 -> 8333.333 Mol -> 8333.333/(20*6) = 70 Mol -> 70000000 Mikromol
 MAX_WATER_PER_CELL = 10000
-TRICKLE_AMOUNT: float = 1/10000
+TRICKLE_AMOUNT: float = 1/100000
 
 ###############################################################################
 # Nitrate

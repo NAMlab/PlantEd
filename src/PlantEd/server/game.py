@@ -7,18 +7,57 @@ import logging
 logger = logging.getLogger("server")
 logging.basicConfig(level=logging.ERROR)
 
+# hot, low precipitation, fast water drain
+scenarios = {
+    "summer_low_nitrate": {
+        "weather_seed": 0.23171800215059546,
+        "nitrate_percent": 2,
+        "photon_peak": 2000,
+        "filename": "data/cleaned_weather_summer.csv",
+    },
+    "summer_high_nitrate": {
+        "weather_seed": 0.23171800215059546,
+        "nitrate_percent": 50,
+        "photon_peak": 2000,
+        "filename": "data/cleaned_weather_summer.csv",
+    },
+    "spring_low_nitrate": {
+        "weather_seed": 15,
+        "nitrate_percent": 2,
+        "photon_peak": 1000,
+        "filename": "data/cleaned_weather_spring.csv",
+    },
+    "spring_high_nitrate": {
+        "weather_seed": 15,
+        "nitrate_percent": 50,
+        "photon_peak": 1000,
+        "filename": "data/cleaned_weather_spring.csv",
+    },
+    "fall_low_nitrate": {
+        "weather_seed": 0.9255162147978742,
+        "nitrate_percent": 2,
+        "photon_peak": 1000,
+        "filename": "data/cleaned_weather_fall.csv",
+    },
+    "fall_high_nitrate": {
+        "weather_seed": 0.9255162147978742,
+        "nitrate_percent": 50,
+        "photon_peak": 1000,
+        "filename": "data/cleaned_weather_fall.csv",
+    }
+}
+
 
 class Game:
-    def __init__(self, player_name, level_name, start_time=0, resolution=3600, green_thumbs=25, seed=15):
+    def __init__(self, player_name, level_name="spring_high_nitrate", start_time=0, resolution=3600, green_thumbs=25):
         self.player_name = player_name
         self.level_name = level_name
         self.time = start_time
         self.resolution = resolution
         self.green_thumbs = green_thumbs
-        # Todo include level selection
         self.time_left_from_last_simulation = 0  # seconds
         self.plant = Plant(ground_grid_resolution=(20, 6))
-        self.environment = Environment(self.time, seed)
+        self.environment = Environment(start_time=self.time, scenario=scenarios[level_name])
         self.model = DynamicModel(self.environment, self.plant)
         self.running = True
 

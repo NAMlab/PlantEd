@@ -538,12 +538,13 @@ class DefaultGameScene(object):
                 game_state = {
                     "type": "load_level",
                     "message": {
-                        "player_name": "NAME",
-                        "level_name": "LEVEL_NAME",
+                        "player_name": "player1",
+                        "level_name": "summer_low_nitrate",
                         }
                     }
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
+                print(response)
                 request_running = False
 
     async def send_and_get_response(self):
