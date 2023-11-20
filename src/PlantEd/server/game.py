@@ -9,12 +9,12 @@ logging.basicConfig(level=logging.ERROR)
 
 
 class Game:
-    def __init__(self, player_name, level_name, start_time=0, resolution=3600, green_thumbs=20, seed=15):
+    def __init__(self, player_name, level_name, start_time=0, resolution=3600, green_thumbs=25, seed=15):
         self.player_name = player_name
         self.level_name = level_name
         self.time = start_time
         self.resolution = resolution
-        self.green_thumbs = 25
+        self.green_thumbs = green_thumbs
         # Todo include level selection
         self.time_left_from_last_simulation = 0  # seconds
         self.plant = Plant(ground_grid_resolution=(20, 6))
