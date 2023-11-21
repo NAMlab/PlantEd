@@ -63,7 +63,6 @@ class MetaboliteGrid:
         return True
 
     def rain_like_increase(self, time_in_s: float, rain: float):
-        return
         """_summary_
 
         weather simulates mm of precipitation per hour per m²
@@ -174,13 +173,14 @@ class MetaboliteGrid:
         """
 
         for x in range(0, self.grid.shape[0]):
-            for y in reversed(range(0, self.grid.shape[1])):
+            for y in reversed(range(1, self.grid.shape[1])):
                 upper_cell_content = self.grid[x, y - 1]
                 if upper_cell_content > 0:
-                    take_from_upper_cell = (TRICKLE_AMOUNT * upper_cell_content * dt)
+                    take_from_upper_cell = (0.005 * dt) + (TRICKLE_AMOUNT * upper_cell_content * dt)
                     # check if zero in upper cell
                     delta_trickle = upper_cell_content - take_from_upper_cell
                     if delta_trickle <= 0:
+
                         self.grid[x, y - 1] = 0
                         take_from_upper_cell = take_from_upper_cell - abs(delta_trickle)
                     else:
