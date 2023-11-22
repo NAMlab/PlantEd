@@ -67,6 +67,7 @@ class Game:
 
     # dt in seconds
     def update(self, message) -> dict:
+        print(message)
         self.check_game_end()
         delta_t = message["delta_t"]
         growth_percentages = message["growth_percentages"]
@@ -89,9 +90,11 @@ class Game:
                     case ("buy_watering_can"):
                         if self.green_thumbs - WATERING_CAN_COST >= 0:
                             self.environment.increase_water_grid(content)
+                            self.green_thumbs -= WATERING_CAN_COST
                     case "buy_nitrate":
                         if self.green_thumbs - NITRATE_COST >= 0:
                             self.environment.increase_nitrate_grid(content)
+                            self.green_thumbs -= NITRATE_COST
                     case "buy_root":
                         for target in content["directions"]:
                             if self.green_thumbs - ROOT_COST >= 0:
