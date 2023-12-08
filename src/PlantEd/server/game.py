@@ -1,4 +1,11 @@
-from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST, WATERING_CAN_COST, NITRATE_COST
+import os
+import time
+
+import numpy as np
+
+from PlantEd.client.analysis.logger import Log
+from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST, WATERING_CAN_COST, NITRATE_COST, \
+    Vmax, Km
 from PlantEd.server.plant import Plant
 from PlantEd.server.dynamic_model import DynamicModel
 from PlantEd.server.environment import Environment
@@ -14,42 +21,47 @@ scenarios = {
         "nitrate_percent": 2,
         "photon_peak": 2000,
         "filename": "data/cleaned_weather_summer.csv",
-    },
+        },
     "summer_high_nitrate": {
         "weather_seed": 0.23171800215059546,
         "nitrate_percent": 50,
         "photon_peak": 2000,
         "filename": "data/cleaned_weather_summer.csv",
-    },
+        },
     "spring_low_nitrate": {
         "weather_seed": 15,
         "nitrate_percent": 2,
         "photon_peak": 1000,
         "filename": "data/cleaned_weather_spring.csv",
-    },
+        },
     "spring_high_nitrate": {
         "weather_seed": 15,
         "nitrate_percent": 50,
         "photon_peak": 1000,
         "filename": "data/cleaned_weather_spring.csv",
-    },
+        },
     "fall_low_nitrate": {
         "weather_seed": 0.9255162147978742,
         "nitrate_percent": 2,
         "photon_peak": 1000,
         "filename": "data/cleaned_weather_fall.csv",
-    },
+        },
     "fall_high_nitrate": {
         "weather_seed": 0.9255162147978742,
         "nitrate_percent": 50,
         "photon_peak": 1000,
         "filename": "data/cleaned_weather_fall.csv",
+        }
     }
-}
 
 
 class Game:
-    def __init__(self, player_name, level_name="spring_high_nitrate", start_time=0, resolution=3600, green_thumbs=25):
+    def __init__(self, player_name, path_to_logs, level_name="spring_high_nitrate", start_time=0, resolution=3600,
+                 green_thumbs=25):
+        since_epoch = time.time()
+        self.path_to_logs = path_to_logs
+        # os.makedirs(self.path_to_logs)
+        self.log = Log(self.path_to_logs)  # can be turned off
         self.player_name = player_name
         self.level_name = level_name
         self.time = start_time
@@ -62,11 +74,21 @@ class Game:
         self.running = True
 
     def check_game_end(self):
-        if self.time/(60*60*24) >= MAX_DAYS:
+        if self.time / (60 * 60 * 24) >= MAX_DAYS:
             self.running = False
+
+    def force_end_game(self) -> dict:
+        self.log.close_model_file()
+        return {"level closed ": "OK"}
 
     # dt in seconds
     def update(self, message) -> dict:
+        if not self.running:
+            self.log.close_model_file()
+            return {}
+            # create scores
+            # close logs
+            # upload data
         print(message)
         self.check_game_end()
         delta_t = message["delta_t"]
@@ -75,7 +97,8 @@ class Game:
         self.time += delta_t
         n_simulations = int((delta_t + self.time_left_from_last_simulation) / self.resolution)
         self.time_left_from_last_simulation = (delta_t + self.time_left_from_last_simulation) % self.resolution
-        print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
+        print(
+            f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
 
         logger.debug(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} "
                      f"and time_left: {self.time_left_from_last_simulation}")
@@ -131,10 +154,44 @@ class Game:
                 "seed_percent": len(self.plant.seeds) * 10 if self.plant.get_seed_mass_to_grow() > 0 else 0,
                 "starch_percent": growth_percentages["starch_percent"],
                 "stomata": growth_percentages["stomata"]
-            }
-            sum_percentages = sum([value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) + max(0,percentages["starch_percent"])
+                }
+            sum_percentages = sum(
+                [value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) + max(0,percentages["starch_percent"])
             if sum_percentages > 0:
                 self.model.simulate(self.resolution, percentages)
+
+        weather_state = self.environment.weather.get_weather_state(int(self.time / 3600))
+
+        self.log.append_model_row(
+            time=self.time,
+            temperature=weather_state[0],
+            sun_intensity=self.environment.get_sun_intensity(),
+            humidity=weather_state[1],
+            precipitation=weather_state[2],
+            accessible_water=self.environment.water_grid.available_absolute(self.plant.lsystem.root_grid),
+            accessible_nitrate=self.environment.nitrate_grid.available_relative_mm(delta_t, self.plant.root_mass, Vmax, Km, self.plant.lsystem.root_grid),
+            leaf_biomass=self.plant.leaf_mass,
+            stem_biomass=self.plant.stem_mass,
+            root_biomass=self.plant.root_mass,
+            seed_biomass=self.plant.seed_mass,
+            starch_pool=self.plant.starch_pool,
+            max_starch_pool=self.plant.max_starch_pool,
+            water_pool=self.plant.water_pool,
+            max_water_pool=self.plant.max_water_pool,
+            leaf_percent=growth_percentages["leaf_percent"],
+            stem_percent=growth_percentages["stem_percent"],
+            root_percent=growth_percentages["root_percent"],
+            seed_percent=growth_percentages["seed_percent"],
+            starch_percent=growth_percentages["starch_percent"],
+            n_leaves=len(self.plant.leafs),
+            n_stems=len(self.plant.branches),
+            n_roots=len(self.plant.roots),
+            n_seeds=len(self.plant.seeds),
+            green_thumbs=self.green_thumbs,
+            open_spots=growth_percentages["stomata"],
+            action=actions,
+            )
+
         game_state = {
             "running": self.running,
             "plant": self.plant.to_dict(),
@@ -142,10 +199,6 @@ class Game:
             "green_thumbs": self.green_thumbs,
             "used_fluxes": self.model.used_fluxes,
             "gametime": self.time
-        }
-        if not self.running:
-            pass
-            # create scores
-            # close logs
-            # upload data
+            }
+
         return game_state

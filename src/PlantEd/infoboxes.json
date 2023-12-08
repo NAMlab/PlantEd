@@ -5,12 +5,13 @@
         778,
         685
       ],
-      "window_width": 355,
+      "window_width": 365,
       "window_height": 120,
       "margin": 10,
       "lines": [
         "Welcome to PlantEd!",
-        "Grow your Plant in 35 Days to win."
+        "Grow your Plant in 35 Days to win.",
+        "Seeds/Flowers determine your score."
       ]
     },
     {
@@ -32,13 +33,13 @@
         324,
         183
       ],
-      "window_width": 252,
+      "window_width": 307,
       "window_height": 291,
       "margin": 10,
       "lines": [
         "Starch acts as an energy",
-        "storage. Use it to grow",
-        "when there is no Sunlight."
+        "Produce starch during the day.",
+        "Consume it to grow at night."
       ]
     },
     {
@@ -51,8 +52,8 @@
       "margin": 10,
       "lines": [
         "Open Stomata to enable",
-        "Photosynthesis Keep an",
-        "eye on your Water supply."
+        "gas exchange. But keep an",
+        "eye on your water pool."
       ]
     },
     {
@@ -87,16 +88,16 @@
     },
     {
       "pos": [
-        757,
+        737,
         0
       ],
-      "window_width": 405,
+      "window_width": 445,
       "window_height": 78,
       "margin": 10,
       "lines": [
         "Humidity, Daytime and Temperature",
-        "play a role in Water loss.",
-        "Day 45 Will be your last chance to grow."
+        "play a role in Water loss through transpiration.",
+        "Day 35 Will be your last chance to grow."
       ]
     }
   ]

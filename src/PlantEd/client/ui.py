@@ -248,6 +248,7 @@ class UI:
             border_w=2,
             select_sound=self.sound_control.play_select_sfx
         )
+        self.button_array.toggle_all()
 
         self.button_sprites.add(Button(
             x=350,
@@ -312,9 +313,14 @@ class UI:
             self.textbox.handle_event(e)
             self.apply_button.handle_event(e)
             return
+
+        self.infobox_manager.handle_event(e)
+        if self.infobox_manager.visible:
+            return
+
         self.hover.handle_event(e)
         self.button_array.handle_event(e)
-        self.infobox_manager.handle_event(e)
+
 
         for button in self.button_sprites:
             # all button_sprites handle their events

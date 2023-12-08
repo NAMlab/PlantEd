@@ -273,9 +273,9 @@ class DefaultGameScene(object):
         # self.server_game = Server_Game()
         since_epoch = time.time()
         self.asset_handler = AssetHandler.instance()
-        self.path_to_logs = "./data/finished_games/{}{}".format(name, since_epoch)
+        self.path_to_logs = "../client/data/finished_games/{}{}".format(name, since_epoch)
         os.makedirs(self.path_to_logs)
-        self.log = Log(self.path_to_logs)  # can be turned off
+        #self.log = Log(self.path_to_logs)  # can be turned off
         pygame.mixer.set_reserved(2)
         self.sound_control = SoundControl()
         self.sound_control.play_music()
@@ -369,21 +369,10 @@ class DefaultGameScene(object):
             snail_clicked=self.sound_control.play_snail_sfx
             )
 
-        # shop items are to be defined by the level
-        add_leaf_item = Shop_Item(
-            image=self.asset_handler.img("leaf_small.PNG", (64, 64)),
-            callback=self.activate_add_leaf,
-            condition=self.plant.organs[1].has_free_spots,
-            condition_not_met_message="Level up your stem to buy more leaves",
-            post_hover_message=self.ui.hover.set_message,
-            message="Leaves enable your plant to produce energy.",
-            play_selected=self.sound_control.play_select_sfx,
-            cost=LEAF_COST
-            )
 
         self.shop = Shop(
-            rect=Rect(1700, 120, 200, 450),
-            shop_items=[add_leaf_item],
+            rect=Rect(1700, 120, 200, 410),
+            shop_items=[],
             water_grid=self.water_grid,
             nitrate_grid=self.nitrate_grid,
             plant=self.plant,
@@ -394,14 +383,31 @@ class DefaultGameScene(object):
 
         self.shop.shop_items.append(
             Shop_Item(
+                image=self.asset_handler.img("leaf_small.PNG", (64, 64)),
+                callback=self.activate_add_leaf,
+                buy=self.shop.buy,
+                condition=self.plant.organs[1].has_free_spots,
+                condition_not_met_message="Level up your stem to buy more leaves",
+                post_hover_message=self.ui.hover.set_message,
+                message="Leaves enable your plant to produce energy.",
+                play_selected=self.sound_control.play_select_sfx,
+                cost=LEAF_COST,
+                cost_label=self.asset_handler.FONT.render(f"{LEAF_COST}", True, config.BLACK)
+                )
+            )
+
+        self.shop.shop_items.append(
+            Shop_Item(
                 image=self.asset_handler.img("root_lateral.PNG", (64, 64)),
                 callback=self.shop.root_item.activate,
+                buy=self.shop.buy,
                 condition=self.plant.organs[2].check_can_add_root,
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Roots are grown to improve water and nitrate intake.",
                 play_selected=self.sound_control.play_select_sfx,
-                cost=ROOT_COST
+                cost=ROOT_COST,
+                cost_label=self.asset_handler.FONT.render(f"{ROOT_COST}", True, config.BLACK)
                 )
             )
 
@@ -409,12 +415,14 @@ class DefaultGameScene(object):
             Shop_Item(
                 image=self.asset_handler.img("branch.PNG", (64, 64)),
                 callback=self.plant.organs[1].activate_add_branch,
+                buy=self.shop.buy,
                 condition=self.plant.organs[1].has_free_spots,
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Branches will provide more spots for leaves or flowers.",
                 play_selected=self.sound_control.play_select_sfx,
-                cost=BRANCH_COST
+                cost=BRANCH_COST,
+                cost_label=self.asset_handler.FONT.render(f"{BRANCH_COST}", True, config.BLACK)
                 )
             )
 
@@ -422,12 +430,14 @@ class DefaultGameScene(object):
             Shop_Item(
                 image=self.asset_handler.img("sunflowers/1.PNG", (64, 64)),
                 callback=self.plant.organs[3].activate_add_flower,
+                buy=self.shop.buy,
                 condition=self.plant.organs[1].has_free_spots,
                 condition_not_met_message="Level up any organ to get more green thumbs",
                 post_hover_message=self.ui.hover.set_message,
                 message="Flowers will enable you to start seed production.",
                 play_selected=self.sound_control.play_select_sfx,
-                cost=FLOWER_COST
+                cost=FLOWER_COST,
+                cost_label=self.asset_handler.FONT.render(f"{FLOWER_COST}", True, config.BLACK)
                 )
             )
 
@@ -476,7 +486,8 @@ class DefaultGameScene(object):
         self.plant.organs[0].activate_add_leaf()
 
     def quit(self):
-        self.log.close_model_file()
+        #self.log.close_model_file()
+        task = asyncio.create_task(self.end_level())
         self.plant.save_image(self.path_to_logs)
         plant_dict = self.plant.to_dict()
         config.write_dict(plant_dict, self.path_to_logs + "/plant")
@@ -485,29 +496,8 @@ class DefaultGameScene(object):
     def handle_events(self, events: List[pygame.event.Event]):
         for e in events:
             self.ui.handle_event(e)
-            if self.ui.pause:
+            if self.ui.pause or self.ui.infobox_manager.visible:
                 continue
-            if e.type == GROWTH:
-                delta_t = 1
-                growth_percentages = {
-                    "leaf_percent": 1,
-                    "stem_percent": 0,
-                    "root_percent": 1,
-                    "seed_percent": 0,
-                    "starch_percent": -10,
-                    "stomata": False,
-                    }
-                # response = self.server_game.update(delta_t=delta_t, growth_percentages=growth_percentages)
-                # print(response)
-                '''if self.shop.watering_can.pouring:
-                    for i in range(len(self.water_grid.poured_cells)):
-                        amount = self.water_grid.poured_cells[i]
-                        if amount > 0:
-                            self.client.add2grid(amount, i, 0, "water")
-                    self.water_grid.poured_cells.fill(0)'''
-
-                '''ticks = self.gametime.get_time()
-                '''
 
             if e.type == WIN:
                 self.plant.save_image(self.path_to_logs)
@@ -529,6 +519,24 @@ class DefaultGameScene(object):
         if days > config.MAX_DAYS:
             pygame.event.post(pygame.event.Event(WIN))
 
+
+    async def end_level(self):
+        global request_running
+        if not request_running:
+            request_running = True
+            async with websockets.connect("ws://localhost:8765") as websocket:
+                print(" --> End Level...")
+                game_state = {
+                    "type": "end_level",
+                    "message": {
+                        "reason": "quit",
+                        }
+                    }
+                await websocket.send(json.dumps(game_state))
+                response = await websocket.recv()
+                request_running = False
+
+
     async def load_level(self):
         global request_running
         if not request_running:
@@ -540,6 +548,7 @@ class DefaultGameScene(object):
                     "message": {
                         "player_name": "player1",
                         "level_name": "summer_low_nitrate",
+                        "path_to_logs": self.path_to_logs,
                         }
                     }
                 await websocket.send(json.dumps(game_state))
@@ -608,23 +617,7 @@ class DefaultGameScene(object):
                 self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
 
                 self.ui.used_fluxes = dic["used_fluxes"]
-                try:
-                    self.log.append_model_row(
-                        ticks=self.gametime.get_time(),
-                        leaf_mass=self.plant.organs[0].get_mass(),
-                        stem_mass=self.plant.organs[1].get_mass(),
-                        root_mass=self.plant.organs[2].get_mass(),
-                        seed_mass=self.plant.organs[3].get_mass(),
-                        water_pool_plant=self.plant.water_pool,
-                        nitrate_pool_plant=np.sum(self.nitrate_grid.grid),
-                        starch_pool=self.plant.organ_starch.mass,
-                        temperature=dic["environment"]["temperature"],
-                        humidity=dic["environment"]["humidity"],
-                        precipitation=dic["environment"]["precipitation"]
-                        )
 
-                finally:
-                    print("Could not write to closed file")
 
                 if dic is not None:
                     if not dic["running"]:
@@ -929,7 +922,7 @@ class EndScene(object):
         - Special (Transpiration, APS lol)
         '''
 
-        df = pandas.read_csv(path_to_logs + "/model_logs.csv")
+        '''df = pandas.read_csv(path_to_logs + "/model_logs.csv")
         self.image = plot.generate_png_from_vec([df.leaf_mass, df.stem_mass, df.root_mass, df.seed_mass],
                                                 name_list=["Leaf", "Stem", "Root", "Seed"],
                                                 colors=[config.hex_color_to_float(config.GREEN),
@@ -940,7 +933,7 @@ class EndScene(object):
                                                 xlabel="Time",
                                                 ylabel="Organ Mass",
                                                 path_to_logs=path_to_logs,
-                                                filename="PLOT.png")
+                                                filename="PLOT.png")'''
 
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
@@ -955,7 +948,22 @@ class EndScene(object):
             config.WHITE,
             border_w=2,
             )
+
+        self.keep = Button(
+            config.SCREEN_WIDTH / 2 + 150,
+            930,
+            300,
+            50,
+            [self.sound_control.play_toggle_sfx, self.return_to_menu],
+            self.asset_handler.BIGGER_FONT,
+            "Keep my secrets",
+            config.LIGHT_GRAY,
+            config.WHITE,
+            border_w=2,
+            )
+
         self.button_sprites.add(self.back)
+        self.button_sprites.add(self.keep)
 
     def update(self, dt):
         self.explosion.update(dt)
@@ -996,8 +1004,8 @@ class EndScene(object):
                     (500 - self.score_sum_label.get_width(), 400 + (distance * len(self.flower_score_list))))
         screen.blit(self.score_header_label, (350 - self.score_header_label.get_width() / 2, 270))
         pygame.draw.rect(screen, config.WHITE, (100, 360, 500, int((len(self.flower_score_list) + 2) * distance)), 1, 1)
-        screen.blit(self.image, (
-            config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))
+        #screen.blit(self.image, (
+        #    config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))
         screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
         screen.blit(self.title, (config.SCREEN_WIDTH / 2 - self.title.get_width() / 2, 100))
 

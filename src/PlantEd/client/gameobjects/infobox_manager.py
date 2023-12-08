@@ -68,6 +68,7 @@ class InfoBoxManager:
         self.active_box += 1
         if self.active_box >= len(self.boxes):
             self.active_box = 0
+            self.visible = False
 
     def previous_infobox(self):
         self.active_box -= 1

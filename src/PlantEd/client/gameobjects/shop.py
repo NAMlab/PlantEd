@@ -232,7 +232,7 @@ class Shop:
             nitrate_grid: Grid,
             plant,
             cols=2,
-            margin=10,
+            margin=18,
             post_hover_message=None,
             active=True,
             sound_control: SoundControl = None
@@ -276,7 +276,8 @@ class Shop:
         self.root_item = Root_Item(
             self.plant.organs[2].create_new_root, self.plant
         )
-        self.buy_button = Button(
+        '''        
+            self.buy_button = Button(
             self.rect[2] - self.margin * 2 - 64,
             self.rect[3] - self.margin - 64,
             64,
@@ -286,6 +287,7 @@ class Shop:
             "BUY",
             offset=(rect[0], rect[1]),
         )
+        '''
         self.init_layout()
 
         images = Animation.generate_rising_animation("-1", self.asset_handler.BIGGER_FONT, config.RED)
@@ -336,10 +338,12 @@ class Shop:
                     Shop_Item(
                         self.asset_handler.img("watering_can_tilted.PNG", (64, 64)),
                         self.watering_can.activate,
+                        buy=self.buy,
                         post_hover_message=self.post_hover_message,
                         message="Buy a watering can to increase availability.",
                         play_selected=self.sound_control.play_select_sfx,
-                        cost=WATERING_CAN_COST
+                        cost=WATERING_CAN_COST,
+                        cost_label=self.asset_handler.FONT.render(f"{WATERING_CAN_COST}", True, config.BLACK)
                     )
                 )
             elif keyword == "blue_grain":
@@ -347,10 +351,12 @@ class Shop:
                     Shop_Item(
                         self.asset_handler.img("blue_grain_0.PNG", (64, 64)),
                         self.blue_grain.activate,
+                        buy=self.buy,
                         post_hover_message=self.post_hover_message,
                         message="Blue grain increases nitrate in the ground.",
                         play_selected=self.sound_control.play_select_sfx,
-                        cost=NITRATE_COST
+                        cost=NITRATE_COST,
+                        cost_label=self.asset_handler.FONT.render(f"{NITRATE_COST}", True, config.BLACK)
                     )
                 )
             elif keyword == "spraycan":
@@ -358,17 +364,29 @@ class Shop:
                     Shop_Item(
                         self.asset_handler.img("spraycan.PNG", (64, 64)),
                         self.spraycan.activate,
+                        buy=self.buy,
                         post_hover_message=self.post_hover_message,
                         message="Spray em!",
                         play_selected=self.sound_control.play_select_sfx,
-                        cost=SPRAYCAN_COST
+                        cost=SPRAYCAN_COST,
+                        cost_label=self.asset_handler.FONT.render(f"{SPRAYCAN_COST}", True, config.BLACK)
                     )
                 )
         for item in self.shop_items:
             item.shop_items = self.shop_items
         self.init_layout()
 
-    def buy(self):
+    def buy(self, item):
+        if self.plant.upgrade_points - item.cost >= 0:
+            self.plant.upgrade_points -= item.cost
+            self.animations[max(0, item.cost - 1)].start(pygame.mouse.get_pos())
+            item.callback()
+            self.sound_control.play_buy_sfx()
+            self.update_current_cost()
+        '''else:
+            
+        
+        
         for item in self.shop_items:
             if item.selected:
                 if self.plant.upgrade_points - item.cost >= 0:
@@ -389,14 +407,13 @@ class Shop:
                     self.update_current_cost()
                 else:
                     # throw insufficient funds, maybe post hover msg
-                    pass
+                    pass'''
 
     def update(self, dt):
         self.watering_can.update(dt)
         self.blue_grain.update(dt)
         self.spraycan.update(dt)
         self.root_item.update(dt)
-        self.buy_button.update(dt)
         for animation in self.animations:
             animation.update(dt)
         for item in self.shop_items:
@@ -421,7 +438,6 @@ class Shop:
         self.watering_can.handle_event(e)
         self.blue_grain.handle_event(e)
         self.spraycan.handle_event(e)
-        self.buy_button.handle_event(e)
         self.root_item.handle_event(e)
 
     def draw(self, screen):
@@ -439,7 +455,7 @@ class Shop:
             self.s, config.WHITE, (0, 0, self.rect[2], 40), border_radius=3
         )
         self.s.blit(self.shop_label, (10, 5))
-        green_thumbs_label = self.asset_handler.BIG_FONT.render(
+        '''green_thumbs_label = self.asset_handler.BIG_FONT.render(
             "{}".format(self.plant.upgrade_points), True, config.BLACK
         )
         self.s.blit(
@@ -448,18 +464,17 @@ class Shop:
         )
         self.s.blit(
             self.asset_handler.img("green_thumb.PNG", (26, 26)), (self.rect[2] - 80, 6)
-        )
+        )'''
         for item in self.shop_items:
             item.draw(self.s)
-        self.buy_button.draw(self.s)
 
-        self.s.blit(
+        '''self.s.blit(
             self.green_thumbs_icon, (70, self.rect[3] - self.margin - 50)
         )
         self.s.blit(
             self.current_cost_label, (50, self.rect[3] - self.margin - 50)
         )
-
+'''
         # s.blit(self.green_thumbs_icon,(self.rect[0]+self.rect[2]-self.margin*4-self.green_thumbs_icon.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-self.green_thumbs_icon.get_height()))
         # s.blit(cost, (self.rect[0]+self.rect[2]-self.margin*5-self.green_thumbs_icon.get_width()-cost.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-cost.get_height()))
         screen.blit(self.s, (self.rect[0], self.rect[1]))
@@ -476,6 +491,7 @@ class Shop_Item:
             self,
             image,
             callback,
+            buy,
             cost=1,
             info_text=None,
             rect=(0, 0, 0, 0),
@@ -488,9 +504,11 @@ class Shop_Item:
             message=None,
             play_selected=None,
             offset=(0, 0),
+            cost_label=None
     ):
         self.image = image
         self.callback = callback
+        self.buy = buy
         self.cost = cost
         self.info_text = info_text
         self.post_hover_message = post_hover_message
@@ -506,6 +524,7 @@ class Shop_Item:
         self.condition_not_met_message = condition_not_met_message
         self.shop_items = []
         self.offset = offset
+        self.cost_label = cost_label
 
     def update(self, dt):
         pass
@@ -518,20 +537,22 @@ class Shop_Item:
             if self.rect.collidepoint(pos):
                 if self.post_hover_message is not None:
                     self.post_hover_message(self.message)
-                if not self.selected:
-                    self.hover = True
+                self.hover = True
 
         if e.type == pygame.MOUSEBUTTONDOWN:
             pos = (e.pos[0] - self.offset[0], e.pos[1] - self.offset[1])
             if self.rect.collidepoint(pos):
-                if self.selected:
-                    self.selected = False
-                    self.hover = True
+                self.selected = True
+
+        if e.type == pygame.MOUSEBUTTONUP:
+            self.selected = False
+            pos = (e.pos[0] - self.offset[0], e.pos[1] - self.offset[1])
+            if self.rect.collidepoint(pos):
+                if self.condition is not None:
+                    if self.condition():
+                        self.buy(self)
                 else:
-                    for item in self.shop_items:
-                        item.selected = False
-                    self.selected = True
-                    self.play_selected()
+                    self.buy(self)
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -543,3 +564,22 @@ class Shop_Item:
             pygame.draw.rect(
                 screen, self.selected_color, self.rect, self.border_width
             )
+        green_thumb_size = (16, 16)
+        margin = 3
+        cost_label = self.cost_label
+
+        rect_with = cost_label.get_width() + green_thumb_size[0] + 6 * margin
+        rect_height = max(green_thumb_size[1], cost_label.get_height()) + 2 * margin - 4
+        rect_x = self.rect[0] + self.image.get_width() / 2 - rect_with / 2
+        rect_y = self.rect[1] + self.image.get_height() - rect_height / 2
+
+        pygame.draw.rect(screen, color=config.WHITE_TRANSPARENT_LESS, rect=(rect_x, rect_y, rect_with, rect_height),
+                         border_radius=2)
+        pygame.draw.rect(screen, color=config.WHITE, rect=(rect_x, rect_y, rect_with, rect_height), border_radius=2,
+                         width=2)
+
+        screen.blit(cost_label, (rect_x + rect_with / 4 - cost_label.get_width() / 2,
+                                 rect_y + rect_height / 2 - cost_label.get_height() / 2))
+
+        pygame.draw.circle(screen, config.GREEN_DARK, (rect_x + rect_with * 3 / 4, rect_y + rect_height / 2),
+                           green_thumb_size[0] / 2)
