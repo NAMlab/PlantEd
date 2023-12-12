@@ -1,4 +1,5 @@
 import json
+import random
 from pathlib import Path
 import pygame
 
@@ -73,6 +74,106 @@ def load_dict(path) -> dict:
     with open(path) as convert_file:
         plant_dict = json.load(convert_file)
     return plant_dict
+
+
+first_names = [
+    "Tiny",
+    "Wacky",
+    "Cozy",
+    "Zippy",
+    "Sunny",
+    "Lucky",
+    "Dizzy",
+    "Funny",
+    "Fuzzy",
+    "Breezy",
+    "Silly",
+    "Snazzy",
+    "Bouncy",
+    "Cheeky",
+    "Jolly",
+    "Squeaky",
+    "Sassy",
+    "Peppy",
+    "Quirky",
+    "Zany",
+    "Blissful",
+    "Dandy",
+    "Dinky",
+    "Perky",
+    "Spunky",
+    "Whimsy",
+    "Wiggly",
+    "Crispy",
+    "Jumpy",
+    "Lively",
+    "Nifty",
+    "Fluffy",
+    "Zesty",
+    "Snappy",
+    "Chirpy",
+    "Giddy",
+    "Merry",
+    "Peachy",
+    "Snuggly",
+    "Spry",
+    "Witty",
+    "Gleeful",
+    "Zesty",
+    "Spry"
+]
+
+last_names = [
+    "Snorty",
+    "Chuckles",
+    "Jellybean",
+    "Tickles",
+    "Giggles",
+    "Serenader",
+    "Bellyflop",
+    "Scribbler",
+    "Bananaflip",
+    "Hopscotchamp",
+    "Snickerdoodle",
+    "Snoozer",
+    "Waffler",
+    "Pickleflip",
+    "Guffawman",
+    "Whisperer",
+    "Sillygiggle",
+    "Danceinator",
+    "Noodler",
+    "Grinner",
+    "Teehee",
+    "Wigglebutt",
+    "Lollygag",
+    "Bumblejoy",
+    "Sparcler",
+    "Merrygig",
+    "Gigglezap",
+    "Snickerbyte",
+    "Gigglebop",
+    "Fizzlefunk",
+    "Zippydoodle",
+    "Cheerychomp",
+    "Fizzwhiz",
+    "Buzzybounce",
+    "Mirthquake",
+    "Zigzagzoo",
+    "Squeezywheezy",
+    "Bamboozler",
+    "Fluffernutter",
+    "Dizzydoo",
+    "Giggleblitz",
+    "Quirkysnicker",
+    "Wobblewhiz"
+]
+
+
+def randomize_name():
+    first_name = first_names[random.randint(0, len(first_names) - 1)]
+    last_name = last_names[random.randint(0, len(last_names) - 1)]
+    return first_name + " " + last_name
 
 
 '''def apply_volume(options):

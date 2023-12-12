@@ -48,14 +48,15 @@ class Button(pygame.sprite.Sprite):
         self.clicked_image = pygame.Surface((w, h), pygame.SRCALPHA)
         self.offset = offset
         self.play_confirm = play_confirm
+        if button_color:
+            self.button_image.fill(button_color)
+            self.hover_image.fill(button_color)
+            self.clicked_image.fill(button_color)
         if image:
             self.button_image.blit(image.copy(), (0, 0))
             self.hover_image.blit(image.copy(), (0, 0))
             self.clicked_image.blit(image.copy(), (0, 0))
-        else:
-            self.button_image.fill(button_color)
-            self.hover_image.fill(button_color)
-            self.clicked_image.fill(button_color)
+
         pygame.draw.rect(
             self.hover_image, WHITE, self.hover_image.get_rect(), self.border_w
         )
@@ -1403,7 +1404,7 @@ class Textbox:
         self.higlight_color = highlight_color
         self.active = False
         self.hover = False
-        self.max_chars = 10
+        self.max_chars = 15
         self.cursor_timer = 0
         self.max_cursor_timer = 60
 
@@ -1430,6 +1431,10 @@ class Textbox:
             else:
                 if len(self.text) < self.max_chars:
                     self.text += e.unicode
+        self.render_text = self.font.render(self.text, True, self.textcolor)
+
+    def update_text(self, text):
+        self.text = text
         self.render_text = self.font.render(self.text, True, self.textcolor)
 
     def update(self, dt):

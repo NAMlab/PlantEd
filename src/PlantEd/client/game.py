@@ -17,6 +17,7 @@ from PlantEd import config
 from PlantEd.client.analysis import scoring
 from PlantEd.client.analysis.logger import Log
 from PlantEd.client.camera import Camera
+from PlantEd.client.utils.icon_handler import IconHandler
 from PlantEd.constants import MAX_WATER_PER_CELL, ROOT_COST, BRANCH_COST, \
     FLOWER_COST, LEAF_COST
 from PlantEd.data.assets import AssetHandler
@@ -85,12 +86,7 @@ class OptionsScene:
         self.narator_label = self.asset_handler.BIGGER_FONT.render(
             "Narator", True, config.WHITE
             )
-        self.network_label = self.asset_handler.MENU_SUBTITLE.render(
-            "Network", True, config.WHITE
-            )
-        self.upload_score_label = self.asset_handler.BIGGER_FONT.render(
-            "Upload Score", True, config.WHITE
-            )
+
         self.name_label = self.asset_handler.MENU_SUBTITLE.render(
             "Name", True, config.WHITE
             )
@@ -122,15 +118,6 @@ class OptionsScene:
             percent=self.options["narator_volume"] * 100,
             active=True,
             )
-        self.upload_score_button = ToggleButton(
-            center_w + 300,
-            400,
-            50,
-            50,
-            None,
-            pressed=self.options["upload_score"],
-            cross=True,
-            )
 
         self.back = Button(
             center_w - 200,
@@ -159,13 +146,11 @@ class OptionsScene:
             )
 
         self.button_sprites = pygame.sprite.Group()
-        self.button_sprites.add(
-            [self.upload_score_button, self.back, self.apply]
-            )
+        self.button_sprites.add([self.apply, self.back])
 
         self.textbox = Textbox(
             center_w + 160,
-            600,
+            400,
             280,
             50,
             self.asset_handler.BIGGER_FONT,
@@ -212,16 +197,8 @@ class OptionsScene:
             (center_w - 150 - self.narator_label.get_width() / 2, 400),
             )
         self.label_surface.blit(
-            self.network_label,
-            (center_w + 300 - self.network_label.get_width() / 2, 300),
-            )
-        self.label_surface.blit(
-            self.upload_score_label,
-            (center_w + 150 - self.upload_score_label.get_width() / 2, 400),
-            )
-        self.label_surface.blit(
             self.name_label,
-            (center_w + 300 - self.name_label.get_width() / 2, 500),
+            (center_w + 300 - self.name_label.get_width() / 2, 300),
             )
 
         self.label_surface.blit(
@@ -249,7 +226,6 @@ class OptionsScene:
             "music_volume": self.music_slider.get_percentage() / 100,
             "sfx_volume": self.sfx_slider.get_percentage() / 100,
             "narator_volume": self.narator_slider.get_percentage() / 100,
-            "upload_score": self.upload_score_button.button_down,
             "name": self.textbox.text,
             }
         return options
@@ -486,8 +462,11 @@ class DefaultGameScene(object):
         self.plant.organs[0].activate_add_leaf()
 
     def quit(self):
-        #self.log.close_model_file()
-        task = asyncio.create_task(self.end_level())
+        options = config.load_options()
+        seed_mass = self.plant.organs[3].get_mass()
+        options["score"] = seed_mass if seed_mass > options["score"] else options["score"]
+        config.write_options(options)
+        task = asyncio.create_task(self.end_level(options))
         self.plant.save_image(self.path_to_logs)
         plant_dict = self.plant.to_dict()
         config.write_dict(plant_dict, self.path_to_logs + "/plant")
@@ -520,7 +499,7 @@ class DefaultGameScene(object):
             pygame.event.post(pygame.event.Event(WIN))
 
 
-    async def end_level(self):
+    async def end_level(self, player_name):
         global request_running
         if not request_running:
             request_running = True
@@ -529,7 +508,7 @@ class DefaultGameScene(object):
                 game_state = {
                     "type": "end_level",
                     "message": {
-                        "reason": "quit",
+                        "player_name": player_name,
                         }
                     }
                 await websocket.send(json.dumps(game_state))
@@ -724,16 +703,20 @@ class DefaultGameScene(object):
 class TitleScene(object):
     def __init__(self, manager=None):
         super(TitleScene, self).__init__()
+        self.options = config.load_options()
         self.sound_control = SoundControl()
         self.asset_handler = AssetHandler.instance()
+        self.icon_handler = IconHandler((0,50))
         self.title = self.asset_handler.MENU_TITLE.render("PlantEd", True, config.WHITE)
         self.center_h = config.SCREEN_HEIGHT / 2 + 100
         self.center_w = config.SCREEN_WIDTH / 2
+        score = self.options["score"] if self.options["score"] is not None else 0
         self.card_0 = Card(
             (self.center_w, self.center_h - 100),
             self.asset_handler.img("menu/gatersleben.JPG", (512, 512)),
             "Gatersleben",
             callback=manager.go_to,
+            score=score,
             callback_var=DefaultGameScene,
             keywords="Beginner, Medium Temperatures",
             play_select_sfx=self.sound_control.play_select_sfx
@@ -792,6 +775,18 @@ class TitleScene(object):
             play_confirm=self.sound_control.play_toggle_sfx
             )
 
+        self.random = Button(
+            500,
+            100,
+            50,
+            50,
+            [self.set_random_name, self.icon_handler.randomize_image],
+            button_color=config.LIGHT_GRAY,
+            image=self.asset_handler.img("re.PNG", (50,50)),
+            border_w=2,
+            play_confirm=self.sound_control.play_toggle_sfx,
+            )
+
         self.button_sprites = pygame.sprite.Group()
         self.button_sprites.add(
             [
@@ -799,24 +794,51 @@ class TitleScene(object):
                 self.credit_button,
                 self.options_button,
                 self.scores_button,
+                self.random,
                 ]
             )
 
+        self.textbox = Textbox(
+            130,
+            100,
+            350,
+            50,
+            self.asset_handler.BIGGER_FONT,
+            self.options["name"],
+            background_color=config.LIGHT_GRAY,
+            textcolor=config.WHITE,
+            highlight_color=config.WHITE,
+            )
+
     def render(self, screen):
+        temp_surface.fill((0,0,0))
         screen.fill(config.BLACK)
-        screen.blit(
+        temp_surface.blit(
             self.title, (self.center_w - self.title.get_width() / 2, 100)
             )
-        self.card_0.draw(screen)
+        self.card_0.draw(temp_surface)
         # self.card_1.draw(screen)
         # self.card_2.draw(screen)
-        pygame.draw.line(screen, config.WHITE, (100, 900), (1820, 900))
-        self.button_sprites.draw(screen)
+        pygame.draw.line(temp_surface, config.WHITE, (100, 900), (1820, 900))
+
+        self.textbox.draw(temp_surface)
+        self.button_sprites.draw(temp_surface)
+        self.icon_handler.draw(temp_surface)
+
+        screen.blit(temp_surface, (0,0))
 
     def update(self, dt):
         self.card_0.update(dt)
         # self.card_1.update(dt)
         # self.card_2.update(dt)
+        self.textbox.update(dt)
+
+    def set_random_name(self):
+        name = config.randomize_name()
+        options = config.load_options()
+        options["name"] = name
+        config.write_options(options)
+        self.textbox.update_text(name)
 
     def quit(self):
         pygame.event.post(pygame.event.Event(QUIT))
@@ -834,12 +856,17 @@ class TitleScene(object):
         for e in events:
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.quit()
+            self.icon_handler.handle_event(e)
+            if self.icon_handler.selected:
+                pass
+                #return
             self.card_0.handle_event(e)
             # self.card_1.handle_event(e)
             # self.card_2.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
             # self.watering_can.handle_event(e)
+            self.textbox.handle_event(e)
 
 
 class EndScene(object):
@@ -941,7 +968,7 @@ class EndScene(object):
             930,
             300,
             50,
-            [self.sound_control.play_toggle_sfx, self.upload_data, self.return_to_menu],
+            [self.sound_control.play_toggle_sfx, self.return_to_menu],
             self.asset_handler.BIGGER_FONT,
             "Upload Simulation",
             config.LIGHT_GRAY,
@@ -975,12 +1002,6 @@ class EndScene(object):
                 pass
             for button in self.button_sprites:
                 button.handle_event(e)
-
-    def upload_data(self):
-        options = config.load_options()
-        scoring.upload_score(
-            options["name"], self.plant_object.organs[3].get_mass(), self.path_to_logs
-            )
 
     def render(self, screen):
         screen.fill((0, 0, 0, 0))

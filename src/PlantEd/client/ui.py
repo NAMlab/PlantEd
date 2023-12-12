@@ -613,13 +613,14 @@ class UI:
         self.name_label = self.asset_handler.FONT.render(self.name, True, config.BLACK)
 
     def get_options(self):
-        upload_score = config.load_options()["upload_score"]
+        best_score = config.load_options()["best_score"]
+        best_score = 0 if best_score is None else best_score
         options = {
             "music_volume": self.music_slider.get_percentage() / 100,
             "sfx_volume": self.sfx_slider.get_percentage() / 100,
             "narator_volume": self.narator_slider.get_percentage() / 100,
             "name": self.textbox.text,
-            "upload_score": upload_score
+            "best_score": best_score
         }
         return options
 

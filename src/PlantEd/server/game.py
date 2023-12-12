@@ -3,6 +3,7 @@ import time
 
 import numpy as np
 
+from PlantEd.client.analysis import scoring
 from PlantEd.client.analysis.logger import Log
 from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST, WATERING_CAN_COST, NITRATE_COST, \
     Vmax, Km
@@ -79,6 +80,7 @@ class Game:
 
     def force_end_game(self) -> dict:
         self.log.close_model_file()
+        scoring.upload_score(self.player_name, self.path_to_logs, self.plant.seed_mass)
         return {"level closed ": "OK"}
 
     # dt in seconds
@@ -89,7 +91,6 @@ class Game:
             # create scores
             # close logs
             # upload data
-        print(message)
         self.check_game_end()
         delta_t = message["delta_t"]
         growth_percentages = message["growth_percentages"]
