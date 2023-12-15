@@ -80,7 +80,7 @@ class Game:
 
     def force_end_game(self) -> dict:
         self.log.close_model_file()
-        scoring.upload_score(self.player_name, self.path_to_logs, self.plant.seed_mass)
+        scoring.upload_score(self.player_name, self.plant.seed_mass, self.path_to_logs)
         return {"level closed ": "OK"}
 
     # dt in seconds

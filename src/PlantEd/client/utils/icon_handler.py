@@ -20,8 +20,11 @@ class IconHandler:
         self.icon_names = [
             "bird", "bear", "bunny", "cat", "chick", "cow", "dear", "elephant", "fox", "giraffe", "hippo", "hog",
             "horse", "koala", "monkey", "mouse", "owl", "panda", "pavian", "penguin", "pig", "racoon", "sheep", "tiger"]
-        icon_name = config.load_options()["icon_name"]
-        self.image = self.asset_handler.img(f"animal_icons/{icon_name}.PNG", image_size)
+        icon_name = config.load_options().get("icon_name")
+        if icon_name is None:
+            self.randomize_image()
+        else:
+            self.image = self.asset_handler.img(f"animal_icons/{icon_name}.PNG", image_size)
 
         self.button_window_height = self.margin + int((len(self.icon_names)+1) / self.max_row) * (self.margin + button_size[1])
         self.button_window_width = self.margin + max_row * (self.margin + button_size[0])

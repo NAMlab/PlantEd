@@ -71,6 +71,7 @@ class OptionsScene:
         self.options = config.load_options()
         self.sound_control = SoundControl()
         self.asset_handler = AssetHandler.instance()
+        self.icon_handler = IconHandler((0, 50))
         self.option_label = self.asset_handler.MENU_TITLE.render(
             "Options", True, config.WHITE
             )
@@ -87,10 +88,6 @@ class OptionsScene:
             "Narator", True, config.WHITE
             )
 
-        self.name_label = self.asset_handler.MENU_SUBTITLE.render(
-            "Name", True, config.WHITE
-            )
-
         self.label_surface = pygame.Surface(
             (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA
             )
@@ -98,33 +95,57 @@ class OptionsScene:
         center_w, center_h = config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2
 
         self.music_slider = Slider(
-            (center_w - 475, 450, 15, 200),
+            (config.SCREEN_WIDTH / 2 - 150 - 25, 350, 15, 200),
             self.asset_handler.FONT,
             (50, 20),
             percent=self.options["music_volume"] * 100,
             active=True,
             )
-        self.sfx_slider = Slider(
-            (center_w - 325, 450, 15, 200),
-            self.asset_handler.FONT,
-            (50, 20),
-            percent=self.options["sfx_volume"] * 100,
-            active=True,
-            )
         self.narator_slider = Slider(
-            (center_w - 175, 450, 15, 200),
+            (config.SCREEN_WIDTH / 2 - 0 - 25, 350, 15, 200),
             self.asset_handler.FONT,
             (50, 20),
             percent=self.options["narator_volume"] * 100,
             active=True,
             )
+        self.sfx_slider = Slider(
+            (config.SCREEN_WIDTH / 2 + 150 - 25, 350, 15, 200),
+            self.asset_handler.FONT,
+            (50, 20),
+            percent=self.options["sfx_volume"] * 100,
+            active=True,
+            )
+
+        self.random = Button(
+            500,
+            100,
+            50,
+            50,
+            [self.set_random_name, self.icon_handler.randomize_image],
+            button_color=config.LIGHT_GRAY,
+            image=self.asset_handler.img("re.PNG", (50, 50)),
+            border_w=2,
+            play_confirm=self.sound_control.play_toggle_sfx,
+            )
+
+        self.textbox = Textbox(
+            130,
+            100,
+            350,
+            50,
+            self.asset_handler.BIGGER_FONT,
+            self.options.get("name") if self.options.get("name") else "Player",
+            background_color=config.LIGHT_GRAY,
+            textcolor=config.WHITE,
+            highlight_color=config.WHITE,
+            )
 
         self.back = Button(
-            center_w - 200,
+            center_w - 100,
             930,
             200,
             50,
-            [self.cancel_return_to_menu],
+            [self.return_to_menu],
             self.asset_handler.BIGGER_FONT,
             "BACK",
             config.LIGHT_GRAY,
@@ -132,42 +153,15 @@ class OptionsScene:
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
             )
-        self.apply = Button(
-            center_w + 50,
-            930,
-            200,
-            50,
-            [self.return_to_menu],
-            self.asset_handler.BIGGER_FONT,
-            "APPLY",
-            config.LIGHT_GRAY,
-            config.WHITE,
-            border_w=2,
-            )
 
         self.button_sprites = pygame.sprite.Group()
-        self.button_sprites.add([self.apply, self.back])
-
-        self.textbox = Textbox(
-            center_w + 160,
-            400,
-            280,
-            50,
-            self.asset_handler.BIGGER_FONT,
-            self.options["name"],
-            background_color=config.LIGHT_GRAY,
-            textcolor=config.WHITE,
-            highlight_color=config.WHITE,
-            )
-
+        self.button_sprites.add([self.back, self.random])
         self.init_labels()
 
     def return_to_menu(self):
         config.write_options(self.get_options())
         self.manager.go_to(TitleScene(self.manager))
 
-    def cancel_return_to_menu(self):
-        self.manager.go_to(TitleScene(self.manager))
 
     def init_labels(self):
         center_w, center_h = config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2
@@ -180,30 +174,22 @@ class OptionsScene:
             self.option_label,
             (center_w - self.option_label.get_width() / 2, 100),
             )
-        self.label_surface.blit(
-            self.sound_label,
-            (center_w - 300 - self.sound_label.get_width() / 2, 300),
-            )
-        self.label_surface.blit(
-            self.music_label,
-            (center_w - 450 - self.music_label.get_width() / 2, 400),
-            )
-        self.label_surface.blit(
-            self.sfx_label,
-            (center_w - 300 - self.sfx_label.get_width() / 2, 400),
-            )
-        self.label_surface.blit(
-            self.narator_label,
-            (center_w - 150 - self.narator_label.get_width() / 2, 400),
-            )
-        self.label_surface.blit(
-            self.name_label,
-            (center_w + 300 - self.name_label.get_width() / 2, 300),
-            )
+
+        pygame.draw.rect(self.label_surface, config.WHITE, (config.SCREEN_WIDTH / 2 - 300, 220, 600, 430), border_radius=3, width=1)
+        self.label_surface.blit(self.music_label, (config.SCREEN_WIDTH / 2 - self.music_label.get_width() / 2 - 150, 300))
+        self.label_surface.blit(self.narator_label, (config.SCREEN_WIDTH / 2 - self.narator_label.get_width() / 2 - 0, 300))
+        self.label_surface.blit(self.sfx_label, (config.SCREEN_WIDTH / 2 - self.sfx_label.get_width() / 2 + 150, 300))
 
         self.label_surface.blit(
             self.asset_handler.img("plant_growth_pod/plant_growth_10.PNG"), (1300, 400)
             )
+
+    def set_random_name(self):
+        name = config.randomize_name()
+        options = config.load_options()
+        options["name"] = name
+        config.write_options(options)
+        self.textbox.update_text(name)
 
     def update(self, dt):
         self.textbox.update(dt)
@@ -216,18 +202,18 @@ class OptionsScene:
             self.music_slider.handle_event(e)
             self.sfx_slider.handle_event(e)
             self.narator_slider.handle_event(e)
+            self.textbox.handle_event(e)
+            self.icon_handler.handle_event(e)
             # self.upload_score_button.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
-            self.textbox.handle_event(e)
 
     def get_options(self):
-        options = {
-            "music_volume": self.music_slider.get_percentage() / 100,
-            "sfx_volume": self.sfx_slider.get_percentage() / 100,
-            "narator_volume": self.narator_slider.get_percentage() / 100,
-            "name": self.textbox.text,
-            }
+        options = config.load_options()
+        options["music_volume"] = self.music_slider.get_percentage() / 100
+        options["sfx_volume"] = self.sfx_slider.get_percentage() / 100
+        options["narator_volume"] = self.narator_slider.get_percentage() / 100
+        print(options)
         return options
 
     def render(self, screen):
@@ -238,12 +224,14 @@ class OptionsScene:
         self.narator_slider.draw(screen)
         self.button_sprites.draw(screen)
         self.textbox.draw(screen)
+        self.icon_handler.draw(screen)
 
 
 class DefaultGameScene(object):
     def __init__(self):
         # get name and date
-        name = config.load_options()["name"]
+        self.options = config.load_options()
+        name = self.options.get("name") if self.options.get("name") is not None else "Player"
         task = asyncio.create_task(self.load_level())
         self.fps = None
         # self.server_game = Server_Game()
@@ -464,7 +452,8 @@ class DefaultGameScene(object):
     def quit(self):
         options = config.load_options()
         seed_mass = self.plant.organs[3].get_mass()
-        options["score"] = seed_mass if seed_mass > options["score"] else options["score"]
+        score = options.get("score") if options.get("score") is not None else 0
+        options["score"] = seed_mass if seed_mass > score else score
         config.write_options(options)
         task = asyncio.create_task(self.end_level(options))
         self.plant.save_image(self.path_to_logs)
@@ -609,7 +598,6 @@ class DefaultGameScene(object):
         # self.fps = self.asset_handler.FONT.render(f"{fps}", True, config.WHITE)
 
         task = asyncio.create_task(self.send_and_get_response())
-
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
         hour = day / 24
@@ -706,11 +694,11 @@ class TitleScene(object):
         self.options = config.load_options()
         self.sound_control = SoundControl()
         self.asset_handler = AssetHandler.instance()
-        self.icon_handler = IconHandler((0,50))
+        self.icon_handler = IconHandler((0, 50))
         self.title = self.asset_handler.MENU_TITLE.render("PlantEd", True, config.WHITE)
         self.center_h = config.SCREEN_HEIGHT / 2 + 100
         self.center_w = config.SCREEN_WIDTH / 2
-        score = self.options["score"] if self.options["score"] is not None else 0
+        score = self.options.get("score") if self.options.get("score") is not None else 0
         self.card_0 = Card(
             (self.center_w, self.center_h - 100),
             self.asset_handler.img("menu/gatersleben.JPG", (512, 512)),
@@ -804,7 +792,7 @@ class TitleScene(object):
             350,
             50,
             self.asset_handler.BIGGER_FONT,
-            self.options["name"],
+            self.options.get("name") if self.options.get("name") else "Player",
             background_color=config.LIGHT_GRAY,
             textcolor=config.WHITE,
             highlight_color=config.WHITE,
@@ -949,7 +937,7 @@ class EndScene(object):
         - Special (Transpiration, APS lol)
         '''
 
-        '''df = pandas.read_csv(path_to_logs + "/model_logs.csv")
+        df = pandas.read_csv(path_to_logs + "/model_logs.csv")
         self.image = plot.generate_png_from_vec([df.leaf_mass, df.stem_mass, df.root_mass, df.seed_mass],
                                                 name_list=["Leaf", "Stem", "Root", "Seed"],
                                                 colors=[config.hex_color_to_float(config.GREEN),
@@ -960,7 +948,7 @@ class EndScene(object):
                                                 xlabel="Time",
                                                 ylabel="Organ Mass",
                                                 path_to_logs=path_to_logs,
-                                                filename="PLOT.png")'''
+                                                filename="PLOT.png")
 
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
@@ -1025,8 +1013,8 @@ class EndScene(object):
                     (500 - self.score_sum_label.get_width(), 400 + (distance * len(self.flower_score_list))))
         screen.blit(self.score_header_label, (350 - self.score_header_label.get_width() / 2, 270))
         pygame.draw.rect(screen, config.WHITE, (100, 360, 500, int((len(self.flower_score_list) + 2) * distance)), 1, 1)
-        #screen.blit(self.image, (
-        #    config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))
+        screen.blit(self.image, (
+            config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))
         screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
         screen.blit(self.title, (config.SCREEN_WIDTH / 2 - self.title.get_width() / 2, 100))
 

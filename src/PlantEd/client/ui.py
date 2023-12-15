@@ -4,6 +4,7 @@ from pygame import Rect, KEYDOWN, K_ESCAPE
 
 from PlantEd import config
 from PlantEd.client.gameobjects.infobox_manager import InfoBoxManager
+from PlantEd.client.utils.icon_handler import IconHandler
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.camera import Camera
 from PlantEd.client.gameobjects.plant import Plant, Organ
@@ -19,7 +20,7 @@ from PlantEd.client.utils.button import (
     SliderGroup,
     Arrow_Button,
     ButtonArray,
-    NegativeSlider, Button, Textbox,
+    NegativeSlider, Button,
 )
 
 """
@@ -43,7 +44,7 @@ class UI:
             camera: Camera,
             sound_control: SoundControl,
             production_topleft: Tuple[int, int] = (10, 100),
-            plant_details_topleft: Tuple[int, int] = (10, 10),
+            plant_details_topleft: Tuple[int, int] = (10, 20),
             organ_details_topleft: Tuple[int, int] = (10, 430),
             dev_mode: bool = False,
             quit=None
@@ -310,8 +311,6 @@ class UI:
             self.narator_slider.handle_event(e)
             self.sfx_slider.handle_event(e)
             self.music_slider.handle_event(e)
-            self.textbox.handle_event(e)
-            self.apply_button.handle_event(e)
             return
 
         self.infobox_manager.handle_event(e)
@@ -332,7 +331,6 @@ class UI:
 
     def update(self, dt):
         if self.pause:
-            self.textbox.update(dt)
             return
         self.hover.update(dt)
         if self.plant.danger_mode:
@@ -429,6 +427,7 @@ class UI:
         '''self.used_fluxes = {
             "water_used": water_used,
             "nitrate_used": nitrate_used,
+            "nitrate_used": nitrate_used,
             "starch_in_used": starch_in_used,
             "co2_used": co2_used,
             "photon_used": photon_used
@@ -467,22 +466,29 @@ class UI:
     def draw_plant_details(self, s, factor=100):
         # details
         topleft = self.plant_details_topleft
+
         pygame.draw.rect(
             s, config.WHITE, (topleft[0], topleft[1], 470, 40), border_radius=3
         )
 
         # biomass
-        biomass_text = self.asset_handler.FONT.render("Mass:", True, (0, 0, 0))
-        s.blit(biomass_text, dest=(topleft[0] + 10, topleft[1] + 6))
+        #biomass_text = self.asset_handler.FONT.render("Mass:", True, (0, 0, 0))
+        #s.blit(biomass_text, dest=(topleft[0] + 10, topleft[1] + 6))
         biomass = self.asset_handler.FONT.render(
             "{:.2f} x10⁻² gDW".format(self.plant.get_biomass() * factor), True, (0, 0, 0)
         )  # title
         s.blit(
             biomass,
-            dest=(topleft[0] + biomass_text.get_width() + 30, topleft[1] + 6),
+            dest=(topleft[0] + 460 - biomass.get_width(), topleft[1] + 6),
         )
         # name
-        s.blit(self.name_label, (topleft[0] + 460 - self.name_label.get_width(), topleft[1] + 6))
+        s.blit(self.name_label, (topleft[0] + 60, topleft[1] + 6))
+
+        pygame.draw.circle(s, config.BLACK, (topleft[0] + 20, topleft[1] + 20), 30)
+        pygame.draw.circle(s, config.WHITE, (topleft[0] + 20, topleft[1] + 20), 30, 3)
+        icon_name = self.options.get("icon_name")
+        icon = self.asset_handler.img(f"animal_icons/{icon_name}.PNG", (60, 60))
+        self.s.blit(icon, (topleft[0]-10, topleft[1]-10))
 
     def get_day_time(self):
         ticks = self.gametime.get_time()
@@ -546,7 +552,7 @@ class UI:
             config.SCREEN_HEIGHT - 250,
             200,
             50,
-            [self.sound_control.play_select_sfx, self.resume],
+            [self.sound_control.play_select_sfx, self.apply_options, self.sound_control.reload_options, self.narrator.reload_options, self.resume],
             self.asset_handler.BIG_FONT,
             "RESUME",
             border_w=2
@@ -563,65 +569,43 @@ class UI:
         )
 
         self.music_slider = Slider(
-            (config.SCREEN_WIDTH / 2 - 300 - 25, 350, 15, 200),
+            (config.SCREEN_WIDTH / 2 - 150 - 25, 350, 15, 200),
             self.asset_handler.FONT,
             (50, 20),
             percent=self.options["music_volume"] * 100,
             active=True,
-        )
+            )
         self.narator_slider = Slider(
-            (config.SCREEN_WIDTH / 2 - 150 - 25, 350, 15, 200),
+            (config.SCREEN_WIDTH / 2 - 0 - 25, 350, 15, 200),
             self.asset_handler.FONT,
             (50, 20),
             percent=self.options["narator_volume"] * 100,
             active=True,
-        )
+            )
         self.sfx_slider = Slider(
-            (config.SCREEN_WIDTH / 2 - 25, 350, 15, 200),
+            (config.SCREEN_WIDTH / 2 + 150 - 25, 350, 15, 200),
             self.asset_handler.FONT,
             (50, 20),
             percent=self.options["sfx_volume"] * 100,
             active=True,
-        )
-
-        self.textbox = Textbox(
-            config.SCREEN_WIDTH / 2 + 100,
-            360,
-            200,
-            50,
-            self.asset_handler.BIGGER_FONT,
-            self.options["name"],
-            background_color=config.LIGHT_GRAY,
-            textcolor=config.WHITE,
-            highlight_color=config.WHITE,
-        )
-
-        self.apply_button = Button(
-            config.SCREEN_WIDTH / 2 + 100,
-            460,
-            200,
-            50,
-            [self.apply_options, self.sound_control.reload_options, self.narrator.reload_options],
-            self.asset_handler.BIG_FONT,
-            "APPLY",
-            border_w=2,
-        )
+            )
+    def set_random_name(self):
+        name = config.randomize_name()
+        options = config.load_options()
+        options["name"] = name
+        config.write_options(options)
 
     def apply_options(self):
         config.write_options(self.get_options())
         self.name = config.load_options()["name"]
         self.name_label = self.asset_handler.FONT.render(self.name, True, config.BLACK)
+        self.options = config.load_options()
 
     def get_options(self):
-        best_score = config.load_options()["best_score"]
-        best_score = 0 if best_score is None else best_score
-        options = {
-            "music_volume": self.music_slider.get_percentage() / 100,
-            "sfx_volume": self.sfx_slider.get_percentage() / 100,
-            "narator_volume": self.narator_slider.get_percentage() / 100,
-            "name": self.textbox.text,
-            "best_score": best_score
-        }
+        options = config.load_options()
+        options["music_volume"] = self.music_slider.get_percentage() / 100
+        options["sfx_volume"] = self.sfx_slider.get_percentage() / 100
+        options["narator_volume"] = self.narator_slider.get_percentage() / 100
         return options
 
     def resume(self):
@@ -709,10 +693,10 @@ class UI:
         SliderGroup([slider for slider in self.sliders], 100)
 
     def draw_pause_menu(self, s):
-        pygame.draw.rect(s, config.WHITE, (config.SCREEN_WIDTH / 2 - 400, 220, 800, 430), border_radius=3, width=1)
-        s.blit(self.music_label, (config.SCREEN_WIDTH / 2 - self.music_label.get_width() / 2 - 300, 300))
-        s.blit(self.narator_label, (config.SCREEN_WIDTH / 2 - self.narator_label.get_width() / 2 - 150, 300))
-        s.blit(self.sfx_label, (config.SCREEN_WIDTH / 2 - self.sfx_label.get_width() / 2, 300))
+        pygame.draw.rect(s, config.WHITE, (config.SCREEN_WIDTH / 2 - 300, 220, 600, 430), border_radius=3, width=1)
+        s.blit(self.music_label, (config.SCREEN_WIDTH / 2 - self.music_label.get_width() / 2 - 150, 300))
+        s.blit(self.narator_label, (config.SCREEN_WIDTH / 2 - self.narator_label.get_width() / 2 - 0, 300))
+        s.blit(self.sfx_label, (config.SCREEN_WIDTH / 2 - self.sfx_label.get_width() / 2 + 150, 300))
         s.blit(self.pause_label, (config.SCREEN_WIDTH / 2 - self.pause_label.get_width() / 2, 100))
 
         self.pause_button_exit.draw(s)
@@ -720,8 +704,6 @@ class UI:
         self.narator_slider.draw(s)
         self.sfx_slider.draw(s)
         self.music_slider.draw(s)
-        self.textbox.draw(s)
-        self.apply_button.draw(s)
 
     def draw_organ_detail_temp(
             self, s, organ: Organ, pos, label, show_amount=True, factor=1
