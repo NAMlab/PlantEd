@@ -2,8 +2,9 @@ import os
 import time
 
 import numpy as np
+import pandas
 
-from PlantEd.client.analysis import scoring
+from PlantEd.client.analysis import scoring, plot
 from PlantEd.client.analysis.logger import Log
 from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST, WATERING_CAN_COST, NITRATE_COST, \
     Vmax, Km
@@ -57,13 +58,14 @@ scenarios = {
 
 
 class Game:
-    def __init__(self, player_name, path_to_logs, level_name="spring_high_nitrate", start_time=0, resolution=3600,
+    def __init__(self, player_name, icon_name, path_to_logs, level_name="spring_high_nitrate", start_time=0, resolution=3600,
                  green_thumbs=25):
         since_epoch = time.time()
         self.path_to_logs = path_to_logs
         # os.makedirs(self.path_to_logs)
         self.log = Log(self.path_to_logs)  # can be turned off
         self.player_name = player_name
+        self.icon_name = icon_name
         self.level_name = level_name
         self.time = start_time
         self.resolution = resolution
@@ -78,9 +80,11 @@ class Game:
         if self.time / (60 * 60 * 24) >= MAX_DAYS:
             self.running = False
 
-    def force_end_game(self) -> dict:
+    def force_end_game(self, message) -> dict:
         self.log.close_model_file()
-        scoring.upload_score(self.player_name, self.plant.seed_mass, self.path_to_logs)
+        df = pandas.read_csv(self.path_to_logs + "/model_logs.csv")
+        plot.generate_big_plot(df, self.path_to_logs)
+        scoring.upload_score(self.player_name, self.plant.seed_mass, self.path_to_logs, self.icon_name)
         return {"level closed ": "OK"}
 
     # dt in seconds

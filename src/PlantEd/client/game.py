@@ -2,32 +2,29 @@ import asyncio
 import json
 import os
 import random
-import sys
 import time
 from datetime import datetime
 from typing import List
 
 import numpy as np
-import pandas
 import pygame
 import websockets
 from pygame.locals import *
 
 from PlantEd import config
 from PlantEd.client.analysis import scoring
-from PlantEd.client.analysis.logger import Log
 from PlantEd.client.camera import Camera
 from PlantEd.client.utils.icon_handler import IconHandler
+from PlantEd.client.utils.scores_handler import ScoreList
 from PlantEd.constants import MAX_WATER_PER_CELL, ROOT_COST, BRANCH_COST, \
     FLOWER_COST, LEAF_COST
 from PlantEd.data.assets import AssetHandler
-from PlantEd.client.gameobjects.infobox_manager import InfoBoxManager
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.gameobjects.bee import Hive
 from PlantEd.client.gameobjects.bug import Bug
 from PlantEd.client.utils.grid import Grid
 from PlantEd.client.gameobjects.level_card import Card
-from PlantEd.client.gameobjects.plant import Plant, Root
+from PlantEd.client.gameobjects.plant import Plant
 from PlantEd.client.gameobjects.shop import (
     Shop,
     Shop_Item,
@@ -38,14 +35,12 @@ from PlantEd.client.gameobjects.snail import SnailSpawner
 from PlantEd.client.gameobjects.tree import Tree
 from PlantEd.client.gameobjects.water_reservoir import Water_Grid, Base_water
 from PlantEd.client.ui import UI
-from PlantEd.client.utils import plot
 from PlantEd.client.utils.animation import Animation
-from PlantEd.client.utils.button import Button, Slider, ToggleButton, Textbox
+from PlantEd.client.utils.button import Button, Slider, Textbox
 from PlantEd.client.utils.gametime import GameTime
 from PlantEd.client.utils.narrator import Narrator
 from PlantEd.client.utils.particle import ParticleSystem, ParticleExplosion
 from PlantEd.client.weather import Environment
-from PlantEd.server.game import Game as Server_Game
 from PlantEd.server.lsystem import DictToRoot
 
 true_res = (
@@ -162,7 +157,6 @@ class OptionsScene:
         config.write_options(self.get_options())
         self.manager.go_to(TitleScene(self.manager))
 
-
     def init_labels(self):
         center_w, center_h = config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2
 
@@ -175,9 +169,12 @@ class OptionsScene:
             (center_w - self.option_label.get_width() / 2, 100),
             )
 
-        pygame.draw.rect(self.label_surface, config.WHITE, (config.SCREEN_WIDTH / 2 - 300, 220, 600, 430), border_radius=3, width=1)
-        self.label_surface.blit(self.music_label, (config.SCREEN_WIDTH / 2 - self.music_label.get_width() / 2 - 150, 300))
-        self.label_surface.blit(self.narator_label, (config.SCREEN_WIDTH / 2 - self.narator_label.get_width() / 2 - 0, 300))
+        pygame.draw.rect(self.label_surface, config.WHITE, (config.SCREEN_WIDTH / 2 - 300, 220, 600, 430),
+                         border_radius=3, width=1)
+        self.label_surface.blit(self.music_label,
+                                (config.SCREEN_WIDTH / 2 - self.music_label.get_width() / 2 - 150, 300))
+        self.label_surface.blit(self.narator_label,
+                                (config.SCREEN_WIDTH / 2 - self.narator_label.get_width() / 2 - 0, 300))
         self.label_surface.blit(self.sfx_label, (config.SCREEN_WIDTH / 2 - self.sfx_label.get_width() / 2 + 150, 300))
 
         self.label_surface.blit(
@@ -213,7 +210,6 @@ class OptionsScene:
         options["music_volume"] = self.music_slider.get_percentage() / 100
         options["sfx_volume"] = self.sfx_slider.get_percentage() / 100
         options["narator_volume"] = self.narator_slider.get_percentage() / 100
-        print(options)
         return options
 
     def render(self, screen):
@@ -239,7 +235,7 @@ class DefaultGameScene(object):
         self.asset_handler = AssetHandler.instance()
         self.path_to_logs = "../client/data/finished_games/{}{}".format(name, since_epoch)
         os.makedirs(self.path_to_logs)
-        #self.log = Log(self.path_to_logs)  # can be turned off
+        # self.log = Log(self.path_to_logs)  # can be turned off
         pygame.mixer.set_reserved(2)
         self.sound_control = SoundControl()
         self.sound_control.play_music()
@@ -332,7 +328,6 @@ class DefaultGameScene(object):
             snails=[],
             snail_clicked=self.sound_control.play_snail_sfx
             )
-
 
         self.shop = Shop(
             rect=Rect(1700, 120, 200, 410),
@@ -455,7 +450,7 @@ class DefaultGameScene(object):
         score = options.get("score") if options.get("score") is not None else 0
         options["score"] = seed_mass if seed_mass > score else score
         config.write_options(options)
-        task = asyncio.create_task(self.end_level(options))
+        task = asyncio.create_task(self.end_level(options["name"], options["icon_name"]))
         self.plant.save_image(self.path_to_logs)
         plant_dict = self.plant.to_dict()
         config.write_dict(plant_dict, self.path_to_logs + "/plant")
@@ -468,10 +463,7 @@ class DefaultGameScene(object):
                 continue
 
             if e.type == WIN:
-                self.plant.save_image(self.path_to_logs)
-                plant_dict = self.plant.to_dict()
-                config.write_dict(plant_dict, self.path_to_logs + "/plant")
-                self.manager.go_to(EndScene(self.path_to_logs))
+                self.quit()
 
             self.shop.handle_event(e)
             self.floating_shop.handle_event(e)
@@ -487,23 +479,18 @@ class DefaultGameScene(object):
         if days > config.MAX_DAYS:
             pygame.event.post(pygame.event.Event(WIN))
 
-
-    async def end_level(self, player_name):
-        global request_running
-        if not request_running:
-            request_running = True
-            async with websockets.connect("ws://localhost:8765") as websocket:
-                print(" --> End Level...")
-                game_state = {
-                    "type": "end_level",
-                    "message": {
-                        "player_name": player_name,
-                        }
+    async def end_level(self, player_name, icon_name):
+        async with websockets.connect("ws://localhost:8765") as websocket:
+            print(" --> End Level...")
+            game_state = {
+                "type": "end_level",
+                "message": {
+                    "player_name": player_name,
+                    "icon_name": icon_name
                     }
-                await websocket.send(json.dumps(game_state))
-                response = await websocket.recv()
-                request_running = False
-
+                }
+            await websocket.send(json.dumps(game_state))
+            response = await websocket.recv()
 
     async def load_level(self):
         global request_running
@@ -514,7 +501,8 @@ class DefaultGameScene(object):
                 game_state = {
                     "type": "load_level",
                     "message": {
-                        "player_name": "player1",
+                        "player_name": self.options["name"],
+                        "icon_name": self.options["icon_name"],
                         "level_name": "summer_low_nitrate",
                         "path_to_logs": self.path_to_logs,
                         }
@@ -585,7 +573,6 @@ class DefaultGameScene(object):
                 self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
 
                 self.ui.used_fluxes = dic["used_fluxes"]
-
 
                 if dic is not None:
                     if not dic["running"]:
@@ -770,7 +757,7 @@ class TitleScene(object):
             50,
             [self.set_random_name, self.icon_handler.randomize_image],
             button_color=config.LIGHT_GRAY,
-            image=self.asset_handler.img("re.PNG", (50,50)),
+            image=self.asset_handler.img("re.PNG", (50, 50)),
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx,
             )
@@ -799,7 +786,7 @@ class TitleScene(object):
             )
 
     def render(self, screen):
-        temp_surface.fill((0,0,0))
+        temp_surface.fill((0, 0, 0))
         screen.fill(config.BLACK)
         temp_surface.blit(
             self.title, (self.center_w - self.title.get_width() / 2, 100)
@@ -813,7 +800,7 @@ class TitleScene(object):
         self.button_sprites.draw(temp_surface)
         self.icon_handler.draw(temp_surface)
 
-        screen.blit(temp_surface, (0,0))
+        screen.blit(temp_surface, (0, 0))
 
     def update(self, dt):
         self.card_0.update(dt)
@@ -847,7 +834,7 @@ class TitleScene(object):
             self.icon_handler.handle_event(e)
             if self.icon_handler.selected:
                 pass
-                #return
+                # return
             self.card_0.handle_event(e)
             # self.card_1.handle_event(e)
             # self.card_2.handle_event(e)
@@ -929,27 +916,6 @@ class EndScene(object):
 
         self.plot_label = self.asset_handler.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
 
-        '''
-        Prepare plots
-        - Mass (Organs)
-        - Pools (Water, Nitrate, starch)
-        - Environment (Photon, Humidity, Precipitation, Temperature)
-        - Special (Transpiration, APS lol)
-        '''
-
-        df = pandas.read_csv(path_to_logs + "/model_logs.csv")
-        self.image = plot.generate_png_from_vec([df.leaf_mass, df.stem_mass, df.root_mass, df.seed_mass],
-                                                name_list=["Leaf", "Stem", "Root", "Seed"],
-                                                colors=[config.hex_color_to_float(config.GREEN),
-                                                        config.hex_color_to_float(config.WHITE),
-                                                        config.hex_color_to_float(config.RED),
-                                                        config.hex_color_to_float(config.YELLOW)],
-                                                ticks=df.ticks,
-                                                xlabel="Time",
-                                                ylabel="Organ Mass",
-                                                path_to_logs=path_to_logs,
-                                                filename="PLOT.png")
-
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
             config.SCREEN_WIDTH / 2 - 150,
@@ -964,21 +930,7 @@ class EndScene(object):
             border_w=2,
             )
 
-        self.keep = Button(
-            config.SCREEN_WIDTH / 2 + 150,
-            930,
-            300,
-            50,
-            [self.sound_control.play_toggle_sfx, self.return_to_menu],
-            self.asset_handler.BIGGER_FONT,
-            "Keep my secrets",
-            config.LIGHT_GRAY,
-            config.WHITE,
-            border_w=2,
-            )
-
         self.button_sprites.add(self.back)
-        self.button_sprites.add(self.keep)
 
     def update(self, dt):
         self.explosion.update(dt)
@@ -1013,8 +965,8 @@ class EndScene(object):
                     (500 - self.score_sum_label.get_width(), 400 + (distance * len(self.flower_score_list))))
         screen.blit(self.score_header_label, (350 - self.score_header_label.get_width() / 2, 270))
         pygame.draw.rect(screen, config.WHITE, (100, 360, 500, int((len(self.flower_score_list) + 2) * distance)), 1, 1)
-        screen.blit(self.image, (
-            config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))
+        '''screen.blit(self.image, (
+            config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))'''
         screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
         screen.blit(self.title, (config.SCREEN_WIDTH / 2 - self.title.get_width() / 2, 100))
 
@@ -1026,20 +978,7 @@ class CustomScene(object):
     def __init__(self):
         self.asset_handler = AssetHandler.instance()
         super(CustomScene, self).__init__()
-        self.text1 = self.asset_handler.MENU_TITLE.render(
-            "Top Plants", True, (255, 255, 255)
-            )
-        # self.text3 = config.BIGGER_FONT.render('> press any key to restart <', True, (255,255,255))
-
-        self.name_txt = self.asset_handler.BIGGER_FONT.render(
-            "Name", True, (255, 255, 255)
-            )
-        self.score_txt = self.asset_handler.BIGGER_FONT.render(
-            "Score", True, (255, 255, 255)
-            )
-        self.submit_txt = self.asset_handler.BIGGER_FONT.render(
-            "Submit Date", True, (255, 255, 255)
-            )
+        self.score_handler = ScoreList((200, 200), 1000)
 
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
@@ -1059,36 +998,28 @@ class CustomScene(object):
         self.winners = scoring.get_scores()
         self.scores = []
         self.names = []
+        self.icon_names = []
         self.datetimes = []
 
         self.winners = sorted(self.winners, key=lambda x: x["score"])
 
         for winner in reversed(self.winners):
+            print("Add score")
             # print(winner["score"])
             score = winner["score"]
-            score_label = self.asset_handler.BIGGER_FONT.render(
-                "Seed Mass {:.5f} gramms".format(score), True, (255, 255, 255)
+            name = winner["name"]
+            icon_name = winner["icon_name"]
+            date = datetime.utcfromtimestamp(winner["datetime_added"]).strftime(
+                "%d/%m/%Y %H:%M"
                 )
-            self.scores.append(score_label)
-            name = self.asset_handler.BIGGER_FONT.render(
-                winner["name"], True, (255, 255, 255)
-                )
-            self.names.append(name)
-            datetime_added = self.asset_handler.BIGGER_FONT.render(
-                datetime.utcfromtimestamp(winner["datetime_added"]).strftime(
-                    "%d/%m/%Y %H:%M"
-                    ),
-                True,
-                (255, 255, 255),
-                )
-            self.datetimes.append(datetime_added)
+            self.score_handler.add_new_score(name, icon_name, score, date)
 
     def return_to_menu(self):
         # pygame.quit()
         # sys.exit()
         self.manager.go_to(TitleScene(self.manager))
 
-    def get_day_time(self, ticks):
+        '''    def get_day_time(self, ticks):
         day = 1000 * 60 * 60 * 24
         hour = day / 24
         min = hour / 60
@@ -1096,44 +1027,11 @@ class CustomScene(object):
         days = str(int(ticks / day))
         hours = str(int((ticks % day) / hour))
         minutes = str(int((ticks % hour) / min))
-        return days + " Days " + hours + " Hours " + minutes + " Minutes"
+        return days + " Days " + hours + " Hours " + minutes + " Minutes"'''
 
     def render(self, screen):
         screen.fill(config.BLACK)
-        screen.blit(
-            self.text1, (SCREEN_WIDTH / 2 - self.text1.get_width() / 2, 100)
-            )
-
-        pygame.draw.line(screen, config.WHITE, (100, 300), (1820, 300))
-
-        # screen.blit(self.name_txt, (SCREEN_WIDTH / 4 - self.name_txt.get_width()/2, SCREEN_HEIGHT / 3))
-        # screen.blit(self.score_txt, (SCREEN_WIDTH / 2 - self.score_txt.get_width()/2, SCREEN_HEIGHT / 3))
-        # screen.blit(self.submit_txt, (SCREEN_WIDTH / 4*2 - self.submit_txt.get_width()/2, SCREEN_HEIGHT / 3))
-
-        for i in range(0, min(10, len(self.winners))):
-            screen.blit(
-                self.names[i],
-                (
-                    SCREEN_WIDTH / 4 - self.names[i].get_width() / 2,
-                    SCREEN_HEIGHT / 3 + SCREEN_HEIGHT / 20 * i,
-                    ),
-                )
-            screen.blit(
-                self.scores[i],
-                (
-                    SCREEN_WIDTH / 2 - self.scores[i].get_width() / 2,
-                    SCREEN_HEIGHT / 3 + SCREEN_HEIGHT / 20 * i,
-                    ),
-                )
-            screen.blit(
-                self.datetimes[i],
-                (
-                    SCREEN_WIDTH / 4 * 3 - self.datetimes[i].get_width() / 2,
-                    SCREEN_HEIGHT / 3 + SCREEN_HEIGHT / 20 * i,
-                    ),
-                )
-
-        pygame.draw.line(screen, config.WHITE, (100, 900), (1820, 900))
+        self.score_handler.draw(screen)
         self.button_sprites.draw(screen)
 
     def update(self, dt):
@@ -1141,8 +1039,7 @@ class CustomScene(object):
 
     def handle_events(self, events):
         for e in events:
-            if e.type == KEYDOWN:
-                self.manager.go_to(TitleScene(self.manager))
+            self.score_handler.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
 
