@@ -28,3 +28,7 @@ src/PlantEd/server/server.err
 src/PlantEd/server/CrashNBurn_run1.csv
 
 src/PlantEd/server/server.log
+
+src/PlantEd/server/data/
+
+src/PlantEd/server/log

@@ -26,7 +26,7 @@ def generate_png_from_vec(vector_list, name_list, colors, ticks, xlabel, ylabel,
     return image
 
 
-def generate_big_plot(df, path_to_logs):
+def generate_big_plot(df, path_to_logs=None) -> pygame.Surface:
     fig, ax = plt.subplots(10, figsize=(10,15), layout="constrained")
 
     days = df.time
@@ -71,6 +71,8 @@ def generate_big_plot(df, path_to_logs):
 
     #plt.show()
     plt.savefig(path_to_logs + "/plot.PNG")
+    image = pygame.image.load(path_to_logs + "/plot.PNG").convert_alpha()
+    return image
 
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@ import pandas as pd
 
 
 def upload_score(name, score, path_to_logs, icon_name):
-    print(name, score, path_to_logs, icon_name)
     files = {
         "logfile": open(path_to_logs + '/model_logs.csv', 'rb')  # ,
         #           'plant_json': open(path_to_logs + '/plant.json', 'rb'),

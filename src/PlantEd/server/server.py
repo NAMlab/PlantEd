@@ -15,13 +15,14 @@ class Server:
             player_name=command["player_name"],
             icon_name=command["icon_name"],
             level_name=command["level_name"],
-            path_to_logs=command["path_to_logs"]
         )
         return {"level loaded": self.game.level_name}
 
     def close_level(self, message) -> dict:
         print("close level")
-        return self.game.force_end_game(message)
+        response = self.game.force_end_game(message)
+        self.game = None
+        return response
 
 
     def update(self, message) -> dict:

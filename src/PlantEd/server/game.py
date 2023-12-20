@@ -58,11 +58,11 @@ scenarios = {
 
 
 class Game:
-    def __init__(self, player_name, icon_name, path_to_logs, level_name="spring_high_nitrate", start_time=0, resolution=3600,
+    def __init__(self, player_name, icon_name, level_name="spring_high_nitrate", start_time=0, resolution=3600,
                  green_thumbs=25):
         since_epoch = time.time()
-        self.path_to_logs = path_to_logs
-        # os.makedirs(self.path_to_logs)
+        self.path_to_logs = "./data/finished_games/{}{}".format(player_name, since_epoch)
+        os.makedirs(self.path_to_logs)
         self.log = Log(self.path_to_logs)  # can be turned off
         self.player_name = player_name
         self.icon_name = icon_name
@@ -82,10 +82,10 @@ class Game:
 
     def force_end_game(self, message) -> dict:
         self.log.close_model_file()
-        df = pandas.read_csv(self.path_to_logs + "/model_logs.csv")
-        plot.generate_big_plot(df, self.path_to_logs)
+        #df = pandas.read_csv(self.path_to_logs + "/model_logs.csv")
+        #plot.generate_big_plot(df, self.path_to_logs)
         scoring.upload_score(self.player_name, self.plant.seed_mass, self.path_to_logs, self.icon_name)
-        return {"level closed ": "OK"}
+        return {"path_to_logs": self.path_to_logs}
 
     # dt in seconds
     def update(self, message) -> dict:

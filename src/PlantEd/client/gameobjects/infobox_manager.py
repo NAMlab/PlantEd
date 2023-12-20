@@ -9,7 +9,7 @@ class InfoBoxManager:
     def __init__(self, boxes=[]):
         self.boxes: list[InfoBox] = boxes
         self.active_box = 0
-        self.visible = True
+        self.visible = False
         self.asset_handler = AssetHandler.instance()
 
         self.show_button = Button(
@@ -30,6 +30,7 @@ class InfoBoxManager:
         return infoboxes
 
     def from_dict(self, boxes: dict):
+        self.boxes = []
         for box in boxes["boxes"]:
             self.create_infobox(
                 pos=box["pos"],
@@ -76,8 +77,8 @@ class InfoBoxManager:
             self.active_box = len(self.boxes)-1
 
     def handle_event(self, e):
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_q:
-            config.write_infobox(self.to_dict())
+        '''if e.type == pygame.KEYDOWN and e.key == pygame.K_q:
+            config.write_infobox(self.to_dict())'''
         if len(self.boxes) > 0:
             self.boxes[self.active_box].handle_event(e)
         self.show_button.handle_event(e)

@@ -7,6 +7,7 @@ from PlantEd.data.assets import AssetHandler
 class PlayerScore:
     def __init__(
             self,
+            id,
             name,
             image,
             font: pygame.font,
@@ -14,6 +15,7 @@ class PlayerScore:
             date,
             width,
             ):
+        self.id = id
         self.name = name
         self.image = image
         self.font: pygame.font = font
@@ -45,26 +47,20 @@ class PlayerScore:
     def update_pos(self, pos):
         self.rect = pygame.Rect(pos[0], pos[1], self.rect[2], self.rect[3])
 
-    def handle_event(self, e):
+    def handle_event(self, e, pos):
         if e.type == pygame.MOUSEMOTION:
-            mouse_pos = pygame.mouse.get_pos()
-            if self.rect.collidepoint(mouse_pos):
+            if self.rect.collidepoint(pos):
                 self.hover = True
             else:
                 self.hover = False
         if e.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos = pygame.mouse.get_pos()
-            print(mouse_pos)
-            print(self.rect)
-            if self.rect.collidepoint(mouse_pos):
+            if self.rect.collidepoint(pos):
                 self.selected = True
                 self.hover = False
             else:
                 self.selected = False
 
     def draw(self, screen):
-        print(self.selected, self.hover)
-
         screen.blit(self.surface, (self.rect[0], self.rect[1]))
         if self.hover:
             pygame.draw.rect(screen, config.WHITE_TRANSPARENT, self.rect, width=3)
@@ -88,10 +84,16 @@ class ScoreList:
         self.rect = pygame.Rect(0, 0, 0, 0)
         self.init_layout()
 
-    def add_new_score(self, name, icon_name, score, date):
+    def get_selected(self) -> PlayerScore:
+        for score in self.player_scores:
+            if score.selected:
+                return score
+
+    def add_new_score(self, id, name, icon_name, score, date):
         image = self.asset_handler.img(f"animal_icons/{icon_name}.PNG", (60, 60))
         self.player_scores.append(
             PlayerScore(
+                id=id,
                 name=name,
                 image=image,
                 font=self.asset_handler.BIGGER_FONT,
@@ -110,9 +112,9 @@ class ScoreList:
             score.update_pos((self.pos[0], self.pos[1] + height))
         self.rect = pygame.Rect(self.pos[0], self.pos[1],self.width, height)
 
-    def handle_event(self, e):
+    def handle_event(self, e, pos):
         for score in self.player_scores:
-            score.handle_event(e)
+            score.handle_event(e, pos)
 
     def draw(self, screen):
         score_height = self.rect[2]/max(len(self.player_scores), 1)

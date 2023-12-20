@@ -7,15 +7,16 @@ from datetime import datetime
 from typing import List
 
 import numpy as np
+import pandas
 import pygame
 import websockets
 from pygame.locals import *
 
 from PlantEd import config
-from PlantEd.client.analysis import scoring
+from PlantEd.client.analysis import scoring, plot
 from PlantEd.client.camera import Camera
 from PlantEd.client.utils.icon_handler import IconHandler
-from PlantEd.client.utils.scores_handler import ScoreList
+from PlantEd.client.utils.scores_handler import ScoreList, PlayerScore
 from PlantEd.constants import MAX_WATER_PER_CELL, ROOT_COST, BRANCH_COST, \
     FLOWER_COST, LEAF_COST
 from PlantEd.data.assets import AssetHandler
@@ -504,12 +505,11 @@ class DefaultGameScene(object):
                         "player_name": self.options["name"],
                         "icon_name": self.options["icon_name"],
                         "level_name": "summer_low_nitrate",
-                        "path_to_logs": self.path_to_logs,
                         }
                     }
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
-                print(response)
+                #print(response)
                 request_running = False
 
     async def send_and_get_response(self):
@@ -899,22 +899,17 @@ class EndScene(object):
             )
 
         self.score_header_label = self.asset_handler.MENU_SUBTITLE.render("Score", True, config.WHITE)
-        self.flower_score_list = []
+        #self.flower_score_list = []
         score_sum = 0
-        for i in range(len(self.plant_object.organs[3].flowers)):
-            flowers = self.plant_object.organs[3].flowers
-            flower_score = self.asset_handler.BIGGER_FONT.render(
-                "Flower {}: {:.2f} grams".format(i, float(flowers[i]["mass"])),
-                True,
-                config.WHITE)
-            self.flower_score_list.append(flower_score)
-            score_sum += flowers[i]["mass"]
+
+        for flower in self.plant_object.organs[3].flowers:
+            score_sum += flower["mass"]
 
         self.score_sum_label = self.asset_handler.BIGGER_FONT.render("{:.2f} grams".format(float(score_sum)), True,
                                                                      config.WHITE)
         self.title = self.asset_handler.MENU_TITLE.render("Finished", True, config.WHITE)
 
-        self.plot_label = self.asset_handler.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
+        #self.plot_label = self.asset_handler.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
 
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
@@ -954,20 +949,13 @@ class EndScene(object):
 
         distance = 0
         width = 0
-        if self.flower_score_list:
-            distance = self.flower_score_list[0].get_height() + 20
-            width = self.flower_score_list[0].get_width()
-        for i in range(len(self.flower_score_list)):
-            screen.blit(self.flower_score_list[i], (500 - width, 380 + (distance * i)))
-        pygame.draw.line(screen, config.WHITE, (150, 380 + (distance * len(self.flower_score_list))),
-                         (550, 380 + (distance * len(self.flower_score_list))))
-        screen.blit(self.score_sum_label,
-                    (500 - self.score_sum_label.get_width(), 400 + (distance * len(self.flower_score_list))))
+        pygame.draw.line(screen, config.WHITE, (150, 360), (550, 360))
+        screen.blit(self.score_sum_label, (500 - self.score_sum_label.get_width(), 400))
         screen.blit(self.score_header_label, (350 - self.score_header_label.get_width() / 2, 270))
-        pygame.draw.rect(screen, config.WHITE, (100, 360, 500, int((len(self.flower_score_list) + 2) * distance)), 1, 1)
+        #pygame.draw.rect(screen, config.WHITE, (100, 360, 500, int((len(self.flower_score_list) + 2) * distance)), 1, 1)
         '''screen.blit(self.image, (
             config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))'''
-        screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
+        #screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
         screen.blit(self.title, (config.SCREEN_WIDTH / 2 - self.title.get_width() / 2, 100))
 
     def return_to_menu(self):
@@ -976,10 +964,12 @@ class EndScene(object):
 
 class CustomScene(object):
     def __init__(self):
+        self.path_to_logs = "./"
         self.asset_handler = AssetHandler.instance()
         super(CustomScene, self).__init__()
-        self.score_handler = ScoreList((200, 200), 1000)
-
+        self.score_handler = ScoreList((800, 140), 1000)
+        main_y = -1 * self.score_handler.rect[3]
+        self.camera = Camera(0, min_y=main_y, max_y=0)
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
             860,
@@ -1000,19 +990,20 @@ class CustomScene(object):
         self.names = []
         self.icon_names = []
         self.datetimes = []
-
         self.winners = sorted(self.winners, key=lambda x: x["score"])
+        self.selected_score: PlayerScore = None
+        self.selected_score_plot: pygame.Surface = None
 
         for winner in reversed(self.winners):
-            print("Add score")
             # print(winner["score"])
             score = winner["score"]
+            id = winner["id"]
             name = winner["name"]
             icon_name = winner["icon_name"]
             date = datetime.utcfromtimestamp(winner["datetime_added"]).strftime(
                 "%d/%m/%Y %H:%M"
                 )
-            self.score_handler.add_new_score(name, icon_name, score, date)
+            self.score_handler.add_new_score(id, name, icon_name, score, date)
 
     def return_to_menu(self):
         # pygame.quit()
@@ -1031,15 +1022,40 @@ class CustomScene(object):
 
     def render(self, screen):
         screen.fill(config.BLACK)
-        self.score_handler.draw(screen)
+        temp_surface.fill(config.BLACK)
+        self.score_handler.draw(temp_surface)
+
+        if self.selected_score_plot is not None:
+            screen.blit(self.selected_score_plot, (10,10))
+
+        screen.blit(temp_surface, (0,self.camera.offset_y))
+        pygame.draw.rect(screen, config.BLACK,(0, config.SCREEN_HEIGHT-200,config.SCREEN_WIDTH, 200))
+        pygame.draw.rect(screen, config.BLACK,(0, 0, config.SCREEN_WIDTH, 200))
         self.button_sprites.draw(screen)
 
     def update(self, dt):
-        pass
+        self.camera.min_y = -1 * self.score_handler.rect[3] + config.SCREEN_HEIGHT
+        '''new_selected_score = self.score_handler.get_selected()
+        if new_selected_score is not None:
+            if self.selected_score is None:
+                self.selected_score = new_selected_score
+                self.selected_score = new_selected_score
+                csv = scoring.get_csv(self.selected_score.id)
+                df = pandas.read_csv(csv)
+                self.selected_score_plot = plot.generate_big_plot(df, self.path_to_logs)
+            elif new_selected_score.id != self.selected_score.id:
+                self.selected_score = new_selected_score
+                csv = scoring.get_csv(self.selected_score.id)
+                df = pandas.read_csv(csv)
+                self.selected_score_plot = plot.generate_big_plot(df, self.path_to_logs)'''
+
 
     def handle_events(self, events):
         for e in events:
-            self.score_handler.handle_event(e)
+            self.camera.handle_event(e)
+            pos = pygame.mouse.get_pos()
+            adapted_pos = (pos[0], pos[1] - self.camera.offset_y)
+            self.score_handler.handle_event(e, adapted_pos)
             for button in self.button_sprites:
                 button.handle_event(e)
 
