@@ -90,6 +90,8 @@ class ScoreList:
                 return score
 
     def add_new_score(self, id, name, icon_name, score, date):
+        if icon_name is None:
+            icon_name = "cow"
         image = self.asset_handler.img(f"animal_icons/{icon_name}.PNG", (60, 60))
         self.player_scores.append(
             PlayerScore(
