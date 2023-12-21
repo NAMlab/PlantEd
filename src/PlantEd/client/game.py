@@ -965,7 +965,6 @@ class EndScene(object):
 class CustomScene(object):
     def __init__(self):
         self.path_to_plots = "./plots"
-        os.makedirs(self.path_to_plots)
         self.asset_handler = AssetHandler.instance()
         super(CustomScene, self).__init__()
         self.score_handler = ScoreList((800, 140), 1000, 680)
