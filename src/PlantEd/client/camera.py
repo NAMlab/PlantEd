@@ -17,11 +17,6 @@ class Camera:
             self.offset_y += diff * self.speed
 
     def handle_event(self, e: pygame.event.Event):
-        if e.type == pygame.MOUSEWHEEL:
-            self.offset_y -= e.y*20
-            if self.min_y is not None and self.max_y is not None:
-                self.offset_y = min(max(self.offset_y, self.min_y), self.max_y)
-
         if e.type == pygame.KEYDOWN and e.key == pygame.K_w:
             self.target_offset = 0
         if e.type == pygame.KEYDOWN and e.key == pygame.K_s:

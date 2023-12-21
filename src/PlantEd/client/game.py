@@ -964,12 +964,11 @@ class EndScene(object):
 
 class CustomScene(object):
     def __init__(self):
-        self.path_to_logs = "./"
+        self.path_to_plots = "./plots"
+        os.makedirs(self.path_to_plots)
         self.asset_handler = AssetHandler.instance()
         super(CustomScene, self).__init__()
-        self.score_handler = ScoreList((800, 140), 1000)
-        main_y = -1 * self.score_handler.rect[3]
-        self.camera = Camera(0, min_y=main_y, max_y=0)
+        self.score_handler = ScoreList((800, 140), 1000, 680)
         self.button_sprites = pygame.sprite.Group()
         self.back = Button(
             860,
@@ -993,6 +992,7 @@ class CustomScene(object):
         self.winners = sorted(self.winners, key=lambda x: x["score"])
         self.selected_score: PlayerScore = None
         self.selected_score_plot: pygame.Surface = None
+        self.plot_dict = {}
 
         for winner in reversed(self.winners):
             # print(winner["score"])
@@ -1004,6 +1004,7 @@ class CustomScene(object):
                 "%d/%m/%Y %H:%M"
                 )
             self.score_handler.add_new_score(id, name, icon_name, score, date)
+        self.score_handler.player_scores[0].selected = True
 
     def return_to_menu(self):
         # pygame.quit()
@@ -1024,40 +1025,37 @@ class CustomScene(object):
         screen.fill(config.BLACK)
         temp_surface.fill(config.BLACK)
         self.score_handler.draw(temp_surface)
-
+        screen.blit(temp_surface, (0,0))
         if self.selected_score_plot is not None:
-            screen.blit(self.selected_score_plot, (10,10))
-
-        screen.blit(temp_surface, (0,self.camera.offset_y))
+            screen.blit(self.selected_score_plot, (50,270))
         pygame.draw.rect(screen, config.BLACK,(0, config.SCREEN_HEIGHT-200,config.SCREEN_WIDTH, 200))
         pygame.draw.rect(screen, config.BLACK,(0, 0, config.SCREEN_WIDTH, 200))
         self.button_sprites.draw(screen)
 
     def update(self, dt):
-        self.camera.min_y = -1 * self.score_handler.rect[3] + config.SCREEN_HEIGHT
-        '''new_selected_score = self.score_handler.get_selected()
+        new_selected_score = self.score_handler.get_selected()
         if new_selected_score is not None:
             if self.selected_score is None:
                 self.selected_score = new_selected_score
-                self.selected_score = new_selected_score
                 csv = scoring.get_csv(self.selected_score.id)
-                df = pandas.read_csv(csv)
-                self.selected_score_plot = plot.generate_big_plot(df, self.path_to_logs)
+                self.selected_score_plot = self.get_small_plot(csv, self.selected_score.id, self.path_to_plots)
             elif new_selected_score.id != self.selected_score.id:
                 self.selected_score = new_selected_score
                 csv = scoring.get_csv(self.selected_score.id)
-                df = pandas.read_csv(csv)
-                self.selected_score_plot = plot.generate_big_plot(df, self.path_to_logs)'''
+                self.selected_score_plot = self.get_small_plot(csv, self.selected_score.id, self.path_to_plots)
 
 
     def handle_events(self, events):
         for e in events:
-            self.camera.handle_event(e)
-            pos = pygame.mouse.get_pos()
-            adapted_pos = (pos[0], pos[1] - self.camera.offset_y)
-            self.score_handler.handle_event(e, adapted_pos)
+            self.score_handler.handle_event(e)
             for button in self.button_sprites:
                 button.handle_event(e)
+
+    def get_small_plot(self, csv, id, path) -> pygame.Surface:
+        graph = self.plot_dict.get(id)
+        if graph is None:
+            graph = plot.generate_small_plot(csv, id, path)
+        return graph
 
 
 class Credits:

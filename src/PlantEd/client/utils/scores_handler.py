@@ -1,6 +1,7 @@
 import pygame
 
 from PlantEd import config
+from PlantEd.client.utils.button import Slider
 from PlantEd.data.assets import AssetHandler
 
 
@@ -53,7 +54,7 @@ class PlayerScore:
                 self.hover = True
             else:
                 self.hover = False
-        if e.type == pygame.MOUSEBUTTONDOWN:
+        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
             if self.rect.collidepoint(pos):
                 self.selected = True
                 self.hover = False
@@ -73,16 +74,40 @@ class ScoreList:
             self,
             pos,
             width,
+            height,
+            min_offset_y=1,
+            max_offset_y=0,
             margin=10
             ):
         self.player_scores = []
         self.asset_handler: AssetHandler = AssetHandler.instance()
         self.pos = pos
         self.width = width
+        self.height = height
         self.margin = margin
+        self.offset_y = 0
+        self.min_offset_y = min_offset_y
+        self.max_offset_y = max_offset_y
 
         self.rect = pygame.Rect(0, 0, 0, 0)
-        self.init_layout()
+        self.surface: pygame.Surface = self.init_layout()
+
+        x = self.rect[0] + self.rect[2] + 20
+        y = (self.height - 50) * abs(self.offset_y / self.min_offset_y) + self.rect[1] + 50
+
+        self.scroll_slider = Slider(
+            rect=(x, y, 15, self.height),
+            slider_size=(20, 50),
+            percent=100,
+            active=True,
+            callback=self.set_offset,
+            activate_callback_on_drag=True
+            )
+
+
+    def set_offset(self, slider: Slider):
+        print(slider.get_percentage(), self.min_offset_y)
+        self.offset_y = self.min_offset_y * (1-(slider.get_percentage() / 100))
 
     def get_selected(self) -> PlayerScore:
         for score in self.player_scores:
@@ -104,23 +129,40 @@ class ScoreList:
                 width=self.width
                 )
             )
-        self.init_layout()
+        self.surface = self.init_layout()
 
-    def init_layout(self):
+
+
+    def init_layout(self) -> pygame.Surface:
         height = self.margin
         for score in self.player_scores:
             surface = score.init_layout()
             height += surface.get_height() + self.margin
-            score.update_pos((self.pos[0], self.pos[1] + height))
+            score.update_pos((0, height))
         self.rect = pygame.Rect(self.pos[0], self.pos[1],self.width, height)
+        self.min_offset_y = (-1 * self.rect[3]) + self.height
+        surface = pygame.Surface((self.rect[2], self.rect[3]), pygame.SRCALPHA)
+        return surface
 
-    def handle_event(self, e, pos):
+    def handle_event(self, e):
+        if e.type == pygame.MOUSEWHEEL:
+
+            self.offset_y -= e.y*20
+            if self.min_offset_y is not None and self.max_offset_y is not None:
+                self.offset_y = min(max(self.offset_y, self.min_offset_y), self.max_offset_y)
+                self.scroll_slider.set_percentage(100-(self.offset_y/self.min_offset_y)*100)
+
+        pos = pygame.mouse.get_pos()
+        pos = (pos[0] - self.rect[0], pos[1] - self.rect[1] - self.offset_y)
         for score in self.player_scores:
             score.handle_event(e, pos)
+        self.scroll_slider.handle_event(e)
 
     def draw(self, screen):
-        score_height = self.rect[2]/max(len(self.player_scores), 1)
-
         for i, score in enumerate(self.player_scores):
-            score.draw(screen)
+            score.draw(self.surface)
+        self.scroll_slider.draw(screen)
+        screen.blit(self.surface, (self.rect[0], self.rect[1] + self.offset_y))
+
+
 

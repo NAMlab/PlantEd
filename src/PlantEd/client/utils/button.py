@@ -1024,8 +1024,8 @@ class Slider:
     def __init__(
             self,
             rect,
-            font,
-            slider_size,
+            font=None,
+            slider_size=None,
             organ=None,
             plant=None,
             color=None,
@@ -1034,6 +1034,7 @@ class Slider:
             percent=0,
             active=True,
             visible=True,
+            activate_callback_on_drag=False
     ):
         super().__init__()
         self.color = color if color else (255, 255, 255, 128)
@@ -1054,6 +1055,7 @@ class Slider:
         self.slider_h = slider_size[1] if slider_size else self.w
         self.callback = callback
         self.rect = rect
+        self.activate_callback_on_drag = activate_callback_on_drag
         self.set_percentage(percent)
 
     def update(self):
@@ -1124,12 +1126,13 @@ class Slider:
 
         # draw slider
         pygame.draw.rect(border, slider_color, self.get_slider_rect_local())
-        msg = self.font.render(
-            "{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0)
-        )
-        border.blit(
-            msg, msg.get_rect(center=self.get_slider_rect_local().center)
-        )
+        if self.font is not None:
+            msg = self.font.render(
+                "{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0)
+                )
+            border.blit(
+                msg, msg.get_rect(center=self.get_slider_rect_local().center)
+                )
         screen.blit(border, (self.x, self.y))
 
     def handle_event(self, event):
@@ -1159,6 +1162,8 @@ class Slider:
                         )
                         - self.y
                 )
+                if self.activate_callback_on_drag:
+                    self.callback(self)
 
 class NegativeSlider:
     def __init__(

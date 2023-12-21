@@ -14,7 +14,7 @@ def generate_png_from_vec(vector_list, name_list, colors, ticks, xlabel, ylabel,
     fig, ax = plt.subplots()
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    days = ticks / (1000*24*60*60)
+    days = ticks
 
     for vector, name, color in zip(vector_list, name_list, colors):
         ax.plot(days, vector, label="{}".format(name), color=color)
@@ -22,7 +22,23 @@ def generate_png_from_vec(vector_list, name_list, colors, ticks, xlabel, ylabel,
 
     plt.savefig(path_to_logs + "/" + filename)
     image = pygame.image.load(path_to_logs + "/" + filename).convert_alpha()
+    return image
 
+def generate_small_plot(df, id, path_to_logs) -> pygame.Surface:
+    plt.style.use("dark_background")
+    fig, ax = plt.subplots()
+    ax.set_xlabel("time")
+    ax.set_ylabel("biomass")
+
+    ax.plot(df.time, df.leaf_biomass, label="leaf", color="g")
+    ax.plot(df.time, df.stem_biomass, label="stem", color="b")
+    ax.plot(df.time, df.root_biomass, label="root", color="r")
+    ax.plot(df.time, df.seed_biomass, label="seed", color="m")
+
+    ax.legend(loc='upper right')
+
+    plt.savefig(f"{path_to_logs}/{id}.PNG")
+    image = pygame.image.load(f"{path_to_logs}/{id}.PNG").convert_alpha()
     return image
 
 
