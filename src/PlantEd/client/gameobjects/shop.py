@@ -455,16 +455,17 @@ class Shop:
             self.s, config.WHITE, (0, 0, self.rect[2], 40), border_radius=3
         )
         self.s.blit(self.shop_label, (10, 5))
-        '''green_thumbs_label = self.asset_handler.BIG_FONT.render(
+        green_thumbs_label = self.asset_handler.BIG_FONT.render(
             "{}".format(self.plant.upgrade_points), True, config.BLACK
         )
         self.s.blit(
             green_thumbs_label,
             (self.rect[2] - 90 - green_thumbs_label.get_width(), 5),
         )
+
         self.s.blit(
             self.asset_handler.img("green_thumb.PNG", (26, 26)), (self.rect[2] - 80, 6)
-        )'''
+        )
         for item in self.shop_items:
             item.draw(self.s)
 
