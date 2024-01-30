@@ -276,7 +276,7 @@ class DefaultGameScene(object):
             water_grid=self.water_grid,
             )
 
-        self.narrator = Narrator(self.environment)
+        self.narrator = Narrator(self.environment, self.plant)
 
         self.ui = UI(
             plant=self.plant,
