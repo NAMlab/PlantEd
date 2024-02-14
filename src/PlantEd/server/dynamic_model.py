@@ -134,7 +134,9 @@ class DynamicModel:
               f"nitrate: {self.get_bounds(NITRATE)} \n"
               f"starch_in: {self.get_bounds(STARCH_IN)} with a pool of {self.plant.starch_pool} \n"
               f"co2: {self.get_bounds(CO2)} \n"
+              f"photon: {self.get_bounds(PHOTON)} \n"
               )
+
         self.normalize_model()
         self.model.slim_optimize()
 
@@ -146,6 +148,7 @@ class DynamicModel:
 
         water_used = max(0, water_flux / self.get_bounds(WATER)[1]) if self.get_bounds(WATER)[1] > 0 else 0
         nitrate_used = nitrate_flux / self.get_bounds(NITRATE)[1] if self.get_bounds(NITRATE)[1] > 0 else 0
+        print(f"NITRATE FLUX: {nitrate_flux}, NITRATE USED: {nitrate_used}")
         starch_in_used = starch_in / self.get_bounds(STARCH_IN)[1] if self.get_bounds(STARCH_IN)[1] > 0 else 0
         co2_used = co2 / self.get_bounds(CO2)[1] if self.get_bounds(CO2)[1] > 0 else 0
         photon_used = photon_flux / self.get_bounds(PHOTON)[1] if self.get_bounds(PHOTON)[1] > 0 else 0

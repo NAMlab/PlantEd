@@ -71,31 +71,17 @@ class UI:
         self.danger_timer = 1
         self.used_fluxes = None
 
-        self.label_leaf = self.asset_handler.FONT.render("Leaf", True, (0, 0, 0))  # title
-        self.label_stem = self.asset_handler.FONT.render("Stem", True, (0, 0, 0))  # title
-        self.label_root = self.asset_handler.FONT.render("Root", True, (0, 0, 0))  # title
-        self.label_starch = self.asset_handler.FONT.render(
-            "Starch", True, (0, 0, 0)
-        )  # title
-        self.label_water = self.asset_handler.FONT.render(
-            "Water", True, (0, 0, 0)
-        )  # title
-        self.label_producing = self.asset_handler.FONT.render(
-            "producing", True, config.GREEN
-        )  # title
-        self.label_producing = pygame.transform.rotate(
-            self.label_producing, 90
-        )
-        self.label_consuming = self.asset_handler.FONT.render(
-            "consuming", True, config.RED
-        )  # title
-        self.label_consuming = pygame.transform.rotate(
-            self.label_consuming, 90
-        )
+        self.label_leaf = self.asset_handler.FONT.render("Leaf", True, (0, 0, 0))
+        self.label_stem = self.asset_handler.FONT.render("Stem", True, (0, 0, 0))
+        self.label_root = self.asset_handler.FONT.render("Root", True, (0, 0, 0))
+        self.label_starch = self.asset_handler.FONT.render("Starch", True, (0, 0, 0))
+        self.label_water = self.asset_handler.FONT.render("Water", True, (0, 0, 0))
+        self.label_producing = self.asset_handler.FONT.render("producing", True, config.GREEN)
+        self.label_producing = pygame.transform.rotate(self.label_producing, 90)
+        self.label_consuming = self.asset_handler.FONT.render("consuming", True, config.RED)
+        self.label_consuming = pygame.transform.rotate(self.label_consuming, 90)
 
-        self.s = pygame.Surface(
-            (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA
-        )
+        self.s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
 
         self.infobox_manager = InfoBoxManager()
         self.infobox_manager.from_dict(config.load_infoboxes())
@@ -124,20 +110,6 @@ class UI:
             spread=(0, 0),
             active=False,
         )
-
-        '''self.open_stomata_particle_in = Inwards_Particle_System(
-            20,
-            spawn_box=Rect(
-                self.production_topleft[0] + 10,
-                self.production_topleft[1] + 80,
-                100,
-                50,
-            ),
-            lifetime=6,
-            color=config.GRAY,
-            active=False,
-            center=(50, 0),
-        )'''
 
         self.open_stomata_particle_out = ParticleSystem(
             20,
@@ -267,14 +239,14 @@ class UI:
             "leaf_slider": 0,
             "stem_slider": 0,
             "root_slider": 100,
-            "starch_slider": 0,
+            "starch_slider": -10,
         }
         self.preset_night = {
             "type": "night",
             "leaf_slider": 0,
             "stem_slider": 0,
             "root_slider": 100,
-            "starch_slider": 0,
+            "starch_slider": -10,
         }
 
         self.active_preset = self.preset_night
@@ -299,8 +271,10 @@ class UI:
         self.pause = not self.pause
         if self.pause:
             self.gametime.pause()
+            self.narrator.pause()
         else:
             self.gametime.unpause()
+            self.narrator.unpause()
 
     def handle_event(self, e: pygame.event.Event):
         if e.type == KEYDOWN and e.key == K_ESCAPE:
@@ -611,6 +585,7 @@ class UI:
     def resume(self):
         self.pause = False
         self.gametime.unpause()
+        self.narrator.unpause()
 
     def init_production_ui(self):
         topleft = self.production_topleft

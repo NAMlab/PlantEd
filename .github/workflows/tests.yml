@@ -22,3 +22,9 @@ jobs:
           run: python -m pip install tox
         - name: Run dev env test
           run: python -m tox -e py-dev
+        - name: Run unit tests
+          run: python -m unittest discover tests/unit
+        - name: Run integration tests
+          run: python -m unittest discover tests/integration
+        - name: Run connectivity tests
+          run: python -m unittest discover tests/connectivity

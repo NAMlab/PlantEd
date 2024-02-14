@@ -543,8 +543,6 @@ class DefaultGameScene(object):
                         }
                     }
 
-                # print(f"REQUEST: {game_state}")
-
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
                 print(" --> Received response, updating state")
@@ -572,7 +570,8 @@ class DefaultGameScene(object):
                 # make simple root strucure from root_dict
                 self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
 
-                self.ui.used_fluxes = dic["used_fluxes"]
+                #self.ui.used_fluxes = dic["used_fluxes"]
+                self.narrator.used_fluxes = dic["used_fluxes"]
 
                 if dic is not None:
                     if not dic["running"]:
@@ -591,7 +590,7 @@ class DefaultGameScene(object):
         days = int(ticks / day)
         hours = (ticks % day) / hour
         self.check_game_end(days)
-        if 8 < hours < 20:
+        if 9 < hours < 20:
             if self.ui.active_preset["type"] == "night":
                 preset = {
                     "type": "night",
@@ -983,27 +982,31 @@ class CustomScene(object):
             )
         self.button_sprites.add(self.back)
 
-        self.winners = scoring.get_scores()
         self.scores = []
         self.names = []
         self.icon_names = []
         self.datetimes = []
-        self.winners = sorted(self.winners, key=lambda x: x["score"])
         self.selected_score: PlayerScore = None
         self.selected_score_plot: pygame.Surface = None
         self.plot_dict = {}
 
-        for winner in reversed(self.winners):
-            # print(winner["score"])
-            score = winner["score"]
-            id = winner["id"]
-            name = winner["name"]
-            icon_name = winner["icon_name"]
-            date = datetime.utcfromtimestamp(winner["datetime_added"]).strftime(
-                "%d/%m/%Y %H:%M"
-                )
-            self.score_handler.add_new_score(id, name, icon_name, score, date)
-        self.score_handler.player_scores[0].selected = True
+        self.winners = None
+        response = scoring.get_scores()
+        if response is not None:
+            self.winners = json.loads(response.text)
+            self.winners = sorted(self.winners, key=lambda x: x["score"])
+
+            for winner in reversed(self.winners):
+                # print(winner["score"])
+                score = winner["score"]
+                id = winner["id"]
+                name = winner["name"]
+                icon_name = winner["icon_name"]
+                date = datetime.utcfromtimestamp(winner["datetime_added"]).strftime(
+                    "%d/%m/%Y %H:%M"
+                    )
+                self.score_handler.add_new_score(id, name, icon_name, score, date)
+            self.score_handler.player_scores[0].selected = True
 
     def return_to_menu(self):
         # pygame.quit()
@@ -1036,11 +1039,10 @@ class CustomScene(object):
         if new_selected_score is not None:
             if self.selected_score is None:
                 self.selected_score = new_selected_score
-                csv = scoring.get_csv(self.selected_score.id)
-                self.selected_score_plot = self.get_small_plot(csv, self.selected_score.id, self.path_to_plots)
             elif new_selected_score.id != self.selected_score.id:
                 self.selected_score = new_selected_score
-                csv = scoring.get_csv(self.selected_score.id)
+            csv = scoring.get_csv(self.selected_score.id)
+            if csv is not None:
                 self.selected_score_plot = self.get_small_plot(csv, self.selected_score.id, self.path_to_plots)
 
 

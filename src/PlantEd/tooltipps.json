@@ -1,139 +1,131 @@
 [
   {
-    "tag": "0",
-    "lines": [
-      "Ah, PlantEd, what a wonderful game!",
-      "It's a game that allows you to grow your very own plant, from",
-      "a tiny seed to a mature plant that produces offspring. And let",
-      "me tell you, it's not just a game, it's an opportunity to learn",
-      "about the wonders of nature and how plants grow and survive."
-    ]
+	"tag": "0",
+	"lines": [
+  	"The game begins, player! Your mission: cultivate a robust plant",
+	"witness the bloom of vibrant flowers, and gather the seeds",
+	"to safeguard the plant kingdom's future."
+	]
   },
   {
-    "tag": "4",
-    "lines": [
-      "Sunlight is crucial for the growth of plants, as it is through",
-      "photosynthesis that plants produce energy. Sunlight is converted into",
-      "chemical energy through chlorophyll, a pigment that gives plants their",
-      "green color. Without sunlight, plants would not be able to produce",
-      "enough energy to grow and survive."
-    ]
+	"tag": "4",
+	"lines": [
+  	"Sunlight, crucial for plant growth, fuels photosynthesis,",
+	"converting it into chemical energy through chlorophyll",
+	"the green pigment defining plants. Without sunlight",
+	"plants can't generate sufficient energy to thrive."
+	]
   },
   {
-    "tag": "5",
-    "lines": [
-      "However, it's important to note that plants also need periods of",
-      "darkness to complete their life cycle. This is because some of the",
-      "biochemical processes involved in plant growth, such as respiration",
-      "and the synthesis of certain hormones, occur primarily during the night."
-    ]
+	"tag": "5",
+	"lines": [
+  	"Plants require periods of darkness for their",
+	"life cycle. Biochemical processes like respiration",
+	"and hormone synthesis thrive mainly during the night",
+	"crucial for complete plant growth."
+	]
   },
   {
-    "tag": "7",
-    "lines": [
-      "Plants also face a number of dangers in the natural world, including",
-      "pathogens and herbivores. Pathogens are disease-causing organisms",
-      "that can infect plants and cause them to become sick or die.",
-      "Herbivores are animals that eat plants, and can cause damage to leaves,",
-      "stems, and other plant parts.To protect themselves from these",
-      "dangers, plants have evolved a variety of defense mechanisms. Some",
-      "plants produce toxins or other chemicals that deter herbivores, while",
-      "others have physical defenses such as thorns or prickly leaves. Plants",
-      "can also use chemical signaling to communicate with each other and",
-      "with beneficial organisms such as pollinators and symbiotic fungi."
-    ]
+	"tag": "20",
+	"lines": [
+  	"Climate change poses a major threat to our planet's",
+	"ecosystems. Rising temperatures and altered rainfall",
+	"patterns disrupt plant and animal life globally.",
+	"It's crucial to act now to safeguard our natural",
+	"resources for a healthy future for all living things."
+	]
   },
   {
-    "tag": "9",
-    "lines": [
-      "Climate change is one of the greatest threats facing our planet's",
-      "ecosystems today. Rising temperatures, changing rainfall patterns,",
-      "and other effects of climate change are causing widespread",
-      "disruptions to plant and animal populations around the world. This",
-      "is why it's more important than ever to take action to protect our",
-      "planet's natural resources and ensure a healthy future for all",
-      "living things."
-    ]
+	"tag": "11",
+	"lines": [
+  	"As you work to maximize the growth and seed production of your plant,",
+  	"remember that every day counts, and that careful attention to",
+  	"environmental factors and resource allocation can make all the",
+  	"difference in the world."
+	]
   },
   {
-    "tag": "11",
-    "lines": [
-      "As you work to maximize the growth and seed production of your plant,",
-      "remember that every day counts, and that careful attention to",
-      "environmental factors and resource allocation can make all the",
-      "difference in the world."
-    ]
-  },
-  {
-    "tag": "12",
-    "lines": [
-      "Well my friend, it seems that the time of growth for your plant has come to an end. Despite the challenges of the environment and the many obstacles that you faced along the way, you have done a truly remarkable job of nurturing this little seedling and guiding it towards maturity.\nAs you take stock of the results that you have been able to produce, I hope that you feel a sense of pride and accomplishment in all that you have achieved. From the delicate leaves and stems to the strong and sturdy roots, every aspect of this plant is a testament to your skill and dedication.\nOf course, there is always more to learn and discover when it comes to the fascinating world of plants, and I would encourage you to continue exploring and experimenting with new seeds and new growing techniques. Who knows what other wonders you might be able to create in the future?\nSo, congratulations on a job well done, and remember - even when the growth has ended, there is always more to discover and explore in the rich and complex world of nature.\n"
-    ]
+	"tag": "30",
+	"lines": [
+  	"Time is ticking, player! Make haste in nurturing those",
+	"seeds. The level's conclusion is just around the corner."
+	]
   },
 
 
   {
-    "tag": "seeds",
-    "lines": [
-      "Ah, the growth of seeds! This is truly one of nature's wonders. Seeds",
-      "are the means by which plants are able to ensure their survival and",
-      "perpetuate their species. When a seed is produced, it contains everything",
-      "that the plant needs to get a new start in life - nutrients, energy, and",
-      "genetic information. However, producing seeds takes a lot of energy and",
-      "resources, so plants must be careful to balance their investment in seed",
-      "production with other important metabolic processes such as growth and",
-      "defense. Some plants produce large numbers of seeds in the hopes that at",
-      "least a few will find a suitable environment in which to germinate and",
-      "grow, while others produce fewer seeds but invest more energy in each",
-      "one, increasing the chances of successful germination."
-    ]
+	"tag": "seed",
+	"lines": [
+  	"Rejoice, for a flower is now in your possession,",
+	"a silent messenger of joy and beauty set to",
+	"bloom under your care."
+	]
+  },
+{
+	"tag": "leaf",
+	"lines": [
+  	"Behold the leaf, your new companion in the",
+	"dance of life, embracing sunlight to weave",
+	"the magic of photosynthesis."
+	]
+  },
+{
+	"tag": "branch",
+	"lines": [
+  	"A branch, a symbol of expansion and upward",
+	"mobility, now in your possession, set to create",
+	"its own story in the ascending symphony of growth."
+	]
+  },
+{
+	"tag": "root",
+	"lines": [
+  	"Your latest acquisition: a root, a quiet explorer",
+	"set to venture into the depths, unlocking",
+	"the secrets hidden beneath the soil."
+	]
+  },
+{
+	"tag": "snail",
+	"lines": [
+  	"Ah, the persistent snails, dining on your plant's",
+	"greenery! A reminder of nature's intricate balance."
+	]
   },
   {
-    "tag": "three",
-    "lines": [
-      "Ah, it seems we have come to the end of our time with this particular",
-      "plant. You only have three more days to maximize its growth and produce",
-      "as many seeds as possible. It's important to remember that plants have",
-      "a limited time to produce seeds, as they are often subject to a variety",
-      "of environmental factors that can limit their growth and reproductive",
-      "success. For example, some plants are only able to flower and produce",
-      "seeds during a specific season or under certain environmental conditions,",
-      "such as when there is sufficient rainfall or when temperatures are",
-      "within a certain range. Others are subject to predation by herbivores",
-      "or damage from pathogens, which can reduce their ability to produce",
-      "viable seeds."
-    ]
+	"tag": "warning",
+	"lines": [
+  	"A fading plant, a visual cue for the player",
+	"to intervene, recognizing the essence of",
+	"energy as the driving force behind the",
+	"flourishing dance of growth."
+	]
   },
-  {
-    "tag": "surrender",
-    "lines": [
-      "I'm afraid to say, my dear friend, that it seems your efforts in the",
-      "world of plant growth and development have not quite lived up to my",
-      "lofty standards. But do not take this as a discouragement! Even the",
-      "greatest scientists and naturalists in history have had their fair",
-      "share of failures and setbacks along the way.I encourage you to",
-      "take this experience as an opportunity to learn and grow, to carefully",
-      "observe the intricacies of the natural world and to seek out new",
-      "techniques and strategies for success. With each new attempt, you",
-      "will undoubtedly come closer to achieving your goals and unlocking",
-      "the full potential of your plants. So do not be disheartened by this",
-      "setback, my friend. Instead, take it as a challenge and an opportunity",
-      "to rise to new heights of greatness in the fascinating and endlessly complex world of plant life. I have every confidence in your abilities, and I look forward to seeing all that you can achieve in the future.\n"
-    ]
+	{
+	"tag": "water",
+	"lines": [
+  	"Thirsty plant alert! A gentle reminder",
+	"to quench your flora's thirst.",
+	"A well-hydrated plant is a resilient",
+	"and thriving one."
+	]
   },
-  {
-    "tag": "warning",
-    "lines": [
-      "it seems that your plant is facing a most troubling and dire situation.",
-      "You see, when a plant is not able to receive enough energy from its",
-      "environment - whether from sunlight or other sources - it may be forced",
-      "to turn to its own stored biomass in order to survive. This is a most",
-      "unfortunate situation indeed, as the plant will be forced to consume its",
-      "own vital resources in order to stay alive, leading to a rapid decline",
-      "in overall health and productivity. It is essential that we take swift",
-      "action to remedy this situation, whether by providing additional sources",
-      "of energy and nutrition or by adjusting the plant's environment to better",
-      "suit its needs."
-    ]
+	{
+	"tag": "nutrient",
+	"lines": [
+  	"Time for a boost! Consider adding nutrients",
+	"to the soil for an extra dose of vitality.",
+	"Your plant will thank you with robust growth."
+	]
+  },
+	{
+	"tag": "bloom",
+	"lines": [
+  	"Flower in full bloom! A celebration of",
+	"life and pollination. Watch for buzzing",
+	"visitors like bees and butterflies,",
+	"nature's pollination maestros."
+	]
   }
 ]
+

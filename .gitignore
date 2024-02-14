@@ -32,3 +32,5 @@ src/PlantEd/server/server.log
 src/PlantEd/server/data/
 
 src/PlantEd/server/log
+
+src/PlantEd/client/plots/

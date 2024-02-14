@@ -167,6 +167,9 @@ class Game:
 
         weather_state = self.environment.weather.get_weather_state(int(self.time / 3600))
 
+        nitrate_available_mm = self.environment.nitrate_grid.available_relative_mm(delta_t, self.plant.root_mass, Vmax, Km,
+                                                            self.plant.lsystem.root_grid)
+
         self.log.append_model_row(
             time=self.time,
             temperature=weather_state[0],
@@ -174,7 +177,7 @@ class Game:
             humidity=weather_state[1],
             precipitation=weather_state[2],
             accessible_water=self.environment.water_grid.available_absolute(self.plant.lsystem.root_grid),
-            accessible_nitrate=self.environment.nitrate_grid.available_relative_mm(delta_t, self.plant.root_mass, Vmax, Km, self.plant.lsystem.root_grid),
+            accessible_nitrate=nitrate_available_mm,
             leaf_biomass=self.plant.leaf_mass,
             stem_biomass=self.plant.stem_mass,
             root_biomass=self.plant.root_mass,
@@ -197,12 +200,16 @@ class Game:
             action=actions,
             )
 
+        if self.model.used_fluxes is not None:
+            self.model.used_fluxes["nitrate_available"] = nitrate_available_mm
+
         game_state = {
             "running": self.running,
             "plant": self.plant.to_dict(),
             "environment": self.environment.to_dict(),
             "green_thumbs": self.green_thumbs,
             "used_fluxes": self.model.used_fluxes,
+            "nitrate_available": nitrate_available_mm,
             "gametime": self.time
             }
 

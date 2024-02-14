@@ -132,7 +132,7 @@ class Plant:
             if branch.spots < (branch.mass / BRANCH_MASS_PER_SPOT + BRANCH_SPOTS_BASE) and branch.spots <= BRANCH_SPOTS_TOTAL:
                 branch.spots += 1
 
-    def get_free_spots(self):
+    def get_free_spots(self) -> int:
         spots = sum(branch.spots for branch in self.branches)
         spots_occupied = sum([len(self.branches), len(self.leafs), len(self.seeds)]) - 1    # for the starting seed -> doesnt count, bu has to be in for the model
         return spots - spots_occupied     # -1 for the first branch

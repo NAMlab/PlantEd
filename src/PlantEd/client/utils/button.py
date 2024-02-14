@@ -1276,7 +1276,7 @@ class NegativeSlider:
         # draw slider
         pygame.draw.rect(border, slider_color, self.get_slider_rect_local())
         msg = self.font.render(
-            "{:02.0f}".format(abs(self.get_percentage())), 1, (0, 0, 0)
+            "{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0)
         )
         border.blit(
             msg, msg.get_rect(center=self.get_slider_rect_local().center)

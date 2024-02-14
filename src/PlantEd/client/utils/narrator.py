@@ -17,14 +17,16 @@ class Voicebox:
             voiceline: Sound,
             written_lines: Surface,
             queue_voicebox: callable,
-            condition: callable,
-            condition_parameter: int
+            condition: callable = None,
+            condition_time: callable = None,
+            condition_parameter_time: int = None
             ):
         self.voiceline = voiceline
         self.written_lines = written_lines
         self.queue_voicebox = queue_voicebox
+        self.condition_time = condition_time
+        self.condition_parameter_time = condition_parameter_time
         self.condition = condition
-        self.condition_parameter = condition_parameter
         self.played = False
 
         self.x = 10
@@ -48,9 +50,20 @@ class Voicebox:
         delta_x = 750 * (1 - self.hide_timer)
         self.x = 10 - delta_x
         if not self.played:
-            if self.condition(self.condition_parameter):
+            if self.handle_conditions():
                 self.queue_voicebox(self)
                 self.played = True
+
+    def handle_conditions(self) -> bool:
+        play = True
+        if self.condition is not None:
+            if not self.condition():
+                play = False
+        if self.condition_time is not None:
+            if self.condition_parameter_time is not None:
+                if not self.condition_time(self.condition_parameter_time):
+                    play = False
+        return play
 
     def handle_event(self, e: pygame.event):
         if e.type == END_LINE:
@@ -105,13 +118,15 @@ class Narrator:
 
         self.voiceboxes: list[Voicebox] = self.make_voiceboxes()
         self.active_voicebox: Voicebox = None
+        self.used_fluxes = None
+        self.low_growth_counter = 0
 
     def make_voiceboxes(self) -> list[Voicebox]:
 
         voiceboxes: list[Voicebox] = []
 
         # make timed boxes
-        index_lines_to_play = [0, 4, 5, 7, 9, 11, 12]
+        index_lines_to_play = [0, 4, 5, 20, 30]
 
         talking_times = [0, 5, 6, 10, 15, 20, 30]
 
@@ -126,60 +141,168 @@ class Narrator:
                     written_lines = lines["lines"]
                     surface_written_lines = self.build_written_lines(written_lines)
 
-            voiceboxes.append(Voicebox(
-                voiceline=self.asset_handler.sfx(f"attenborough/{index_lines_to_play[i]}.mp3"),
-                written_lines=surface_written_lines,
-                queue_voicebox=self.queue_voicebox,
-                condition=self.check_date,
-                condition_parameter=talking_times[i]
-                )
+            voiceboxes.append(
+                Voicebox(
+                    voiceline=self.asset_handler.sfx(f"attenborough/{index_lines_to_play[i]}.mp3"),
+                    written_lines=surface_written_lines,
+                    queue_voicebox=self.queue_voicebox,
+                    condition_time=self.check_date,
+                    condition_parameter_time=talking_times[i]
+                    )
                 )
 
         # make seed box
         surface_written_lines = None
         for lines in all_written_lines:
-            if lines["tag"] == "seeds":
-                written_lines = lines["lines"]
-                surface_written_lines = self.build_written_lines(written_lines)
+            if lines["tag"] == "seed":
+                written_lines_seed = lines["lines"]
+                surface_written_lines_seed = self.build_written_lines(written_lines_seed)
+                voiceboxes.append(
+                    Voicebox(
+                        voiceline=self.asset_handler.sfx("attenborough/seed.mp3"),
+                        written_lines=surface_written_lines_seed,
+                        queue_voicebox=self.queue_voicebox,
+                        condition=self.check_seed_bought,
+                        )
+                    )
+            if lines["tag"] == "branch":
+                written_lines_branch = lines["lines"]
+                surface_written_lines_branch = self.build_written_lines(written_lines_branch)
+                voiceboxes.append(
+                    Voicebox(
+                        voiceline=self.asset_handler.sfx("attenborough/branch.mp3"),
+                        written_lines=surface_written_lines_branch,
+                        queue_voicebox=self.queue_voicebox,
+                        condition=self.check_branch_bought,
+                        )
+                    )
+            if lines["tag"] == "leaf":
+                written_lines_leaf = lines["lines"]
+                surface_written_lines_leaf = self.build_written_lines(written_lines_leaf)
+                voiceboxes.append(
+                    Voicebox(
+                        voiceline=self.asset_handler.sfx("attenborough/leaf.mp3"),
+                        written_lines=surface_written_lines_leaf,
+                        queue_voicebox=self.queue_voicebox,
+                        condition=self.check_leaf_bought,
+                        )
+                    )
+            if lines["tag"] == "root":
+                written_lines_root = lines["lines"]
+                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                voiceboxes.append(
+                    Voicebox(
+                        voiceline=self.asset_handler.sfx("attenborough/root.mp3"),
+                        written_lines=surface_written_lines_root,
+                        queue_voicebox=self.queue_voicebox,
+                        condition=self.check_root_bought,
+                        )
+                    )
 
-        voiceboxes.append(Voicebox(
-            voiceline=self.asset_handler.sfx("attenborough/seeds.mp3"),
-            written_lines=surface_written_lines,
-            queue_voicebox=self.queue_voicebox,
-            condition=self.check_seed_bought,
-            condition_parameter=1
-            )
-            )
+            if lines["tag"] == "water":
+                written_lines_root = lines["lines"]
+                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                voiceboxes.append(
+                    Voicebox(
+                        voiceline=self.asset_handler.sfx("attenborough/water.mp3"),
+                        written_lines=surface_written_lines_root,
+                        queue_voicebox=self.queue_voicebox,
+                        condition=self.check_water_pool_empty,
+                        )
+                    )
+
+            if lines["tag"] == "nutrient":
+                written_lines_root = lines["lines"]
+                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                voiceboxes.append(
+                    Voicebox(
+                        voiceline=self.asset_handler.sfx("attenborough/nutrient.mp3"),
+                        written_lines=surface_written_lines_root,
+                        queue_voicebox=self.queue_voicebox,
+                        condition=self.check_nitrate_intake_zero,
+                        )
+                    )
+
+            if lines["tag"] == "warning":
+                written_lines_root = lines["lines"]
+                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                voiceboxes.append(
+                    Voicebox(
+                        voiceline=self.asset_handler.sfx("attenborough/warning.mp3"),
+                        written_lines=surface_written_lines_root,
+                        queue_voicebox=self.queue_voicebox,
+                        condition=self.check_no_growth,
+                        )
+                    )
+
+            if lines["tag"] == "bloom":
+                written_lines_root = lines["lines"]
+                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                voiceboxes.append(
+                    Voicebox(
+                        voiceline=self.asset_handler.sfx("attenborough/bloom.mp3"),
+                        written_lines=surface_written_lines_root,
+                        queue_voicebox=self.queue_voicebox,
+                        condition=self.check_bloom,
+                        )
+                    )
 
         return voiceboxes
 
-    def check_seed_bought(self, useless_param):
+    def check_seed_bought(self) -> bool:
         if len(self.plant.organs[3].flowers) > 0:
             return True
         else:
             return False
 
-    def check_leaf_bought(self, useless_param):
+    def check_leaf_bought(self) -> bool:
         if len(self.plant.organs[0].leaves) > 1:
             return True
         else:
             return False
 
-    def check_branch_bought(self, useless_param):
+    def check_branch_bought(self) -> bool:
         if len(self.plant.organs[1].curve.branches) > 1:
             return True
         else:
             return False
 
-    def check_root_bought(self, useless_param):
+    def check_root_bought(self) -> bool:
         if self.plant.organs[2].ls is not None:
             if len(self.plant.organs[2].ls.first_letters) > 1:
                 return True
         return False
 
+    def check_water_pool_empty(self) -> bool:
+        if self.plant.water_pool <= 0:
+            return True
+        else:
+            return False
+
+    def check_nitrate_intake_zero(self) -> bool:
+        if self.used_fluxes is not None:
+            if self.used_fluxes["nitrate_available"] <= 0:
+                return True
+        return False
+
+    def check_no_growth(self) -> bool:
+        if self.used_fluxes is not None:
+            if self.used_fluxes["starch_in_used"] <= 0 and self.used_fluxes["photon_used"] <= 0:
+                self.low_growth_counter += 1
+                print(f"LOW C: {self.low_growth_counter}")
+                return False
+        return False
+
+    def check_bloom(self) -> bool:
+        if len(self.plant.organs[3].flowers) > 0:
+            for flower in self.plant.organs[3].flowers:
+                if flower["mass"] >= flower["maximum_mass"]:
+                    return True
+        return False
+
     def check_date(self, condition_day: int) -> bool:
         day, hour, minute = self.environment.get_day_time()
-        if condition_day <= day and hour > 8:
+        if condition_day <= day and hour > 1:
             return True
         else:
             return False
@@ -197,6 +320,12 @@ class Narrator:
     def unmute(self):
         self.muted = False
         self.channel.set_volume(self.volume)
+
+    def pause(self):
+        self.channel.pause()
+
+    def unpause(self):
+        self.channel.unpause()
 
     def reload_options(self):
         options = config.load_options()
@@ -230,13 +359,15 @@ class Narrator:
 
     def build_written_lines(self, lines: list[str]) -> Surface:
 
-        rect_height = len(lines) * 22 + 20
+        sire_david_image_size = (100, 100)
+
+        rect_height = max(sire_david_image_size[1], len(lines) * 22) + 20
         rect_width = 800
 
         box_surface: Surface = Surface((rect_width, rect_height), pygame.SRCALPHA)
         box_surface.fill((0, 0, 0, 150))
 
-        box_surface.blit(self.asset_handler.img("sir_david.jpeg", (100, 100)), (10, 10))
+        box_surface.blit(self.asset_handler.img("professor.PNG", sire_david_image_size), (10, 10))
         for i, line in enumerate(lines):
             box_surface.blit(self.asset_handler.FONT.render(line, True, config.WHITE), (120, 10 + i * 22))
 
