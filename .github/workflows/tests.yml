@@ -11,12 +11,12 @@ jobs:
           with:
             python-version: "3.11"
         - name: Install dependencies
-          run: pip install tox
+          run: pip install tox unittest
         - name: Run dev env test
           run: tox -e py
         - name: Run calculations tests
           run: python -m unittest discover tests/calculations
         - name: Run integration tests
-          run: unittest discover tests/integration
+          run: python -m unittest discover tests/integration
         - name: Run connectivity tests
-          run: unittest discover tests/connectivity
+          run: python -m unittest discover tests/connectivity
