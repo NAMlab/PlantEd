@@ -6,17 +6,17 @@ jobs:
   test-dev:
     runs-on: ubuntu-latest
     steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - uses: actions/setup-python@v4
           with:
             python-version: "3.11"
         - name: Install dependencies
-          run: python -m pip install tox
+          run: pip install tox
         - name: Run dev env test
-          run: python -m tox -e py-dev
+          run: tox -e py
         - name: Run calculations tests
-          run: python -m unittest discover tests/calculations
+          run: unittest discover tests/calculations
         - name: Run integration tests
-          run: python -m unittest discover tests/integration
+          run: unittest discover tests/integration
         - name: Run connectivity tests
-          run: python -m unittest discover tests/connectivity
+          run: unittest discover tests/connectivity
