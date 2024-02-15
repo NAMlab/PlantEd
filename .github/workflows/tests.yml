@@ -15,7 +15,7 @@ jobs:
         - name: Run dev env test
           run: python -m tox -e py
         - name: Run calculations tests
-          run: python -m unittest discover tests/calculations
+          run: python -m unittest discover -s tests/calculations
         - name: Run integration tests
           run: python -m unittest discover tests/integration
         - name: Run connectivity tests
