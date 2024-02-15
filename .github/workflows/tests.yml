@@ -11,7 +11,7 @@ jobs:
           with:
             python-version: "3.11"
         - name: Install dependencies
-          run: pip install tox unittest
+          run: python -m pip install tox unittests
         - name: Run dev env test
           run: tox -e py
         - name: Run calculations tests
