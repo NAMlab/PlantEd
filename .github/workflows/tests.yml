@@ -17,4 +17,4 @@ jobs:
         - name: Test with pytest
           run: |
             pip install pytest pytest-cov
-            pytest tests/connectivity/test_connectivity_scoring.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+            pytest test_connectivity_scoring.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
