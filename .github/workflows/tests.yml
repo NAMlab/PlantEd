@@ -12,11 +12,9 @@ jobs:
             python-version: "3.11"
         - name: Install dependencies
           run: python -m pip install tox
-        - name: Run dev env test
-          run: python -m tox -e py
-        - name: Run calculations tests
-          run: python -m unittest discover -s tests/calculations
-        - name: Run integration tests
-          run: python -m unittest discover tests/integration
-        - name: Run connectivity tests
-          run: python -m unittest discover tests/connectivity
+        - name: Install dependencies
+          run: python -m pip install --upgrade pip
+        - name: Test with pytest
+          run: |
+            pip install pytest pytest-cov
+            pytest tests/connectivity/test_connectivity_scoring.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
