@@ -4,6 +4,7 @@ import unittest
 class TestBackendCalculations(unittest.TestCase):
     def test_player_movement(self):
         # Test player movement calculations
+        print("print something to test")
         assert True
 
     def test_collision_detection(self):
