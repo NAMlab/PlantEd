@@ -1,14 +1,6 @@
 name: Tests
-on:
-  workflow_dispatch:
 
-  pull_request:
-    types: [ opened, synchronize, reopened, closed ]
-
-  workflow_run:
-    workflows: ["Linter"]
-    types:
-      - completed
+on: [push]
 
 jobs:
   test-dev:
