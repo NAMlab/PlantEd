@@ -4,7 +4,7 @@ import time
 import numpy as np
 import pandas
 
-from PlantEd.client.analysis import scoring, plot
+from PlantEd.client.analysis import scoring
 from PlantEd.client.analysis.logger import Log
 from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST, WATERING_CAN_COST, NITRATE_COST, \
     Vmax, Km

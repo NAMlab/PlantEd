@@ -314,7 +314,6 @@ class Plant:
         This is done on the basis of a time period and the mass of the
         organ that has access to this reservoir. The value calculated
         here corresponds to the `upper_bound` within a
-        :py:class:`cobra.Reaction`.
         The unit is micromol / (second * gram_of_organ).
         Args:
             percentage: The slider value of starch consumption UI

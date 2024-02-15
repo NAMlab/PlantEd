@@ -106,7 +106,7 @@ class MetaboliteGrid:
             root_grid:
 
         Returns:
-            Relative availability of the Metabolite. The unit is [mMol] / ([gram] * [s]).
+            Relative availability of the Metabolite. The calculations is [mMol] / ([gram] * [s]).
         """
         if any(x < 0 for x in [time_seconds, g_root, v_max, k_m]):
             logger.error(
