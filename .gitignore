@@ -2,6 +2,7 @@
 .tox/
 dist/
 build/build
+build/
 build/dist
 dist
 __pycache__
@@ -34,3 +35,5 @@ src/PlantEd/server/data/
 src/PlantEd/server/log
 
 src/PlantEd/client/plots/
+src/PlantEd.egg-info/dependency_links.txt
+src/PlantEd.egg-info/entry_points.txt

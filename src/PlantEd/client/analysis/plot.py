@@ -39,6 +39,7 @@ def generate_small_plot(df, id, path_to_logs) -> pygame.Surface:
 
     plt.savefig(f"{path_to_logs}/{id}.PNG")
     image = pygame.image.load(f"{path_to_logs}/{id}.PNG").convert_alpha()
+    plt.close(fig)
     return image
 
 
