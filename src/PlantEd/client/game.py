@@ -986,8 +986,13 @@ class CustomScene(object):
         self.names = []
         self.icon_names = []
         self.datetimes = []
-        self.selected_score: PlayerScore = None
-        self.selected_score_plot: pygame.Surface = None
+
+        self.score_plot_list: list[tuple[PlayerScore, pygame.Surface]] = []
+        self.selected_score = None
+        self.selected_plot = None
+
+        #self.selected_score: PlayerScore = None
+        #self.selected_score_plot: pygame.Surface = None
         self.plot_dict = {}
 
         self.winners = None
@@ -1027,24 +1032,36 @@ class CustomScene(object):
         screen.fill(config.BLACK)
         temp_surface.fill(config.BLACK)
         self.score_handler.draw(temp_surface)
-        screen.blit(temp_surface, (0,0))
-        if self.selected_score_plot is not None:
-            screen.blit(self.selected_score_plot, (50,270))
-        pygame.draw.rect(screen, config.BLACK,(0, config.SCREEN_HEIGHT-200,config.SCREEN_WIDTH, 200))
-        pygame.draw.rect(screen, config.BLACK,(0, 0, config.SCREEN_WIDTH, 200))
+        screen.blit(temp_surface, (0, 0))
+        if self.selected_plot is not None:
+            screen.blit(self.selected_plot, (50, 270))
+        pygame.draw.rect(screen, config.BLACK, (0, config.SCREEN_HEIGHT-200, config.SCREEN_WIDTH, 200))
+        pygame.draw.rect(screen, config.BLACK, (0, 0, config.SCREEN_WIDTH, 200))
         self.button_sprites.draw(screen)
 
     def update(self, dt):
         new_selected_score = self.score_handler.get_selected()
         if new_selected_score is not None:
             if self.selected_score is None:
-                self.selected_score = new_selected_score
-            elif new_selected_score.id != self.selected_score.id:
-                self.selected_score = new_selected_score
-            csv = scoring.get_csv(self.selected_score.id)
-            if csv is not None:
-                self.selected_score_plot = self.get_small_plot(csv, self.selected_score.id, self.path_to_plots)
+                self.add_new_score(new_selected_score)
 
+            else:
+                if new_selected_score in [score_plot[0] for score_plot in self.score_plot_list]:
+                    self.selected_score = new_selected_score
+                    for i, score_plot in enumerate(self.score_plot_list):
+                        if self.selected_score.id == score_plot[0].id:
+                            self.selected_plot = score_plot[1]
+                else:
+                    self.add_new_score(new_selected_score)
+
+    def add_new_score(self, new_selected_score):
+
+        self.selected_score = new_selected_score
+        csv = scoring.get_csv(self.selected_score.id)
+        if csv is not None:
+            score_plot = self.get_small_plot(csv, self.selected_score.id, self.path_to_plots)
+            self.score_plot_list.append((new_selected_score, score_plot))
+            self.selected_plot = score_plot
 
     def handle_events(self, events):
         for e in events:
