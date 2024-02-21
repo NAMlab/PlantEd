@@ -26,6 +26,15 @@ dependencies = [
   "requests",
 ]
 
+[project.optional-dependencies]
+test = [
+  "flake8",
+  "tox",
+  "pytest",
+  "pytest-cov",
+  "mypy"
+]
+
 [project.urls]
 homepage = "https://github.com/NAMlab/PlantEd"
 repository = "https://github.com/NAMlab/PlantEd"

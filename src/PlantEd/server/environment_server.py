@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from scipy import integrate
 
-from PlantEd.grid import MetaboliteGrid
+from PlantEd.server.grid_server import MetaboliteGrid
 from PlantEd.constants import MAX_WATER_PER_CELL, MAX_NITRATE_PER_CELL, WATERING_CAN_AMOUNT, \
     NITRATE_FERTILIZE_AMOUNT
 from PlantEd.server.weather import WeatherSimulator

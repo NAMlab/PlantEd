@@ -3,7 +3,7 @@ import cobra
 from cobra import Reaction
 from sympy import Add
 from PlantEd.server.helpers import normalize
-from PlantEd.server.environment import Environment
+from PlantEd.server.environment_server import Environment
 from PlantEd.constants import Vmax, Km, SLA_IN_SQUARE_METER_PER_GRAM
 
 fileDir = Path(__file__)

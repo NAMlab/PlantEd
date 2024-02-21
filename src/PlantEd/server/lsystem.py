@@ -9,19 +9,19 @@ short_root = [
     {"max_length": 150, "duration": 0.03, "tries": 5, "max_branches": 5},
     {"max_length": 100, "duration": 0.04, "tries": 4, "max_branches": 5},
     {"max_length": 30, "duration": 0.03, "tries": 1, "max_branches": 0},
-]
+    ]
 
 medium_root = [
     {"max_length": 600, "duration": 0.05, "tries": 4, "max_branches": 5},
     {"max_length": 250, "duration": 0.03, "tries": 3, "max_branches": 3},
     {"max_length": 50, "duration": 0.02, "tries": 1, "max_branches": 0},
-]
+    ]
 
 long_root = [
     {"max_length": 800, "duration": 3, "tries": 6, "max_branches": 3},
     {"max_length": 450, "duration": 2, "tries": 5, "max_branches": 2},
     {"max_length": 90, "duration": 1, "tries": 1, "max_branches": 0},
-]
+    ]
 
 root_classes = [short_root, medium_root, long_root]
 
@@ -46,22 +46,22 @@ class Letter:
             max_length: float,
             mass_start: float,
             mass_end: float,
-            max_branches: int = None,
+            max_branches: int = 0,
             branches: list = [],
-            t: float = None,
-            branching_t: list[float] = None,
+            t: float = 0,
+            branching_t: list[float] = [],
             length: float = 0,
             pos: tuple[float, float] = (0, 0)
-    ):
+            ):
         self.id: int = id
         self.tier: int = tier
         self.root_class: int = root_class
         self.dir: tuple[float, float] = dir
-        if branching_t is None:
+        if branching_t is []:
             self.branching_t: float = (
                 np.random.random(max_branches).tolist()
-                if max_branches is not None
-                else None
+                if max_branches != 0
+                else []
             )  # branching dist
         else:
             self.branching_t = branching_t
@@ -82,7 +82,7 @@ class Letter:
             next_start_pos = (
                 start_pos[0] + self.dir[0] * branch.t * self.length,
                 start_pos[1] + self.dir[1] * branch.t * self.length,
-            )
+                )
             branch.calc_position(next_start_pos)
 
     def draw(self, screen, start_pos):
@@ -93,16 +93,16 @@ class Letter:
         end_pos = (
             start_pos[0] + self.dir[0] * self.length,
             start_pos[1] + self.dir[1] * self.length,
-        )
+            )
         # pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
         pygame.draw.line(
             screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier
-        )
+            )
         for branch in self.branches:
             next_start_pos = (
                 start_pos[0] + self.dir[0] * branch.t * self.length,
                 start_pos[1] + self.dir[1] * branch.t * self.length,
-            )
+                )
             # get t of branch, calc length
             branch.draw(screen, next_start_pos)
 
@@ -115,19 +115,19 @@ class Letter:
         end_pos = (
             start_pos[0] + self.dir[0] * self.length,
             start_pos[1] + self.dir[1] * self.length,
-        )
+            )
         pygame.draw.line(
             screen, (255, 255, 255), start_pos, end_pos, 7 - self.tier
-        )
+            )
         # pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
         pygame.draw.line(
             screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier
-        )
+            )
         for branch in self.branches:
             next_start_pos = (
                 start_pos[0] + self.dir[0] * branch.t * self.length,
                 start_pos[1] + self.dir[1] * branch.t * self.length,
-            )
+                )
             # get t of branch, calc length
             branch.draw_highlighted(screen, next_start_pos)
 
@@ -136,16 +136,16 @@ class Letter:
         dic["id"] = self.id
         dic["tier"] = self.tier
         dic["root_class"] = self.root_class
-        dic["length"] = self.length
-        dic["max_length"] = self.max_length
-        dic["mass_start"] = self.mass_start
-        dic["mass_end"] = self.mass_end
-        dic["branching_t"] = self.branching_t
-        dic["branches"] = [branch.to_dict() for branch in self.branches]
-        dic["max_branches"] = self.max_branches
-        dic["t"] = self.t
-        dic["pos"] = self.pos
-        dic["dir"] = self.dir
+        dic["length"]: int = self.length
+        dic["max_length"]: float = self.max_length
+        dic["mass_start"]: float = self.mass_start
+        dic["mass_end"]: float = self.mass_end
+        dic["branching_t"]: float = self.branching_t
+        dic["branches"]: list[dict] = [branch.to_dict() for branch in self.branches]
+        dic["max_branches"]: int = self.max_branches
+        dic["t"]: float = self.t
+        dic["pos"]: tuple[float, float] = self.pos
+        dic["dir"]: tuple[float, float] = self.dir
         return dic
 
     def print(self, offset=""):
@@ -159,7 +159,7 @@ class Letter:
             self.mass_end,
             self.branching_t,
             len(self.branches),
-        )
+            )
         for branch in self.branches:
             branch.print(offset="   " + offset)
 
@@ -184,15 +184,15 @@ class LSystem:
             root_grid: np.ndarray,
             water_grid_pos: tuple[float, float],
             directions: list[tuple[float, float]] = [],
-            positions: list[tuple[float, float]] = None,
+            positions: list[tuple[float, float]] = [],
             mass: float = 0,
-    ):
+            ):
         self.root_grid: np.ndarray = root_grid
         self.water_grid_pos: tuple[float, float] = water_grid_pos
-        self.positions: list[tuple[float, float]] = positions if positions is not None else []
+        self.positions: list[tuple[float, float]] = positions
         self.first_letters: list[Letter] = []
         self.directions: list[tuple[float, float]] = directions  # if directions is not None else []
-        self.root_classes: list[list[dict]] = root_classes
+        self.root_classes: list[object] = root_classes
         for dir in directions:
             self.first_letters.append(self.create_root(dir, mass))
 
@@ -216,12 +216,14 @@ class LSystem:
         return True
 
     def to_dict(self) -> dict:
-        dic = {"root_grid": self.root_grid.tolist(),
-               "water_grid_pos": self.water_grid_pos,
-               "positions": self.positions,
-               "directions": self.directions,
-               "root_classes": self.root_classes,
-               "first_letters": [first_letter.to_dict() for first_letter in self.first_letters]}
+        dic = {
+            "root_grid": self.root_grid.tolist(),
+            "water_grid_pos": self.water_grid_pos,
+            "positions": self.positions,
+            "directions": self.directions,
+            "root_classes": self.root_classes,
+            "first_letters": [first_letter.to_dict() for first_letter in self.first_letters]
+            }
         return dic
 
     """
@@ -230,10 +232,9 @@ class LSystem:
     fully grown before the next one can grow
     """
 
-    def create_root(self, dir: tuple[float, float] = None, mass: float = 0, root_class: int = 0, tier: int = None,
-                    t: float = None):
-        dir = dir if dir is not None else (0, 1)
-        next_tier = tier if tier else 0
+    def create_root(self, dir: tuple[float, float] = (0, 1), mass: float = 0, root_class: int = 0, tier: int = 0,
+                    t: float = 0):
+        next_tier = tier
         dic = self.root_classes[root_class][next_tier]
 
         basal_length = dic["max_length"] / 10 * 1
@@ -253,7 +254,7 @@ class LSystem:
             mass_start=mass + basal_duration + branching_duration,
             mass_end=mass + basal_duration + branching_duration + apex_duration,
             t=1,
-        )
+            )
         branching = Letter(
             id=200,
             root_class=root_class,
@@ -265,7 +266,7 @@ class LSystem:
             max_branches=dic["max_branches"],
             branches=[apex],
             t=1,
-        )
+            )
         branching.branching_t.sort()
         basal = Letter(
             id=100,
@@ -277,7 +278,7 @@ class LSystem:
             mass_end=mass + basal_duration,
             branches=[branching],
             t=t,
-        )
+            )
         return basal
 
     """
@@ -298,8 +299,8 @@ class LSystem:
         # mass_per_letter = mass/max(0,len(self.first_letters))
 
         for letter in self.first_letters:
-            resolution_mass = MAXIMUM_ROOT_BIOMASS_GRAM/10
-            n_steps = min(int(mass/resolution_mass), 1)
+            resolution_mass = MAXIMUM_ROOT_BIOMASS_GRAM / 10
+            n_steps = min(int(mass / resolution_mass), 1)
             delta_mass = mass / n_steps
             for i in range(n_steps):
                 self.apply_rules(letter, delta_mass)
@@ -339,7 +340,7 @@ class LSystem:
                 root_class=letter.root_class,
                 tier=letter.tier + 1,
                 t=t,
-            )
+                )
             apex = letter.branches.pop(-1)
             letter.branches.append(branch)
             segment = Letter(
@@ -349,14 +350,14 @@ class LSystem:
                 dir=self.get_random_dir(
                     self.root_classes[letter.root_class][letter.tier]["tries"],
                     letter.dir,
-                ),
+                    ),
                 max_length=letter.max_length - letter.length,
                 mass_start=mass,
                 mass_end=letter.mass_end,
                 max_branches=letter.max_branches - len(letter.branches),
                 branches=[apex],
                 t=1,
-            )
+                )
             segment.branching_t = letter.branching_t
             letter.branching_t = []
             letter.id = 99
@@ -375,7 +376,7 @@ class LSystem:
         self.positions.append(pos)
         self.first_letters.append(
             self.create_root(dir, mass, root_class=root_class)
-        )
+            )
 
     def update_letter_length(self, letter, mass):
         if mass > letter.mass_start:
@@ -383,7 +384,7 @@ class LSystem:
                 1,
                 (mass - letter.mass_start)
                 / (letter.mass_end - letter.mass_start),
-            )
+                )
 
     def get_random_dir(self, tries, growth_dir=None, down=(0, 1)):
         phi = random.uniform(0, math.pi)

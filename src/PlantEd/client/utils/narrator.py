@@ -5,7 +5,7 @@ from pygame.mixer import Channel, Sound
 
 from PlantEd import config
 from PlantEd.client.gameobjects.plant import Plant
-from PlantEd.client.weather import Environment
+from PlantEd.client.environment import Environment
 from PlantEd.data.assets import AssetHandler
 
 END_LINE = pygame.USEREVENT + 2

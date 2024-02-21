@@ -675,8 +675,6 @@ class Root(Organ):
             pivot: tuple[float, float] = None,
             mass: float = 0.0,
             active: bool = False,
-            water_grid_shape: tuple[int, int] = None,
-            water_grid_pos: tuple[float, float] = None,
             play_reward: callable = None,
             camera: Camera = None,
 

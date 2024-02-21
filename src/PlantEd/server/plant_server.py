@@ -48,7 +48,7 @@ class Plant:
             root_grid=np.zeros(
                 ground_grid_resolution,
             ),  # same resolution as environment grids
-            water_grid_pos=(0, 900),  # hardcoded at ui [game.py 310]
+            water_grid_pos=(0, 900),  # hardcoded at ui [game_server.py 310]
         )
         self.lsystem.create_new_first_letter((0, 1), PLANT_POS, self.get_total_plant_mass())
         self.lsystem.update(self.root_mass)

@@ -5,7 +5,7 @@ import random
 from collections import namedtuple
 import pandas as pd
 
-weather_state = namedtuple("state", ["temperature", "humidity", "precipitation"])
+weather_state = namedtuple("weather_state", ["temperature", "humidity", "precipitation"])
 
 
 class WeatherSimulator:
@@ -30,10 +30,10 @@ class WeatherSimulator:
             temp_bins: int = 50,
             hum_bins: int = 50,
             precip_bins: int = 100,
-            seed: float = None
+            seed: float = 0
     ):
         super().__init__()
-        if seed is None:
+        if seed is 0:
             seed = random.randint(0, 100)
         self.seed = seed
 
@@ -48,7 +48,7 @@ class WeatherSimulator:
         self.states: list[weather_state] = []
 
         # Calculate transition probabilities
-        self.transitions = {}
+        self.transitions: dict = {}
         for i in range(len(data) - 1):
             curr_temp = data["temp 2m avg"][i]
             curr_hum = data["humidity"][i]

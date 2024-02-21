@@ -41,7 +41,7 @@ from PlantEd.client.utils.button import Button, Slider, Textbox
 from PlantEd.client.utils.gametime import GameTime
 from PlantEd.client.utils.narrator import Narrator
 from PlantEd.client.utils.particle import ParticleSystem, ParticleExplosion
-from PlantEd.client.weather import Environment
+from PlantEd.client.environment import Environment
 from PlantEd.server.lsystem import DictToRoot
 
 true_res = (

@@ -2,7 +2,7 @@
 import asyncio
 import websockets
 import json
-from PlantEd.server.game import Game
+from PlantEd.server.game_server import Game
 
 
 class Server:

@@ -7,3 +7,10 @@ pygame
 scipy
 matplotlib
 requests
+
+[test]
+flake8
+tox
+pytest
+pytest-cov
+mypy

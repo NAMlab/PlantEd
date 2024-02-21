@@ -8,9 +8,9 @@ from PlantEd.client.analysis import scoring
 from PlantEd.client.analysis.logger import Log
 from PlantEd.constants import MAX_DAYS, ROOT_COST, BRANCH_COST, LEAF_COST, FLOWER_COST, WATERING_CAN_COST, NITRATE_COST, \
     Vmax, Km
-from PlantEd.server.plant import Plant
+from PlantEd.server.plant_server import Plant
 from PlantEd.server.dynamic_model import DynamicModel
-from PlantEd.server.environment import Environment
+from PlantEd.server.environment_server import Environment
 import logging
 
 logger = logging.getLogger("server")
