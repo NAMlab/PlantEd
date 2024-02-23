@@ -37,3 +37,7 @@ src/PlantEd/server/log
 src/PlantEd/client/plots/
 src/PlantEd.egg-info/dependency_links.txt
 src/PlantEd.egg-info/entry_points.txt
+src/PlantEd.egg-info/SOURCES.txt
+src/PlantEd.egg-info/SOURCES.txt
+src/PlantEd/planted.zip
+src/PlantEd/planted/PlantEd/_internal/

@@ -41,8 +41,8 @@ class MetaboliteGrid:
     ):
         self.grid_size: tuple[int, int] = grid_size
         self.grid: np.ndarray = np.full(grid_size, fill_value=preset_fill_amount)
-
         self.max_metabolite_cell = max_metabolite_cell
+
 
     def __str__(self) -> str:
         string = str(self.grid)
@@ -149,7 +149,7 @@ class MetaboliteGrid:
             else:
                 self.grid[x, y] -= average_cell_drain
 
-    def add2cell(self, rate: int, x: int, y: int):
+    def add2cell(self, rate: float, x: int, y: int):
         """
         Increase amount of once cell.
 

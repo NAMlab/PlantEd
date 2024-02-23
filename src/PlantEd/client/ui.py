@@ -330,7 +330,7 @@ class UI:
         self.button_array.draw(screen)
         self.button_sprites.draw(screen)
         days, hours, minutes = self.get_day_time()
-        slider_color = config.YELLOW if 8 < hours < 20 else config.BLUE
+        slider_color = config.YELLOW if 9 < hours < 20 else config.BLUE
         [slider.draw(screen, slider_color) for slider in self.sliders]
         self.draw_ui(screen)
         for element in self.floating_elements:

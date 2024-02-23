@@ -336,6 +336,7 @@ class DefaultGameScene(object):
             water_grid=self.water_grid,
             nitrate_grid=self.nitrate_grid,
             plant=self.plant,
+            camera=self.camera,
             post_hover_message=self.ui.hover.set_message,
             active=False,
             sound_control=self.sound_control
@@ -405,7 +406,7 @@ class DefaultGameScene(object):
         self.shop.spraycan.callbacks.append(self.snail_spawner.spray_snails)
         self.shop.spraycan.callbacks.append(self.hive.spray_bees)
 
-        self.floating_shop = FloatingShop(self.camera, (0, 0))
+        '''self.floating_shop = FloatingShop(self.camera, (0, 0))
         add_leaf_item_floating = FloatingShopItem(
             pos=(0, 0),
             callback=self.activate_add_leaf,
@@ -438,7 +439,7 @@ class DefaultGameScene(object):
         self.plant.organs[1].floating_shop = self.floating_shop
         self.plant.organs[2].floating_shop = self.floating_shop
 
-        # start plant growth timer
+        '''# start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 
     def activate_add_leaf(self):
@@ -467,7 +468,7 @@ class DefaultGameScene(object):
                 self.quit()
 
             self.shop.handle_event(e)
-            self.floating_shop.handle_event(e)
+            #self.floating_shop.handle_event(e)
             self.plant.handle_event(e)
             self.snail_spawner.handle_event(e)
             for bug in self.bugs:
@@ -635,7 +636,7 @@ class DefaultGameScene(object):
         self.camera.update(dt)
         self.environment.update(dt)
         self.shop.update(dt)
-        self.floating_shop.update(dt)
+        #self.floating_shop.update(dt)
         self.ui.update(dt)
         self.narrator.update(dt)
         self.plant.update(dt)
@@ -663,7 +664,7 @@ class DefaultGameScene(object):
 
         self.water_grid.draw(temp_surface)
         self.nitrate_grid.draw(temp_surface)
-        self.floating_shop.draw(temp_surface)
+        #self.floating_shop.draw(temp_surface)
 
         screen.blit(temp_surface, (0, self.camera.offset_y))
         self.shop.draw(screen)

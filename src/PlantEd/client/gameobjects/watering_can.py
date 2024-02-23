@@ -14,6 +14,9 @@ class Watering_can:
             pos,
             image_active,
             image_inactive,
+            check_refund: callable,
+            finalize_shop_transaction: callable,
+            cost: int,
             water_grid: Water_Grid = None,
             amount: int = config.WATERING_CAN_AMOUNT,
             active=False,
@@ -26,6 +29,9 @@ class Watering_can:
         self.water_grid = water_grid  # remove
         self.image_active = image_active
         self.image_inactive = image_inactive
+        self.check_refund = check_refund
+        self.finalize_shop_transaction = finalize_shop_transaction
+        self.cost = cost
         self.image = self.image_inactive
         self.default_amount = amount  # default gamespeed 3s
         self.amount = amount if amount else self.default_amount
@@ -82,10 +88,15 @@ class Watering_can:
         if not self.active:
             return
         if e.type == MOUSEBUTTONDOWN:
+            if self.amount >= self.default_amount:  # if used, cant refund
+                if self.check_refund(pygame.mouse.get_pos(), self.cost):
+                    self.deactivate()
+                    return
             self.image = self.image_active
             self.pouring = True
             self.can_particle_system.activate()
             self.play_sound()
+            self.finalize_shop_transaction()
         if e.type == MOUSEBUTTONUP:
             self.image = self.image_inactive
             self.can_particle_system.deactivate()
@@ -99,5 +110,6 @@ class Watering_can:
 
     def draw(self, screen):
         if self.active:
+            pygame.draw.circle(screen, config.WHITE, self.pos, radius=10)
             screen.blit(self.image, self.pos)
             self.can_particle_system.draw(screen)

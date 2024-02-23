@@ -11,6 +11,9 @@ from PlantEd.client.utils.particle import ParticleSystem
 class Blue_grain:
     def __init__(self,
                  pos,
+                 check_refund: callable,
+                 finalize_shop_transaction: callable,
+                 cost: int,
                  amount: int = NITRATE_FERTILIZE_AMOUNT,
                  play_sound=None,
                  nitrate_grid=None
@@ -18,6 +21,9 @@ class Blue_grain:
         self.asset_handler = AssetHandler.instance()
         self.image = self.asset_handler.img("blue_grain_bag.PNG", (128, 128))
         self.pos = pos
+        self.check_refund = check_refund
+        self.finalize_shop_transaction = finalize_shop_transaction
+        self.cost = cost
         self.amount = amount
         self.play_sound = play_sound
         self.active = False
@@ -40,19 +46,14 @@ class Blue_grain:
 
     def activate(self, pos=None):
         pos = pos if pos else pygame.mouse.get_pos()
-        self.pos = (
-            (
-                int(pos[0] - self.image.get_width() / 2),
-                int(pos[1] - self.image.get_height() / 2),
-            )
-            if pos
-            else (0, 0)
-        )
+        self.pos = pos
+
         self.active = True
         pygame.mouse.set_visible(False)
 
     def deactivate(self):
         self.active = False
+        self.finalize_shop_transaction()
         pygame.mouse.set_visible(True)
 
     def update(self, dt):
@@ -63,8 +64,11 @@ class Blue_grain:
             return
         if e.type == MOUSEMOTION:
             x, y = pygame.mouse.get_pos()
-            self.pos = (x + 120, y + 120)
+            self.pos = (x, y)
         if e.type == MOUSEBUTTONDOWN:
+            if self.check_refund(self.pos, self.cost):
+                self.deactivate()
+                return
             self.particle_system.spawn_box = Rect(
                 self.pos[0], self.pos[1], 20, 20
             )
@@ -84,4 +88,5 @@ class Blue_grain:
     def draw(self, screen):
         self.particle_system.draw(screen)
         if self.active:
+            pygame.draw.circle(screen, config.WHITE, self.pos, radius=10)
             screen.blit(self.image, self.pos)
