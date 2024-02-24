@@ -151,10 +151,11 @@ class Game:
             self.environment.update(self.resolution)
 
             # Todo check percentages, build seed percentage
+            # min 0.1 percent for organs to grow
             percentages = {
-                "leaf_percent": growth_percentages["leaf_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0000.1,
-                "stem_percent": growth_percentages["stem_percent"] if self.plant.get_stem_mass_to_grow() > 0 else 0000.1,
-                "root_percent": growth_percentages["root_percent"] if self.plant.get_root_mass_to_grow() > 0 else 0000.1,
+                "leaf_percent": max(growth_percentages["leaf_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0.1,0.1),
+                "stem_percent": max(growth_percentages["stem_percent"] if self.plant.get_stem_mass_to_grow() > 0 else 0.1,0.1),
+                "root_percent": max(growth_percentages["root_percent"] if self.plant.get_root_mass_to_grow() > 0 else 0.1,0.1),
                 "seed_percent": len(self.plant.seeds) * 10 if self.plant.get_seed_mass_to_grow() > 0 else 0,
                 "starch_percent": growth_percentages["starch_percent"],
                 "stomata": growth_percentages["stomata"]
