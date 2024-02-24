@@ -102,15 +102,14 @@ class Game:
         self.time += delta_t
         n_simulations = int((delta_t + self.time_left_from_last_simulation) / self.resolution)
         self.time_left_from_last_simulation = (delta_t + self.time_left_from_last_simulation) % self.resolution
-        print(
-            f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
+        #print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
 
-        logger.debug(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} "
-                     f"and time_left: {self.time_left_from_last_simulation}")
+        '''logger.debug(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} "
+                     f"and time_left: {self.time_left_from_last_simulation}")'''
 
         actions = [(action, content) for action, content in message["shop_actions"].items() if content is not None]
-        for action in actions:
-            logger.debug(f"shop actions from client: {action}")
+        '''for action in actions:
+            logger.debug(f"shop actions from client: {action}")'''
 
         for action, content in message["shop_actions"].items():
             if content is not None:
@@ -153,15 +152,15 @@ class Game:
 
             # Todo check percentages, build seed percentage
             percentages = {
-                "leaf_percent": growth_percentages["leaf_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0,
-                "stem_percent": growth_percentages["stem_percent"] if self.plant.get_stem_mass_to_grow() > 0 else 0,
-                "root_percent": growth_percentages["root_percent"] if self.plant.get_root_mass_to_grow() > 0 else 0,
+                "leaf_percent": growth_percentages["leaf_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0000.1,
+                "stem_percent": growth_percentages["stem_percent"] if self.plant.get_stem_mass_to_grow() > 0 else 0000.1,
+                "root_percent": growth_percentages["root_percent"] if self.plant.get_root_mass_to_grow() > 0 else 0000.1,
                 "seed_percent": len(self.plant.seeds) * 10 if self.plant.get_seed_mass_to_grow() > 0 else 0,
                 "starch_percent": growth_percentages["starch_percent"],
                 "stomata": growth_percentages["stomata"]
                 }
             sum_percentages = sum(
-                [value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) + max(0,percentages["starch_percent"])
+                [value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) + max(0, percentages["starch_percent"])
             if sum_percentages > 0:
                 self.model.simulate(self.resolution, percentages)
 

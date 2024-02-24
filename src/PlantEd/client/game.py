@@ -336,7 +336,6 @@ class DefaultGameScene(object):
             water_grid=self.water_grid,
             nitrate_grid=self.nitrate_grid,
             plant=self.plant,
-            camera=self.camera,
             post_hover_message=self.ui.hover.set_message,
             active=False,
             sound_control=self.sound_control
@@ -520,7 +519,7 @@ class DefaultGameScene(object):
             async with websockets.connect("ws://localhost:8765") as websocket:
                 delta_t = self.gametime.get_time() / 1000 - self.seconds_at_last_request
                 self.seconds_at_last_request = self.gametime.get_time() / 1000
-                print(" --> Sending request...")
+                #print(" --> Sending request...")
                 game_state = {
                     "type": "simulate",
                     "message": {
@@ -546,7 +545,7 @@ class DefaultGameScene(object):
 
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
-                print(" --> Received response, updating state")
+                #print(" --> Received response, updating state")
                 dic = json.loads(response)
 
                 # print(f"RESPONSE: {dic}")

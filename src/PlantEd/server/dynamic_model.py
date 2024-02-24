@@ -128,8 +128,7 @@ class DynamicModel:
         # slim optimize best case
         self.update_bounds(delta_t, percentages)
         self.update_constraints(percentages)
-        print(f"Simulation: \n"
-              f"Inputs: \n"
+        print(f"Inputs: \n"
               f"Water: {self.get_bounds(WATER)} \n"
               f"nitrate: {self.get_bounds(NITRATE)} \n"
               f"starch_in: {self.get_bounds(STARCH_IN)} with a pool of {self.plant.starch_pool} \n"
@@ -148,17 +147,16 @@ class DynamicModel:
 
         water_used = max(0, water_flux / self.get_bounds(WATER)[1]) if self.get_bounds(WATER)[1] > 0 else 0
         nitrate_used = nitrate_flux / self.get_bounds(NITRATE)[1] if self.get_bounds(NITRATE)[1] > 0 else 0
-        print(f"NITRATE FLUX: {nitrate_flux}, NITRATE USED: {nitrate_used}")
         starch_in_used = starch_in / self.get_bounds(STARCH_IN)[1] if self.get_bounds(STARCH_IN)[1] > 0 else 0
         co2_used = co2 / self.get_bounds(CO2)[1] if self.get_bounds(CO2)[1] > 0 else 0
         photon_used = photon_flux / self.get_bounds(PHOTON)[1] if self.get_bounds(PHOTON)[1] > 0 else 0
-        print(f"Percentage used of available: \n"
+        '''print(f"Percentage used of available: \n"
               f"water_used: {water_used} of pool: \n"
               f"nitrate_used: {nitrate_used} \n"
               f"starch_in_used: {starch_in_used} \n"
               f"co2_used: {co2_used} \n"
               f"photon_used: {photon_used} \n"
-              )
+              )'''
 
         self.used_fluxes = {
             "water_used": water_used,
@@ -293,7 +291,7 @@ class DynamicModel:
         self.model.objective = objective
 
     def update_constraints(self, percentages):
-        constraint_starch_percentage = max(percentages["starch_percent"], 0)
+        constraint_starch_percentage = min(max(percentages["starch_percent"], 0), 99)
 
         root_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_ROOT)
         stem_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_STEM)

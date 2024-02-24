@@ -205,23 +205,25 @@ class FloatingShopItem:
                     (self.rect[0], self.rect[1], self.rect[2], self.rect[3]),
                     width=2,
                 )
-            green_thumb_size = (16,16)
+            green_thumb_size = (16, 16)
             margin = 3
             cost_label = self.asset_handler.FONT.render(f"{self.cost}", True, config.BLACK)
 
-
             rect_with = cost_label.get_width() + green_thumb_size[0] + 6 * margin
             rect_height = max(green_thumb_size[1], cost_label.get_height()) + 2 * margin - 4
-            rect_x = self.rect[0] + self.image.get_width()/2 - rect_with/2
-            rect_y = self.rect[1] + self.image.get_height() - rect_height/2
+            rect_x = self.rect[0] + self.image.get_width() / 2 - rect_with / 2
+            rect_y = self.rect[1] + self.image.get_height() - rect_height / 2
 
-            pygame.draw.rect(screen, color=config.WHITE_TRANSPARENT_LESS, rect=(rect_x, rect_y, rect_with, rect_height), border_radius=2)
-            pygame.draw.rect(screen, color=config.WHITE, rect=(rect_x, rect_y, rect_with, rect_height), border_radius=2, width=2)
+            pygame.draw.rect(screen, color=config.WHITE_TRANSPARENT_LESS, rect=(rect_x, rect_y, rect_with, rect_height),
+                             border_radius=2)
+            pygame.draw.rect(screen, color=config.WHITE, rect=(rect_x, rect_y, rect_with, rect_height), border_radius=2,
+                             width=2)
 
-            screen.blit(cost_label, (rect_x+rect_with/4-cost_label.get_width()/2,
-                                     rect_y+rect_height/2-cost_label.get_height()/2))
+            screen.blit(cost_label, (rect_x + rect_with / 4 - cost_label.get_width() / 2,
+                                     rect_y + rect_height / 2 - cost_label.get_height() / 2))
 
-            pygame.draw.circle(screen, config.GREEN_DARK, (rect_x+rect_with*3/4, rect_y+ rect_height/2), green_thumb_size[0]/2)
+            pygame.draw.circle(screen, config.GREEN_DARK, (rect_x + rect_with * 3 / 4, rect_y + rect_height / 2),
+                               green_thumb_size[0] / 2)
 
 
 class Shop:
@@ -232,7 +234,6 @@ class Shop:
             water_grid: Water_Grid,
             nitrate_grid: Grid,
             plant,
-            camera,
             cols=2,
             margin=18,
             post_hover_message=None,
@@ -251,7 +252,6 @@ class Shop:
         self.post_hover_message = post_hover_message
         self.water_grid = water_grid
         self.nitrate_grid = nitrate_grid
-        self.camera = camera
         self.plant = plant
         self.plant.organs[1].check_refund = self.check_refund
         self.plant.organs[1].finalize_shop_transaction = self.finalize_shop_transaction
@@ -298,8 +298,6 @@ class Shop:
             finalize_shop_transaction=self.finalize_shop_transaction
         )
 
-
-
         self.init_layout()
 
         images = Animation.generate_rising_animation("-1", self.asset_handler.BIGGER_FONT, config.RED)
@@ -316,8 +314,8 @@ class Shop:
         pygame.draw.rect(self.refund_image, config.WHITE, (0, 0, self.rect[2], 50), border_radius=3, width=3)
         refund_label = self.asset_handler.BIGGER_FONT.render("Refund", True, config.BLACK)
         self.refund_image.blit(refund_label, (
-            self.refund_image.get_width()/2-refund_label.get_width()/2,
-            self.refund_image.get_height()/2-refund_label.get_height()/2))
+            self.refund_image.get_width() / 2 - refund_label.get_width() / 2,
+            self.refund_image.get_height() / 2 - refund_label.get_height() / 2))
 
     def init_layout(self):
         if len(self.shop_items) <= 0:
@@ -422,7 +420,7 @@ class Shop:
                 self.rect[0],
                 self.rect[1] + self.rect[3],
                 self.refund_image.get_width(),
-                self.refund_image.get_height()-self.camera.offset_y).collidepoint(mouse_pos):
+                self.refund_image.get_height()).collidepoint(mouse_pos):
             self.plant.upgrade_points += cost
             self.refund_available = False
             return True
@@ -442,7 +440,7 @@ class Shop:
     def handle_event(self, e: pygame.event.Event):
         if not self.active:
             return
-        if not self.refund_available:   # can't buy new items while refund is available
+        if not self.refund_available:  # can't buy new items while refund is available
             for item in self.shop_items:
                 item.handle_event(e)
         if e.type == pygame.MOUSEBUTTONDOWN:

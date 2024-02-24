@@ -76,7 +76,7 @@ class UI:
         self.label_root = self.asset_handler.FONT.render("Root", True, (0, 0, 0))
         self.label_starch = self.asset_handler.FONT.render("Starch", True, (0, 0, 0))
         self.label_water = self.asset_handler.FONT.render("Water", True, (0, 0, 0))
-        self.label_producing = self.asset_handler.FONT.render("producing", True, config.GREEN)
+        self.label_producing = self.asset_handler.FONT.render("producing", True, config.GREEN_DARK)
         self.label_producing = pygame.transform.rotate(self.label_producing, 90)
         self.label_consuming = self.asset_handler.FONT.render("consuming", True, config.RED)
         self.label_consuming = pygame.transform.rotate(self.label_consuming, 90)
