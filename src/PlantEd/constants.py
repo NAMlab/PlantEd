@@ -34,7 +34,7 @@ MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT = GRAM_FRESH_WEIGHT_PER_GRAM_DRY_WEIGHT * GR
 # 18 gram/mol -> mol/gramm = 1/18 -> 0.05550843506179199 mol/gramm -> 0.05550843506179199 * 1000000 mikromol/gram, 80% water in plant
 WATER_MOL_PER_GRAM = 1/18
 WATER_MIKROMOL_PER_GRAM = WATER_MOL_PER_GRAM * 1000000
-MAX_WATER_POOL_PER_GRAMM = WATER_MIKROMOL_PER_GRAM * 4 #0.008
+MAX_WATER_POOL_PER_GRAMM = WATER_MIKROMOL_PER_GRAM * 0.4
 
 # rainwater mm to mikromol -> 1mm/m² = 1 Liter -> are is 1/4 m²
 WATER_MIKROMOL_PER_LITER = WATER_MIKROMOL_PER_GRAM * 1000 / 100
@@ -65,7 +65,7 @@ MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = 0.00027     #0.00027
 
 
 # guiding paper has 50 mmol high /0.4 mmol low for a complete growth -> 5 per cell maybe? -> 50000 mikromol
-MAX_NITRATE_PER_CELL = 10     # 20*6 cells overall ->
+MAX_NITRATE_PER_CELL = 5     # 20*6 cells overall ->
 
 Vmax = MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
 Km = 10 #400  # mikromol, Substrate density at which intake is 50% of max
@@ -94,7 +94,7 @@ START_LEAF_BIOMASS_GRAM = 0.01
 START_STEM_BIOMASS_GRAM = 0.02
 START_ROOT_BIOMASS_GRAM = 0.02
 START_SEED_BIOMASS_GRAM = 0.01
-START_SUM_BIOMASS_GRAM = 0.05
+START_SUM_BIOMASS_GRAM = 0.035
 
 
 MAXIMUM_LEAF_BIOMASS_GRAM = START_LEAF_BIOMASS_GRAM * 20
@@ -122,13 +122,13 @@ START_STARCH_POOL_IN_MICROMOL = -1
 # ↓ simulation step. The Plant can only use up to this percent
 # ↓ of the pool very step. (applies to Starch, Water and Nitrate)
 # ↓ value of 1 = 100% and a value of .3 = 30% of the available pool
-PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP = 0.01
+PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP = 0.005
 
 # ↓ Factor that limits how much of the pool the plant can use per
 # ↓ simulation step. This scales based on the maximum of the pool therefore
 # ↓ a value of 0.05 limits the uptake of the plant per step to 5%
 # ↓ of the max pool.
-PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.01
+PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP = 0.005
 
 
 ###############################################################################
@@ -140,7 +140,7 @@ BRANCH_COST = 2
 ROOT_COST = 2
 FLOWER_COST = 0
 WATERING_CAN_COST = 1
-NITRATE_COST = 1
+NITRATE_COST = 3
 SPRAYCAN_COST = 0
 
 
@@ -148,7 +148,7 @@ SPRAYCAN_COST = 0
 # Shop Item Effect
 ###############################################################################
 WATERING_CAN_AMOUNT = 30000  # mikromol
-NITRATE_FERTILIZE_AMOUNT = 50 # mikromol
+NITRATE_FERTILIZE_AMOUNT = 15 # mikromol
 
 water_concentration_at_temp = [
     0.269,

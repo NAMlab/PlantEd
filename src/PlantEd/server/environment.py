@@ -21,6 +21,10 @@ class Environment:
                                                          preset_fill_amount=MAX_WATER_PER_CELL / 20)
         self.nitrate_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_NITRATE_PER_CELL,
                                                            preset_fill_amount=MAX_NITRATE_PER_CELL * (scenario["nitrate_percent"] / 100))
+        # Todo balancing
+        self.nitrate_grid.add2cell(0.5, 8, 0)
+        self.nitrate_grid.add2cell(1, 9, 0)
+        self.nitrate_grid.add2cell(0.5, 10, 0)
 
         df_weather: pd.DataFrame = pd.read_csv(script_dir / scenario["filename"])
         self.weather: WeatherSimulator = WeatherSimulator(

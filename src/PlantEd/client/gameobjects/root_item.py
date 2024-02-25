@@ -6,11 +6,21 @@ from PlantEd.client.utils.particle import ParticleSystem
 
 
 class Root_Item:
-    def __init__(self, callback, plant, cost=1):  # take from config
+    def __init__(
+            self,
+            callback: callable,
+            plant,
+            check_refund: callable,
+            finalize_shop_transaction: callable,
+            cost=1
+    ):  # take from config
+
+        self.callback = callback
         self.plant = plant
+        self.check_refund = check_refund
+        self.finalize_shop_transaction = finalize_shop_transaction
         self.dir = [0, 0]
         self.cost = cost
-        self.callback = callback
         self.active = False
         self.particle_system = ParticleSystem(
             100,
@@ -31,6 +41,10 @@ class Root_Item:
         if self.active:
             if e.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
+                if self.check_refund(mouse_pos, self.cost):
+                    self.deactivate()
+                    return
+
                 if self.get_validation_rect().collidepoint(mouse_pos):
                     self.callback(pygame.mouse.get_pos())
                     self.deactivate()
@@ -38,6 +52,7 @@ class Root_Item:
                         self.plant.x, self.get_validation_rect()[1] + 45, 0, 0
                     )
                     self.particle_system.activate()
+                    self.finalize_shop_transaction()
 
     def activate(self):
         self.active = True
@@ -62,9 +77,9 @@ class Root_Item:
                 pygame.draw.line(
                     screen, config.WHITE, (plant_x, plant_y), mouse_pos, 3
                 )
-                pygame.draw.circle(screen, config.WHITE, mouse_pos, 3)
+                pygame.draw.circle(screen, config.WHITE, mouse_pos, 10)
             else:
                 pygame.draw.line(
                     screen, config.GRAY, (plant_x, plant_y), mouse_pos, 3
                 )
-                pygame.draw.circle(screen, config.GRAY, mouse_pos, 3)
+                pygame.draw.circle(screen, config.GRAY, mouse_pos, 10)

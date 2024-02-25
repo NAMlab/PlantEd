@@ -1,8 +1,10 @@
 import pygame
 
 from PlantEd import config
+from PlantEd.client.camera import Camera
 from PlantEd.client.utils.grid import Grid
-from PlantEd.constants import NITRATE_COST, WATERING_CAN_COST, SPRAYCAN_COST
+from PlantEd.constants import NITRATE_COST, WATERING_CAN_COST, SPRAYCAN_COST, ROOT_COST, LEAF_COST, BRANCH_COST, \
+    FLOWER_COST
 from PlantEd.data.assets import AssetHandler
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.gameobjects.blue_grain import Blue_grain
@@ -204,23 +206,25 @@ class FloatingShopItem:
                     (self.rect[0], self.rect[1], self.rect[2], self.rect[3]),
                     width=2,
                 )
-            green_thumb_size = (16,16)
+            green_thumb_size = (16, 16)
             margin = 3
             cost_label = self.asset_handler.FONT.render(f"{self.cost}", True, config.BLACK)
 
-
             rect_with = cost_label.get_width() + green_thumb_size[0] + 6 * margin
             rect_height = max(green_thumb_size[1], cost_label.get_height()) + 2 * margin - 4
-            rect_x = self.rect[0] + self.image.get_width()/2 - rect_with/2
-            rect_y = self.rect[1] + self.image.get_height() - rect_height/2
+            rect_x = self.rect[0] + self.image.get_width() / 2 - rect_with / 2
+            rect_y = self.rect[1] + self.image.get_height() - rect_height / 2
 
-            pygame.draw.rect(screen, color=config.WHITE_TRANSPARENT_LESS, rect=(rect_x, rect_y, rect_with, rect_height), border_radius=2)
-            pygame.draw.rect(screen, color=config.WHITE, rect=(rect_x, rect_y, rect_with, rect_height), border_radius=2, width=2)
+            pygame.draw.rect(screen, color=config.WHITE_TRANSPARENT_LESS, rect=(rect_x, rect_y, rect_with, rect_height),
+                             border_radius=2)
+            pygame.draw.rect(screen, color=config.WHITE, rect=(rect_x, rect_y, rect_with, rect_height), border_radius=2,
+                             width=2)
 
-            screen.blit(cost_label, (rect_x+rect_with/4-cost_label.get_width()/2,
-                                     rect_y+rect_height/2-cost_label.get_height()/2))
+            screen.blit(cost_label, (rect_x + rect_with / 4 - cost_label.get_width() / 2,
+                                     rect_y + rect_height / 2 - cost_label.get_height() / 2))
 
-            pygame.draw.circle(screen, config.GREEN_DARK, (rect_x+rect_with*3/4, rect_y+ rect_height/2), green_thumb_size[0]/2)
+            pygame.draw.circle(screen, config.GREEN_DARK, (rect_x + rect_with * 3 / 4, rect_y + rect_height / 2),
+                               green_thumb_size[0] / 2)
 
 
 class Shop:
@@ -231,6 +235,7 @@ class Shop:
             water_grid: Water_Grid,
             nitrate_grid: Grid,
             plant,
+            camera: Camera,
             cols=2,
             margin=18,
             post_hover_message=None,
@@ -250,6 +255,12 @@ class Shop:
         self.water_grid = water_grid
         self.nitrate_grid = nitrate_grid
         self.plant = plant
+        self.camera = camera
+        self.plant.organs[1].check_refund = self.check_refund
+        self.plant.organs[1].finalize_shop_transaction = self.finalize_shop_transaction
+        self.plant.organs[1].leaf_cost = LEAF_COST
+        self.plant.organs[1].branch_cost = BRANCH_COST
+        self.plant.organs[1].flower_cost = FLOWER_COST
         self.active = active
         self.animations = []
         self.sound_control = sound_control
@@ -262,40 +273,56 @@ class Shop:
                                          water_grid=self.water_grid,
                                          play_sound=self.sound_control.play_watering_can_sfx,
                                          stop_sound=self.sound_control.stop_watering_can_sfx,
+                                         check_refund=self.check_refund,
+                                         cost=WATERING_CAN_COST,
+                                         finalize_shop_transaction=self.finalize_shop_transaction
                                          )
         self.blue_grain = Blue_grain(pos=(0, 0),
                                      play_sound=self.sound_control.play_nitrogen_sfx,
                                      nitrate_grid=self.nitrate_grid,
+                                     check_refund=self.check_refund,
+                                     cost=NITRATE_COST,
+                                     finalize_shop_transaction=self.finalize_shop_transaction
                                      )
         self.spraycan = Spraycan(pos=(0, 0),
                                  amount=3,
                                  image_active=self.asset_handler.img("spraycan_active.PNG", (128, 128)),
                                  image_inactive=self.asset_handler.img("spraycan.PNG", (128, 128)),
+                                 camera=self.camera,
                                  play_sound=self.sound_control.play_spraycan_sfx,
+                                 check_refund=self.check_refund,
+                                 cost=SPRAYCAN_COST,
+                                 finalize_shop_transaction=self.finalize_shop_transaction
                                  )
         self.root_item = Root_Item(
-            self.plant.organs[2].create_new_root, self.plant
+            callback=self.plant.organs[2].create_new_root,
+            plant=self.plant,
+            check_refund=self.check_refund,
+            cost=ROOT_COST,
+            finalize_shop_transaction=self.finalize_shop_transaction
         )
-        '''        
-            self.buy_button = Button(
-            self.rect[2] - self.margin * 2 - 64,
-            self.rect[3] - self.margin - 64,
-            64,
-            64,
-            [self.buy],
-            self.asset_handler.FONT,
-            "BUY",
-            offset=(rect[0], rect[1]),
-        )
-        '''
+
         self.init_layout()
 
+        images = Animation.generate_rising_animation("-0", self.asset_handler.BIGGER_FONT, config.RED)
+        self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
         images = Animation.generate_rising_animation("-1", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
         images = Animation.generate_rising_animation("-2", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
         images = Animation.generate_rising_animation("-3", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
+
+
+        self.refund_available = False
+        self.refund_image = pygame.Surface((self.rect[2], 50), pygame.SRCALPHA)
+        self.refund_image.fill((0, 0, 0, 0))
+        pygame.draw.rect(self.refund_image, config.WHITE_TRANSPARENT, (0, 0, self.rect[2], 50), border_radius=3)
+        pygame.draw.rect(self.refund_image, config.WHITE, (0, 0, self.rect[2], 50), border_radius=3, width=3)
+        refund_label = self.asset_handler.BIGGER_FONT.render("Refund", True, config.BLACK)
+        self.refund_image.blit(refund_label, (
+            self.refund_image.get_width() / 2 - refund_label.get_width() / 2,
+            self.refund_image.get_height() / 2 - refund_label.get_height() / 2))
 
     def init_layout(self):
         if len(self.shop_items) <= 0:
@@ -379,35 +406,11 @@ class Shop:
     def buy(self, item):
         if self.plant.upgrade_points - item.cost >= 0:
             self.plant.upgrade_points -= item.cost
-            self.animations[max(0, item.cost - 1)].start(pygame.mouse.get_pos())
+            self.animations[max(0, item.cost)].start(pygame.mouse.get_pos())
             item.callback()
             self.sound_control.play_buy_sfx()
             self.update_current_cost()
-        '''else:
-            
-        
-        
-        for item in self.shop_items:
-            if item.selected:
-                if self.plant.upgrade_points - item.cost >= 0:
-                    if item.condition is not None:
-                        if not item.condition():
-                            # condition not met
-                            if item.condition_not_met_message is not None:
-                                item.post_hover_message(
-                                    item.condition_not_met_message
-                                )
-                            self.sound_control.play_error_sfx()
-                            return
-                    self.plant.upgrade_points -= item.cost
-                    self.animations[max(0, item.cost - 1)].start(pygame.mouse.get_pos())
-                    item.callback()
-                    item.selected = False
-                    self.sound_control.play_buy_sfx()
-                    self.update_current_cost()
-                else:
-                    # throw insufficient funds, maybe post hover msg
-                    pass'''
+            self.refund_available = True
 
     def update(self, dt):
         self.watering_can.update(dt)
@@ -418,6 +421,19 @@ class Shop:
             animation.update(dt)
         for item in self.shop_items:
             item.update(dt)
+
+    def check_refund(self, mouse_pos, cost):
+        if pygame.Rect(
+                self.rect[0],
+                self.rect[1] + self.rect[3],
+                self.refund_image.get_width(),
+                self.refund_image.get_height()).collidepoint(mouse_pos):
+            self.plant.upgrade_points += cost
+            self.refund_available = False
+            return True
+
+    def finalize_shop_transaction(self):
+        self.refund_available = False
 
     def update_current_cost(self):
         self.current_cost = 0
@@ -431,8 +447,9 @@ class Shop:
     def handle_event(self, e: pygame.event.Event):
         if not self.active:
             return
-        for item in self.shop_items:
-            item.handle_event(e)
+        if not self.refund_available:  # can't buy new items while refund is available
+            for item in self.shop_items:
+                item.handle_event(e)
         if e.type == pygame.MOUSEBUTTONDOWN:
             self.update_current_cost()
         self.watering_can.handle_event(e)
@@ -479,6 +496,10 @@ class Shop:
         # s.blit(self.green_thumbs_icon,(self.rect[0]+self.rect[2]-self.margin*4-self.green_thumbs_icon.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-self.green_thumbs_icon.get_height()))
         # s.blit(cost, (self.rect[0]+self.rect[2]-self.margin*5-self.green_thumbs_icon.get_width()-cost.get_width()-64,self.rect[1]+self.rect[3]-self.margin*3-cost.get_height()))
         screen.blit(self.s, (self.rect[0], self.rect[1]))
+
+        if self.refund_available:
+            screen.blit(self.refund_image, (self.rect[0], self.rect[1] + self.rect[3] + 10))
+
         self.watering_can.draw(screen)
         self.blue_grain.draw(screen)
         self.spraycan.draw(screen)

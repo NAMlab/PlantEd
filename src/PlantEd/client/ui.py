@@ -76,7 +76,7 @@ class UI:
         self.label_root = self.asset_handler.FONT.render("Root", True, (0, 0, 0))
         self.label_starch = self.asset_handler.FONT.render("Starch", True, (0, 0, 0))
         self.label_water = self.asset_handler.FONT.render("Water", True, (0, 0, 0))
-        self.label_producing = self.asset_handler.FONT.render("producing", True, config.GREEN)
+        self.label_producing = self.asset_handler.FONT.render("producing", True, config.GREEN_DARK)
         self.label_producing = pygame.transform.rotate(self.label_producing, 90)
         self.label_consuming = self.asset_handler.FONT.render("consuming", True, config.RED)
         self.label_consuming = pygame.transform.rotate(self.label_consuming, 90)
@@ -330,7 +330,7 @@ class UI:
         self.button_array.draw(screen)
         self.button_sprites.draw(screen)
         days, hours, minutes = self.get_day_time()
-        slider_color = config.YELLOW if 8 < hours < 20 else config.BLUE
+        slider_color = config.YELLOW if 9 < hours < 20 else config.BLUE
         [slider.draw(screen, slider_color) for slider in self.sliders]
         self.draw_ui(screen)
         for element in self.floating_elements:
@@ -808,6 +808,7 @@ class UI:
         )
 
         width = 140
+        height = 30
 
         pygame.draw.rect(
             s,
@@ -822,14 +823,14 @@ class UI:
             (topleft[0], topleft[1] + 40, int(width * self.plant.water_pool/self.plant.max_water_pool), 30),
             border_radius=3,
         )  # exp
-        text_water_pool = self.asset_handler.MEDIUM.render(
+        text_water_pool = self.asset_handler.SMALL_FONT.render(
             "{:.1f}/{:.1f} MMol".format(self.plant.water_pool / 1000, self.plant.max_water_pool / 1000), True, (0, 0, 0)
         )
         s.blit(
             text_water_pool,
             dest=(
                 topleft[0] + width / 2 - text_water_pool.get_width() / 2,
-                topleft[1] + 45,
+                topleft[1] + 40 + height / 2 - text_water_pool.get_height() / 2,
             ),
         )  # Todo change x, y
 

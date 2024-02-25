@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.ERROR)
 scenarios = {
     "summer_low_nitrate": {
         "weather_seed": 0.23171800215059546,
-        "nitrate_percent": 2,
+        "nitrate_percent": 0.2,
         "photon_peak": 2000,
         "filename": "data/cleaned_weather_summer.csv",
         },
@@ -102,15 +102,14 @@ class Game:
         self.time += delta_t
         n_simulations = int((delta_t + self.time_left_from_last_simulation) / self.resolution)
         self.time_left_from_last_simulation = (delta_t + self.time_left_from_last_simulation) % self.resolution
-        print(
-            f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
+        #print(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} and time_left: {self.time_left_from_last_simulation}")
 
-        logger.debug(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} "
-                     f"and time_left: {self.time_left_from_last_simulation}")
+        '''logger.debug(f"update game time: {self.time} with delta_T: {delta_t} and n_simulations: {n_simulations} "
+                     f"and time_left: {self.time_left_from_last_simulation}")'''
 
         actions = [(action, content) for action, content in message["shop_actions"].items() if content is not None]
-        for action in actions:
-            logger.debug(f"shop actions from client: {action}")
+        '''for action in actions:
+            logger.debug(f"shop actions from client: {action}")'''
 
         for action, content in message["shop_actions"].items():
             if content is not None:
@@ -151,17 +150,25 @@ class Game:
             self.plant.update(self.resolution)
             self.environment.update(self.resolution)
 
+            '''print(f"Leaf Mass: {self.plant.leaf_mass}, L Mass to grow: {self.plant.get_leaf_mass_to_grow()}, Max: {self.plant.leaf_mass + self.plant.get_leaf_mass_to_grow()} \n"
+                  f"Stem Mass: {self.plant.stem_mass}, S Mass to grow: {self.plant.get_stem_mass_to_grow()}, Max: {self.plant.stem_mass + self.plant.get_stem_mass_to_grow()}\n"
+                  f"Root Mass: {self.plant.root_mass}, R Mass to grow: {self.plant.get_root_mass_to_grow()}, Max: {self.plant.root_mass + self.plant.get_root_mass_to_grow()}\n"
+                  f"Flower Mass: {self.plant.seed_mass}, F Mass to grow: {self.plant.get_seed_mass_to_grow()}, Max: {self.plant.seed_mass + self.plant.get_seed_mass_to_grow()}\n"
+                  f"Overall Biomass: {self.plant.get_total_plant_mass()}"
+                  )'''
+
             # Todo check percentages, build seed percentage
+            # min 0.1 percent for organs to grow
             percentages = {
-                "leaf_percent": growth_percentages["leaf_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0,
-                "stem_percent": growth_percentages["stem_percent"] if self.plant.get_stem_mass_to_grow() > 0 else 0,
-                "root_percent": growth_percentages["root_percent"] if self.plant.get_root_mass_to_grow() > 0 else 0,
+                "leaf_percent": max(growth_percentages["leaf_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0.1,0.1),
+                "stem_percent": max(growth_percentages["stem_percent"] if self.plant.get_stem_mass_to_grow() > 0 else 0.1,0.1),
+                "root_percent": max(growth_percentages["root_percent"] if self.plant.get_root_mass_to_grow() > 0 else 0.1,0.1),
                 "seed_percent": len(self.plant.seeds) * 10 if self.plant.get_seed_mass_to_grow() > 0 else 0,
                 "starch_percent": growth_percentages["starch_percent"],
                 "stomata": growth_percentages["stomata"]
                 }
             sum_percentages = sum(
-                [value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) + max(0,percentages["starch_percent"])
+                [value for key, value in percentages.items() if key != "starch_percent" and key != "stomata"]) + max(0, percentages["starch_percent"])
             if sum_percentages > 0:
                 self.model.simulate(self.resolution, percentages)
 

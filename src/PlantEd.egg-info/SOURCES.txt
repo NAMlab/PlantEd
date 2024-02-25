@@ -44,6 +44,9 @@ src/PlantEd/client/utils/scores_handler.py
 src/PlantEd/client/utils/spline.py
 src/PlantEd/data/assets.py
 src/PlantEd/data/sound_control.py
+src/PlantEd/planted/PlantEd/_internal/PlantEd/data/assets.py
+src/PlantEd/planted/PlantEd/_internal/PlantEd/data/sound_control.py
+src/PlantEd/planted/PlantEd/_internal/certifi/py.typed
 src/PlantEd/server/dynamic_model.py
 src/PlantEd/server/environment.py
 src/PlantEd/server/game.py

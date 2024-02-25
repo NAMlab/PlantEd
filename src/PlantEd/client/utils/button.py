@@ -1436,6 +1436,9 @@ class Textbox:
             else:
                 if len(self.text) < self.max_chars:
                     self.text += e.unicode
+            options = config.load_options()
+            options["name"] = self.text
+            config.write_options(options)
         self.render_text = self.font.render(self.text, True, self.textcolor)
 
     def update_text(self, text):

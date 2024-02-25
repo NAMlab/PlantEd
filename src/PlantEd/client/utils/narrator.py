@@ -289,7 +289,6 @@ class Narrator:
         if self.used_fluxes is not None:
             if self.used_fluxes["starch_in_used"] <= 0 and self.used_fluxes["photon_used"] <= 0:
                 self.low_growth_counter += 1
-                print(f"LOW C: {self.low_growth_counter}")
                 return False
         return False
 

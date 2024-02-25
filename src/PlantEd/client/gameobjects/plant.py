@@ -1,7 +1,7 @@
 import logging
 import random
 import string
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import pygame
 
@@ -74,7 +74,8 @@ class Plant:
         plant.organs[1].curve = Cubic_Tree(branches=branches)
 
         plant.organs[2].mass = plant_dict["root"]["mass"]
-        plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])
+        if plant_dict["root"]["ls"] is not None:
+            plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])
         plant.organs[3].mass = plant_dict["flower"]["mass"]
         plant.organs[3].flowers = plant_dict["flower"]["flowers"]
         for flower in plant.organs[3].flowers:
@@ -221,7 +222,7 @@ class Plant:
     def get_biomass(self):
         biomass = 0
         for organ in self.organs:
-            biomass += organ.mass
+            biomass += organ.get_mass()
         return biomass
 
     # Todo dirty to reduce mass like this
@@ -629,8 +630,9 @@ class Leaf(Organ):
             x, y = pygame.mouse.get_pos()
             screen.blit(
                 self.hover_leaf,
-                (x, y - self.camera.offset_y),
+                (x, y - self.camera.offset_y - self.hover_leaf.get_height() + 20),
             )
+            pygame.draw.circle(screen, config.WHITE, (x,y - self.camera.offset_y), radius=10)
 
         for leaf in self.leaves:
             # image = self.yellow_leaf(leaf["image"], 128)
@@ -739,7 +741,7 @@ class Root(Organ):
 
     def get_maximum_growable_mass(self):
         return (
-            constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1,self.get_organ_amount())
+            constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1, self.get_organ_amount())
         )
 
     def get_mass(self):
@@ -778,6 +780,11 @@ class Stem(Organ):
             name: string,
             organ_type: int,
             callback: callable,
+            leaf_cost: Union[callable, int] = None,
+            branch_cost: Union[callable, int] = None,
+            flower_cost: Union[callable, int] = None,
+            check_refund: Union[callable, None] = None,
+            finalize_shop_transaction: Union[callable, None] = None,
             image: pygame.Surface = None,
             leaf: Leaf = None,
             flower=None,
@@ -788,6 +795,12 @@ class Stem(Organ):
     ):
         self.leaf = leaf
         self.flower = flower
+        self.leaf_cost = leaf_cost
+        self.branch_cost = branch_cost
+        self.flower_cost = flower_cost
+        self.check_refund = check_refund
+        self.finalize_shop_transaction = finalize_shop_transaction
+        self.leaf_cost = leaf_cost
         self.width: float = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
         self.curve = Cubic_Tree(
@@ -916,6 +929,17 @@ class Stem(Organ):
                 if dist_to_stem < 20:
                     self.timer = pygame.time.get_ticks()
 
+            if self.check_refund is not None:
+                if self.leaf.can_add_leaf:
+                    if self.check_refund((x, y), self.leaf_cost):
+                        self.leaf.can_add_leaf = False
+                if self.can_add_branch:
+                    if self.check_refund((x, y), self.branch_cost):
+                        self.can_add_branch = False
+                if self.flower.can_add_flower:
+                    if self.check_refund((x, y), self.flower_cost):
+                        self.flower.can_add_flower = False
+
         if event.type == pygame.MOUSEBUTTONUP:
             if self.can_add_branch and self.dist_to_stem < 50:
                 if self.highlight:
@@ -924,6 +948,7 @@ class Stem(Organ):
                         self.highlight[2]
                     ] = config.BRANCH_SPOT
                     self.can_add_branch = False
+                    self.finalize_shop_transaction()
             elif self.leaf.can_add_leaf and self.dist_to_stem < 50:
                 if self.highlight:
                     self.leaf.append_leaf(self.highlight)
@@ -931,12 +956,14 @@ class Stem(Organ):
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
                     ] = config.LEAF_SPOT
+                    self.finalize_shop_transaction()
             elif self.flower.can_add_flower and self.dist_to_stem < 50:
                 if self.highlight:
                     self.flower.append_flower(self.highlight)
                     self.curve.branches[self.highlight[1]].free_spots[
                         self.highlight[2]
                     ] = config.FLOWER_SPOT
+                    self.finalize_shop_transaction()
             else:
                 if pygame.time.get_ticks() - self.timer < 300:
                     x, y = pygame.mouse.get_pos()
@@ -1220,8 +1247,9 @@ class Flower(Organ):
             x, y = pygame.mouse.get_pos()
             screen.blit(
                 self.hover_image,
-                (x, y - self.camera.offset_y),
+                (x, y - self.camera.offset_y - self.hover_image.get_height() + 20),
             )
+            pygame.draw.circle(screen, config.WHITE, (x, y - self.camera.offset_y), radius=10)
 
         for flower in self.flowers:
             screen.blit(

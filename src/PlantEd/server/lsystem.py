@@ -12,9 +12,9 @@ short_root = [
 ]
 
 medium_root = [
-    {"max_length": 600, "duration": 0.05, "tries": 4, "max_branches": 5},
-    {"max_length": 250, "duration": 0.03, "tries": 3, "max_branches": 3},
-    {"max_length": 50, "duration": 0.02, "tries": 1, "max_branches": 0},
+    {"max_length": 600, "duration": 0.1, "tries": 4, "max_branches": 5},
+    {"max_length": 250, "duration": 0.1, "tries": 3, "max_branches": 3},
+    {"max_length": 50, "duration": 0.1, "tries": 1, "max_branches": 0},
 ]
 
 long_root = [
@@ -240,9 +240,11 @@ class LSystem:
         branching_length = dic["max_length"] / 10 * 8
         apex_length = dic["max_length"] / 10 * 1
 
-        basal_duration = dic["duration"] / 10 * 1
-        branching_duration = dic["duration"] / 10 * 8
-        apex_duration = dic["duration"] / 10 * 1
+        basal_duration = dic["duration"] / 100 * 5
+        branching_duration = dic["duration"] / 100 * 65
+        apex_duration = dic["duration"] / 100 * 30
+
+        #print(f"STARTING MASS: {mass}, BASAL END: {mass + basal_duration} END MASS: {mass + basal_duration + branching_duration + apex_duration}")
 
         apex = Letter(
             id=300,

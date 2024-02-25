@@ -46,8 +46,8 @@ class TestGameStateStructure(unittest.TestCase):
                     "stomata": bool,
                     },
                 "shop_actions": {
-                    "buy_watering_can": int,
-                    "buy_nitrate": int,
+                    "buy_watering_can": dict,
+                    "buy_nitrate": dict,
                     "buy_leaf": int,
                     "buy_branch": int,
                     "buy_root": int,

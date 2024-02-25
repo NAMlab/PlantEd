@@ -9,7 +9,7 @@ import numpy as np
 
 from PlantEd import config
 from PlantEd.client.utils.gametime import GameTime
-from PlantEd.constants import START_STEM_BIOMASS_GRAM
+from PlantEd.constants import START_STEM_BIOMASS_GRAM, MAXIMUM_STEM_BIOMASS_GRAM
 
 
 class Cubic_Tree:
@@ -116,7 +116,7 @@ class Cubic_Tree:
 class Cubic:
     def __init__(self, points, id, color=config.GREEN, res=10, width=15, max_points=8):
         self.mass = START_STEM_BIOMASS_GRAM
-        self.maximum_mass = START_STEM_BIOMASS_GRAM * 7
+        self.maximum_mass = MAXIMUM_STEM_BIOMASS_GRAM
         self.size = 0
         self.points = points
         self.offsets = self.points.copy()
@@ -158,6 +158,8 @@ class Cubic:
         return branch_dict
 
     def grow(self, point=None):
+        self.move_offset = False
+        self.drag = False
         if not point:
             point = [
                 self.points[-1][0] + random.randint(0, 80) - 40,
@@ -168,7 +170,7 @@ class Cubic:
         self.free_spots.append(config.FREE_SPOT)
         self.new_curve = self.get_curve()
         self.growth_percentage = 0
-        self.move_offset = False
+
 
     def get_rects(self):
         rects = []
