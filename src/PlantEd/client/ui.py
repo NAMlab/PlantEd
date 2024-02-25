@@ -808,6 +808,7 @@ class UI:
         )
 
         width = 140
+        height = 30
 
         pygame.draw.rect(
             s,
@@ -822,14 +823,14 @@ class UI:
             (topleft[0], topleft[1] + 40, int(width * self.plant.water_pool/self.plant.max_water_pool), 30),
             border_radius=3,
         )  # exp
-        text_water_pool = self.asset_handler.MEDIUM.render(
+        text_water_pool = self.asset_handler.SMALL_FONT.render(
             "{:.1f}/{:.1f} MMol".format(self.plant.water_pool / 1000, self.plant.max_water_pool / 1000), True, (0, 0, 0)
         )
         s.blit(
             text_water_pool,
             dest=(
                 topleft[0] + width / 2 - text_water_pool.get_width() / 2,
-                topleft[1] + 45,
+                topleft[1] + 40 + height / 2 - text_water_pool.get_height() / 2,
             ),
         )  # Todo change x, y
 

@@ -74,7 +74,8 @@ class Plant:
         plant.organs[1].curve = Cubic_Tree(branches=branches)
 
         plant.organs[2].mass = plant_dict["root"]["mass"]
-        plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])
+        if plant_dict["root"]["ls"] is not None:
+            plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])
         plant.organs[3].mass = plant_dict["flower"]["mass"]
         plant.organs[3].flowers = plant_dict["flower"]["flowers"]
         for flower in plant.organs[3].flowers:
@@ -221,7 +222,7 @@ class Plant:
     def get_biomass(self):
         biomass = 0
         for organ in self.organs:
-            biomass += organ.mass
+            biomass += organ.get_mass()
         return biomass
 
     # Todo dirty to reduce mass like this
@@ -740,7 +741,7 @@ class Root(Organ):
 
     def get_maximum_growable_mass(self):
         return (
-            constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1,self.get_organ_amount())
+            constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1, self.get_organ_amount())
         )
 
     def get_mass(self):

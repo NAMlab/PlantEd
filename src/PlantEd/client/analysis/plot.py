@@ -87,7 +87,7 @@ def generate_big_plot(df, path_to_logs=None):
     ax[9].set_ylabel("starch_pool", rotation=0, labelpad=65)
 
     #plt.show()
-    plt.savefig("30.PNG")
+    plt.savefig("63.PNG")
     #image = pygame.image.load(path_to_logs + "/plot.PNG").convert_alpha()
     #return image
 
@@ -95,7 +95,7 @@ def generate_big_plot(df, path_to_logs=None):
 if __name__ == "__main__":
     import pandas
     path = "~/PlantEd/src/PlantEd/client/data/finished_games/Sunny Gigglezap1702900252.9989524"
-    df = pandas.read_csv("30.csv")
+    df = pandas.read_csv("63.csv")
     generate_big_plot(df, path)
 
 #def make_subplot(plot, vec, time, name, color, xlabel, ylabel) -> plt.Subplot:

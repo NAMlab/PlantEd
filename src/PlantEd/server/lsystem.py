@@ -244,6 +244,8 @@ class LSystem:
         branching_duration = dic["duration"] / 100 * 65
         apex_duration = dic["duration"] / 100 * 30
 
+        #print(f"STARTING MASS: {mass}, BASAL END: {mass + basal_duration} END MASS: {mass + basal_duration + branching_duration + apex_duration}")
+
         apex = Letter(
             id=300,
             root_class=root_class,

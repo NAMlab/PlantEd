@@ -50,7 +50,7 @@ class Plant:
             ),  # same resolution as environment grids
             water_grid_pos=(0, 900),  # hardcoded at ui [game.py 310]
         )
-        self.lsystem.create_new_first_letter((0, 1), PLANT_POS, self.get_total_plant_mass())
+        self.lsystem.create_new_first_letter((0, 1), PLANT_POS, self.root_mass)
         self.lsystem.update(self.root_mass)
 
         self.max_starch_pool = (self.get_total_plant_mass() * MIMROMOL_STARCH_PER_GRAM_DRY_WEIGHT)
@@ -153,32 +153,43 @@ class Plant:
         return root_mass
 
     def update_root_mass(self, delta_root_mass):
-        if delta_root_mass <= 0 or len(self.roots) <= 0:
-            return
-        growable_roots = []
-        for root in self.roots:
-            if root.mass < MAXIMUM_ROOT_BIOMASS_GRAM:
-                growable_roots.append(root)
-        n_roots_to_grow = len(growable_roots)
-        if n_roots_to_grow <= 0:
-            return
-        delta_each_root = delta_root_mass / n_roots_to_grow
-        growable_roots.sort(key=lambda root: root.mass)
-        for root in growable_roots:
-            if root.mass + delta_each_root > MAXIMUM_ROOT_BIOMASS_GRAM:
-                root.mass = MAXIMUM_ROOT_BIOMASS_GRAM
-                overflow_mass = MAXIMUM_ROOT_BIOMASS_GRAM - root.mass + delta_each_root
-                n_roots_to_grow -= 1
-                if n_roots_to_grow <= 0:
-                    break
-                delta_each_root = (delta_root_mass + overflow_mass) / n_roots_to_grow
+        # do it more often to grow better
+        resolution_mass = MAXIMUM_ROOT_BIOMASS_GRAM / 10
+        n_steps = max(int(delta_root_mass / resolution_mass), 1)
+        delta_mass_root_mass_slice = delta_root_mass / n_steps
+        print(f"GROWING ROOTS FOR N STEPS: {n_steps}")
+        for i in range(n_steps):
+            if delta_mass_root_mass_slice <= 0 or len(self.roots) <= 0:
+                return
+            growable_roots = []
+            for root in self.roots:
+                if root.mass < MAXIMUM_ROOT_BIOMASS_GRAM:
+                    growable_roots.append(root)
+                    #print(f"Add another root to the list {len(growable_roots)}")
+            n_roots_to_grow = len(growable_roots)
+            if n_roots_to_grow <= 0:
+                return
+            delta_each_root = delta_mass_root_mass_slice / n_roots_to_grow
+            #print(f"Each root is allowed to grow: {delta_each_root}")
+            growable_roots.sort(key=lambda root: root.mass)
+            for root in reversed(growable_roots):
+                if root.mass + delta_each_root > MAXIMUM_ROOT_BIOMASS_GRAM:
+                    used_root_mass = (root.mass + delta_each_root) - MAXIMUM_ROOT_BIOMASS_GRAM
+                    root.mass = MAXIMUM_ROOT_BIOMASS_GRAM
+                    n_roots_to_grow -= 1
+                    #print(f"Overflow: {used_root_mass}, with a max of: {MAXIMUM_ROOT_BIOMASS_GRAM}")
+                    if n_roots_to_grow <= 0:
+                        break
+                    delta_each_root = (delta_mass_root_mass_slice - used_root_mass) / n_roots_to_grow
+                    #print(f"Delta each root after for: {delta_each_root}")
 
-            else:
-                root.mass += delta_each_root
+                else:
+                    root.mass += delta_each_root
 
-        for i, first_letter in enumerate(self.lsystem.first_letters):
-            self.lsystem.apply_rules(first_letter, self.roots[i].mass)
-        self.lsystem.calc_positions()
+            for i, first_letter in enumerate(self.lsystem.first_letters):
+                self.lsystem.apply_rules(first_letter, self.roots[i].mass)
+            self.lsystem.calc_positions()
+
 
     def get_root_mass_to_grow(self) -> float:
         return MAXIMUM_ROOT_BIOMASS_GRAM*len(self.roots) - self.root_mass
@@ -399,6 +410,7 @@ class Plant:
         return self.transpiration
 
     def get_total_plant_mass(self):
+        #print(f"LEAF: {self.leaf_mass}, stem: {self.stem_mass}, root: {self.root_mass}, seed: {self.seed_mass}")
         return self.leaf_mass + self.stem_mass + self.root_mass + self.seed_mass
 
 

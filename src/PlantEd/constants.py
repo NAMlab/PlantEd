@@ -65,7 +65,7 @@ MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND = 0.00027     #0.00027
 
 
 # guiding paper has 50 mmol high /0.4 mmol low for a complete growth -> 5 per cell maybe? -> 50000 mikromol
-MAX_NITRATE_PER_CELL = 10     # 20*6 cells overall ->
+MAX_NITRATE_PER_CELL = 5     # 20*6 cells overall ->
 
 Vmax = MAX_NITRATE_INTAKE_IN_MICROMOL_PER_GRAM_ROOT_PER_SECOND
 Km = 10 #400  # mikromol, Substrate density at which intake is 50% of max
@@ -94,7 +94,7 @@ START_LEAF_BIOMASS_GRAM = 0.01
 START_STEM_BIOMASS_GRAM = 0.02
 START_ROOT_BIOMASS_GRAM = 0.02
 START_SEED_BIOMASS_GRAM = 0.01
-START_SUM_BIOMASS_GRAM = 0.05
+START_SUM_BIOMASS_GRAM = 0.035
 
 
 MAXIMUM_LEAF_BIOMASS_GRAM = START_LEAF_BIOMASS_GRAM * 20
@@ -140,7 +140,7 @@ BRANCH_COST = 2
 ROOT_COST = 2
 FLOWER_COST = 0
 WATERING_CAN_COST = 1
-NITRATE_COST = 1
+NITRATE_COST = 3
 SPRAYCAN_COST = 0
 
 
@@ -148,7 +148,7 @@ SPRAYCAN_COST = 0
 # Shop Item Effect
 ###############################################################################
 WATERING_CAN_AMOUNT = 30000  # mikromol
-NITRATE_FERTILIZE_AMOUNT = 7 # mikromol
+NITRATE_FERTILIZE_AMOUNT = 15 # mikromol
 
 water_concentration_at_temp = [
     0.269,

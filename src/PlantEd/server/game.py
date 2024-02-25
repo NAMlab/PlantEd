@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.ERROR)
 scenarios = {
     "summer_low_nitrate": {
         "weather_seed": 0.23171800215059546,
-        "nitrate_percent": 2,
+        "nitrate_percent": 0.2,
         "photon_peak": 2000,
         "filename": "data/cleaned_weather_summer.csv",
         },
@@ -149,6 +149,13 @@ class Game:
         for i in range(n_simulations):
             self.plant.update(self.resolution)
             self.environment.update(self.resolution)
+
+            '''print(f"Leaf Mass: {self.plant.leaf_mass}, L Mass to grow: {self.plant.get_leaf_mass_to_grow()}, Max: {self.plant.leaf_mass + self.plant.get_leaf_mass_to_grow()} \n"
+                  f"Stem Mass: {self.plant.stem_mass}, S Mass to grow: {self.plant.get_stem_mass_to_grow()}, Max: {self.plant.stem_mass + self.plant.get_stem_mass_to_grow()}\n"
+                  f"Root Mass: {self.plant.root_mass}, R Mass to grow: {self.plant.get_root_mass_to_grow()}, Max: {self.plant.root_mass + self.plant.get_root_mass_to_grow()}\n"
+                  f"Flower Mass: {self.plant.seed_mass}, F Mass to grow: {self.plant.get_seed_mass_to_grow()}, Max: {self.plant.seed_mass + self.plant.get_seed_mass_to_grow()}\n"
+                  f"Overall Biomass: {self.plant.get_total_plant_mass()}"
+                  )'''
 
             # Todo check percentages, build seed percentage
             # min 0.1 percent for organs to grow

@@ -1,6 +1,7 @@
 import pygame
 
 from PlantEd import config
+from PlantEd.client.camera import Camera
 from PlantEd.client.utils.grid import Grid
 from PlantEd.constants import NITRATE_COST, WATERING_CAN_COST, SPRAYCAN_COST, ROOT_COST, LEAF_COST, BRANCH_COST, \
     FLOWER_COST
@@ -234,6 +235,7 @@ class Shop:
             water_grid: Water_Grid,
             nitrate_grid: Grid,
             plant,
+            camera: Camera,
             cols=2,
             margin=18,
             post_hover_message=None,
@@ -253,6 +255,7 @@ class Shop:
         self.water_grid = water_grid
         self.nitrate_grid = nitrate_grid
         self.plant = plant
+        self.camera = camera
         self.plant.organs[1].check_refund = self.check_refund
         self.plant.organs[1].finalize_shop_transaction = self.finalize_shop_transaction
         self.plant.organs[1].leaf_cost = LEAF_COST
@@ -285,6 +288,7 @@ class Shop:
                                  amount=3,
                                  image_active=self.asset_handler.img("spraycan_active.PNG", (128, 128)),
                                  image_inactive=self.asset_handler.img("spraycan.PNG", (128, 128)),
+                                 camera=self.camera,
                                  play_sound=self.sound_control.play_spraycan_sfx,
                                  check_refund=self.check_refund,
                                  cost=SPRAYCAN_COST,
@@ -300,12 +304,15 @@ class Shop:
 
         self.init_layout()
 
+        images = Animation.generate_rising_animation("-0", self.asset_handler.BIGGER_FONT, config.RED)
+        self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
         images = Animation.generate_rising_animation("-1", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
         images = Animation.generate_rising_animation("-2", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
         images = Animation.generate_rising_animation("-3", self.asset_handler.BIGGER_FONT, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
+
 
         self.refund_available = False
         self.refund_image = pygame.Surface((self.rect[2], 50), pygame.SRCALPHA)
@@ -399,7 +406,7 @@ class Shop:
     def buy(self, item):
         if self.plant.upgrade_points - item.cost >= 0:
             self.plant.upgrade_points -= item.cost
-            self.animations[max(0, item.cost - 1)].start(pygame.mouse.get_pos())
+            self.animations[max(0, item.cost)].start(pygame.mouse.get_pos())
             item.callback()
             self.sound_control.play_buy_sfx()
             self.update_current_cost()

@@ -73,6 +73,7 @@ class Blue_grain:
                 self.pos[0], self.pos[1], 20, 20
             )
             self.play_sound()
+            self.particle_system.deactivate()
             self.particle_system.activate()
             if self.nitrate_grid is not None:
                 lower_limit_grid = max(0, int(self.pos[0]/100)-1)

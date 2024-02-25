@@ -158,6 +158,8 @@ class Cubic:
         return branch_dict
 
     def grow(self, point=None):
+        self.move_offset = False
+        self.drag = False
         if not point:
             point = [
                 self.points[-1][0] + random.randint(0, 80) - 40,
@@ -168,7 +170,7 @@ class Cubic:
         self.free_spots.append(config.FREE_SPOT)
         self.new_curve = self.get_curve()
         self.growth_percentage = 0
-        self.move_offset = False
+
 
     def get_rects(self):
         rects = []

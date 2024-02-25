@@ -336,6 +336,7 @@ class DefaultGameScene(object):
             water_grid=self.water_grid,
             nitrate_grid=self.nitrate_grid,
             plant=self.plant,
+            camera=self.camera,
             post_hover_message=self.ui.hover.set_message,
             active=False,
             sound_control=self.sound_control
@@ -464,6 +465,7 @@ class DefaultGameScene(object):
                 continue
 
             if e.type == WIN:
+                print("end this game already")
                 self.quit()
 
             self.shop.handle_event(e)
@@ -542,40 +544,46 @@ class DefaultGameScene(object):
                             }
                         }
                     }
-
+                print("REQUEST SENT:")
+                print(game_state)
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
                 #print(" --> Received response, updating state")
                 dic = json.loads(response)
-
-                # print(f"RESPONSE: {dic}")
-                self.environment.precipitation = dic["environment"]["precipitation"]
-                self.ui.humidity = dic["environment"]["humidity"]
-                self.ui.temperature = dic["environment"]["temperature"]
-
-                self.nitrate_grid.grid = np.asarray(dic["environment"]["nitrate_grid"])
-                if not self.shop.watering_can.active:
-                    self.water_grid.water_grid = np.asarray(dic["environment"]["water_grid"])
-
-                # update plant
-                self.plant.organs[0].update_masses(dic["plant"]["leafs_biomass"])
-                self.plant.organs[1].update_masses(dic["plant"]["stems_biomass"])
-                self.plant.organs[2].update_mass(dic["plant"]["roots_biomass"])
-                self.plant.organs[3].update_masses(dic["plant"]["seeds_biomass"])
-                self.plant.organ_starch.update_mass(dic["plant"]["starch_pool"])
-                self.plant.organ_starch.max_pool = dic["plant"]["max_starch_pool"]
-                self.plant.water_pool = dic["plant"]["water_pool"]
-                self.plant.max_water_pool = dic["plant"]["max_water_pool"]
-
-                # make simple root strucure from root_dict
-                self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
-
-                #self.ui.used_fluxes = dic["used_fluxes"]
-                self.narrator.used_fluxes = dic["used_fluxes"]
-
                 if dic is not None:
-                    if not dic["running"]:
-                        pygame.event.post(pygame.event.Event(WIN))
+                    if len(dic) != 0:
+                        print("RESPONSE GOT:")
+                        print(dic)
+                        # print(f"RESPONSE: {dic}")
+                        self.environment.precipitation = dic["environment"]["precipitation"]
+                        self.ui.humidity = dic["environment"]["humidity"]
+                        self.ui.temperature = dic["environment"]["temperature"]
+
+                        self.nitrate_grid.grid = np.asarray(dic["environment"]["nitrate_grid"])
+                        if not self.shop.watering_can.active:
+                            self.water_grid.water_grid = np.asarray(dic["environment"]["water_grid"])
+
+                        # update plant
+                        self.plant.organs[0].update_masses(dic["plant"]["leafs_biomass"])
+                        self.plant.organs[1].update_masses(dic["plant"]["stems_biomass"])
+                        self.plant.organs[2].update_mass(dic["plant"]["roots_biomass"])
+                        self.plant.organs[3].update_masses(dic["plant"]["seeds_biomass"])
+                        self.plant.organ_starch.update_mass(dic["plant"]["starch_pool"])
+                        self.plant.organ_starch.max_pool = dic["plant"]["max_starch_pool"]
+                        self.plant.water_pool = dic["plant"]["water_pool"]
+                        self.plant.max_water_pool = dic["plant"]["max_water_pool"]
+
+                        # make simple root strucure from root_dict
+                        self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
+
+                        #self.ui.used_fluxes = dic["used_fluxes"]
+                        self.narrator.used_fluxes = dic["used_fluxes"]
+
+
+                        if not dic["running"]:
+                            # end
+                            print("end level")
+                            pygame.event.post(pygame.event.Event(WIN))
                 request_running = False
 
     def update(self, dt):
