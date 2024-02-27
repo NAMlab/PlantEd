@@ -10,6 +10,7 @@ from PlantEd.client.utils.particle import ParticleSystem
 
 class Blue_grain:
     def __init__(self,
+                 screen_size: tuple[int, int],
                  pos,
                  check_refund: callable,
                  finalize_shop_transaction: callable,
@@ -18,6 +19,7 @@ class Blue_grain:
                  play_sound=None,
                  nitrate_grid=None
                  ):
+        self.screen_size = screen_size
         self.asset_handler = AssetHandler.instance()
         self.image = self.asset_handler.img("blue_grain_bag.PNG", (128, 128))
         self.pos = pos
@@ -76,8 +78,9 @@ class Blue_grain:
             self.particle_system.deactivate()
             self.particle_system.activate()
             if self.nitrate_grid is not None:
-                lower_limit_grid = max(0, int(self.pos[0]/100)-1)
-                upper_limit_grid = max(0, int(self.pos[0]/100)+5)
+                lower_limit_grid = max(0, int(self.pos[0]/(self.screen_size[0]/10))+3)
+                upper_limit_grid = max(0, int(self.pos[0]/(self.screen_size[0]/10))+8)
+                print(f"LOWER IM: {lower_limit_grid}, UPPER LIM: {upper_limit_grid}")
                 # (x,y,value)
                 cells_to_fill = []
                 for i in range(lower_limit_grid, upper_limit_grid):

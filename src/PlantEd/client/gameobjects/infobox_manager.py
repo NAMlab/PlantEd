@@ -19,7 +19,7 @@ class InfoBoxManager:
             h=32,
             callbacks=[self.show],
             text="Help",
-            font=self.asset_handler.FONT,
+            font=self.asset_handler.FONT_24,
             border_w=2
         )
 
@@ -107,7 +107,7 @@ class InfoBox:
         self.window_height: int = window_height
         self.margin = margin
         self.lines_text = lines
-        self.lines: list[pygame.Surface] = [self.asset_handler.FONT.render(line, True, config.BLACK) for line in lines]
+        self.lines: list[pygame.Surface] = [self.asset_handler.FONT_24.render(line, True, config.BLACK) for line in lines]
         self.buttons = []
         self.button_height = 30
         self.button_width = 60
@@ -123,7 +123,7 @@ class InfoBox:
             w=self.button_width,
             h=self.button_height,
             text="back",
-            font=self.asset_handler.FONT,
+            font=self.asset_handler.FONT_24,
             callbacks=[previous_infobox],
             border_w=2
         )
@@ -133,7 +133,7 @@ class InfoBox:
             w=self.button_width,
             h=self.button_height,
             text="hide",
-            font=self.asset_handler.FONT,
+            font=self.asset_handler.FONT_24,
             callbacks=[hide],
             border_w=2
         )
@@ -143,7 +143,7 @@ class InfoBox:
             w=self.button_width,
             h=self.button_height,
             text="next",
-            font=self.asset_handler.FONT,
+            font=self.asset_handler.FONT_24,
             callbacks=[next_infobox],
             border_w=2
         )

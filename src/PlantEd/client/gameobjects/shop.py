@@ -47,11 +47,11 @@ class FloatingShop:
         )
 
         # Todo make dynamic and append to items or search for cost in buy
-        images = Animation.generate_rising_animation("-1", self.asset_handler.BIGGER_FONT, config.RED)
+        images = Animation.generate_rising_animation("-1", self.asset_handler.FONT_36, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-2", self.asset_handler.BIGGER_FONT, config.RED)
+        images = Animation.generate_rising_animation("-2", self.asset_handler.FONT_36, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-3", self.asset_handler.BIGGER_FONT, config.RED)
+        images = Animation.generate_rising_animation("-3", self.asset_handler.FONT_36, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
 
     def buy(self, cost):
@@ -208,7 +208,7 @@ class FloatingShopItem:
                 )
             green_thumb_size = (16, 16)
             margin = 3
-            cost_label = self.asset_handler.FONT.render(f"{self.cost}", True, config.BLACK)
+            cost_label = self.asset_handler.FONT_24.render(f"{self.cost}", True, config.BLACK)
 
             rect_with = cost_label.get_width() + green_thumb_size[0] + 6 * margin
             rect_height = max(green_thumb_size[1], cost_label.get_height()) + 2 * margin - 4
@@ -230,6 +230,7 @@ class FloatingShopItem:
 class Shop:
     def __init__(
             self,
+            screen_size: tuple[int, int],
             rect,
             shop_items,
             water_grid: Water_Grid,
@@ -243,10 +244,11 @@ class Shop:
             sound_control: SoundControl = None
     ):
         # performance improve test
+        self.screen_size = screen_size
         self.asset_handler = AssetHandler.instance()
         self.s = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA)
-        self.shop_label = self.asset_handler.BIG_FONT.render("Shop", True, (0, 0, 0))
-        self.current_cost_label = self.asset_handler.BIG_FONT.render("0", False, (0, 0, 0))
+        self.shop_label = self.asset_handler.FONT_28.render("Shop", True, (0, 0, 0))
+        self.current_cost_label = self.asset_handler.FONT_28.render("0", False, (0, 0, 0))
 
         self.rect = rect
         self.shop_items = shop_items
@@ -277,13 +279,15 @@ class Shop:
                                          cost=WATERING_CAN_COST,
                                          finalize_shop_transaction=self.finalize_shop_transaction
                                          )
-        self.blue_grain = Blue_grain(pos=(0, 0),
-                                     play_sound=self.sound_control.play_nitrogen_sfx,
-                                     nitrate_grid=self.nitrate_grid,
-                                     check_refund=self.check_refund,
-                                     cost=NITRATE_COST,
-                                     finalize_shop_transaction=self.finalize_shop_transaction
-                                     )
+        self.blue_grain = Blue_grain(
+            screen_size=self.screen_size,
+            pos=(0, 0),
+            play_sound=self.sound_control.play_nitrogen_sfx,
+            nitrate_grid=self.nitrate_grid,
+            check_refund=self.check_refund,
+            cost=NITRATE_COST,
+            finalize_shop_transaction=self.finalize_shop_transaction
+            )
         self.spraycan = Spraycan(pos=(0, 0),
                                  amount=3,
                                  image_active=self.asset_handler.img("spraycan_active.PNG", (128, 128)),
@@ -295,6 +299,7 @@ class Shop:
                                  finalize_shop_transaction=self.finalize_shop_transaction
                                  )
         self.root_item = Root_Item(
+            screen_size=self.screen_size,
             callback=self.plant.organs[2].create_new_root,
             plant=self.plant,
             check_refund=self.check_refund,
@@ -304,13 +309,13 @@ class Shop:
 
         self.init_layout()
 
-        images = Animation.generate_rising_animation("-0", self.asset_handler.BIGGER_FONT, config.RED)
+        images = Animation.generate_rising_animation("-0", self.asset_handler.FONT_36, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-1", self.asset_handler.BIGGER_FONT, config.RED)
+        images = Animation.generate_rising_animation("-1", self.asset_handler.FONT_36, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-2", self.asset_handler.BIGGER_FONT, config.RED)
+        images = Animation.generate_rising_animation("-2", self.asset_handler.FONT_36, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
-        images = Animation.generate_rising_animation("-3", self.asset_handler.BIGGER_FONT, config.RED)
+        images = Animation.generate_rising_animation("-3", self.asset_handler.FONT_36, config.RED)
         self.animations.append(Animation(images=images, duration=0.2, pos=(500, 500), running=False, once=True))
 
 
@@ -319,7 +324,7 @@ class Shop:
         self.refund_image.fill((0, 0, 0, 0))
         pygame.draw.rect(self.refund_image, config.WHITE_TRANSPARENT, (0, 0, self.rect[2], 50), border_radius=3)
         pygame.draw.rect(self.refund_image, config.WHITE, (0, 0, self.rect[2], 50), border_radius=3, width=3)
-        refund_label = self.asset_handler.BIGGER_FONT.render("Refund", True, config.BLACK)
+        refund_label = self.asset_handler.FONT_36.render("Refund", True, config.BLACK)
         self.refund_image.blit(refund_label, (
             self.refund_image.get_width() / 2 - refund_label.get_width() / 2,
             self.refund_image.get_height() / 2 - refund_label.get_height() / 2))
@@ -370,7 +375,7 @@ class Shop:
                         message="Buy a watering can to increase availability.",
                         play_selected=self.sound_control.play_select_sfx,
                         cost=WATERING_CAN_COST,
-                        cost_label=self.asset_handler.FONT.render(f"{WATERING_CAN_COST}", True, config.BLACK)
+                        cost_label=self.asset_handler.FONT_24.render(f"{WATERING_CAN_COST}", True, config.BLACK)
                     )
                 )
             elif keyword == "blue_grain":
@@ -383,7 +388,7 @@ class Shop:
                         message="Blue grain increases nitrate in the ground.",
                         play_selected=self.sound_control.play_select_sfx,
                         cost=NITRATE_COST,
-                        cost_label=self.asset_handler.FONT.render(f"{NITRATE_COST}", True, config.BLACK)
+                        cost_label=self.asset_handler.FONT_24.render(f"{NITRATE_COST}", True, config.BLACK)
                     )
                 )
             elif keyword == "spraycan":
@@ -396,7 +401,7 @@ class Shop:
                         message="Spray em!",
                         play_selected=self.sound_control.play_select_sfx,
                         cost=SPRAYCAN_COST,
-                        cost_label=self.asset_handler.FONT.render(f"{SPRAYCAN_COST}", True, config.BLACK)
+                        cost_label=self.asset_handler.FONT_24.render(f"{SPRAYCAN_COST}", True, config.BLACK)
                     )
                 )
         for item in self.shop_items:
@@ -440,7 +445,7 @@ class Shop:
         for item in self.shop_items:
             if item.selected:
                 self.current_cost += item.cost
-        self.current_cost_label = self.asset_handler.BIG_FONT.render(
+        self.current_cost_label = self.asset_handler.FONT_28.render(
             "{}".format(self.current_cost), False, (0, 0, 0)
         )
 
@@ -472,7 +477,7 @@ class Shop:
             self.s, config.WHITE, (0, 0, self.rect[2], 40), border_radius=3
         )
         self.s.blit(self.shop_label, (10, 5))
-        green_thumbs_label = self.asset_handler.BIG_FONT.render(
+        green_thumbs_label = self.asset_handler.FONT_28.render(
             "{}".format(self.plant.upgrade_points), True, config.BLACK
         )
         self.s.blit(

@@ -12,6 +12,7 @@ RIGHT = 1
 class SnailSpawner:
     def __init__(
             self,
+            plant_pos: tuple[float, float],
             images_left,
             images_right,
             skull_image,
@@ -24,6 +25,7 @@ class SnailSpawner:
             snails=[],
             snail_clicked=None
     ):
+        self.plant_pos = plant_pos
         self.bounds = bounds
         self.max_amount = max_amount
         self.snails = snails
@@ -39,6 +41,7 @@ class SnailSpawner:
     def spawn_snail(self):
         self.snails.append(
             Snail(
+                plant_pos=self.plant_pos,
                 pos=(random.randint(0, 1) * self.bounds[2] + self.bounds[0],
                      random.random() * self.bounds[3] + self.bounds[1]),
                 bounding_rect=self.bounds,
@@ -86,6 +89,7 @@ class SnailSpawner:
 class Snail:
     def __init__(
             self,
+            plant_pos: tuple[float, float],
             pos,
             bounding_rect,
             images_left,
@@ -98,6 +102,7 @@ class Snail:
             speed=1,
             snail_clicked=None
     ):
+        self.plant_pos = plant_pos
         self.state = LEFT
         self.pos = pos
         self.bounding_rect = bounding_rect
@@ -137,7 +142,7 @@ class Snail:
             self.set_random_direction()
         if self.target is None:
             if random.random() > 0.9999:
-                self.target_plant((config.SCREEN_WIDTH / 2, 0))
+                self.target_plant((self.plant_pos[0], 0))
 
         self.move(dt)
         self.animation_death.update(dt)

@@ -14,6 +14,7 @@ END_LINE = pygame.USEREVENT + 2
 class Voicebox:
     def __init__(
             self,
+            pos: tuple[int, int],
             voiceline: Sound,
             written_lines: Surface,
             queue_voicebox: callable,
@@ -21,6 +22,7 @@ class Voicebox:
             condition_time: callable = None,
             condition_parameter_time: int = None
             ):
+        self.pos = pos
         self.voiceline = voiceline
         self.written_lines = written_lines
         self.queue_voicebox = queue_voicebox
@@ -29,8 +31,6 @@ class Voicebox:
         self.condition = condition
         self.played = False
 
-        self.x = 10
-        self.y = config.SCREEN_HEIGHT - 80
         self.hide = True
         self.hide_timer = 1
         self.hover = False
@@ -47,7 +47,7 @@ class Voicebox:
                 self.hide_timer += dt * 2
             else:
                 self.hide_timer = 1
-        delta_x = 750 * (1 - self.hide_timer)
+        delta_x = self.written_lines.get_width()*0.9 * (1 - self.hide_timer)
         self.x = 10 - delta_x
         if not self.played:
             if self.handle_conditions():
@@ -70,7 +70,7 @@ class Voicebox:
             self.hide = True
         if e.type == pygame.MOUSEMOTION:
             if pygame.Rect(
-                    self.x, self.y - self.written_lines.get_height(),
+                    self.x, self.pos[1] - self.written_lines.get_height(),
                     self.written_lines.get_width(), self.written_lines.get_height()
                     ).collidepoint(pygame.mouse.get_pos()):
                 self.hover = True
@@ -79,7 +79,7 @@ class Voicebox:
 
         if e.type == pygame.MOUSEBUTTONDOWN:
             if pygame.Rect(
-                    self.x, self.y - self.written_lines.get_height(),
+                    self.x, self.pos[1] - self.written_lines.get_height(),
                     self.written_lines.get_width(), self.written_lines.get_height()
                     ).collidepoint(pygame.mouse.get_pos()):
                 self.toggle_hide()
@@ -89,13 +89,14 @@ class Voicebox:
             pygame.draw.rect(
                 screen,
                 config.WHITE,
-                (self.x, self.y - self.written_lines.get_height(),
+                (self.x, self.pos[1] - self.written_lines.get_height(),
                  self.written_lines.get_width(), self.written_lines.get_height()),
                 width=3
                 )
         screen.blit(
             self.written_lines,
-            (self.x, self.y - self.written_lines.get_height()))
+            (self.x, self.pos[1] - self.written_lines.get_height()))
+
 
     def toggle_hide(self):
         # 850 to the left
@@ -103,10 +104,25 @@ class Voicebox:
 
 
 class Narrator:
-    def __init__(self, environment: Environment, plant: Plant):
+    def __init__(
+            self,
+            pos: tuple[int, int],
+            environment: Environment,
+            plant: Plant,
+            img_size: tuple[int, int] = (100, 100),
+            width: int = 100,
+            font=None
+    ):
+        self.pos = pos
+        self.img_size = img_size
+        self.width = width
+        self.margin = 10
+        self.font = font
         self.environment: Environment = environment
         self.plant: Plant = plant
         self.asset_handler: AssetHandler = AssetHandler.instance()
+        if self.font is None:
+            self.font = self.asset_handler.FONT_24
         self.active: bool = True
         self.queue: list[Voicebox] = []
         self.muted: bool = False
@@ -143,6 +159,7 @@ class Narrator:
 
             voiceboxes.append(
                 Voicebox(
+                    pos=self.pos,
                     voiceline=self.asset_handler.sfx(f"attenborough/{index_lines_to_play[i]}.mp3"),
                     written_lines=surface_written_lines,
                     queue_voicebox=self.queue_voicebox,
@@ -159,6 +176,7 @@ class Narrator:
                 surface_written_lines_seed = self.build_written_lines(written_lines_seed)
                 voiceboxes.append(
                     Voicebox(
+                        pos=self.pos,
                         voiceline=self.asset_handler.sfx("attenborough/seed.mp3"),
                         written_lines=surface_written_lines_seed,
                         queue_voicebox=self.queue_voicebox,
@@ -170,6 +188,7 @@ class Narrator:
                 surface_written_lines_branch = self.build_written_lines(written_lines_branch)
                 voiceboxes.append(
                     Voicebox(
+                        pos=self.pos,
                         voiceline=self.asset_handler.sfx("attenborough/branch.mp3"),
                         written_lines=surface_written_lines_branch,
                         queue_voicebox=self.queue_voicebox,
@@ -181,6 +200,7 @@ class Narrator:
                 surface_written_lines_leaf = self.build_written_lines(written_lines_leaf)
                 voiceboxes.append(
                     Voicebox(
+                        pos=self.pos,
                         voiceline=self.asset_handler.sfx("attenborough/leaf.mp3"),
                         written_lines=surface_written_lines_leaf,
                         queue_voicebox=self.queue_voicebox,
@@ -192,6 +212,7 @@ class Narrator:
                 surface_written_lines_root = self.build_written_lines(written_lines_root)
                 voiceboxes.append(
                     Voicebox(
+                        pos=self.pos,
                         voiceline=self.asset_handler.sfx("attenborough/root.mp3"),
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
@@ -204,6 +225,7 @@ class Narrator:
                 surface_written_lines_root = self.build_written_lines(written_lines_root)
                 voiceboxes.append(
                     Voicebox(
+                        pos=self.pos,
                         voiceline=self.asset_handler.sfx("attenborough/water.mp3"),
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
@@ -216,6 +238,7 @@ class Narrator:
                 surface_written_lines_root = self.build_written_lines(written_lines_root)
                 voiceboxes.append(
                     Voicebox(
+                        pos=self.pos,
                         voiceline=self.asset_handler.sfx("attenborough/nutrient.mp3"),
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
@@ -228,6 +251,7 @@ class Narrator:
                 surface_written_lines_root = self.build_written_lines(written_lines_root)
                 voiceboxes.append(
                     Voicebox(
+                        pos=self.pos,
                         voiceline=self.asset_handler.sfx("attenborough/warning.mp3"),
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
@@ -240,6 +264,7 @@ class Narrator:
                 surface_written_lines_root = self.build_written_lines(written_lines_root)
                 voiceboxes.append(
                     Voicebox(
+                        pos=self.pos,
                         voiceline=self.asset_handler.sfx("attenborough/bloom.mp3"),
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
@@ -358,17 +383,16 @@ class Narrator:
 
     def build_written_lines(self, lines: list[str]) -> Surface:
 
-        sire_david_image_size = (100, 100)
-
-        rect_height = max(sire_david_image_size[1], len(lines) * 22) + 20
-        rect_width = 800
+        rect_height = max(self.img_size[1], len(lines) * 22) + 20
+        rect_width = self.width
 
         box_surface: Surface = Surface((rect_width, rect_height), pygame.SRCALPHA)
         box_surface.fill((0, 0, 0, 150))
 
-        box_surface.blit(self.asset_handler.img("professor.PNG", sire_david_image_size), (10, 10))
+        box_surface.blit(self.asset_handler.img("professor.PNG", self.img_size), (10, 10))
+        font_height = self.font.get_height()
         for i, line in enumerate(lines):
-            box_surface.blit(self.asset_handler.FONT.render(line, True, config.WHITE), (120, 10 + i * 22))
+            box_surface.blit(self.font.render(line, True, config.WHITE), (self.img_size[0] + self.img_size[0]/5, self.margin + i * font_height))
 
         return box_surface
 

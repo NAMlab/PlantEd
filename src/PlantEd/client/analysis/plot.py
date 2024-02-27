@@ -26,7 +26,7 @@ def generate_png_from_vec(vector_list, name_list, colors, ticks, xlabel, ylabel,
 
 def generate_small_plot(df, id, path_to_logs) -> pygame.Surface:
     plt.style.use("dark_background")
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5, 4))
     ax.set_xlabel("time")
     ax.set_ylabel("biomass")
 

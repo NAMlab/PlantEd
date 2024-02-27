@@ -8,6 +8,7 @@ from PlantEd.client.utils.particle import ParticleSystem
 class Root_Item:
     def __init__(
             self,
+            screen_size: tuple[int, int],
             callback: callable,
             plant,
             check_refund: callable,
@@ -15,6 +16,7 @@ class Root_Item:
             cost=1
     ):  # take from config
 
+        self.screen_size = screen_size
         self.callback = callback
         self.plant = plant
         self.check_refund = check_refund
@@ -58,7 +60,7 @@ class Root_Item:
         self.active = True
 
     def get_validation_rect(self):
-        y = 880 + self.plant.camera.offset_y
+        y = self.screen_size[1]/1.15 + self.plant.camera.offset_y
         return Rect(0, y, config.SCREEN_WIDTH, config.SCREEN_HEIGHT)
 
     def deactivate(self):

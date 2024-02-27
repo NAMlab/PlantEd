@@ -3,6 +3,7 @@ import math
 import pygame
 import numpy as np
 
+from PlantEd import config
 from PlantEd.client.utils.animation import Animation
 
 
@@ -84,7 +85,7 @@ class Bug:
         self.rotate_images()
 
     def draw(self, screen):
-        # pygame.draw.rect(screen,config.WHITE,self.get_rect(),2)
+        #pygame.draw.rect(screen, config.WHITE, self.bounding_rect, 2)
         if self.animation:
             screen.blit(
                 self.animation.image,

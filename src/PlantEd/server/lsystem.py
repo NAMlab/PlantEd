@@ -106,6 +106,29 @@ class Letter:
             # get t of branch, calc length
             branch.draw(screen, next_start_pos)
 
+    def draw_scaled(self, screen, start_pos, scaling_factor):
+        import pygame
+
+        start_pos = (start_pos[0]*scaling_factor, start_pos[1]*scaling_factor)
+
+        if self.id == 300:
+            self.pos = start_pos
+        end_pos = (
+            start_pos[0] + self.dir[0] * (self.length * scaling_factor),
+            start_pos[1] + self.dir[1] * (self.length * scaling_factor),
+        )
+        # pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
+        pygame.draw.line(
+            screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier
+        )
+        for branch in self.branches:
+            next_start_pos = (
+                start_pos[0] + self.dir[0] * branch.t * self.length * scaling_factor,
+                start_pos[1] + self.dir[1] * branch.t * self.length * scaling_factor,
+            )
+            # get t of branch, calc length
+            branch.draw(screen, next_start_pos)
+
     def draw_highlighted(self, screen, start_pos):
         import pygame
 
@@ -418,6 +441,10 @@ class LSystem:
     def draw(self, screen):
         for i in range(0, len(self.first_letters)):
             self.first_letters[i].draw(screen, self.positions[i])
+
+    def draw_scaled(self, screen, scaling_factor):
+        for i in range(0, len(self.first_letters)):
+            self.first_letters[i].draw_scaled(screen, self.positions[i], scaling_factor)
 
     def draw_highlighted(self, screen):
         for i in range(0, len(self.first_letters)):

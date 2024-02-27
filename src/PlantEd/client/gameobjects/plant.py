@@ -36,6 +36,7 @@ class Plant:
     @staticmethod
     def from_dict(plant_dict, camera=None):
         asset_handler = AssetHandler.instance()
+        options = config.load_options()
         pivot_pos = [
             (286, 113),
             (76, 171),
@@ -54,6 +55,7 @@ class Plant:
         ]
         sound_control = SoundControl()
         plant = Plant(
+            screen_size=options["aspect_ratio"],
             pos=plant_dict["pos"],
             water_grid_shape=plant_dict["water_grid_shape"],
             water_grid_pos=plant_dict["water_grid_pos"],
@@ -84,6 +86,7 @@ class Plant:
 
     def __init__(
             self,
+            screen_size: tuple[int, int],
             pos: tuple[float, float],
             water_grid_shape: tuple[int, int],
             water_grid_pos: tuple[float, float],
@@ -91,6 +94,7 @@ class Plant:
             sound_control: SoundControl = None,
             camera: Camera = None
     ):
+        self.screen_size = screen_size
         self.x: float = pos[0]
         self.y: float = pos[1]
         self.asset_handler = AssetHandler.instance()
@@ -127,8 +131,8 @@ class Plant:
             organ_type=self.LEAF,
             callback=self.set_target_organ_leaf,
             images=leaves,
-            pivot_positions = pivot_pos,
-            hover_leaf = self.asset_handler.img("leaf_small.PNG", (128, 128)),
+            pivot_positions=pivot_pos,
+            hover_leaf=self.asset_handler.img("leaf_small.PNG", (128, 128)),
             mass=constants.START_LEAF_BIOMASS_GRAM,
             active=False,
             camera=self.camera,
@@ -153,6 +157,7 @@ class Plant:
             name="Stem",
             organ_type=self.STEM,
             callback=self.set_target_organ_stem,
+            screen_size=self.screen_size,
             mass=constants.START_STEM_BIOMASS_GRAM,
             leaf=organ_leaf,
             flower=organ_flower,
@@ -163,6 +168,7 @@ class Plant:
         organ_root = Root(
             x=self.x,
             y=self.y,
+            screen_size=self.screen_size,
             name="Roots",
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
@@ -670,6 +676,7 @@ class Root(Organ):
             self,
             x: float,
             y: float,
+            screen_size: tuple[int, int],
             name: string,
             organ_type: int,
             callback: callable,
@@ -699,7 +706,7 @@ class Root(Organ):
         self.selected = 0
         #root_grid: np.array = np.zeros(water_grid_shape)
         #water_grid_pos: tuple[float, float] = water_grid_pos
-
+        self.screen_size = screen_size
         self.ls = None #LSystem = LSystem(root_grid, water_grid_pos)
         self.new_roots = []
         self.blocked_growth = False
@@ -766,10 +773,11 @@ class Root(Organ):
     def draw(self, screen):
         if self.ls is not None:
             if self.target:
+                pass
                 # pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 8)
-                self.ls.draw_highlighted(screen)
+                #self.ls.draw_highlighted(screen)
             else:
-                self.ls.draw(screen)
+                self.ls.draw_scaled(screen, scaling_factor=self.screen_size[0]/1920)
 
 
 class Stem(Organ):
@@ -780,6 +788,7 @@ class Stem(Organ):
             name: string,
             organ_type: int,
             callback: callable,
+            screen_size: tuple[int, int],
             leaf_cost: Union[callable, int] = None,
             branch_cost: Union[callable, int] = None,
             flower_cost: Union[callable, int] = None,
@@ -791,8 +800,9 @@ class Stem(Organ):
             mass: float = 0.0,
             active: bool = False,
             play_reward: callable = None,
-            camera: Camera = None,
+            camera: Camera = None
     ):
+        self.screen_size = screen_size
         self.leaf = leaf
         self.flower = flower
         self.leaf_cost = leaf_cost
@@ -803,8 +813,15 @@ class Stem(Organ):
         self.leaf_cost = leaf_cost
         self.width: float = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
+
         self.curve = Cubic_Tree(
-            [Cubic(points=[[955, 900], [960, 820], [940, 750]], id=0)], camera
+            [Cubic(
+                points=[[self.screen_size[0]/2-5, self.screen_size[1]/1.2],
+                        [self.screen_size[0]/2+10, self.screen_size[1]/1.2-80],
+                        [self.screen_size[0]/2-15, self.screen_size[1]/1.2-150]
+                        ],
+                id=0)],
+            camera
         )
         self.timer: float = 0
         self.floating_shop: FloatingShop = None
@@ -1304,7 +1321,7 @@ class Flower(Organ):
                     2,
                     3,
                 )
-                percentage_label = self.asset_handler.SMALL_FONT.render(
+                percentage_label = self.asset_handler.FONT_16.render(
                     "{:.3f}".format(flower["mass"]), True, config.BLACK
                 )
                 screen.blit(

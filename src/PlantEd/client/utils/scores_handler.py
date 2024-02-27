@@ -77,7 +77,8 @@ class ScoreList:
             height,
             min_offset_y=1,
             max_offset_y=0,
-            margin=10
+            margin=10,
+            font=None
             ):
         self.player_scores = []
         self.asset_handler: AssetHandler = AssetHandler.instance()
@@ -85,6 +86,9 @@ class ScoreList:
         self.width = width
         self.height = height
         self.margin = margin
+        self.font = font
+        if self.font is None:
+            self.font = self.asset_handler.FONT_36
         self.offset_y = 0
         self.min_offset_y = min_offset_y
         self.max_offset_y = max_offset_y
@@ -106,7 +110,6 @@ class ScoreList:
 
 
     def set_offset(self, slider: Slider):
-        print(slider.get_percentage(), self.min_offset_y)
         self.offset_y = self.min_offset_y * (1-(slider.get_percentage() / 100))
 
     def get_selected(self) -> PlayerScore:
@@ -115,7 +118,7 @@ class ScoreList:
                 return score
 
     def add_new_score(self, id, name, icon_name, score, date):
-        if icon_name is None:
+        if icon_name is None or icon_name == "robot":
             icon_name = "cow"
         image = self.asset_handler.img(f"animal_icons/{icon_name}.PNG", (60, 60))
         self.player_scores.append(
@@ -123,7 +126,7 @@ class ScoreList:
                 id=id,
                 name=name,
                 image=image,
-                font=self.asset_handler.BIGGER_FONT,
+                font=self.font,
                 score=score,
                 date=date,
                 width=self.width

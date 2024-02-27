@@ -1156,7 +1156,7 @@ class Slider:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
                 self.slider_y = (
                         clamp(
-                            pygame.mouse.get_pos()[1],
+                            pygame.mouse.get_pos()[1]-self.slider_h/2,
                             self.y,
                             self.y - self.slider_h + self.h,
                         )
@@ -1518,8 +1518,8 @@ class ButtonArray:
         self.hours = 0
         self.color = config.RED
         self.border_w = border_w
-        self.button_font = self.asset_handler.BIG_FONT
-        self.label = self.asset_handler.BIG_FONT.render("Stomata:", True, config.BLACK)
+        self.button_font = self.asset_handler.FONT_28
+        self.label = self.asset_handler.FONT_28.render("Stomata:", True, config.BLACK)
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
         self.gradient = None
         if start_color and end_color:
@@ -1653,9 +1653,9 @@ class ButtonArray:
             border_radius=3,
         )
         if self.color == config.GREEN:
-            open_closed = self.asset_handler.BIG_FONT.render("Open", True, self.color)
+            open_closed = self.asset_handler.FONT_28.render("Open", True, self.color)
         else:
-            open_closed = self.asset_handler.BIG_FONT.render("Closed", True, self.color)
+            open_closed = self.asset_handler.FONT_28.render("Closed", True, self.color)
         screen.blit(self.label, (self.rect[0] + 5, self.rect[1] + 5))
         screen.blit(open_closed, (self.rect[0] + 120, self.rect[1] + 5))
         self.set_all_button.draw(screen)

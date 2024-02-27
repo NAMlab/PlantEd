@@ -13,6 +13,8 @@ MAX_DAYS = 35
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
+SUN_POS_SPLINE_RES: int = 10000
+
 PLANT_POS = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - SCREEN_HEIGHT / 5)
 
 # todo move somewhere else
@@ -133,8 +135,8 @@ last_names = [
     "Bellyflop",
     "Scribbler",
     "Bananaflip",
-    "Hopscotchamp",
-    "Snickerdoodle",
+    "Hopscot",
+    "Snicker",
     "Snoozer",
     "Waffler",
     "Pickleflip",
@@ -160,12 +162,12 @@ last_names = [
     "Buzzybounce",
     "Mirthquake",
     "Zigzagzoo",
-    "Squeezywheezy",
+    "Squeezywhey",
     "Bamboozler",
-    "Fluffernutter",
+    "Fluffernut",
     "Dizzydoo",
     "Giggleblitz",
-    "Quirkysnicker",
+    "Quirky",
     "Wobblewhiz"
 ]
 
