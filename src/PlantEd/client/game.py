@@ -303,13 +303,15 @@ class DefaultGameScene(object):
             sound_control=self.sound_control,
             quit=self.quit
             )
-        self.hive = Hive((1500, 600),
-                         10,
-                         self.plant,
-                         self.camera,
-                         10,
-                         self.sound_control.play_hive_clicked_sfx,
-                         self.sound_control.play_bee_sfx)
+        self.hive = Hive((self.screen_width/1.35, self.screen_height/1.6),
+                         image_size=(90, 90),
+                         screen_size=(self.screen_width, self.screen_height),
+                         amount=10,
+                         plant=self.plant,
+                         camera=self.camera,
+                         spawn_rate=10,
+                         play_hive_clicked=self.sound_control.play_hive_clicked_sfx,
+                         play_bee_clicked=self.sound_control.play_bee_sfx)
         self.bugs = []
         for i in range(0, 10):
             self.bugs.append(

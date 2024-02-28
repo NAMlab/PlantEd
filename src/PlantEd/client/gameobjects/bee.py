@@ -9,10 +9,12 @@ from PlantEd.data.assets import AssetHandler
 
 
 class Hive:
-    def __init__(self, pos, amount, plant, camera, spawn_rate, play_hive_clicked, play_bee_clicked):
+    def __init__(self, pos, image_size, screen_size, amount, plant, camera, spawn_rate, play_hive_clicked, play_bee_clicked):
         self.pos = pos
+        self.image_size = image_size
+        self.screen_size = screen_size
         self.asset_handler = AssetHandler.instance()
-        self.image = self.asset_handler.img("bee/hive.png", (128, 128))
+        self.image = self.asset_handler.img("bee/hive.png", image_size)
         self.amount = amount
         self.plant = plant
         self.camera = camera
@@ -56,7 +58,7 @@ class Hive:
             Bee(
                 pos=pos,
                 bounding_rect=pygame.Rect(
-                    0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT - 200
+                    0, 0, self.screen_size[0], self.screen_size[1] - self.screen_size[1]/5
                 ),
                 images=[
                     self.asset_handler.img("bee/{}.PNG".format(i), (64, 64))

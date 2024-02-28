@@ -108,7 +108,6 @@ class ScoreList:
             activate_callback_on_drag=True
             )
 
-
     def set_offset(self, slider: Slider):
         self.offset_y = self.min_offset_y * (1-(slider.get_percentage() / 100))
 

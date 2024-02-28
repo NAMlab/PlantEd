@@ -37,6 +37,7 @@ class Plant:
     def from_dict(plant_dict, camera=None):
         asset_handler = AssetHandler.instance()
         options = config.load_options()
+        screen_size = options["aspect_ratio"]
         pivot_pos = [
             (286, 113),
             (76, 171),
@@ -55,7 +56,7 @@ class Plant:
         ]
         sound_control = SoundControl()
         plant = Plant(
-            screen_size=options["aspect_ratio"],
+            screen_size=screen_size,
             pos=plant_dict["pos"],
             water_grid_shape=plant_dict["water_grid_shape"],
             water_grid_pos=plant_dict["water_grid_pos"],
@@ -71,9 +72,9 @@ class Plant:
         branches: list[Cubic] = []
         branches_dict_list = plant_dict["stem"]["curve"]["branches"]
         for branch in branches_dict_list:
-            branches.append(Cubic(branch["branch"], 0))
+            branches.append(Cubic(branch["branch"], 0, screen_size=screen_size))
         plant.organs[1].mass = plant_dict["stem"]["mass"]
-        plant.organs[1].curve = Cubic_Tree(branches=branches)
+        plant.organs[1].curve = Cubic_Tree(branches=branches, screen_size=screen_size)
 
         plant.organs[2].mass = plant_dict["root"]["mass"]
         if plant_dict["root"]["ls"] is not None:
@@ -108,7 +109,7 @@ class Plant:
         self.danger_mode: bool = False
 
         pivot_pos = [
-            (286, 113),
+            (286, 103),
             (76, 171),
             (254, 78),
             (19, 195),
@@ -288,6 +289,7 @@ class Plant:
 
     def draw_seedling(self, screen):
         self.seedling.draw(screen, self.get_biomass())
+
 
 class Seedling:
     def __init__(self, x, y, images, max):
@@ -503,7 +505,7 @@ class Leaf(Organ):
         # adjust image sizes
         for leaf in self.leaves:
             relative_mass = leaf["mass"] / leaf["maximum_mass"]
-            if relative_mass*10 > leaf["size"]:
+            if relative_mass * 10 > leaf["size"]:
                 leaf["size"] += 1
                 self.update_leaf_image(leaf)
 
@@ -638,7 +640,7 @@ class Leaf(Organ):
                 self.hover_leaf,
                 (x, y - self.camera.offset_y - self.hover_leaf.get_height() + 20),
             )
-            pygame.draw.circle(screen, config.WHITE, (x,y - self.camera.offset_y), radius=10)
+            pygame.draw.circle(screen, config.WHITE, (x, y - self.camera.offset_y), radius=10)
 
         for leaf in self.leaves:
             # image = self.yellow_leaf(leaf["image"], 128)
@@ -704,10 +706,10 @@ class Root(Organ):
             camera=camera,
         )
         self.selected = 0
-        #root_grid: np.array = np.zeros(water_grid_shape)
-        #water_grid_pos: tuple[float, float] = water_grid_pos
+        # root_grid: np.array = np.zeros(water_grid_shape)
+        # water_grid_pos: tuple[float, float] = water_grid_pos
         self.screen_size = screen_size
-        self.ls = None #LSystem = LSystem(root_grid, water_grid_pos)
+        self.ls = None  # LSystem = LSystem(root_grid, water_grid_pos)
         self.new_roots = []
         self.blocked_growth = False
 
@@ -748,7 +750,7 @@ class Root(Organ):
 
     def get_maximum_growable_mass(self):
         return (
-            constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1, self.get_organ_amount())
+                constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1, self.get_organ_amount())
         )
 
     def get_mass(self):
@@ -775,9 +777,9 @@ class Root(Organ):
             if self.target:
                 pass
                 # pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 8)
-                #self.ls.draw_highlighted(screen)
+                # self.ls.draw_highlighted(screen)
             else:
-                self.ls.draw_scaled(screen, scaling_factor=self.screen_size[0]/1920)
+                self.ls.draw_scaled(screen, scaling_factor=self.screen_size[0] / 1920)
 
 
 class Stem(Organ):
@@ -816,12 +818,14 @@ class Stem(Organ):
 
         self.curve = Cubic_Tree(
             [Cubic(
-                points=[[self.screen_size[0]/2-5, self.screen_size[1]/1.2],
-                        [self.screen_size[0]/2+10, self.screen_size[1]/1.2-80],
-                        [self.screen_size[0]/2-15, self.screen_size[1]/1.2-150]
+                points=[[self.screen_size[0] / 2 - 5, self.screen_size[1] / 1.2],
+                        [self.screen_size[0] / 2 + 10, self.screen_size[1] / 1.2 - 80],
+                        [self.screen_size[0] / 2 - 15, self.screen_size[1] / 1.2 - 150]
                         ],
-                id=0)],
-            camera
+                id=0,
+                screen_size=self.screen_size)],
+            screen_size=self.screen_size,
+            camera=camera
         )
         self.timer: float = 0
         self.floating_shop: FloatingShop = None
@@ -1029,7 +1033,7 @@ class Stem(Organ):
                 (int(self.highlight[0][0]), int(self.highlight[0][1])),
                 10,
             )
-        pygame.draw.circle(screen, config.GREEN, (self.x - 5, self.y + 40), 10)
+        pygame.draw.circle(screen, config.GREEN, (self.x - 5, self.y + 30), 10)
 
     def get_rect(self):
         return self.curve.get_rects()
