@@ -43,24 +43,11 @@ from PlantEd.client.utils.narrator import Narrator
 from PlantEd.client.utils.particle import ParticleSystem, ParticleExplosion
 from PlantEd.client.weather import Environment
 from PlantEd.server.lsystem import DictToRoot
+from PlantEd.server.root_generator import RootGenerator
 
-true_res = (
-    1920,
-    1080,
-    )  # (ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1))
 
-temp_surface = pygame.Surface((1920, 2160), pygame.SRCALPHA)
 GROWTH = 26
 WIN = pygame.USEREVENT + 1
-
-# stupid, change dynamically
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
-plant_pos = (
-    SCREEN_WIDTH - SCREEN_WIDTH / 4,
-    SCREEN_HEIGHT - SCREEN_HEIGHT / 5,
-    )
-
 
 class OptionsScene:
     def __init__(self):
@@ -159,7 +146,7 @@ class OptionsScene:
         pygame.draw.rect(
             self.label_surface,
             config.WHITE,
-            (self.screen_width / 2 - 300, 220, 600, 430),
+            (self.screen_width / 2 - 300, self.screen_height/3.4, 600, 430),
             border_radius=3,
             width=1)
         self.label_surface.blit(
@@ -228,6 +215,8 @@ class DefaultGameScene(object):
         self.center_h = self.screen_height / 2
         self.center_w = self.screen_width / 2
         self.margin = 10
+
+        self.temp_surface = pygame.Surface((self.screen_width, self.screen_height*2), pygame.SRCALPHA)
 
         name = self.options.get("name") if self.options.get("name") is not None else "Player"
         task = asyncio.create_task(self.load_level())
@@ -677,27 +666,27 @@ class DefaultGameScene(object):
 
     def render(self, screen):
         screen.fill((0, 0, 0))
-        temp_surface.fill((0, 0, 0))
+        self.temp_surface.fill((0, 0, 0))
         if self.ui.pause:
             self.ui.draw(screen)
             return
 
-        self.environment.draw_background(temp_surface)
-        self.hive.draw(temp_surface)
-        self.tree.draw(temp_surface)
-        self.environment.draw_foreground(temp_surface)
-        self.snail_spawner.draw(temp_surface)
+        self.environment.draw_background(self.temp_surface)
+        self.hive.draw(self.temp_surface)
+        self.tree.draw(self.temp_surface)
+        self.environment.draw_foreground(self.temp_surface)
+        self.snail_spawner.draw(self.temp_surface)
         for bug in self.bugs:
-            bug.draw(temp_surface)
+            bug.draw(self.temp_surface)
 
-        self.plant.draw(temp_surface)
+        self.plant.draw(self.temp_surface)
         #self.environment.draw_shadows(temp_surface)
 
-        self.water_grid.draw(temp_surface)
-        self.nitrate_grid.draw(temp_surface)
+        self.water_grid.draw(self.temp_surface)
+        self.nitrate_grid.draw(self.temp_surface)
         #self.floating_shop.draw(temp_surface)
 
-        screen.blit(temp_surface, (0, self.camera.offset_y))
+        screen.blit(self.temp_surface, (0, self.camera.offset_y))
         self.shop.draw(screen)
         self.ui.draw(screen)
         if self.fps:
@@ -712,6 +701,9 @@ class TitleScene(object):
         self.options = config.load_options()
         self.screen_width = self.options["aspect_ratio"][0]
         self.screen_height = self.options["aspect_ratio"][1]
+
+        self.temp_surface = pygame.Surface((self.screen_width, self.screen_height * 2), pygame.SRCALPHA)
+
         self.sound_control = SoundControl()
         self.asset_handler = AssetHandler.instance()
         self.icon_handler = IconHandler(pos=(0, 50), image_size=(100, 100), sound_control=self.sound_control)
@@ -729,6 +721,9 @@ class TitleScene(object):
             keywords="Beginner, Summer",
             play_select_sfx=self.sound_control.play_select_sfx
             )
+
+        self.root_generator = RootGenerator(resolution=(self.screen_width, self.screen_height))
+        self.root_mass = 10
 
         menu_buttons_anker = (self.options["aspect_ratio"][0]/2, self.options["aspect_ratio"][1])
         button_height = 50
@@ -801,24 +796,28 @@ class TitleScene(object):
 
 
     def render(self, screen):
-        temp_surface.fill((0, 0, 0))
+        self.temp_surface.fill((0, 0, 0))
         screen.fill(config.BLACK)
-        temp_surface.blit(
+        self.temp_surface.blit(
             self.title, (self.center_w - self.title.get_width() / 2, 80)
             )
-        self.card_0.draw(temp_surface)
+        self.card_0.draw(self.temp_surface)
         # self.card_1.draw(screen)
         # self.card_2.draw(screen)
         pygame.draw.line(
-            temp_surface,
+            self.temp_surface,
             config.WHITE,
             (self.screen_width / 20, self.screen_height - self.screen_height / 10),
             (self.screen_width - self.screen_width / 20, self.screen_height - self.screen_height / 10)
         )
-        self.button_sprites.draw(temp_surface)
-        self.icon_handler.draw(temp_surface)
+        self.button_sprites.draw(self.temp_surface)
+        self.icon_handler.draw(self.temp_surface)
 
-        screen.blit(temp_surface, (0, 0))
+        self.root_generator.draw(self.temp_surface, self.root_mass)
+
+        screen.blit(self.temp_surface, (0, 0))
+
+
 
     def update(self, dt):
         self.card_0.update(dt)
@@ -842,6 +841,19 @@ class TitleScene(object):
         for e in events:
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.quit()
+            if e.type == KEYDOWN and e.key == K_r:
+                self.root_generator.delete_roots()
+                direction = pygame.mouse.get_pos()
+                self.root_generator.generate_root(direction=(direction[0]-self.screen_width/2, direction[1]))
+            if e.type == KEYDOWN and e.key == K_l:
+                self.root_mass += 0.1
+            if e.type == KEYDOWN and e.key == K_k:
+                self.root_mass += 1
+            if e.type == KEYDOWN and e.key == K_j:
+                self.root_mass -= 1
+                if self.root_mass <= 0:
+                    self.root_mass = 0
+
             self.icon_handler.handle_event(e)
             if self.icon_handler.selected:
                 pass
@@ -862,6 +874,9 @@ class EndScene(object):
         self.options = config.load_options()
         self.screen_width = self.options["aspect_ratio"][0]
         self.screen_height = self.options["aspect_ratio"][1]
+
+        self.temp_surface = pygame.Surface((self.screen_width, self.screen_height*2), pygame.SRCALPHA)
+
         self.center_w = self.screen_width / 2
         self.center_h = self.screen_height / 2
         self.margin = 10
@@ -960,9 +975,9 @@ class EndScene(object):
 
     def render(self, screen):
         screen.fill((0, 0, 0, 0))
-        temp_surface.fill((0, 0, 0))
-        self.plant_object.draw(temp_surface)
-        screen.blit(temp_surface, (0, self.camera.offset_y))
+        self.temp_surface.fill((0, 0, 0))
+        self.plant_object.draw(self.temp_surface)
+        screen.blit(self.temp_surface, (0, self.camera.offset_y))
         self.button_sprites.draw(screen)
         self.explosion.draw(screen)
         # self.score_animation.draw(screen)
@@ -994,6 +1009,8 @@ class CustomScene(object):
         self.center_w = self.screen_width / 2
         self.center_h = self.screen_height / 2
         self.margin = 10
+
+        self.temp_surface = pygame.Surface((self.screen_width, self.screen_height * 2), pygame.SRCALPHA)
 
         self.path_to_plots = "./plots"
         self.asset_handler = AssetHandler.instance()
@@ -1072,14 +1089,14 @@ class CustomScene(object):
 
     def render(self, screen):
         screen.fill(config.BLACK)
-        temp_surface.fill(config.BLACK)
-        self.score_handler.draw(temp_surface)
-        screen.blit(temp_surface, (0, 0))
+        self.temp_surface.fill(config.BLACK)
+        self.score_handler.draw(self.temp_surface)
+        screen.blit(self.temp_surface, (0, 0))
         if self.selected_plot is not None:
             #plot = pygame.transform.scale(self.selected_plot, (self.screen_width/3, self.screen_width/3))
             screen.blit(self.selected_plot, (0, self.screen_height/5))
-        pygame.draw.rect(screen, config.BLACK, (0, self.screen_height-self.screen_height/6, config.SCREEN_WIDTH, self.screen_height/5+5))
-        pygame.draw.rect(screen, config.BLACK, (0, 0, config.SCREEN_WIDTH, self.screen_height/5))
+        pygame.draw.rect(screen, config.BLACK, (0, self.screen_height-self.screen_height/6, self.screen_width, self.screen_height/5+5))
+        pygame.draw.rect(screen, config.BLACK, (0, 0, self.screen_width, self.screen_height/5))
         screen.blit(
             self.title,
             (self.center_w - self.title.get_width() / 2, self.screen_height / 10),
@@ -1131,6 +1148,7 @@ class Credits:
         self.asset_handler = AssetHandler.instance()
         self.screen_width = self.options["aspect_ratio"][0]
         self.screen_height = self.options["aspect_ratio"][1]
+
         self.center_w = self.screen_width / 2
         self.center_h = self.screen_height / 2
         self.margin = 10
@@ -1183,7 +1201,7 @@ class Credits:
             )
 
         pygame.draw.line(
-            temp_surface,
+            self.label_surface,
             config.WHITE,
             (self.screen_width / 20, self.screen_height - self.screen_height / 10),
             (self.screen_width - self.screen_width / 20, self.screen_height - self.screen_height / 10)
@@ -1256,10 +1274,15 @@ async def main():
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 
-    screen = pygame.display.set_mode(
-        (1366, 768), pygame.DOUBLEBUF, 16
-        )
+    display_info = pygame.display.Info()
+    options = config.load_options()
+    options["aspect_ratio"] = (display_info.current_w, display_info.current_h)
 
+
+    screen = pygame.display.set_mode(
+        options["aspect_ratio"], pygame.DOUBLEBUF, 16
+        )
+    config.write_options(options)
     timer = pygame.time.Clock()
     running = True
     # camera = Camera()

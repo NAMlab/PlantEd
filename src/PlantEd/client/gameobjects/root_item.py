@@ -61,7 +61,7 @@ class Root_Item:
 
     def get_validation_rect(self):
         y = self.screen_size[1]/1.15 + self.plant.camera.offset_y
-        return Rect(0, y, config.SCREEN_WIDTH, config.SCREEN_HEIGHT)
+        return Rect(0, y, self.screen_size[0], self.screen_size[1])
 
     def deactivate(self):
         self.active = False

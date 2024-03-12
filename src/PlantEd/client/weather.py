@@ -31,7 +31,7 @@ class Environment:
         self.gametime = GameTime.instance()
         self.asset_handler = AssetHandler.instance()
         self.water_grid = water_grid
-        self.s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        self.s = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
         self.sun_pos_spline: list[tuple[float, float]] = Beziere(
             list_of_points=[(-1*self.screen_width/10, self.screen_height-self.screen_height/5),
                             (self.screen_width/2, -1*self.screen_height/5),

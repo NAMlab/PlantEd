@@ -84,7 +84,7 @@ class UI:
         self.label_consuming = self.asset_handler.FONT_24.render("consuming", True, config.RED)
         self.label_consuming = pygame.transform.rotate(self.label_consuming, 90)
 
-        self.s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        self.s = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
 
         self.infobox_manager = InfoBoxManager()
         self.infobox_manager.from_dict(config.load_infoboxes())
@@ -680,7 +680,7 @@ class UI:
         pygame.draw.rect(
             s,
             config.WHITE,
-            (self.screen_width / 2 - 300, 220, 600, 430),
+            (self.screen_width / 2 - 300, self.screen_height/3.4, 600, 430),
             border_radius=3,
             width=1)
 
