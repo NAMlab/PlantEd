@@ -1,46 +1,45 @@
 import math
 import random
 from typing import Union
-import pygame
 import numpy as np
 
-from PlantEd import config
+from PlantEd.constants import MAXIMUM_ROOT_BIOMASS_GRAM, ROOT_GRID_SIZE
 
 
 class RootGenerator:
     def __init__(
             self,
-            root_grid_size: tuple[int, int] = (20, 6),
-            resolution: tuple[int, int] = (1920, 1080)
+            start_pos: tuple[int, int] = (10, 0),
+            delta_mass_to_get_grid: float = MAXIMUM_ROOT_BIOMASS_GRAM/10
     ):
-        self.root_grid_size = root_grid_size
-        self.resolution = resolution
-        self.root_grid: np.array = np.zeros(root_grid_size)
-        self.root_grid.fill(-1)
-        self.FONT_24 = pygame.font.SysFont("timesnewroman", 18)
-        self.roots: list[RootStructure] = []
-        self.root_grid_mass_list: list[tuple[float, tuple[float, float]]] = []
+        self.start_pos = start_pos
+        self.delta_mass_to_get_grid = delta_mass_to_get_grid
+        self.root_grid_size = ROOT_GRID_SIZE
+        self.root_grids: list[np.array] = []
+        self.current_grid: np.array = []
+        self.current_grid_mass: float = 0
+        self.roots: list[list[RootStructure]] = []
         self.root_classes = [
             {
-                "length": 0.8,
+                "length": 0.4,
                 "gravity_factor": 0,
                 "n_branches": 12,
-                "tries": 6,
-                "mass_factor": 0.6,
-                "n_segments": 4,
+                "tries": 3,
+                "mass_factor": 0.7,
+                "n_segments": 7,
                 "stop_upward": True
             },
             {
-                "length": 0.3,  # factor of screen_height
+                "length": 0.2,  # factor of screen_height
                 "gravity_factor": 1,
                 "n_branches": 6,
-                "tries": 6,
+                "tries": 4,
                 "mass_factor": 0.35,
                 "n_segments": 5,
                 "stop_upward": True
             },
             {
-                "length": 0.05,
+                "length": 0.02,
                 "gravity_factor": 0,
                 "n_branches": 0,
                 "tries": 3,
@@ -49,47 +48,109 @@ class RootGenerator:
                 "stop_upward": False
             }
         ]
-        self.generate_root()
+
+    def to_dict(self) -> dict:
+        return {
+            "start_pos": self.start_pos,
+            "root_grid_size": self.root_grid_size,
+            "roots": [[root.to_dict() for root in root_list] for root_list in self.roots]
+        }
+
+    def get_matrix_at_mass(self, mass_list: list[float]) -> np.array:
+        combined_grid = self.current_grid
+        if sum(mass_list) - self.current_grid_mass > self.delta_mass_to_get_grid or len(self.current_grid) <= 0:
+            combined_grid = np.zeros(self.root_grid_size)
+            for x in range(self.root_grid_size[0]):
+                for y in range(self.root_grid_size[1]):
+                    for grid, mass in zip(self.root_grids, mass_list):
+                        if grid[x, y] <= mass and grid[x, y] != -1:
+                            combined_grid[x, y] = 1
+        return combined_grid
 
     def delete_roots(self):
         self.roots = []
+        self.root_grids = []
 
-    def generate_root(self, tier=0, start_mass=1.0, end_mass=10.0, start_pos=(400, 250), direction=(0, 1)):
+    def generate_root_list(self, id, direction=(0, 1), start_mass=0):
+        root_list = self.generate_root(id, direction=direction, start_mass=start_mass)
+        self.roots.append(root_list)
+        grid = np.zeros(self.root_grid_size)
+        grid.fill(-1)
+        self.root_grids.append(grid)
+
+        for root in self.roots[0]:
+            root.add_mass_to_root_grid(self.root_grids[0])
+
+    def generate_root(
+            self,
+            root_id=None,
+            root_list=None,
+            tier=0,
+            start_mass=0.0,
+            end_mass=None,
+            direction=(0, 1),
+            start_pos=None,
+    ):
+        if end_mass is None:
+            end_mass = MAXIMUM_ROOT_BIOMASS_GRAM + start_mass
+        if root_id is None:
+            root_id = len(self.roots)
+        if root_list is None:
+            root_list = []
+        if start_pos is None:
+            start_pos = self.start_pos
         root_structure: RootStructure = RootStructure(
-            root_grid=self.root_grid.copy(),
-            resolution=self.resolution,
+            root_id=root_id,
             tier=tier,
             tries=self.root_classes[tier]["tries"],
             gravity_effect=self.root_classes[tier]["gravity_factor"],
             start_mass=start_mass,
             end_mass=start_mass + (end_mass - start_mass) * self.root_classes[tier]["mass_factor"],
             start_pos=start_pos,
-            length=self.root_classes[tier]["length"] * self.resolution[1],
+            length=self.root_classes[tier]["length"] * self.root_grid_size[0],
             direction=direction,
             n_branches=self.root_classes[tier]["n_branches"],
             n_segments=self.root_classes[tier]["n_segments"],
             stop_upward=self.root_classes[tier]["stop_upward"],
         )
 
-        self.roots.append(root_structure)
+        root_list.append(root_structure)
         for t in root_structure.branches_t:
             self.generate_root(
+                root_list=root_list,
+                root_id=root_id,
                 tier=root_structure.tier + 1,
                 start_mass=start_mass + (end_mass - start_mass) * t,
-                end_mass=end_mass,
+                end_mass=root_structure.end_mass,
                 direction=get_ortogonal(root_structure.direction),
                 start_pos=root_structure.get_pos_at_t(t_branch=t),
             )
+        return root_list
 
     def draw(self, screen, mass):
-        for root in self.roots:
-            if root.start_mass <= mass:
-                root.draw(screen, mass)
+
+        '''for grid in self.root_grids:
+            n, m = grid.shape
+            for x in range(n):
+                for y in range(m):
+                    if grid[x, y] > 0:
+                        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (
+                            x / n * self.resolution[0], y / m * self.resolution[1], self.resolution[0] / n,
+                            self.resolution[1] / m))
+
+                        mass_label = self.FONT_24.render(f"{grid[x, y]:.2f}", True, config.BLACK)
+                        screen.blit(mass_label, (x/n*self.resolution[0], y/m*self.resolution[1]))'''
+
+        for root_list in self.roots:
+            for root in root_list:
+                if root.start_mass <= mass:
+                    root.draw(screen, mass)
 
 
 class RootStructure:
     def __init__(
             self,
+            root_id: int,
             tier: int,
             tries: int,
             gravity_effect: float,
@@ -98,12 +159,11 @@ class RootStructure:
             start_pos: tuple[float, float],
             length: float,
             direction: tuple[float, float],
-            root_grid: np.array,
-            resolution: tuple[int, int],
             n_branches: int = 0,
             n_segments: int = 5,
             stop_upward: bool = True,
     ):
+        self.root_id = root_id
         self.tier = tier
         self.tries = tries
         self.gravity_effect = gravity_effect
@@ -115,8 +175,6 @@ class RootStructure:
         self.n_segments = n_segments
         self.n_branches = n_branches
         self.stop_upward = stop_upward
-        self.root_grid = root_grid
-        self.resolution = resolution
 
         self.branches_t: list[float] = [random.random() for _ in range(n_branches)]
         self.segments_t: list[float] = [random.random() for _ in range(n_segments)]
@@ -125,48 +183,48 @@ class RootStructure:
         self.segments: list[tuple[float, float]] = [self.start_pos]
         self.generate_segments()
         self.segments_t.insert(0, 0)
-        self.add_mass_to_root_grid()
 
-    def add_mass_to_root_grid(self):
+    def to_dict(self) -> dict:
+        return {
+            "id": self.root_id,
+            "start_mass": self.start_mass,
+            "end_mass": self.end_mass,
+            "segments_t": self.segments_t,
+            "segments": self.segments
+        }
 
-        n, m = self.root_grid.shape
+    def add_mass_to_root_grid(self, root_grid) -> np.array:
+        n, m = root_grid.shape
+
         for i in range(1, len(self.segments)):
-            previous_point = self.segments[i - 1]
-            current_point = self.segments[i]
+            x1 = self.segments[i - 1][0]
+            y1 = (self.segments[i - 1][1])
+            x2 = self.segments[i][0]
+            y2 = (self.segments[i][1])
 
-            # normalize to fit matrix
-            x1 = previous_point[0] / self.resolution[0] * n
-            y1 = previous_point[1] / self.resolution[1] * m
-            x2 = current_point[0] / self.resolution[0] * n
-            y2 = current_point[1] / self.resolution[1] * m
+            prev_t = self.segments_t[i - 1]
+            next_t = self.segments_t[i]
 
             dx = x2 - x1
             dy = y2 - y1
+            steps = max(abs(dx), abs(dy))
 
-            x = x1
-            y = y1
+            if steps == 0:  # If the points are the same, return just the starting point
+                return [(x1, y1)]
 
-            if abs(dx) > abs(dy):
-                steps = abs(dx)
-            else:
-                steps = abs(dy)
-            print(f"steps: {steps}")
+            step_x = dx / steps
+            step_y = dy / steps
 
-            x_increment = dx / steps
-            y_increment = dy / steps
+            for j in range(int(steps) + 1):
+                x = x1 + step_x * j
+                y = y1 + step_y * j
+                percentage_line = (x1 - x) / dx if dx != 0 else (y1 - y) / dy
+                t = prev_t + (next_t - prev_t) * percentage_line
 
-            print(f"y_inc: {y_increment}, x_inc: {x_increment}")
-
-            length = max(abs(dx), abs(dy))
-
-            for _ in range(int(steps) + 1):
-                print(f"in loop: x: {x}, y: {y}")
+                mass_at_point = self.start_mass + (self.end_mass - self.start_mass) * t
                 if 0 <= x < n and 0 <= y < m:
-                    print(f"dist: delta_x: {abs(x-x1)}, delty_y: {abs(y-y1)}, lenght: {length}")
-                    percentage = max(abs(x - x1), abs(y - y1))/length
-                    self.root_grid[int(x), int(y)] = percentage
-                x += x_increment
-                y += y_increment
+                    root_grid[int(x), int(y)] = mass_at_point
+        return root_grid
 
     def get_pos_at_t(self, t_branch) -> tuple[float, float]:
         pos_at_t = (0, 0)
@@ -205,8 +263,10 @@ class RootStructure:
 
             previous_pos = next_pos
             t_sum_previous += delta_t
-
-    def draw(self, screen, mass):
+'''
+    def draw(self, screen, mass, resolution=(2560, 1440)):
+        n = 20
+        m = 6
         percentage = 1
         # if mass is smaller than end_mass -> only draw a part of the root
         if mass < self.end_mass:
@@ -218,8 +278,8 @@ class RootStructure:
                     previous_pos = self.segments[i - 1]
                     previous_segment_t = self.segments_t[i - 1]
                     percentage_segment = (percentage - previous_segment_t) / (segment_t - previous_segment_t)
-                    x = (next_pos[0] - previous_pos[0]) * percentage_segment + previous_pos[0]
-                    y = (next_pos[1] - previous_pos[1]) * percentage_segment + previous_pos[1]
+                    x = ((next_pos[0] - previous_pos[0]) * percentage_segment + previous_pos[0]) * resolution[0] / n
+                    y = ((next_pos[1] - previous_pos[1]) * percentage_segment + previous_pos[1]) * resolution[1] / m
                     end_pos = (x, y)
 
                     points_to_draw.append(end_pos)
@@ -228,13 +288,14 @@ class RootStructure:
                     points_to_draw.append(self.segments[i])
         else:
             points_to_draw = self.segments
-        pygame.draw.lines(screen, color=config.WHITE, closed=False, points=points_to_draw, width=3)
+        pygame.draw.lines(screen, color=config.WHITE, closed=False, points=points_to_draw, width=3)'''
 
 
 def get_ortogonal(v1):
     flip = random.randint(0, 1) * 2 - 1
     orthogonal_vector = (-v1[1] * flip, v1[0])
     return orthogonal_vector
+
 
 def add_vector(vector_a: tuple[float, float], vector_b: tuple[float, float]) -> tuple[float, float]:
     return vector_a[0] + vector_b[0], vector_a[1] + vector_b[1]

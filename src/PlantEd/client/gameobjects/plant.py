@@ -13,6 +13,7 @@ import numpy as np
 from PlantEd import config
 from PlantEd import constants
 from PlantEd.client.camera import Camera
+from PlantEd.client.gameobjects.root_drawer import RootDrawer
 from PlantEd.constants import START_SUM_BIOMASS_GRAM
 from PlantEd.data.assets import AssetHandler
 from PlantEd.data.sound_control import SoundControl
@@ -168,15 +169,13 @@ class Plant:
         )
         organ_root = Root(
             x=self.x,
-            y=self.y,
+            y=self.y+50,
             screen_size=self.screen_size,
             name="Roots",
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
             mass=constants.START_ROOT_BIOMASS_GRAM,
             active=True,
-            water_grid_shape=water_grid_shape,
-            water_grid_pos=water_grid_pos,
             camera=self.camera,
             play_reward=self.sound_control.play_reward_sfx,
         )
@@ -218,13 +217,6 @@ class Plant:
 
     def get_stomata_open(self) -> bool:
         return self.organs[0].stomata_open
-
-    def update_organ_masses(self, organ_masses):
-        self.organs[0].update_masses(organ_masses["leafs"])
-        self.organs[1].update_masses(organ_masses["stem_mass"])
-        self.organs[2].update_mass(organ_masses["root_mass"])
-        self.organs[3].update_masses(organ_masses["seed_mass"])
-        # self.organ_starch.starch_intake = growth_rates.starch_intake * growth_boost
 
     def get_biomass(self):
         biomass = 0
@@ -686,8 +678,6 @@ class Root(Organ):
             pivot: tuple[float, float] = None,
             mass: float = 0.0,
             active: bool = False,
-            water_grid_shape: tuple[int, int] = None,
-            water_grid_pos: tuple[float, float] = None,
             play_reward: callable = None,
             camera: Camera = None,
 
@@ -706,18 +696,14 @@ class Root(Organ):
             camera=camera,
         )
         self.selected = 0
-        # root_grid: np.array = np.zeros(water_grid_shape)
-        # water_grid_pos: tuple[float, float] = water_grid_pos
         self.screen_size = screen_size
-        self.ls = None  # LSystem = LSystem(root_grid, water_grid_pos)
         self.new_roots = []
+        self.roots: list[tuple[int, float]] = []
         self.blocked_growth = False
+        self.root_drawer = RootDrawer(resolution=self.screen_size, start_pos=(self.x, self.y))
 
     def to_dict(self) -> dict:
-        root_dict = {
-            "mass": self.mass,
-            "ls": self.ls.to_dict() if self.ls else None
-        }
+        root_dict = dict(self.roots)
         return root_dict
 
     def check_can_add_root(self):
@@ -740,8 +726,8 @@ class Root(Organ):
             return None
 
     def get_organ_amount(self):
-        if self.ls is not None:
-            return len(self.ls.first_letters)
+        if self.root_drawer is not None:
+            return len(self.root_drawer.roots)
         else:
             return 0
 
@@ -754,10 +740,21 @@ class Root(Organ):
         )
 
     def get_mass(self):
-        return self.mass
+        return sum([root[1] for root in self.roots])
 
-    def update_mass(self, mass):
-        self.mass = mass
+    def check_for_new_roots(self, root_dic):
+        if len(self.root_drawer.roots) < len(root_dic["roots"]):
+            self.root_drawer.generate_rootlist_from_dict(root_dic)
+
+
+    def update_masses(self, new_root_masses):
+        print(f"root Masses: {new_root_masses}")
+        self.roots = new_root_masses
+        '''while len(new_root_masses) > len(self.roots):
+            self.roots.append((len(self.roots), 0))
+        for i, server_root in new_root_masses:
+            self.roots[i][1] = server_root[1]'''
+
 
     def create_new_root(self, mouse_pos=None, dir=None):
         if self.play_reward is not None:
@@ -767,19 +764,15 @@ class Root(Organ):
         self.new_roots.append(dir)
 
     def get_root_grid(self):
-        return self.ls.root_grid if self.ls else None
+        # Todo make root_generator not ls
+        pass
+        #return self.ls.root_grid if self.ls else None
 
     def handle_event(self, event):
         pass
 
     def draw(self, screen):
-        if self.ls is not None:
-            if self.target:
-                pass
-                # pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 8)
-                # self.ls.draw_highlighted(screen)
-            else:
-                self.ls.draw_scaled(screen, scaling_factor=self.screen_size[0] / 1920)
+        self.root_drawer.draw(screen, self.roots)
 
 
 class Stem(Organ):

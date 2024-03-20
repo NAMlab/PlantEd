@@ -51,7 +51,8 @@ class Water_Grid:
         """
         Set the root grid to update current root structure
         """
-        self.root_grid = root_grid
+        pass
+        #self.root_grid = root_grid
 
     def pour(self, rate: int, dt: float, pos: tuple[int, int]):
         self.pouring = True

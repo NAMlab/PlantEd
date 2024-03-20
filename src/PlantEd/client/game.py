@@ -419,40 +419,6 @@ class DefaultGameScene(object):
         self.shop.spraycan.callbacks.append(self.snail_spawner.spray_snails)
         self.shop.spraycan.callbacks.append(self.hive.spray_bees)
 
-        '''self.floating_shop = FloatingShop(self.camera, (0, 0))
-        add_leaf_item_floating = FloatingShopItem(
-            pos=(0, 0),
-            callback=self.activate_add_leaf,
-            image=self.asset_handler.img("leaf_small.PNG", (64, 64)),
-            cost=LEAF_COST,
-            plant=self.plant,
-            play_buy_sfx=self.sound_control.play_buy_sfx,
-            )
-        add_branch_item_floating = FloatingShopItem(
-            pos=(0, 0),
-            callback=self.plant.organs[1].activate_add_branch,
-            image=self.asset_handler.img("branch.PNG", (64, 64)),
-            cost=BRANCH_COST,
-            plant=self.plant,
-            play_buy_sfx=self.sound_control.play_buy_sfx
-            )
-        add_flower_item_floating = FloatingShopItem(
-            pos=(0, 0),
-            callback=self.plant.organs[3].activate_add_flower,
-            image=self.asset_handler.img("sunflowers/1.PNG", (64, 64)),
-            cost=FLOWER_COST,
-            plant=self.plant,
-            play_buy_sfx=self.sound_control.play_buy_sfx
-            )
-
-        self.floating_shop.add_item(add_leaf_item_floating)
-        self.floating_shop.add_item(add_branch_item_floating)
-        self.floating_shop.add_item(add_flower_item_floating)
-        self.plant.organs[0].floating_shop = self.floating_shop
-        self.plant.organs[1].floating_shop = self.floating_shop
-        self.plant.organs[2].floating_shop = self.floating_shop
-
-        '''# start plant growth timer
         pygame.time.set_timer(GROWTH, 1000)
 
     def activate_add_leaf(self):
@@ -579,7 +545,8 @@ class DefaultGameScene(object):
                         # update plant
                         self.plant.organs[0].update_masses(dic["plant"]["leafs_biomass"])
                         self.plant.organs[1].update_masses(dic["plant"]["stems_biomass"])
-                        self.plant.organs[2].update_mass(dic["plant"]["roots_biomass"])
+                        self.plant.organs[2].check_for_new_roots(dic["plant"]["root"])
+                        self.plant.organs[2].update_masses(dic["plant"]["roots_biomass"])
                         self.plant.organs[3].update_masses(dic["plant"]["seeds_biomass"])
                         self.plant.organ_starch.update_mass(dic["plant"]["starch_pool"])
                         self.plant.organ_starch.max_pool = dic["plant"]["max_starch_pool"]
@@ -587,7 +554,10 @@ class DefaultGameScene(object):
                         self.plant.max_water_pool = dic["plant"]["max_water_pool"]
 
                         # make simple root strucure from root_dict
-                        self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
+                        #self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
+
+
+
 
                         #self.ui.used_fluxes = dic["used_fluxes"]
                         self.narrator.used_fluxes = dic["used_fluxes"]
@@ -722,9 +692,6 @@ class TitleScene(object):
             play_select_sfx=self.sound_control.play_select_sfx
             )
 
-        self.root_generator = RootGenerator(resolution=(self.screen_width, self.screen_height))
-        self.root_mass = 10
-
         menu_buttons_anker = (self.options["aspect_ratio"][0]/2, self.options["aspect_ratio"][1])
         button_height = 50
 
@@ -812,9 +779,6 @@ class TitleScene(object):
         )
         self.button_sprites.draw(self.temp_surface)
         self.icon_handler.draw(self.temp_surface)
-
-        self.root_generator.draw(self.temp_surface, self.root_mass)
-
         screen.blit(self.temp_surface, (0, 0))
 
 
@@ -841,19 +805,6 @@ class TitleScene(object):
         for e in events:
             if e.type == KEYDOWN and e.key == K_ESCAPE:
                 self.quit()
-            if e.type == KEYDOWN and e.key == K_r:
-                self.root_generator.delete_roots()
-                direction = pygame.mouse.get_pos()
-                self.root_generator.generate_root(direction=(direction[0]-self.screen_width/2, direction[1]))
-            if e.type == KEYDOWN and e.key == K_l:
-                self.root_mass += 0.1
-            if e.type == KEYDOWN and e.key == K_k:
-                self.root_mass += 1
-            if e.type == KEYDOWN and e.key == K_j:
-                self.root_mass -= 1
-                if self.root_mass <= 0:
-                    self.root_mass = 0
-
             self.icon_handler.handle_event(e)
             if self.icon_handler.selected:
                 pass

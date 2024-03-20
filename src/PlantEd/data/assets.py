@@ -5,7 +5,6 @@ import pygame
 from pygame.surface import Surface
 
 from PlantEd.client.utils.gametime import Singleton
-from PlantEd.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 # assets is supposed to allow access to images, sounds
 # assets also handles options like volume, lists of songs to play or

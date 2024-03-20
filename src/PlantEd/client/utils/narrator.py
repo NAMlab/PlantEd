@@ -293,8 +293,8 @@ class Narrator:
             return False
 
     def check_root_bought(self) -> bool:
-        if self.plant.organs[2].ls is not None:
-            if len(self.plant.organs[2].ls.first_letters) > 1:
+        if self.plant.organs[2].root_drawer is not None:
+            if len(self.plant.organs[2].root_drawer.roots) > 1:
                 return True
         return False
 
