@@ -44,7 +44,6 @@ class UI:
             narrator: Narrator,
             camera: Camera,
             sound_control: SoundControl,
-            dev_mode: bool = False,
             quit=None
     ):
         self.screen_width = screen_size[0]
@@ -86,7 +85,7 @@ class UI:
 
         self.s = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
 
-        self.infobox_manager = InfoBoxManager()
+        self.infobox_manager = InfoBoxManager(screen_size=(self.screen_width, self.screen_height))
         self.infobox_manager.from_dict(config.load_infoboxes())
         self.sliders = []
         self.button_sprites = pygame.sprite.Group()

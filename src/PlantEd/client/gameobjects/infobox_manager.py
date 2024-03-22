@@ -6,15 +6,20 @@ from PlantEd.data.assets import AssetHandler
 
 
 class InfoBoxManager:
-    def __init__(self, boxes=[]):
+    def __init__(
+            self,
+            screen_size: tuple[int, int],
+            boxes=[],
+    ):
+        self.screen_size = screen_size
         self.boxes: list[InfoBox] = boxes
         self.active_box = 0
         self.visible = False
         self.asset_handler = AssetHandler.instance()
 
         self.show_button = Button(
-            x=260,
-            y=config.SCREEN_HEIGHT - 50,
+            x=self.screen_size[0]/8,
+            y=self.screen_size[1] - self.screen_size[1]/12,
             w=64,
             h=32,
             callbacks=[self.show],

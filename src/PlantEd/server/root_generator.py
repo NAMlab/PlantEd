@@ -10,61 +10,71 @@ class RootGenerator:
     def __init__(
             self,
             start_pos: tuple[int, int] = (10, 0),
-            delta_mass_to_get_grid: float = MAXIMUM_ROOT_BIOMASS_GRAM/10
+            delta_mass_to_get_grid: float = MAXIMUM_ROOT_BIOMASS_GRAM/20
     ):
         self.start_pos = start_pos
         self.delta_mass_to_get_grid = delta_mass_to_get_grid
         self.root_grid_size = ROOT_GRID_SIZE
         self.root_grids: list[np.array] = []
-        self.current_grid: np.array = []
+        self.current_grid: np.array = None
         self.current_grid_mass: float = 0
         self.roots: list[list[RootStructure]] = []
         self.root_classes = [
             {
-                "length": 0.4,
+                "length": 0.2,
                 "gravity_factor": 0,
-                "n_branches": 12,
+                "n_branches": 6,
                 "tries": 3,
                 "mass_factor": 0.7,
-                "n_segments": 7,
+                "n_segments": 6,
                 "stop_upward": True
             },
             {
-                "length": 0.2,  # factor of screen_height
+                "length": 0.05,  # factor of screen_height
                 "gravity_factor": 1,
                 "n_branches": 6,
                 "tries": 4,
                 "mass_factor": 0.35,
-                "n_segments": 5,
+                "n_segments": 4,
                 "stop_upward": True
             },
             {
-                "length": 0.02,
+                "length": 0.01,
                 "gravity_factor": 0,
                 "n_branches": 0,
                 "tries": 3,
                 "mass_factor": 0.05,
-                "n_segments": 4,
+                "n_segments": 3,
                 "stop_upward": False
             }
         ]
 
-    def to_dict(self) -> dict:
+    def to_dict(self, root_ids: list[int]) -> dict:
+        root_lists_to_send = []
+        for id in root_ids:
+            for root_list in self.roots:
+                if root_list[0].root_id == id:
+                    root_lists_to_send.append(root_list)
         return {
             "start_pos": self.start_pos,
             "root_grid_size": self.root_grid_size,
-            "roots": [[root.to_dict() for root in root_list] for root_list in self.roots]
+            "roots": [[root.to_dict() for root in root_list] for root_list in root_lists_to_send]
         }
 
     def get_matrix_at_mass(self, mass_list: list[float]) -> np.array:
         combined_grid = self.current_grid
-        if sum(mass_list) - self.current_grid_mass > self.delta_mass_to_get_grid or len(self.current_grid) <= 0:
+
+        if sum(mass_list) - self.current_grid_mass > self.delta_mass_to_get_grid or self.current_grid is None:
             combined_grid = np.zeros(self.root_grid_size)
             for x in range(self.root_grid_size[0]):
                 for y in range(self.root_grid_size[1]):
                     for grid, mass in zip(self.root_grids, mass_list):
                         if grid[x, y] <= mass and grid[x, y] != -1:
                             combined_grid[x, y] = 1
+            #print(f"for a mass of: {mass_list}")
+            #print(f"the grid looks like: {combined_grid}")
+            self.current_grid = combined_grid
+            self.current_grid_mass = sum(mass_list)
         return combined_grid
 
     def delete_roots(self):
@@ -75,11 +85,10 @@ class RootGenerator:
         root_list = self.generate_root(id, direction=direction, start_mass=start_mass)
         self.roots.append(root_list)
         grid = np.zeros(self.root_grid_size)
-        grid.fill(-1)
+        grid.fill(100)
         self.root_grids.append(grid)
-
-        for root in self.roots[0]:
-            root.add_mass_to_root_grid(self.root_grids[0])
+        for root in self.roots[id]:
+            root.add_mass_to_root_grid(self.root_grids[id])
 
     def generate_root(
             self,
@@ -222,8 +231,10 @@ class RootStructure:
                 t = prev_t + (next_t - prev_t) * percentage_line
 
                 mass_at_point = self.start_mass + (self.end_mass - self.start_mass) * t
+
                 if 0 <= x < n and 0 <= y < m:
-                    root_grid[int(x), int(y)] = mass_at_point
+                    if mass_at_point < root_grid[int(x), int(y)]:
+                        root_grid[int(x), int(y)] = mass_at_point
         return root_grid
 
     def get_pos_at_t(self, t_branch) -> tuple[float, float]:
@@ -263,33 +274,6 @@ class RootStructure:
 
             previous_pos = next_pos
             t_sum_previous += delta_t
-'''
-    def draw(self, screen, mass, resolution=(2560, 1440)):
-        n = 20
-        m = 6
-        percentage = 1
-        # if mass is smaller than end_mass -> only draw a part of the root
-        if mass < self.end_mass:
-            percentage = (mass - self.start_mass) / (self.end_mass - self.start_mass)
-            points_to_draw = []
-            for i, segment_t in enumerate(self.segments_t):
-                if percentage < segment_t:
-                    next_pos = self.segments[i]
-                    previous_pos = self.segments[i - 1]
-                    previous_segment_t = self.segments_t[i - 1]
-                    percentage_segment = (percentage - previous_segment_t) / (segment_t - previous_segment_t)
-                    x = ((next_pos[0] - previous_pos[0]) * percentage_segment + previous_pos[0]) * resolution[0] / n
-                    y = ((next_pos[1] - previous_pos[1]) * percentage_segment + previous_pos[1]) * resolution[1] / m
-                    end_pos = (x, y)
-
-                    points_to_draw.append(end_pos)
-                    break
-                else:
-                    points_to_draw.append(self.segments[i])
-        else:
-            points_to_draw = self.segments
-        pygame.draw.lines(screen, color=config.WHITE, closed=False, points=points_to_draw, width=3)'''
-
 
 def get_ortogonal(v1):
     flip = random.randint(0, 1) * 2 - 1

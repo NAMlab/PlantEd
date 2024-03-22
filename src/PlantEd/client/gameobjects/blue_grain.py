@@ -34,9 +34,9 @@ class Blue_grain:
             80,
             spawn_box=Rect(self.pos[0], self.pos[1], 50, 50),
             boundary_box=Rect(
-                0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT - 220
+                0, 0, self.screen_size[0], self.screen_size[1]
             ),
-            lifetime=3,
+            lifetime=2,
             size=10,
             color=config.NITRATE_BROWN,
             gravity=500,

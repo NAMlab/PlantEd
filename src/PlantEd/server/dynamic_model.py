@@ -292,7 +292,7 @@ class DynamicModel:
 
     def update_constraints(self, percentages):
         constraint_starch_percentage = min(max(percentages["starch_percent"], 0), 95)
-        print(constraint_starch_percentage, percentages)
+        #print(constraint_starch_percentage, percentages)
 
         root_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_ROOT)
         stem_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_STEM)

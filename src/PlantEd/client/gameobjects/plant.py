@@ -77,9 +77,12 @@ class Plant:
         plant.organs[1].mass = plant_dict["stem"]["mass"]
         plant.organs[1].curve = Cubic_Tree(branches=branches, screen_size=screen_size)
 
-        plant.organs[2].mass = plant_dict["root"]["mass"]
-        if plant_dict["root"]["ls"] is not None:
-            plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])
+        roots = plant_dict["root"].items()
+        root_mass = sum(root[1] for root in roots)
+        plant.organs[2].roots = root_mass
+        # todo make root_drawer to and from dict to also draw roots for the endscreen
+        '''if plant_dict["root"]["ls"] is not None:
+            plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])'''
         plant.organs[3].mass = plant_dict["flower"]["mass"]
         plant.organs[3].flowers = plant_dict["flower"]["flowers"]
         for flower in plant.organs[3].flowers:
@@ -743,12 +746,10 @@ class Root(Organ):
         return sum([root[1] for root in self.roots])
 
     def check_for_new_roots(self, root_dic):
-        if len(self.root_drawer.roots) < len(root_dic["roots"]):
-            self.root_drawer.generate_rootlist_from_dict(root_dic)
+        self.root_drawer.generate_rootlist_from_dict(root_dic)
 
 
     def update_masses(self, new_root_masses):
-        print(f"root Masses: {new_root_masses}")
         self.roots = new_root_masses
         '''while len(new_root_masses) > len(self.roots):
             self.roots.append((len(self.roots), 0))

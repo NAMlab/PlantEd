@@ -1,4 +1,3 @@
-import numpy as np
 import pygame
 
 from PlantEd import config
@@ -50,7 +49,7 @@ class RootStructureSmall:
             for i, segment_t in enumerate(self.segments_t):
                 points_to_draw.append(
                     ((self.segments[i][0] * self.resolution[0] / n), (self.segments[i][1] * self.resolution[1] / m) + self.start_pos[1]))
-        pygame.draw.lines(screen, color=config.WHITE, closed=False, points=points_to_draw, width=3)
+        pygame.draw.lines(screen, color=config.WHITE, closed=False, points=points_to_draw, width=5)
 
 
 class RootDrawer:
@@ -77,7 +76,6 @@ class RootDrawer:
                     root.draw(screen, mass=client_root_list[i][1])
 
     def generate_rootlist_from_dict(self, dic):
-        self.roots = []
         for root_list_server in dic["roots"]:
             root_list_client = []
             for root_server in root_list_server:
@@ -92,5 +90,4 @@ class RootDrawer:
                         resolution=self.resolution
                     )
                 )
-            grid = np.zeros(self.root_grid_size)
             self.roots.append(root_list_client)

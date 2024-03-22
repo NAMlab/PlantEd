@@ -41,8 +41,10 @@ class Plant:
         self.branches: list[Branch] = [Branch(0, START_STEM_BIOMASS_GRAM, BRANCH_SPOTS_BASE)]
         self.roots: list[Root] = []
         self.root_generator = RootGenerator()
+        self.new_root_ids: list[int] = []
         self.roots.append(Root(0, START_ROOT_BIOMASS_GRAM))
-        self.root_generator.generate_root_list(id=0, start_mass=0)
+        self.root_generator.generate_root_list(id=0, start_mass=START_ROOT_BIOMASS_GRAM/2)
+        self.new_root_ids.append(0)
 
         self.seeds: list[Seed] = []
         self.seed_mass_base = START_SEED_BIOMASS_GRAM
@@ -186,9 +188,10 @@ class Plant:
 
     def create_new_root(self, target):
         id = len(self.roots)
+        self.new_root_ids.append(id)
         direction = target
 
-        self.root_generator.generate_root_list(id=id, direction=direction, start_mass=self.root_mass)
+        self.root_generator.generate_root_list(id=id, direction=direction, start_mass=0)
         self.roots.append(Root(id, 0))
 
     def get_root_grid(self) -> np.array:
@@ -257,6 +260,8 @@ class Plant:
         encoded as a :py:class:`dict`.
 
         """
+        root_ids = self.new_root_ids
+        self.new_root_ids = []
 
         dic = {"leafs_biomass": [(leaf.id, leaf.mass) for leaf in self.leafs],
                "stems_biomass": [(branch.id, branch.mass, branch.spots) for branch in self.branches],
@@ -264,7 +269,7 @@ class Plant:
                "seeds_biomass": [(seed.id, seed.mass) for seed in self.seeds],
                "starch_pool": self.starch_pool,
                "max_starch_pool": self.max_starch_pool,
-               "root": self.root_generator.to_dict(),
+               "root": self.root_generator.to_dict(root_ids=root_ids),
                "water_pool": self.water_pool,
                "max_water_pool": self.max_water_pool,
                "open_spots": self.get_free_spots(),
@@ -342,7 +347,6 @@ class Plant:
             ) from e
 
         value = value * (abs(percentage) / 100)
-        #print(f"Available starch {value} from pool of {self.starch_pool} and a percentage of {percentage/100}")
         return value
 
     def calc_available_water_in_mol_per_gram_and_time(
