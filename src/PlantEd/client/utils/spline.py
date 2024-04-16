@@ -13,8 +13,9 @@ from PlantEd.constants import START_STEM_BIOMASS_GRAM, MAXIMUM_STEM_BIOMASS_GRAM
 
 
 class Cubic_Tree:
-    def __init__(self, branches, camera=None):
+    def __init__(self, branches, screen_size: tuple[int, int], camera=None):
         self.branches: list[Cubic] = branches
+        self.screen_size = screen_size
         self.camera = camera
         self.branches[0].main = True
 
@@ -55,17 +56,17 @@ class Cubic_Tree:
         if mouse_pos[0] - point[0] < 0:
             points = [
                 point,
-                [point[0] - 50, point[1] - 20],
-                [point[0] - 100, point[1] - 100],
+                [point[0] - int(self.screen_size[0]/40), point[1] - int(self.screen_size[1]/40)],
+                [point[0] - int(self.screen_size[0]/20), point[1] - int(self.screen_size[1]/15)],
             ]
         else:
             points = [
                 point,
-                [point[0] + 50, point[1] - 20],
-                [point[0] + 100, point[1] - 100],
+                [point[0] + int(self.screen_size[0] / 40), point[1] - int(self.screen_size[1] / 40)],
+                [point[0] + int(self.screen_size[0] / 20), point[1] - int(self.screen_size[1] / 15)],
             ]
         self.branches[0].free_spots[highlight[2]] = config.BRANCH_SPOT
-        self.branches.append(Cubic(points, id=len(self.branches)))
+        self.branches.append(Cubic(points, id=len(self.branches), screen_size=self.screen_size))
 
     def handle_event(self, e):
         for branch in self.branches:
@@ -114,7 +115,8 @@ class Cubic_Tree:
 
 
 class Cubic:
-    def __init__(self, points, id, color=config.GREEN, res=10, width=15, max_points=8):
+    def __init__(self, points, id, screen_size: tuple[int, int], color=config.GREEN, res=10, width=15, max_points=8):
+        self.screen_size = screen_size
         self.mass = START_STEM_BIOMASS_GRAM
         self.maximum_mass = MAXIMUM_STEM_BIOMASS_GRAM
         self.size = 0
@@ -162,8 +164,8 @@ class Cubic:
         self.drag = False
         if not point:
             point = [
-                self.points[-1][0] + random.randint(0, 80) - 40,
-                self.points[-1][1] - 50,
+                self.points[-1][0] + random.randint(0, int(self.screen_size[1]/20)) - 40,
+                self.points[-1][1] - int(self.screen_size[1]/20),
             ]
         self.points.append(point)
         self.offsets = self.points.copy()
@@ -258,7 +260,7 @@ class Cubic:
         )
 
         dist = math.sqrt(x_dist * x_dist + y_dist * y_dist)
-        if dist > 70:
+        if dist > self.screen_size[1]/15:
             return False
         return True
 
@@ -277,7 +279,7 @@ class Cubic:
     def draw(self, screen, highlighted):
         if self.drag:
             pygame.draw.circle(
-                screen, config.WHITE, self.offsets[self.id], 80, 2
+                screen, config.WHITE, self.offsets[self.id], self.screen_size[1]/15, 2
             )
         if self.growth_percentage < 1:
             points = self.interpolated

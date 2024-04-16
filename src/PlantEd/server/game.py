@@ -157,7 +157,6 @@ class Game:
                   f"Overall Biomass: {self.plant.get_total_plant_mass()}"
                   )'''
 
-            # Todo check percentages, build seed percentage
             # min 0.1 percent for organs to grow
             percentages = {
                 "leaf_percent": max(growth_percentages["leaf_percent"] if self.plant.get_leaf_mass_to_grow() > 0 else 0.1,0.1),
@@ -174,8 +173,8 @@ class Game:
 
         weather_state = self.environment.weather.get_weather_state(int(self.time / 3600))
 
-        nitrate_available_mm = self.environment.nitrate_grid.available_relative_mm(delta_t, self.plant.root_mass, Vmax, Km,
-                                                            self.plant.lsystem.root_grid)
+        # Todo make for new roots
+        nitrate_available_mm = self.environment.nitrate_grid.available_relative_mm(delta_t, self.plant.root_mass, Vmax, Km, self.plant.get_root_grid())
 
         self.log.append_model_row(
             time=self.time,
@@ -183,7 +182,7 @@ class Game:
             sun_intensity=self.environment.get_sun_intensity(),
             humidity=weather_state[1],
             precipitation=weather_state[2],
-            accessible_water=self.environment.water_grid.available_absolute(self.plant.lsystem.root_grid),
+            accessible_water=self.environment.water_grid.available_absolute(self.plant.get_root_grid()),
             accessible_nitrate=nitrate_available_mm,
             leaf_biomass=self.plant.leaf_mass,
             stem_biomass=self.plant.stem_mass,

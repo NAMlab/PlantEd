@@ -31,13 +31,13 @@ class Card:
         self.margin = margin
         self.play_select_sfx = play_select_sfx
 
-        self.name_label = self.asset_handler.BIGGER_FONT.render(
+        self.name_label = self.asset_handler.FONT_36.render(
             "{}".format(name), True, config.WHITE
         )
-        self.score_label = self.asset_handler.BIGGER_FONT.render(
-            "Score: {}".format(score), True, config.WHITE
+        self.score_label = self.asset_handler.FONT_36.render(
+            "Score: {:.5f}".format(score), True, config.WHITE
         )
-        self.keyword_labels = self.asset_handler.BIG_FONT.render(
+        self.keyword_labels = self.asset_handler.FONT_28.render(
             "{}".format(keywords), True, config.WHITE
         )
 

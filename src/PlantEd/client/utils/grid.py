@@ -11,18 +11,20 @@ MAX_TO_DRAW: int = 20
 class Grid:
     def __init__(
             self,
-            pos: tuple[int, int] = (0, 900),
+            pos: tuple[int, int],
+            screen_size: tuple[int, int],
             grid_size: tuple[int, int] = (20, 6),
             max_cell: int = MAX_NITRATE_PER_CELL
     ):
 
         self.pos = pos
+        self.screen_size = screen_size
         self.grid: ndarray = np.zeros(grid_size)
         self.max_cell = max_cell
         self.cells_to_fill = None
 
-        self.offset_grid: ndarray = np.random.randint(0, 90, (2, MAX_TO_DRAW, grid_size[0], grid_size[1]))
-        self.grid_screen = pygame.Surface((1920, 1080), pygame.SRCALPHA)
+        self.offset_grid: ndarray = np.random.randint(0, self.screen_size[1]/11, (2, MAX_TO_DRAW, grid_size[0], grid_size[1]))
+        self.grid_screen = pygame.Surface(self.screen_size, pygame.SRCALPHA)
 
     def fertilize(self, cells_to_fill):
         self.cells_to_fill = cells_to_fill
@@ -55,8 +57,8 @@ class Grid:
                         # color variations
                         color=(90, 40 + int(offset_x / 4), 10 + int(offset_y / 4)),
                         center=(
-                            self.pos[0] + i * 100 + offset_x,
-                            self.pos[1] + j * 100 + offset_y,
+                            self.pos[0] + i * self.screen_size[1]/10 + offset_x,
+                            self.pos[1] + j * self.screen_size[1]/10 + offset_y,
                         ),
                         radius=min(15, int(cell / (self.max_cell / 5) + int(offset_x/10))),
                     )
@@ -70,8 +72,8 @@ class Grid:
                             # color variations
                             color=(100, 40 + int(offset_x / 4), 20 + int(offset_y / 4)),
                             center=(
-                                self.pos[0] + i * 100 + offset_x,
-                                self.pos[1] + j * 100 + offset_y,
+                                self.pos[0] + i * self.screen_size[1]/10 + offset_x,
+                                self.pos[1] + j * self.screen_size[1]/10 + offset_y,
                             ),
                             radius=min(10, int(cell / (self.max_cell / 5) + int(offset_x/20))),
                         )

@@ -79,7 +79,7 @@ class DynamicModel:
             self.set_bounds(STARCH_IN, (0, upper_bound_starch_in))
 
         # nitrate
-        root_grid = self.plant.lsystem.root_grid
+        root_grid = self.plant.get_root_grid()
         nitrate_upper_bound_env_pool = self.environment.nitrate_grid.available_relative_mm(
             time_seconds=delta_t,
             g_root=self.plant.root_mass,
@@ -197,7 +197,7 @@ class DynamicModel:
 
     def update_environment(self, delta_t, water_per_second, nitrate_per_second):
         # -> drain from ground, else take from pool -> try to fill pool
-        root_grid = self.plant.lsystem.root_grid
+        root_grid = self.plant.get_root_grid()
 
         # update water
         water_intake = water_per_second * delta_t  # solution.fluxes[WATER] * delta_t * self.plant.root_biomass
@@ -292,7 +292,7 @@ class DynamicModel:
 
     def update_constraints(self, percentages):
         constraint_starch_percentage = min(max(percentages["starch_percent"], 0), 95)
-        print(constraint_starch_percentage, percentages)
+        #print(constraint_starch_percentage, percentages)
 
         root_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_ROOT)
         stem_reaction: Reaction = self.model.reactions.get_by_id(BIOMASS_STEM)

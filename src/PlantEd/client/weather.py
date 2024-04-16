@@ -7,10 +7,9 @@ from PlantEd.client.gameobjects.water_reservoir import Water_Grid
 from PlantEd.client.utils.gametime import GameTime
 from PlantEd.client.utils.animation import Animation
 from PlantEd import config
+from PlantEd.config import SUN_POS_SPLINE_RES
 from PlantEd.data.assets import AssetHandler
 from PlantEd.client.utils.spline import Beziere
-
-SUN_POS_SPLINE_RES: int = 10000
 
 
 class Environment:
@@ -22,16 +21,22 @@ class Environment:
     """
     def __init__(
         self,
+        screen_size: tuple[int, int],
         plant: Plant,
         water_grid: Water_Grid,
     ):
+        self.screen_width = screen_size[0]
+        self.screen_height = screen_size[1]
         self.plant = plant
         self.gametime = GameTime.instance()
         self.asset_handler = AssetHandler.instance()
         self.water_grid = water_grid
-        self.s = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        self.s = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
         self.sun_pos_spline: list[tuple[float, float]] = Beziere(
-            [(-100, 800), (960, -200), (2020, 800)], res=SUN_POS_SPLINE_RES
+            list_of_points=[(-1*self.screen_width/10, self.screen_height-self.screen_height/5),
+                            (self.screen_width/2, -1*self.screen_height/5),
+                            (self.screen_width + self.screen_width/10, self.screen_height - self.screen_height/5)],
+            res=SUN_POS_SPLINE_RES
         ).points_to_draw
 
         self.sunpos: tuple[float, float] = (0, 0)
@@ -40,12 +45,13 @@ class Environment:
         self.rain_animation = Animation(
             images=[
                 self.asset_handler.img(
-                    "gif_rain/frame_{index}_delay-0.05s.png".format(index=i)
+                    path="gif_rain/frame_{index}_delay-0.05s.png".format(index=i),
+                    size=(self.screen_width/2, self.screen_width/2)
                 )
                 for i in range(0, 21)
             ],
             duration=1,
-            pos=(480, 0),
+            pos=(self.screen_width/4, 0),
             running=False
         )
 
@@ -59,6 +65,8 @@ class Environment:
         self.sun: pygame.Surface = self.asset_handler.img("sun/sun.PNG", (256, 256))
         self.cloud: pygame.Surface = self.asset_handler.img("clouds/cloud_0.PNG", (402, 230))
         self.cloud_dark: pygame.Surface = self.asset_handler.img("clouds/cloud_dark_0.PNG", (402, 230))
+
+        self.soil_surface = self.asset_handler.img("soil.PNG", (self.screen_width, self.screen_height/2*3))
 
 
     def update(self, dt):
@@ -178,7 +186,7 @@ class Environment:
         )
 
     def draw_foreground(self, screen):
-        screen.blit(self.asset_handler.img("soil.PNG"), (0, -140))
+        screen.blit(self.soil_surface, (0, -1*self.screen_height/7.7))
         self.rain_animation.draw(screen)
 
     def get_day_time(self) -> (int, float, float):

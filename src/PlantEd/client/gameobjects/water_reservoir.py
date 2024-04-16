@@ -23,11 +23,14 @@ class Water_Grid:
     """
 
     def __init__(
-            self, pos: tuple[int, int] = (0, 900),
+            self,
+            pos: tuple[int, int],
+            screen_size: [int, int],
             grid_size: tuple[int, int] = (20, 6),
             max_water_cell: int = MAX_WATER_PER_CELL
     ):
         self.pos = pos
+        self.screen_size = screen_size
         self.water_grid: ndarray = np.zeros(grid_size)
         self.poured_cells: ndarray = np.zeros(20)
         self.available_water_grid: ndarray = np.zeros(grid_size)
@@ -36,18 +39,14 @@ class Water_Grid:
         self.raining: bool = False
         self.base_waters: list[Base_water] = []
         self.max_water_cell = max_water_cell
-        self.offset_grid: ndarray = np.random.randint(0, 90, (2, MAX_DROPS_TO_DRAW, grid_size[0], grid_size[1]))
-        self.grid_screen = pygame.Surface((1920, 1080), pygame.SRCALPHA)
+
+        self.offset_grid: ndarray = np.random.randint(0, self.screen_size[1] / 11,
+                                                      (2, MAX_DROPS_TO_DRAW, grid_size[0], grid_size[1]))
+        self.grid_screen = pygame.Surface(self.screen_size, pygame.SRCALPHA)
 
     def update(self, dt):
         for base_water in self.base_waters:
             base_water.update(dt)
-
-    def set_root_grid(self, root_grid: ndarray):
-        """
-        Set the root grid to update current root structure
-        """
-        self.root_grid = root_grid
 
     def pour(self, rate: int, dt: float, pos: tuple[int, int]):
         self.pouring = True
@@ -59,9 +58,9 @@ class Water_Grid:
             dt (float): ticks between last call
             pos (tuple[int, int]): position of watering can
         """
-        if not self.water_grid[int(pos[0] / 100), 0] > self.max_water_cell:
-            self.water_grid[int(pos[0] / 100), 0] += rate * dt
-            self.poured_cells[int(pos[0] / 100)] += rate * dt
+        if not self.water_grid[int(pos[0] / (self.screen_size[1] / 10)), 0] > self.max_water_cell:
+            self.water_grid[int(pos[0] / (self.screen_size[1] / 10)), 0] += rate * dt
+            self.poured_cells[int(pos[0] / (self.screen_size[1] / 10))] += rate * dt
 
     def pop_poured_cells(self):
         poured_sum = self.poured_cells.sum()
@@ -70,7 +69,7 @@ class Water_Grid:
             # normalize
             for i in range(len(poured_cells)):
                 if poured_cells[i] > 0:
-                    poured_cells[i] = poured_cells[i]/poured_sum
+                    poured_cells[i] = poured_cells[i] / poured_sum
             poured_cells = {
                 "cells": poured_cells.tolist()
             }
@@ -78,7 +77,6 @@ class Water_Grid:
             return poured_cells
         else:
             return None
-
 
     def add_base_water(self, base_water):
         """
@@ -131,8 +129,8 @@ class Water_Grid:
                         # color variations
                         color=(0, 10 + offset_y, 255 - offset_x),
                         center=(
-                            self.pos[0] + i * 100 + offset_x,
-                            self.pos[1] + j * 100 + offset_y,
+                            self.pos[0] + i * self.screen_size[1] / 10 + offset_x,
+                            self.pos[1] + j * self.screen_size[1] / 10 + offset_y,
                         ),
                         radius=min(10, int(cell / (self.max_water_cell / 5) + 5)),
                     )
@@ -145,8 +143,8 @@ class Water_Grid:
                             screen,
                             (10, 10 + offset_y, 255 - offset_x),
                             (
-                                self.pos[0] + i * 100 + offset_x,
-                                self.pos[1] + j * 100 + offset_y,
+                                self.pos[0] + i * self.screen_size[1] / 10 + offset_x,
+                                self.pos[1] + j * self.screen_size[1] / 10 + offset_y,
                             ),
                             5,
                         )

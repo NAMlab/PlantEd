@@ -4,10 +4,11 @@ assumptions and initialization values that are not calculated dynamically.
 """
 from typing import Final
 
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
-PLANT_POS = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - SCREEN_HEIGHT / 5)
 MAX_DAYS = 25
+ROOT_GRID_SIZE = (20, 6)
+
+MAX_TIME_RESPONSE = 2
+BUFFER_TIMER = 2
 
 ###############################################################################
 # Starch
@@ -94,7 +95,7 @@ START_LEAF_BIOMASS_GRAM = 0.01
 START_STEM_BIOMASS_GRAM = 0.02
 START_ROOT_BIOMASS_GRAM = 0.02
 START_SEED_BIOMASS_GRAM = 0.01
-START_SUM_BIOMASS_GRAM = 0.035
+START_SUM_BIOMASS_GRAM = 0.02
 
 
 MAXIMUM_LEAF_BIOMASS_GRAM = START_LEAF_BIOMASS_GRAM * 20

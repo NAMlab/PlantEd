@@ -13,6 +13,7 @@ import numpy as np
 from PlantEd import config
 from PlantEd import constants
 from PlantEd.client.camera import Camera
+from PlantEd.client.gameobjects.root_drawer import RootDrawer
 from PlantEd.constants import START_SUM_BIOMASS_GRAM
 from PlantEd.data.assets import AssetHandler
 from PlantEd.data.sound_control import SoundControl
@@ -36,6 +37,8 @@ class Plant:
     @staticmethod
     def from_dict(plant_dict, camera=None):
         asset_handler = AssetHandler.instance()
+        options = config.load_options()
+        screen_size = options["aspect_ratio"]
         pivot_pos = [
             (286, 113),
             (76, 171),
@@ -54,6 +57,7 @@ class Plant:
         ]
         sound_control = SoundControl()
         plant = Plant(
+            screen_size=screen_size,
             pos=plant_dict["pos"],
             water_grid_shape=plant_dict["water_grid_shape"],
             water_grid_pos=plant_dict["water_grid_pos"],
@@ -69,13 +73,16 @@ class Plant:
         branches: list[Cubic] = []
         branches_dict_list = plant_dict["stem"]["curve"]["branches"]
         for branch in branches_dict_list:
-            branches.append(Cubic(branch["branch"], 0))
+            branches.append(Cubic(branch["branch"], 0, screen_size=screen_size))
         plant.organs[1].mass = plant_dict["stem"]["mass"]
-        plant.organs[1].curve = Cubic_Tree(branches=branches)
+        plant.organs[1].curve = Cubic_Tree(branches=branches, screen_size=screen_size)
 
-        plant.organs[2].mass = plant_dict["root"]["mass"]
-        if plant_dict["root"]["ls"] is not None:
-            plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])
+        roots = plant_dict["root"].items()
+        root_mass = sum(root[1] for root in roots)
+        plant.organs[2].roots = roots
+        # todo make root_drawer to and from dict to also draw roots for the endscreen
+        '''if plant_dict["root"]["ls"] is not None:
+            plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])'''
         plant.organs[3].mass = plant_dict["flower"]["mass"]
         plant.organs[3].flowers = plant_dict["flower"]["flowers"]
         for flower in plant.organs[3].flowers:
@@ -84,6 +91,7 @@ class Plant:
 
     def __init__(
             self,
+            screen_size: tuple[int, int],
             pos: tuple[float, float],
             water_grid_shape: tuple[int, int],
             water_grid_pos: tuple[float, float],
@@ -91,6 +99,7 @@ class Plant:
             sound_control: SoundControl = None,
             camera: Camera = None
     ):
+        self.screen_size = screen_size
         self.x: float = pos[0]
         self.y: float = pos[1]
         self.asset_handler = AssetHandler.instance()
@@ -104,7 +113,7 @@ class Plant:
         self.danger_mode: bool = False
 
         pivot_pos = [
-            (286, 113),
+            (286, 103),
             (76, 171),
             (254, 78),
             (19, 195),
@@ -127,8 +136,8 @@ class Plant:
             organ_type=self.LEAF,
             callback=self.set_target_organ_leaf,
             images=leaves,
-            pivot_positions = pivot_pos,
-            hover_leaf = self.asset_handler.img("leaf_small.PNG", (128, 128)),
+            pivot_positions=pivot_pos,
+            hover_leaf=self.asset_handler.img("leaf_small.PNG", (128, 128)),
             mass=constants.START_LEAF_BIOMASS_GRAM,
             active=False,
             camera=self.camera,
@@ -153,6 +162,7 @@ class Plant:
             name="Stem",
             organ_type=self.STEM,
             callback=self.set_target_organ_stem,
+            screen_size=self.screen_size,
             mass=constants.START_STEM_BIOMASS_GRAM,
             leaf=organ_leaf,
             flower=organ_flower,
@@ -162,14 +172,13 @@ class Plant:
         )
         organ_root = Root(
             x=self.x,
-            y=self.y,
+            y=self.y+50,
+            screen_size=self.screen_size,
             name="Roots",
             organ_type=self.ROOTS,
             callback=self.set_target_organ_root,
             mass=constants.START_ROOT_BIOMASS_GRAM,
             active=True,
-            water_grid_shape=water_grid_shape,
-            water_grid_pos=water_grid_pos,
             camera=self.camera,
             play_reward=self.sound_control.play_reward_sfx,
         )
@@ -211,13 +220,6 @@ class Plant:
 
     def get_stomata_open(self) -> bool:
         return self.organs[0].stomata_open
-
-    def update_organ_masses(self, organ_masses):
-        self.organs[0].update_masses(organ_masses["leafs"])
-        self.organs[1].update_masses(organ_masses["stem_mass"])
-        self.organs[2].update_mass(organ_masses["root_mass"])
-        self.organs[3].update_masses(organ_masses["seed_mass"])
-        # self.organ_starch.starch_intake = growth_rates.starch_intake * growth_boost
 
     def get_biomass(self):
         biomass = 0
@@ -282,6 +284,7 @@ class Plant:
 
     def draw_seedling(self, screen):
         self.seedling.draw(screen, self.get_biomass())
+
 
 class Seedling:
     def __init__(self, x, y, images, max):
@@ -497,7 +500,7 @@ class Leaf(Organ):
         # adjust image sizes
         for leaf in self.leaves:
             relative_mass = leaf["mass"] / leaf["maximum_mass"]
-            if relative_mass*10 > leaf["size"]:
+            if relative_mass * 10 > leaf["size"]:
                 leaf["size"] += 1
                 self.update_leaf_image(leaf)
 
@@ -632,7 +635,7 @@ class Leaf(Organ):
                 self.hover_leaf,
                 (x, y - self.camera.offset_y - self.hover_leaf.get_height() + 20),
             )
-            pygame.draw.circle(screen, config.WHITE, (x,y - self.camera.offset_y), radius=10)
+            pygame.draw.circle(screen, config.WHITE, (x, y - self.camera.offset_y), radius=10)
 
         for leaf in self.leaves:
             # image = self.yellow_leaf(leaf["image"], 128)
@@ -670,6 +673,7 @@ class Root(Organ):
             self,
             x: float,
             y: float,
+            screen_size: tuple[int, int],
             name: string,
             organ_type: int,
             callback: callable,
@@ -677,8 +681,6 @@ class Root(Organ):
             pivot: tuple[float, float] = None,
             mass: float = 0.0,
             active: bool = False,
-            water_grid_shape: tuple[int, int] = None,
-            water_grid_pos: tuple[float, float] = None,
             play_reward: callable = None,
             camera: Camera = None,
 
@@ -697,18 +699,14 @@ class Root(Organ):
             camera=camera,
         )
         self.selected = 0
-        #root_grid: np.array = np.zeros(water_grid_shape)
-        #water_grid_pos: tuple[float, float] = water_grid_pos
-
-        self.ls = None #LSystem = LSystem(root_grid, water_grid_pos)
+        self.screen_size = screen_size
         self.new_roots = []
+        self.roots: list[tuple[int, float]] = []
         self.blocked_growth = False
+        self.root_drawer = RootDrawer(resolution=self.screen_size, start_pos=(self.x, self.y))
 
     def to_dict(self) -> dict:
-        root_dict = {
-            "mass": self.mass,
-            "ls": self.ls.to_dict() if self.ls else None
-        }
+        root_dict = dict(self.roots)
         return root_dict
 
     def check_can_add_root(self):
@@ -731,8 +729,8 @@ class Root(Organ):
             return None
 
     def get_organ_amount(self):
-        if self.ls is not None:
-            return len(self.ls.first_letters)
+        if self.root_drawer is not None:
+            return len(self.root_drawer.roots)
         else:
             return 0
 
@@ -741,35 +739,41 @@ class Root(Organ):
 
     def get_maximum_growable_mass(self):
         return (
-            constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1, self.get_organ_amount())
+                constants.MAXIMUM_ROOT_BIOMASS_GRAM * max(1, self.get_organ_amount())
         )
 
     def get_mass(self):
-        return self.mass
+        return sum([root[1] for root in self.roots])
 
-    def update_mass(self, mass):
-        self.mass = mass
+    def check_for_new_roots(self, root_dic):
+        self.root_drawer.generate_rootlist_from_dict(root_dic)
+
+
+    def update_masses(self, new_root_masses):
+        self.roots = new_root_masses
+        '''while len(new_root_masses) > len(self.roots):
+            self.roots.append((len(self.roots), 0))
+        for i, server_root in new_root_masses:
+            self.roots[i][1] = server_root[1]'''
+
 
     def create_new_root(self, mouse_pos=None, dir=None):
         if self.play_reward is not None:
             self.play_reward()
         if not dir and mouse_pos:
-            dir = (mouse_pos[0] - self.x, mouse_pos[1] - (self.y + 45))
+            dir = (mouse_pos[0] - self.x, mouse_pos[1] - (self.y + 45) - self.camera.offset_y)
         self.new_roots.append(dir)
 
     def get_root_grid(self):
-        return self.ls.root_grid if self.ls else None
+        # Todo make root_generator not ls
+        pass
+        #return self.ls.root_grid if self.ls else None
 
     def handle_event(self, event):
         pass
 
     def draw(self, screen):
-        if self.ls is not None:
-            if self.target:
-                # pygame.draw.line(screen, config.WHITE, (self.x + 1, self.y + 30), (self.x, self.y + 45), 8)
-                self.ls.draw_highlighted(screen)
-            else:
-                self.ls.draw(screen)
+        self.root_drawer.draw(screen, self.roots)
 
 
 class Stem(Organ):
@@ -780,6 +784,7 @@ class Stem(Organ):
             name: string,
             organ_type: int,
             callback: callable,
+            screen_size: tuple[int, int],
             leaf_cost: Union[callable, int] = None,
             branch_cost: Union[callable, int] = None,
             flower_cost: Union[callable, int] = None,
@@ -791,8 +796,9 @@ class Stem(Organ):
             mass: float = 0.0,
             active: bool = False,
             play_reward: callable = None,
-            camera: Camera = None,
+            camera: Camera = None
     ):
+        self.screen_size = screen_size
         self.leaf = leaf
         self.flower = flower
         self.leaf_cost = leaf_cost
@@ -803,8 +809,17 @@ class Stem(Organ):
         self.leaf_cost = leaf_cost
         self.width: float = 15
         self.highlight: Optional[Tuple[list[int], int, int]] = None
+
         self.curve = Cubic_Tree(
-            [Cubic(points=[[955, 900], [960, 820], [940, 750]], id=0)], camera
+            [Cubic(
+                points=[[self.screen_size[0] / 2 - 5, self.screen_size[1] / 1.2],
+                        [self.screen_size[0] / 2 + 10, self.screen_size[1] / 1.2 - 80],
+                        [self.screen_size[0] / 2 - 15, self.screen_size[1] / 1.2 - 150]
+                        ],
+                id=0,
+                screen_size=self.screen_size)],
+            screen_size=self.screen_size,
+            camera=camera
         )
         self.timer: float = 0
         self.floating_shop: FloatingShop = None
@@ -1012,7 +1027,7 @@ class Stem(Organ):
                 (int(self.highlight[0][0]), int(self.highlight[0][1])),
                 10,
             )
-        pygame.draw.circle(screen, config.GREEN, (self.x - 5, self.y + 40), 10)
+        pygame.draw.circle(screen, config.GREEN, (self.x - 5, self.y + 30), 10)
 
     def get_rect(self):
         return self.curve.get_rects()
@@ -1304,7 +1319,7 @@ class Flower(Organ):
                     2,
                     3,
                 )
-                percentage_label = self.asset_handler.SMALL_FONT.render(
+                percentage_label = self.asset_handler.FONT_16.render(
                     "{:.3f}".format(flower["mass"]), True, config.BLACK
                 )
                 screen.blit(

@@ -5,7 +5,6 @@ import pygame
 from pygame.surface import Surface
 
 from PlantEd.client.utils.gametime import Singleton
-from PlantEd.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 # assets is supposed to allow access to images, sounds
 # assets also handles options like volume, lists of songs to play or
@@ -29,12 +28,12 @@ class AssetHandler:
         ###############################################################################
         # FONTS
         ###############################################################################
-        self.SMALL_FONT = pygame.font.SysFont("timesnewroman", 16)
-        self.MEDIUM = pygame.font.SysFont("timesnewroman", 20)
-        self.FONT = pygame.font.SysFont("timesnewroman", 24)
-        self.TITLE_FONT = pygame.font.SysFont("timesnewroman", 24)
-        self.BIG_FONT = pygame.font.SysFont("timesnewroman", 28)
-        self.BIGGER_FONT = pygame.font.SysFont("timesnewroman", 36)
+        self.FONT_16 = pygame.font.SysFont("timesnewroman", 16)
+        self.FONT_20 = pygame.font.SysFont("timesnewroman", 20)
+        self.FONT_24 = pygame.font.SysFont("timesnewroman", 24)
+        self.FONT_28 = pygame.font.SysFont("timesnewroman", 28)
+        self.FONT_32 = pygame.font.SysFont("timesnewroman", 32)
+        self.FONT_36 = pygame.font.SysFont("timesnewroman", 36)
         self.MENU_TITLE = pygame.font.SysFont("timesnewroman", 72)
         self.MENU_SUBTITLE = pygame.font.SysFont("timesnewroman", 56)
 
