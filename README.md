@@ -8,3 +8,5 @@ Challenge yourself to optimize growth strategies and achieve the highest scores.
 ![grafik](https://github.com/NAMlab/PlantEd/assets/20724556/3555080f-9d2e-4953-81bb-710e50dd27a4)
 
 ![grafik](https://github.com/NAMlab/PlantEd/assets/20724556/42235acb-9960-41ba-ba5e-82ce1cd40a83)
+
+[![DOI](https://zenodo.org/badge/388772914.svg)](https://zenodo.org/doi/10.5281/zenodo.10978201)
