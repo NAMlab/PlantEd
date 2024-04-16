@@ -79,7 +79,7 @@ class Plant:
 
         roots = plant_dict["root"].items()
         root_mass = sum(root[1] for root in roots)
-        plant.organs[2].roots = root_mass
+        plant.organs[2].roots = roots
         # todo make root_drawer to and from dict to also draw roots for the endscreen
         '''if plant_dict["root"]["ls"] is not None:
             plant.organs[2].ls = DictToRoot().load_root_system(plant_dict["root"]["ls"])'''
@@ -761,7 +761,7 @@ class Root(Organ):
         if self.play_reward is not None:
             self.play_reward()
         if not dir and mouse_pos:
-            dir = (mouse_pos[0] - self.x, mouse_pos[1] - (self.y + 45))
+            dir = (mouse_pos[0] - self.x, mouse_pos[1] - (self.y + 45) - self.camera.offset_y)
         self.new_roots.append(dir)
 
     def get_root_grid(self):

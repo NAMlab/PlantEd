@@ -24,7 +24,7 @@ class RootGenerator:
                 "length": 0.2,
                 "gravity_factor": 0,
                 "n_branches": 6,
-                "tries": 3,
+                "tries": 9,
                 "mass_factor": 0.7,
                 "n_segments": 6,
                 "stop_upward": True

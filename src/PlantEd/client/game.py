@@ -18,7 +18,7 @@ from PlantEd.client.camera import Camera
 from PlantEd.client.utils.icon_handler import IconHandler
 from PlantEd.client.utils.scores_handler import ScoreList, PlayerScore
 from PlantEd.constants import MAX_WATER_PER_CELL, ROOT_COST, BRANCH_COST, \
-    FLOWER_COST, LEAF_COST
+    FLOWER_COST, LEAF_COST, BUFFER_TIMER, MAX_TIME_RESPONSE
 from PlantEd.data.assets import AssetHandler
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.gameobjects.bee import Hive
@@ -31,7 +31,7 @@ from PlantEd.client.gameobjects.shop import (
     Shop_Item,
     FloatingShopItem,
     FloatingShop,
-    )
+)
 from PlantEd.client.gameobjects.snail import SnailSpawner
 from PlantEd.client.gameobjects.tree import Tree
 from PlantEd.client.gameobjects.water_reservoir import Water_Grid, Base_water
@@ -45,9 +45,9 @@ from PlantEd.client.weather import Environment
 from PlantEd.server.lsystem import DictToRoot
 from PlantEd.server.root_generator import RootGenerator
 
-
 GROWTH = 26
 WIN = pygame.USEREVENT + 1
+
 
 class OptionsScene:
     def __init__(self):
@@ -66,49 +66,49 @@ class OptionsScene:
         )
         self.option_label = self.asset_handler.MENU_TITLE.render(
             "Options", True, config.WHITE
-            )
+        )
         self.sound_label = self.asset_handler.MENU_SUBTITLE.render(
             "Sound", True, config.WHITE
-            )
+        )
         self.music_label = self.asset_handler.FONT_36.render(
             "Music", True, config.WHITE
-            )
+        )
         self.sfx_label = self.asset_handler.FONT_36.render(
             "SFX", True, config.WHITE
-            )
+        )
         self.narator_label = self.asset_handler.FONT_36.render(
             "Narator", True, config.WHITE
-            )
+        )
 
         self.label_surface = pygame.Surface(
             (self.screen_width, self.screen_height), pygame.SRCALPHA
-            )
+        )
 
         self.music_slider = Slider(
-            (self.screen_width / 2 - 150 - 25, self.screen_height/2.5, 15, 200),
+            (self.screen_width / 2 - 150 - 25, self.screen_height / 2.5, 15, 200),
             self.asset_handler.FONT_24,
             (50, 20),
             percent=self.options["music_volume"] * 100,
             active=True,
-            )
+        )
         self.narator_slider = Slider(
-            (self.screen_width / 2 - 25, self.screen_height/2.5, 15, 200),
+            (self.screen_width / 2 - 25, self.screen_height / 2.5, 15, 200),
             self.asset_handler.FONT_24,
             (50, 20),
             percent=self.options["narator_volume"] * 100,
             active=True,
-            )
+        )
         self.sfx_slider = Slider(
-            (self.screen_width / 2 + 150 - 25, self.screen_height/2.5, 15, 200),
+            (self.screen_width / 2 + 150 - 25, self.screen_height / 2.5, 15, 200),
             self.asset_handler.FONT_24,
             (50, 20),
             percent=self.options["sfx_volume"] * 100,
             active=True,
-            )
+        )
 
         self.back = Button(
             x=self.center_w - 100,
-            y=self.screen_height - self.screen_height/10 + self.margin,
+            y=self.screen_height - self.screen_height / 10 + self.margin,
             w=200,
             h=50,
             callbacks=[self.return_to_menu],
@@ -118,7 +118,7 @@ class OptionsScene:
             text_color=config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-            )
+        )
 
         self.button_sprites = pygame.sprite.Group()
         self.button_sprites.add(self.back)
@@ -134,38 +134,38 @@ class OptionsScene:
         pygame.draw.line(
             self.label_surface,
             config.WHITE,
-            (self.screen_width/20, self.screen_height - self.screen_height/10),
-            (self.screen_width - self.screen_width/20, self.screen_height - self.screen_height/10)
-            )
+            (self.screen_width / 20, self.screen_height - self.screen_height / 10),
+            (self.screen_width - self.screen_width / 20, self.screen_height - self.screen_height / 10)
+        )
 
         self.label_surface.blit(
             self.option_label,
-            (self.screen_width/2 - self.option_label.get_width() / 2, self.screen_height/10),
-            )
+            (self.screen_width / 2 - self.option_label.get_width() / 2, self.screen_height / 10),
+        )
 
         pygame.draw.rect(
             self.label_surface,
             config.WHITE,
-            (self.screen_width / 2 - 300, self.screen_height/3.4, 600, 430),
+            (self.screen_width / 2 - 300, self.screen_height / 3.4, 600, 430),
             border_radius=3,
             width=1)
         self.label_surface.blit(
             self.music_label,
             (self.screen_width / 2 - self.music_label.get_width() / 2 - 150,
-             self.screen_height/3))
+             self.screen_height / 3))
         self.label_surface.blit(
             self.narator_label,
             (self.screen_width / 2 - self.narator_label.get_width() / 2 - 0,
-             self.screen_height/3))
+             self.screen_height / 3))
         self.label_surface.blit(
             self.sfx_label,
             (self.screen_width / 2 - self.sfx_label.get_width() / 2 + 150,
-             self.screen_height/3))
+             self.screen_height / 3))
 
         self.label_surface.blit(
             self.asset_handler.img("plant_growth_pod/plant_growth_10.PNG"),
-            (self.screen_width-400, self.screen_height-600)
-            )
+            (self.screen_width - 400, self.screen_height - 600)
+        )
 
     def set_random_name(self):
         name = config.randomize_name()
@@ -216,11 +216,14 @@ class DefaultGameScene(object):
         self.center_w = self.screen_width / 2
         self.margin = 10
 
-        self.temp_surface = pygame.Surface((self.screen_width, self.screen_height*2), pygame.SRCALPHA)
+        self.frames_waited = 0
+
+        self.temp_surface = pygame.Surface((self.screen_width, self.screen_height * 2), pygame.SRCALPHA)
 
         name = self.options.get("name") if self.options.get("name") is not None else "Player"
         task = asyncio.create_task(self.load_level())
-        self.fps = None
+        self.fps = 0
+        self.soft_stopp_timer = 0
         # self.server_game = Server_Game()
         since_epoch = time.time()
         self.asset_handler = AssetHandler.instance()
@@ -233,7 +236,7 @@ class DefaultGameScene(object):
         self.sound_control.play_start_sfx()
         pygame.mouse.set_visible(True)
 
-        self.camera = Camera(offset_y=0, min_y=0, max_y=-1*self.screen_height/2.7)
+        self.camera = Camera(offset_y=0, min_y=0, max_y=-1 * self.screen_height / 2.7)
         self.gametime = GameTime.instance()
         self.gametime.reset()
         self.seconds_at_last_request = 0
@@ -251,31 +254,31 @@ class DefaultGameScene(object):
             pos=(
                 self.screen_width / 2,
                 self.screen_height - self.screen_height / 5,
-                ),
+            ),
             camera=self.camera,
             water_grid_pos=self.water_grid.pos,
             water_grid_shape=self.water_grid.get_shape(),
             sound_control=self.sound_control
-            )
+        )
 
         self.water_grid.add_base_water(
             Base_water(
                 n_dots=10,
-                base_height=self.screen_height/10,
+                base_height=self.screen_height / 10,
                 width=self.screen_width,
-                y=self.screen_height + self.screen_height/2.5,
+                y=self.screen_height + self.screen_height / 2.5,
                 color=config.DARK_BLUE,
                 line_color=config.LIGHT_BLUE,
-                )
             )
+        )
         self.environment = Environment(
             screen_size=(self.screen_width, self.screen_height),
             plant=self.plant,
             water_grid=self.water_grid,
-            )
+        )
 
         self.narrator = Narrator(
-            pos=(self.margin, self.screen_height - self.screen_height/10),
+            pos=(self.margin, self.screen_height - self.screen_height / 10),
             environment=self.environment,
             plant=self.plant,
             img_size=(70, 70),
@@ -291,60 +294,62 @@ class DefaultGameScene(object):
             camera=self.camera,
             sound_control=self.sound_control,
             quit=self.quit
-            )
-        self.hive = Hive((self.screen_width/1.35, self.screen_height/1.6),
-                         image_size=(90, 90),
-                         screen_size=(self.screen_width, self.screen_height),
-                         amount=10,
-                         plant=self.plant,
-                         camera=self.camera,
-                         spawn_rate=10,
-                         play_hive_clicked=self.sound_control.play_hive_clicked_sfx,
-                         play_bee_clicked=self.sound_control.play_bee_sfx)
+        )
+        self.hive = Hive(
+            (self.screen_width / 1.35, self.screen_height / 1.6),
+            image_size=(90, 90),
+            screen_size=(self.screen_width, self.screen_height),
+            amount=10,
+            plant=self.plant,
+            camera=self.camera,
+            spawn_rate=10,
+            play_hive_clicked=self.sound_control.play_hive_clicked_sfx,
+            play_bee_clicked=self.sound_control.play_bee_sfx
+        )
         self.bugs = []
         for i in range(0, 10):
             self.bugs.append(
                 Bug(
                     pos=(
-                        self.screen_width/10 * random.randint(0, 10),
-                        self.screen_height/1.2 + random.randint(0, 200),
-                        ),
-                    bounding_rect=pygame.Rect(0, self.screen_height/1.2, self.screen_width, self.screen_height/2.5),
+                        self.screen_width / 10 * random.randint(0, 10),
+                        self.screen_height / 1.2 + random.randint(0, 200),
+                    ),
+                    bounding_rect=pygame.Rect(0, self.screen_height / 1.2, self.screen_width, self.screen_height / 2.5),
                     images=[self.asset_handler.img("bug_purple/bug_purple_{}.png".format(i)) for i in range(0, 3)],
                     camera=self.camera,
                     play_clicked=self.sound_control.play_bug_sfx
-                    )
                 )
+            )
 
-        tree_size = (self.screen_width/3, self.screen_width/3)
+        tree_size = (self.screen_width / 3, self.screen_width / 3)
         self.tree = Tree(
-            pos=(self.screen_width-tree_size[0], self.screen_height - tree_size[1] - self.screen_height/6),
+            pos=(self.screen_width - tree_size[0], self.screen_height - tree_size[1] - self.screen_height / 6),
             images=[
                 (self.asset_handler.img("tree/{index}.PNG".format(index=i), tree_size))
                 for i in range(0, 4)
-                ],
+            ],
             environment=self.environment,
-            )
+        )
 
         self.snail_spawner = SnailSpawner(
-            plant_pos=(self.screen_width/2, self.screen_height - self.screen_height / 5),
+            plant_pos=(self.screen_width / 2, self.screen_height - self.screen_height / 5),
             images_left=[self.asset_handler.img("snail/0.png")],
             images_right=[self.asset_handler.img("snail/4.png")],
             skull_image=self.asset_handler.img("skull.png", (64, 64)),
             camera=self.camera,
             callback=self.plant.eat_stem,
             nom_label=self.asset_handler.FONT_24.render("NOM NOM", True, (0, 0, 0)),
-            bounds=pygame.Rect(0, self.screen_height/1.25, self.screen_width, 20),
+            bounds=pygame.Rect(0, self.screen_height / 1.25, self.screen_width, 20),
             max_amount=2,
             speed=1,
             snails=[],
             snail_clicked=self.sound_control.play_snail_sfx
-            )
+        )
 
         shop_size = (200, 410)
         self.shop = Shop(
             screen_size=(self.screen_width, self.screen_height),
-            rect=Rect(self.screen_width - shop_size[0] - self.margin, self.screen_height/7, 200, 410),
+            rect=Rect(self.screen_width - shop_size[0] - self.margin, self.screen_height / 7, 200, 410),
             shop_items=[],
             water_grid=self.water_grid,
             nitrate_grid=self.nitrate_grid,
@@ -353,7 +358,7 @@ class DefaultGameScene(object):
             post_hover_message=self.ui.hover.set_message,
             active=False,
             sound_control=self.sound_control
-            )
+        )
 
         self.shop.shop_items.append(
             Shop_Item(
@@ -367,8 +372,8 @@ class DefaultGameScene(object):
                 play_selected=self.sound_control.play_select_sfx,
                 cost=LEAF_COST,
                 cost_label=self.asset_handler.FONT_24.render(f"{LEAF_COST}", True, config.BLACK)
-                )
             )
+        )
 
         self.shop.shop_items.append(
             Shop_Item(
@@ -382,8 +387,8 @@ class DefaultGameScene(object):
                 play_selected=self.sound_control.play_select_sfx,
                 cost=ROOT_COST,
                 cost_label=self.asset_handler.FONT_24.render(f"{ROOT_COST}", True, config.BLACK)
-                )
             )
+        )
 
         self.shop.shop_items.append(
             Shop_Item(
@@ -397,8 +402,8 @@ class DefaultGameScene(object):
                 play_selected=self.sound_control.play_select_sfx,
                 cost=BRANCH_COST,
                 cost_label=self.asset_handler.FONT_24.render(f"{BRANCH_COST}", True, config.BLACK)
-                )
             )
+        )
 
         self.shop.shop_items.append(
             Shop_Item(
@@ -412,8 +417,8 @@ class DefaultGameScene(object):
                 play_selected=self.sound_control.play_select_sfx,
                 cost=FLOWER_COST,
                 cost_label=self.asset_handler.FONT_24.render(f"{FLOWER_COST}", True, config.BLACK)
-                )
             )
+        )
 
         self.shop.add_shop_item(["watering", "blue_grain", "spraycan"])
         self.shop.spraycan.callbacks.append(self.snail_spawner.spray_snails)
@@ -444,11 +449,10 @@ class DefaultGameScene(object):
                 continue
 
             if e.type == WIN:
-                print("end this game already")
                 self.quit()
 
             self.shop.handle_event(e)
-            #self.floating_shop.handle_event(e)
+            # self.floating_shop.handle_event(e)
             self.plant.handle_event(e)
             self.snail_spawner.handle_event(e)
             for bug in self.bugs:
@@ -469,8 +473,8 @@ class DefaultGameScene(object):
                 "message": {
                     "player_name": player_name,
                     "icon_name": icon_name
-                    }
                 }
+            }
             await websocket.send(json.dumps(game_state))
             response = await websocket.recv()
 
@@ -486,21 +490,22 @@ class DefaultGameScene(object):
                         "player_name": self.options["name"],
                         "icon_name": self.options["icon_name"],
                         "level_name": "summer_low_nitrate",
-                        }
                     }
+                }
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
-                #print(response)
+                # print(response)
                 request_running = False
 
-    async def send_and_get_response(self):
+    async def send_and_get_response(self, dt):
         global request_running
         if not request_running:
+            self.frames_waited = 0
             request_running = True
             async with websockets.connect("ws://localhost:8765") as websocket:
                 delta_t = self.gametime.get_time() / 1000 - self.seconds_at_last_request
                 self.seconds_at_last_request = self.gametime.get_time() / 1000
-                #print(" --> Sending request...")
+                # print(" --> Sending request...")
                 game_state = {
                     "type": "simulate",
                     "message": {
@@ -512,7 +517,7 @@ class DefaultGameScene(object):
                             "seed_percent": 0,
                             "starch_percent": self.plant.organ_starch.percentage,
                             "stomata": self.plant.organs[0].stomata_open,
-                            },
+                        },
                         "shop_actions": {
                             "buy_watering_can": self.water_grid.pop_poured_cells(),
                             "buy_nitrate": self.nitrate_grid.pop_cells_to_add(),
@@ -520,14 +525,14 @@ class DefaultGameScene(object):
                             "buy_branch": self.plant.organs[1].pop_new_branches(),
                             "buy_root": self.plant.organs[2].pop_new_roots(),
                             "buy_seed": self.plant.organs[3].pop_new_flowers(),
-                            }
                         }
                     }
+                }
                 print("REQUEST SENT:")
                 print(game_state)
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
-                #print(" --> Received response, updating state")
+                # print(" --> Received response, updating state")
                 dic = json.loads(response)
                 if dic is not None:
                     if len(dic) != 0:
@@ -554,27 +559,32 @@ class DefaultGameScene(object):
                         self.plant.max_water_pool = dic["plant"]["max_water_pool"]
 
                         # make simple root strucure from root_dict
-                        #self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
+                        # self.plant.organs[2].ls = DictToRoot().load_root_system(dic["plant"]["root"])
 
-
-
-
-                        #self.ui.used_fluxes = dic["used_fluxes"]
+                        # self.ui.used_fluxes = dic["used_fluxes"]
                         self.narrator.used_fluxes = dic["used_fluxes"]
-
 
                         if not dic["running"]:
                             # end
                             print("end level")
                             pygame.event.post(pygame.event.Event(WIN))
                 request_running = False
+        else:
+            self.frames_waited += dt
+            if self.frames_waited >= MAX_TIME_RESPONSE:
+                self.soft_stopp_timer = BUFFER_TIMER
+                self.gametime.pause()
+            print(f"FRAMES WAITED: {self.frames_waited}")
 
     def update(self, dt):
-        # self.client.update()
-        # fps = 1/dt
-        # self.fps = self.asset_handler.FONT.render(f"{fps}", True, config.WHITE)
+        self.fps = 1 / dt
 
-        task = asyncio.create_task(self.send_and_get_response())
+        if self.soft_stopp_timer > 0:
+            self.soft_stopp_timer -= dt
+            if self.soft_stopp_timer <= 0:
+                self.gametime.unpause()
+        else:
+            task = asyncio.create_task(self.send_and_get_response(dt))
         ticks = self.gametime.get_time()
         day = 1000 * 60 * 60 * 24
         hour = day / 24
@@ -589,7 +599,7 @@ class DefaultGameScene(object):
                     "stem_slider": self.plant.organs[1].percentage,
                     "root_slider": self.plant.organs[2].percentage,
                     "starch_slider": self.plant.organ_starch.percentage,
-                    }
+                }
                 self.ui.switch_preset(preset)
 
             '''(
@@ -611,11 +621,8 @@ class DefaultGameScene(object):
                     "stem_slider": self.plant.organs[1].percentage,
                     "root_slider": self.plant.organs[2].percentage,
                     "starch_slider": self.plant.organ_starch.percentage,
-                    }
+                }
                 self.ui.switch_preset(preset)
-            #self.environment.shadow_map = None
-            #self.plant.organs[0].shadow_map = None
-        self.water_grid.set_root_grid(self.plant.organs[2].get_root_grid())
 
         self.water_grid.update(dt)
         self.snail_spawner.update(dt)
@@ -626,7 +633,6 @@ class DefaultGameScene(object):
         self.camera.update(dt)
         self.environment.update(dt)
         self.shop.update(dt)
-        #self.floating_shop.update(dt)
         self.ui.update(dt)
         self.narrator.update(dt)
         self.plant.update(dt)
@@ -650,17 +656,23 @@ class DefaultGameScene(object):
             bug.draw(self.temp_surface)
 
         self.plant.draw(self.temp_surface)
-        #self.environment.draw_shadows(temp_surface)
+        # self.environment.draw_shadows(temp_surface)
 
         self.water_grid.draw(self.temp_surface)
         self.nitrate_grid.draw(self.temp_surface)
-        #self.floating_shop.draw(temp_surface)
+        # self.floating_shop.draw(temp_surface)
 
         screen.blit(self.temp_surface, (0, self.camera.offset_y))
         self.shop.draw(screen)
         self.ui.draw(screen)
-        if self.fps:
-            screen.blit(self.fps, (1200, 20))
+
+        if self.soft_stopp_timer > 0:
+            pygame.draw.rect(screen, config.RED, (200, 200, 200, 200))
+
+        fps_label = self.asset_handler.FONT_24.render(f"{self.fps:.2f}", True, config.WHITE)
+        frames_waited = self.asset_handler.FONT_24.render(f"{self.frames_waited:.2f}", True, config.WHITE)
+        screen.blit(frames_waited, (self.screen_width / 5 * 3 + 100, self.screen_height / 15))
+        screen.blit(fps_label, (self.screen_width / 5 * 3, self.screen_height / 15))
 
         self.narrator.draw(screen)
 
@@ -683,16 +695,16 @@ class TitleScene(object):
         score = self.options.get("score") if self.options.get("score") is not None else 0
         self.card_0 = Card(
             pos=(self.center_w, self.center_h),
-            image=self.asset_handler.img("menu/gatersleben.JPG", (self.screen_width/3.75, self.screen_width/3.75)),
+            image=self.asset_handler.img("menu/gatersleben.JPG", (self.screen_width / 3.75, self.screen_width / 3.75)),
             name="Gatersleben",
             callback=manager.go_to,
             score=score,
             callback_var=DefaultGameScene,
             keywords="Beginner, Summer",
             play_select_sfx=self.sound_control.play_select_sfx
-            )
+        )
 
-        menu_buttons_anker = (self.options["aspect_ratio"][0]/2, self.options["aspect_ratio"][1])
+        menu_buttons_anker = (self.options["aspect_ratio"][0] / 2, self.options["aspect_ratio"][1])
         button_height = 50
 
         self.credit_button = Button(
@@ -707,7 +719,7 @@ class TitleScene(object):
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-            )
+        )
         self.options_button = Button(
             self.center_w - 200,
             self.screen_height - button_height - 10,
@@ -720,7 +732,7 @@ class TitleScene(object):
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-            )
+        )
         self.scores_button = Button(
             self.center_w + 50,
             self.screen_height - button_height - 10,
@@ -733,7 +745,7 @@ class TitleScene(object):
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-            )
+        )
         self.quit_button = Button(
             self.center_w + 300,
             self.screen_height - button_height - 10,
@@ -746,9 +758,7 @@ class TitleScene(object):
             config.WHITE,
             border_w=2,
             play_confirm=self.sound_control.play_toggle_sfx
-            )
-
-
+        )
 
         self.button_sprites = pygame.sprite.Group()
         self.button_sprites.add(
@@ -757,17 +767,15 @@ class TitleScene(object):
                 self.credit_button,
                 self.options_button,
                 self.scores_button
-                ]
-            )
-
-
+            ]
+        )
 
     def render(self, screen):
         self.temp_surface.fill((0, 0, 0))
         screen.fill(config.BLACK)
         self.temp_surface.blit(
             self.title, (self.center_w - self.title.get_width() / 2, 80)
-            )
+        )
         self.card_0.draw(self.temp_surface)
         # self.card_1.draw(screen)
         # self.card_2.draw(screen)
@@ -781,13 +789,10 @@ class TitleScene(object):
         self.icon_handler.draw(self.temp_surface)
         screen.blit(self.temp_surface, (0, 0))
 
-
-
     def update(self, dt):
         self.card_0.update(dt)
         # self.card_1.update(dt)
         # self.card_2.update(dt)
-
 
     def quit(self):
         pygame.event.post(pygame.event.Event(QUIT))
@@ -817,7 +822,6 @@ class TitleScene(object):
             # self.watering_can.handle_event(e)
 
 
-
 class EndScene(object):
     def __init__(self, path_to_logs):
         self.path_to_logs = path_to_logs
@@ -826,7 +830,7 @@ class EndScene(object):
         self.screen_width = self.options["aspect_ratio"][0]
         self.screen_height = self.options["aspect_ratio"][1]
 
-        self.temp_surface = pygame.Surface((self.screen_width, self.screen_height*2), pygame.SRCALPHA)
+        self.temp_surface = pygame.Surface((self.screen_width, self.screen_height * 2), pygame.SRCALPHA)
 
         self.center_w = self.screen_width / 2
         self.center_h = self.screen_height / 2
@@ -857,13 +861,13 @@ class EndScene(object):
                     size_over_lifetime=True,
                     size=10,
                     once=True,
-                    )
                 )
+            )
         self.explosion: ParticleExplosion = ParticleExplosion(
             systems=systems,
             interval=0.5,
             play_explosion_sound=self.sound_control.play_pop_seed_sfx,
-            )
+        )
         self.explosion.start()
 
         images = Animation.generate_counter(
@@ -871,7 +875,7 @@ class EndScene(object):
             end_number=2000,
             resolution=10,
             font=self.asset_handler.FONT_36
-            )
+        )
 
         explosion_duration = 0.5 * len(self.plant_object.organs[3].flowers)
 
@@ -881,10 +885,10 @@ class EndScene(object):
             pos=(400, 400),
             running=True,
             once=True
-            )
+        )
 
         self.score_header_label = self.asset_handler.MENU_SUBTITLE.render("Score", True, config.WHITE)
-        #self.flower_score_list = []
+        # self.flower_score_list = []
         score_sum = 0
 
         for flower in self.plant_object.organs[3].flowers:
@@ -894,7 +898,7 @@ class EndScene(object):
                                                                  config.WHITE)
         self.title = self.asset_handler.MENU_TITLE.render("Finished", True, config.WHITE)
 
-        #self.plot_label = self.asset_handler.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
+        # self.plot_label = self.asset_handler.MENU_SUBTITLE.render("Simulation Data", True, config.WHITE)
 
         self.button_sprites = pygame.sprite.Group()
 
@@ -935,13 +939,16 @@ class EndScene(object):
 
         distance = 0
         width = 0
-        pygame.draw.line(screen, config.WHITE, (self.screen_width/13, self.screen_height/3.5), (self.screen_width/3, self.screen_height/3.5))
-        screen.blit(self.score_sum_label, (self.screen_width/4 - self.score_sum_label.get_width(), self.screen_height/2.5))
-        screen.blit(self.score_header_label, (self.screen_width/8 - self.score_header_label.get_width() / 2, self.screen_height/5))
-        #pygame.draw.rect(screen, config.WHITE, (100, 360, 500, int((len(self.flower_score_list) + 2) * distance)), 1, 1)
+        pygame.draw.line(screen, config.WHITE, (self.screen_width / 13, self.screen_height / 3.5),
+                         (self.screen_width / 3, self.screen_height / 3.5))
+        screen.blit(self.score_sum_label,
+                    (self.screen_width / 4 - self.score_sum_label.get_width(), self.screen_height / 2.5))
+        screen.blit(self.score_header_label,
+                    (self.screen_width / 8 - self.score_header_label.get_width() / 2, self.screen_height / 5))
+        # pygame.draw.rect(screen, config.WHITE, (100, 360, 500, int((len(self.flower_score_list) + 2) * distance)), 1, 1)
         '''screen.blit(self.image, (
             config.SCREEN_WIDTH - self.image.get_width() - 20, config.SCREEN_HEIGHT / 2 - self.image.get_height() / 2))'''
-        #screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
+        # screen.blit(self.plot_label, (1570 - self.plot_label.get_width() / 2, 270))
         screen.blit(
             self.title,
             (self.center_w - self.title.get_width() / 2, self.screen_height / 10),
@@ -967,9 +974,9 @@ class CustomScene(object):
         self.asset_handler = AssetHandler.instance()
         super(CustomScene, self).__init__()
         self.score_handler = ScoreList(
-            pos=(self.screen_width/20*8, self.screen_height/8),
-            width=self.screen_width/2,
-            height=self.screen_height/3*2,
+            pos=(self.screen_width / 20 * 8, self.screen_height / 8),
+            width=self.screen_width / 2,
+            height=self.screen_height / 3 * 2,
             font=self.asset_handler.FONT_28)
         self.button_sprites = pygame.sprite.Group()
 
@@ -1001,8 +1008,8 @@ class CustomScene(object):
         self.selected_score = None
         self.selected_plot = None
 
-        #self.selected_score: PlayerScore = None
-        #self.selected_score_plot: pygame.Surface = None
+        # self.selected_score: PlayerScore = None
+        # self.selected_score_plot: pygame.Surface = None
         self.plot_dict = {}
 
         self.winners = None
@@ -1019,7 +1026,7 @@ class CustomScene(object):
                 icon_name = winner["icon_name"]
                 date = datetime.utcfromtimestamp(winner["datetime_added"]).strftime(
                     "%d/%m/%Y %H:%M"
-                    )
+                )
                 self.score_handler.add_new_score(id, name, icon_name, score, date)
             self.score_handler.player_scores[0].selected = True
 
@@ -1044,10 +1051,11 @@ class CustomScene(object):
         self.score_handler.draw(self.temp_surface)
         screen.blit(self.temp_surface, (0, 0))
         if self.selected_plot is not None:
-            #plot = pygame.transform.scale(self.selected_plot, (self.screen_width/3, self.screen_width/3))
-            screen.blit(self.selected_plot, (0, self.screen_height/5))
-        pygame.draw.rect(screen, config.BLACK, (0, self.screen_height-self.screen_height/6, self.screen_width, self.screen_height/5+5))
-        pygame.draw.rect(screen, config.BLACK, (0, 0, self.screen_width, self.screen_height/5))
+            # plot = pygame.transform.scale(self.selected_plot, (self.screen_width/3, self.screen_width/3))
+            screen.blit(self.selected_plot, (0, self.screen_height / 5))
+        pygame.draw.rect(screen, config.BLACK, (
+            0, self.screen_height - self.screen_height / 6, self.screen_width, self.screen_height / 5 + 5))
+        pygame.draw.rect(screen, config.BLACK, (0, 0, self.screen_width, self.screen_height / 5))
         screen.blit(
             self.title,
             (self.center_w - self.title.get_width() / 2, self.screen_height / 10),
@@ -1105,7 +1113,7 @@ class Credits:
         self.margin = 10
         self.label_surface = pygame.Surface(
             (self.screen_width, self.screen_height), pygame.SRCALPHA
-            )
+        )
 
         self.init_labels()
         self.button_sprites = pygame.sprite.Group()
@@ -1131,25 +1139,25 @@ class Credits:
         self.label_surface.fill(config.BLACK)
         self.made_by_label = self.asset_handler.MENU_TITLE.render(
             "MADE BY", True, config.WHITE
-            )
+        )
         self.daniel = self.asset_handler.MENU_SUBTITLE.render(
             "Daniel Koch", True, config.WHITE
-            )
+        )
         self.jj = self.asset_handler.MENU_SUBTITLE.render(
             "Jedrzej J. Szymanski", True, config.WHITE
-            )
+        )
         self.nadine = self.asset_handler.MENU_SUBTITLE.render(
             "Nadine Töpfer", True, config.WHITE
-            )
+        )
         self.stefano = self.asset_handler.MENU_SUBTITLE.render(
             "Stefano A. Cruz", True, config.WHITE
-            )
+        )
         self.pouneh = self.asset_handler.MENU_SUBTITLE.render(
             "Pouneh Pouramini", True, config.WHITE
-            )
+        )
         self.jan = self.asset_handler.MENU_SUBTITLE.render(
             "Jan-Niklas Weder", True, config.WHITE
-            )
+        )
 
         pygame.draw.line(
             self.label_surface,
@@ -1160,26 +1168,26 @@ class Credits:
 
         self.label_surface.blit(
             self.made_by_label,
-            (self.center_w - self.made_by_label.get_width() / 2, self.screen_height/10),
-            )
+            (self.center_w - self.made_by_label.get_width() / 2, self.screen_height / 10),
+        )
         self.label_surface.blit(
-            self.daniel, (self.center_w - self.daniel.get_width() / 2, self.screen_height/10 * 3)
-            )
+            self.daniel, (self.center_w - self.daniel.get_width() / 2, self.screen_height / 10 * 3)
+        )
         self.label_surface.blit(
-            self.jan, (self.center_w - self.jan.get_width() / 2, self.screen_height/10 * 4)
-            )
+            self.jan, (self.center_w - self.jan.get_width() / 2, self.screen_height / 10 * 4)
+        )
         self.label_surface.blit(
-            self.stefano, (self.center_w - self.stefano.get_width() / 2, self.screen_height/10 * 5)
-            )
+            self.stefano, (self.center_w - self.stefano.get_width() / 2, self.screen_height / 10 * 5)
+        )
         self.label_surface.blit(
-            self.pouneh, (self.center_w - self.pouneh.get_width() / 2, self.screen_height/10 * 6)
-            )
+            self.pouneh, (self.center_w - self.pouneh.get_width() / 2, self.screen_height / 10 * 6)
+        )
         self.label_surface.blit(
-            self.nadine, (self.center_w - self.nadine.get_width() / 2, self.screen_height/10 * 7)
-            )
+            self.nadine, (self.center_w - self.nadine.get_width() / 2, self.screen_height / 10 * 7)
+        )
         self.label_surface.blit(
-            self.jj, (self.center_w - self.jj.get_width() / 2, self.screen_height/10 * 8)
-            )
+            self.jj, (self.center_w - self.jj.get_width() / 2, self.screen_height / 10 * 8)
+        )
 
     def update(self, dt):
         pass
@@ -1229,10 +1237,9 @@ async def main():
     options = config.load_options()
     options["aspect_ratio"] = (display_info.current_w, display_info.current_h)
 
-
     screen = pygame.display.set_mode(
         options["aspect_ratio"], pygame.DOUBLEBUF, 16
-        )
+    )
     config.write_options(options)
     timer = pygame.time.Clock()
     running = True
@@ -1243,9 +1250,6 @@ async def main():
         # dt = timer.tick(60) / 1000.0
         dt = timer.tick(30) / 1000.0
 
-        # fps = str(int(timer.get_fps()))
-        # fps_text = AssetHandler.instance().FONT.render(fps, False, (255, 255, 255))
-
         if pygame.event.get(QUIT):
             running = False
             break
@@ -1254,7 +1258,6 @@ async def main():
         manager.scene.handle_events(pygame.event.get())
         manager.scene.update(dt)
         manager.scene.render(screen)
-        # screen.blit(fps_text, (true_res[0]-500, 20))
         pygame.display.update()
         await asyncio.sleep(0)
 
