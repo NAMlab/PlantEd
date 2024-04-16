@@ -89,7 +89,8 @@ class InfoBoxManager:
         self.show_button.handle_event(e)
 
     def draw(self, screen):
-        self.show_button.draw(screen)
+        pass
+        #self.show_button.draw(screen)
         if self.visible:
             if len(self.boxes) > 0:
                 self.boxes[self.active_box].draw(screen)

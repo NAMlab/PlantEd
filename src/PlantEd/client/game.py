@@ -128,6 +128,11 @@ class OptionsScene:
         config.write_options(self.get_options())
         self.manager.go_to(TitleScene(self.manager))
 
+    def set_full_screen(self, fullscreen: bool):
+        options = config.load_options()
+        options["fullscreen"] = fullscreen
+        config.write_options(options)
+
     def init_labels(self):
         center_w, center_h = config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2
 
@@ -447,10 +452,10 @@ class DefaultGameScene(object):
             self.ui.handle_event(e)
             if self.ui.pause or self.ui.infobox_manager.visible:
                 continue
-
             if e.type == WIN:
                 self.quit()
-
+            if e.type == pygame.QUIT:
+                self.quit()
             self.shop.handle_event(e)
             # self.floating_shop.handle_event(e)
             self.plant.handle_event(e)
@@ -574,7 +579,6 @@ class DefaultGameScene(object):
             if self.frames_waited >= MAX_TIME_RESPONSE:
                 self.soft_stopp_timer = BUFFER_TIMER
                 self.gametime.pause()
-            print(f"FRAMES WAITED: {self.frames_waited}")
 
     def update(self, dt):
         self.fps = 1 / dt
@@ -666,13 +670,13 @@ class DefaultGameScene(object):
         self.shop.draw(screen)
         self.ui.draw(screen)
 
-        if self.soft_stopp_timer > 0:
-            pygame.draw.rect(screen, config.RED, (200, 200, 200, 200))
+        #if self.soft_stopp_timer > 0:
+        #    pygame.draw.rect(screen, config.RED, (200, 200, 200, 200))
 
-        fps_label = self.asset_handler.FONT_24.render(f"{self.fps:.2f}", True, config.WHITE)
-        frames_waited = self.asset_handler.FONT_24.render(f"{self.frames_waited:.2f}", True, config.WHITE)
-        screen.blit(frames_waited, (self.screen_width / 5 * 3 + 100, self.screen_height / 15))
-        screen.blit(fps_label, (self.screen_width / 5 * 3, self.screen_height / 15))
+        #fps_label = self.asset_handler.FONT_24.render(f"{self.fps:.2f}", True, config.WHITE)
+        #frames_waited = self.asset_handler.FONT_24.render(f"{self.frames_waited:.2f}", True, config.WHITE)
+        #screen.blit(frames_waited, (self.screen_width / 5 * 3 + 100, self.screen_height / 15))
+        #screen.blit(fps_label, (self.screen_width / 5 * 3, self.screen_height / 15))
 
         self.narrator.draw(screen)
 
@@ -1207,14 +1211,41 @@ class Credits:
 
 class SceneMananger(object):
     def __init__(self):
+        display_info = pygame.display.Info()
+        options = config.load_options()
+        options["aspect_ratio"] = (display_info.current_w, display_info.current_h)
+        self.screen = pygame.display.set_mode(
+            options["aspect_ratio"], pygame.RESIZABLE | pygame.DOUBLEBUF, 16
+            )
+        display_info = pygame.display.Info()
+        options["aspect_ratio"] = (display_info.current_w, display_info.current_h)
+        self.screen = pygame.display.set_mode(
+            options["aspect_ratio"], pygame.RESIZABLE | pygame.DOUBLEBUF, 16
+            )
+        config.write_options(options)
         self.go_to(TitleScene(self))
+
+    def on_resize(self):
+        display_info = pygame.display.Info()
+        options = config.load_options()
+        options["aspect_ratio"] = (display_info.current_w, display_info.current_h)
+
+        self.screen = pygame.display.set_mode(
+            options["aspect_ratio"], pygame.RESIZABLE | pygame.DOUBLEBUF, 16
+            )
+
+        config.write_options(options)
+        #self.go_to(TitleScene(self))
+
+    def handle_events(self, events):
+        self.scene.handle_events(events)
 
     def go_to(self, scene):
         self.scene = scene
         self.scene.manager = self
 
-    def render(self, screen):
-        self.scene.render(screen)
+    def render(self):
+        self.scene.render(self.screen)
         # screen.blit(screen_high,(0,-100))
         # self.camera.render(screen_high, screen)
 
@@ -1233,14 +1264,7 @@ async def main():
     pygame.init()
     # screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 
-    display_info = pygame.display.Info()
-    options = config.load_options()
-    options["aspect_ratio"] = (display_info.current_w, display_info.current_h)
 
-    screen = pygame.display.set_mode(
-        options["aspect_ratio"], pygame.DOUBLEBUF, 16
-    )
-    config.write_options(options)
     timer = pygame.time.Clock()
     running = True
     # camera = Camera()
@@ -1255,9 +1279,9 @@ async def main():
             break
 
         # manager handles the current scene
-        manager.scene.handle_events(pygame.event.get())
+        manager.handle_events(pygame.event.get())
         manager.scene.update(dt)
-        manager.scene.render(screen)
+        manager.render()
         pygame.display.update()
         await asyncio.sleep(0)
 
