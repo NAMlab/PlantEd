@@ -20,25 +20,30 @@ from PlantEd.server import server
 Biomass = collections.namedtuple("Biomass", "leaf stem root seed")
 
 # Action Space
-Action = Enum('Action', [
-    'GROW_LEAVES',
-    'GROW_STEM',
-    'GROW_ROOTS',
-    'PRODUCE_STARCH',
-    'OPEN_STOMATA',
-    'CLOSE_STOMATA',
-    'BUY_LEAF',
-    'BUY_STEM',
-    'BUY_ROOT',
-    'BUY_SEED'
-], start=0)  # start at 0 because the gym action space starts at 0
+Action = Enum(
+    "Action",
+    [
+        "GROW_LEAVES",
+        "GROW_STEM",
+        "GROW_ROOTS",
+        "PRODUCE_STARCH",
+        "OPEN_STOMATA",
+        "CLOSE_STOMATA",
+        "BUY_LEAF",
+        "BUY_STEM",
+        "BUY_ROOT",
+        "BUY_SEED",
+    ],
+    start=0,
+)  # start at 0 because the gym action space starts at 0
 
 
 # @TODO add these next:
 # 10 - watering can
 # 11 - add fertilizer
 
-class PlantEdEnv():
+
+class PlantEdEnv:
     metadata = {"render_modes": ["ansi"], "render_fps": 30}
 
     def __init__(self, instance_name="PlantEd_instance", port=8765):
@@ -53,9 +58,9 @@ class PlantEdEnv():
         self.close()
 
     def close(self):
-        if (self.csv_file):
+        if self.csv_file:
             self.csv_file.close()
-        if (self.server_process):
+        if self.server_process:
             self.server_process.terminate()
             print("Terminated server process, waiting 5 sec")
             time.sleep(5)
@@ -89,7 +94,7 @@ class PlantEdEnv():
                 "message": {
                     "player_name": "Planted-AI",
                     "level_name": "LEVEL_NAME",
-                }
+                },
             }
             await websocket.send(json.dumps(message))
             response = await websocket.recv()
@@ -99,38 +104,63 @@ class PlantEdEnv():
         pass
 
     def start_server(self):
-        sys.stdout = open("server.log", 'w')
-        sys.stderr = open("server.err", 'w')
+        sys.stdout = open("server.log", "w")
+        sys.stderr = open("server.err", "w")
         server.start(self.port)
 
     def init_csv_logger(self):
-        self.csv_file = open(self.instance_name + '_run' + str(self.game_counter) + '.csv', 'w', newline='')
-        self.csv_writer = csv.writer(self.csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        self.csv_file = open(
+            self.instance_name + "_run" + str(self.game_counter) + ".csv",
+            "w",
+            newline="",
+        )
+        self.csv_writer = csv.writer(
+            self.csv_file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+        )
         self.csv_writer.writerow(
-            ["time", "temperature", "sun_intensity", "humidity", "precipitation", "accessible_water",
-             "accessible_nitrate",
-             "leaf_biomass", "stem_biomass", "root_biomass", "seed_biomass", "starch_pool", "max_starch_pool",
-             "water_pool", "max_water_pool",
-             "leaf_percent", "stem_percent", "root_percent", "seed_percent", "starch_percent", "action",
-             "reward"])
+            [
+                "time",
+                "temperature",
+                "sun_intensity",
+                "humidity",
+                "precipitation",
+                "accessible_water",
+                "accessible_nitrate",
+                "leaf_biomass",
+                "stem_biomass",
+                "root_biomass",
+                "seed_biomass",
+                "starch_pool",
+                "max_starch_pool",
+                "water_pool",
+                "max_water_pool",
+                "leaf_percent",
+                "stem_percent",
+                "root_percent",
+                "seed_percent",
+                "starch_percent",
+                "action",
+                "reward",
+            ]
+        )
 
     def get_biomasses(self, res):
         leaf = sum([x[1] for x in res["plant"]["leafs_biomass"]])
         stem = sum([x[1] for x in res["plant"]["stems_biomass"]])
         root = res["plant"]["roots_biomass"]
         seed = sum([x[1] for x in res["plant"]["seeds_biomass"]])
-        return (Biomass(leaf, stem, root, seed))
+        return Biomass(leaf, stem, root, seed)
 
     def get_n_organs(self, res):
-        return ([
+        return [
             len(res["plant"]["leafs_biomass"]),
             len(res["plant"]["stems_biomass"]),
             len(res["plant"]["root"]["first_letters"]),
             len(res["plant"]["seeds_biomass"]),
-        ])
+        ]
 
     def step(self, action):
-        return (asyncio.run(self._async_step(action)))
+        return asyncio.run(self._async_step(action))
 
     async def _async_step(self, a):
         print("step. ", end="")
@@ -152,8 +182,16 @@ class PlantEdEnv():
                         "stem_percent": 100 if action == Action.GROW_STEM else 0,
                         "root_percent": 100 if action == Action.GROW_ROOTS else 0,
                         "seed_percent": 0,
-                        "starch_percent": 100 if action not in [Action.GROW_LEAVES, Action.GROW_STEM,
-                                                                Action.GROW_ROOTS] else -100,
+                        "starch_percent": (
+                            100
+                            if action
+                            not in [
+                                Action.GROW_LEAVES,
+                                Action.GROW_STEM,
+                                Action.GROW_ROOTS,
+                            ]
+                            else -100
+                        ),
                         # make starch when manipulating stomata or new roots
                         "stomata": self.stomata,
                     },
@@ -164,9 +202,9 @@ class PlantEdEnv():
                         "buy_branch": 1 if action == Action.BUY_STEM else None,
                         "buy_root": None,
                         # (random.gauss(0, 0.4), random.gauss(1, 0.3)) if action == Action.BUY_ROOT else None,
-                        "buy_seed": 1 if action == Action.BUY_SEED else None
-                    }
-                }
+                        "buy_seed": 1 if action == Action.BUY_SEED else None,
+                    },
+                },
             }
             try:
                 await websocket.send(json.dumps(message))
@@ -181,28 +219,45 @@ class PlantEdEnv():
                 biomasses = self.get_biomasses(res)
 
                 res["environment"]["accessible_water"] = (root_grid * water_grid).sum()
-                res["environment"]["accessible_nitrate"] = (root_grid * nitrate_grid).sum()
+                res["environment"]["accessible_nitrate"] = (
+                    root_grid * nitrate_grid
+                ).sum()
 
                 observation = {
                     # Environment
-                    "temperature": np.array([res["environment"]["temperature"]]).astype(np.float32),
-                    "sun_intensity": np.array([res["environment"]["sun_intensity"]]).astype(np.float32),
-                    "humidity": np.array([res["environment"]["humidity"]]).astype(np.float32),
-                    "accessible_water": np.array([res["environment"]["accessible_water"]]).astype(np.float32),
-                    "accessible_nitrate": np.array([res["environment"]["accessible_nitrate"]]).astype(np.float32),
+                    "temperature": np.array([res["environment"]["temperature"]]).astype(
+                        np.float32
+                    ),
+                    "sun_intensity": np.array(
+                        [res["environment"]["sun_intensity"]]
+                    ).astype(np.float32),
+                    "humidity": np.array([res["environment"]["humidity"]]).astype(
+                        np.float32
+                    ),
+                    "accessible_water": np.array(
+                        [res["environment"]["accessible_water"]]
+                    ).astype(np.float32),
+                    "accessible_nitrate": np.array(
+                        [res["environment"]["accessible_nitrate"]]
+                    ).astype(np.float32),
                     "green_thumbs": np.array([res["green_thumbs"]]).astype(np.float32),
-
                     # Plant
-                    "biomasses": np.array([
-                        biomasses.leaf,
-                        biomasses.stem,
-                        biomasses.root,
-                        biomasses.seed,
-                    ]).astype(np.float32),
+                    "biomasses": np.array(
+                        [
+                            biomasses.leaf,
+                            biomasses.stem,
+                            biomasses.root,
+                            biomasses.seed,
+                        ]
+                    ).astype(np.float32),
                     "n_organs": np.array(self.get_n_organs(res)).astype(np.float32),
-                    "starch_pool": np.array([res["plant"]["starch_pool"]]).astype(np.float32),
-                    "max_starch_pool": np.array([res["plant"]["max_starch_pool"]]).astype(np.float32),
-                    "stomata_state": np.array([self.stomata])
+                    "starch_pool": np.array([res["plant"]["starch_pool"]]).astype(
+                        np.float32
+                    ),
+                    "max_starch_pool": np.array(
+                        [res["plant"]["max_starch_pool"]]
+                    ).astype(np.float32),
+                    "stomata_state": np.array([self.stomata]),
                 }
                 self.last_observation = observation
 
@@ -218,40 +273,44 @@ class PlantEdEnv():
             return (observation, reward, terminated, truncated, {})
 
     def calc_reward(self, biomasses):
-        total_biomass = biomasses.leaf + biomasses.stem + biomasses.root + biomasses.seed
-        reward = 0 if self.last_step_biomass == -1 else (
-                                                                    total_biomass - self.last_step_biomass) / self.last_step_biomass
+        total_biomass = (
+            biomasses.leaf + biomasses.stem + biomasses.root + biomasses.seed
+        )
+        reward = (
+            0
+            if self.last_step_biomass == -1
+            else (total_biomass - self.last_step_biomass) / self.last_step_biomass
+        )
         self.last_step_biomass = total_biomass
-        return (reward)
+        return reward
 
     def write_log_row(self, res, game_state, biomasses, action, reward):
-        self.csv_writer.writerow([
-            res["environment"]["time"],
-            res["environment"]["temperature"],
-            res["environment"]["sun_intensity"],
-            res["environment"]["humidity"],
-            res["environment"]["precipitation"],
-            res["environment"]["accessible_water"],
-            res["environment"]["accessible_nitrate"],
-
-            biomasses.leaf,
-            biomasses.stem,
-            biomasses.root,
-            biomasses.seed,
-            res["plant"]["starch_pool"],
-            res["plant"]["max_starch_pool"],
-            res["plant"]["water_pool"],
-            res["plant"]["max_water_pool"],
-
-            game_state["growth_percentages"]["leaf_percent"],
-            game_state["growth_percentages"]["stem_percent"],
-            game_state["growth_percentages"]["root_percent"],
-            game_state["growth_percentages"]["seed_percent"],
-            game_state["growth_percentages"]["starch_percent"],
-            action.name,
-
-            reward
-        ])
+        self.csv_writer.writerow(
+            [
+                res["environment"]["time"],
+                res["environment"]["temperature"],
+                res["environment"]["sun_intensity"],
+                res["environment"]["humidity"],
+                res["environment"]["precipitation"],
+                res["environment"]["accessible_water"],
+                res["environment"]["accessible_nitrate"],
+                biomasses.leaf,
+                biomasses.stem,
+                biomasses.root,
+                biomasses.seed,
+                res["plant"]["starch_pool"],
+                res["plant"]["max_starch_pool"],
+                res["plant"]["water_pool"],
+                res["plant"]["max_water_pool"],
+                game_state["growth_percentages"]["leaf_percent"],
+                game_state["growth_percentages"]["stem_percent"],
+                game_state["growth_percentages"]["root_percent"],
+                game_state["growth_percentages"]["seed_percent"],
+                game_state["growth_percentages"]["starch_percent"],
+                action.name,
+                reward,
+            ]
+        )
 
 
 if __name__ == "__main__":
@@ -259,7 +318,9 @@ if __name__ == "__main__":
     env.reset()
     truncated = False
     while not truncated:
-        observation, reward, terminated, truncated, info = env.step(Action(random.randint(0, 9)))
+        observation, reward, terminated, truncated, info = env.step(
+            Action(random.randint(0, 9))
+        )
         if terminated:
             env.reset()
     env.close()

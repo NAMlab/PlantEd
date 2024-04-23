@@ -11,19 +11,19 @@ RIGHT = 1
 
 class SnailSpawner:
     def __init__(
-            self,
-            plant_pos: tuple[float, float],
-            images_left,
-            images_right,
-            skull_image,
-            camera,
-            callback,
-            nom_label,
-            bounds=pygame.Rect(0, 0, 0, 0),
-            max_amount=0,
-            speed=3,
-            snails=[],
-            snail_clicked=None
+        self,
+        plant_pos: tuple[float, float],
+        images_left,
+        images_right,
+        skull_image,
+        camera,
+        callback,
+        nom_label,
+        bounds=pygame.Rect(0, 0, 0, 0),
+        max_amount=0,
+        speed=3,
+        snails=[],
+        snail_clicked=None,
     ):
         self.plant_pos = plant_pos
         self.bounds = bounds
@@ -42,8 +42,10 @@ class SnailSpawner:
         self.snails.append(
             Snail(
                 plant_pos=self.plant_pos,
-                pos=(random.randint(0, 1) * self.bounds[2] + self.bounds[0],
-                     random.random() * self.bounds[3] + self.bounds[1]),
+                pos=(
+                    random.randint(0, 1) * self.bounds[2] + self.bounds[0],
+                    random.random() * self.bounds[3] + self.bounds[1],
+                ),
                 bounding_rect=self.bounds,
                 images_left=self.images_left,
                 images_right=self.images_right,
@@ -53,7 +55,7 @@ class SnailSpawner:
                 nom_label=self.nom_label,
                 eat_rate=0.0001,
                 speed=self.speed,
-                snail_clicked=self.snail_clicked
+                snail_clicked=self.snail_clicked,
             )
         )
 
@@ -88,19 +90,19 @@ class SnailSpawner:
 
 class Snail:
     def __init__(
-            self,
-            plant_pos: tuple[float, float],
-            pos,
-            bounding_rect,
-            images_left,
-            images_right,
-            skull_image,
-            camera,
-            callback,
-            nom_label,
-            eat_rate=0.00001,
-            speed=1,
-            snail_clicked=None
+        self,
+        plant_pos: tuple[float, float],
+        pos,
+        bounding_rect,
+        images_left,
+        images_right,
+        skull_image,
+        camera,
+        callback,
+        nom_label,
+        eat_rate=0.00001,
+        speed=1,
+        snail_clicked=None,
     ):
         self.plant_pos = plant_pos
         self.state = LEFT
@@ -111,8 +113,12 @@ class Snail:
         self.camera = camera
         self.animation_left = Animation(self.images_left, 0.5)
         self.animation_right = Animation(self.images_right, 0.5)
-        skull_images = Animation.generate_rising_animation(image=skull_image, move_up=-1)
-        self.animation_death = Animation(images=skull_images, duration=1, running=False, once=True)
+        skull_images = Animation.generate_rising_animation(
+            image=skull_image, move_up=-1
+        )
+        self.animation_death = Animation(
+            images=skull_images, duration=1, running=False, once=True
+        )
         self.speed = speed
         self.snail_clicked = snail_clicked
         self.base_speed = speed
@@ -135,7 +141,9 @@ class Snail:
             self.dead = True
             self.death_timer = 0
         if self.target:
-            dist = math.sqrt((self.target[0] - self.pos[0]) * (self.target[0] - self.pos[0]))
+            dist = math.sqrt(
+                (self.target[0] - self.pos[0]) * (self.target[0] - self.pos[0])
+            )
             if dist < 10:
                 self.callback(self.eat_rate, dt)
         elif random.random() > 0.999:
@@ -176,7 +184,9 @@ class Snail:
     def move(self, dt):
         self.check_boundaries()
         if self.target:
-            dist = math.sqrt((self.target[0] - self.pos[0]) * (self.target[0] - self.pos[0]))
+            dist = math.sqrt(
+                (self.target[0] - self.pos[0]) * (self.target[0] - self.pos[0])
+            )
             if dist < 10:
                 return
         self.pos = (
@@ -219,12 +229,21 @@ class Snail:
             return
         self.animation_death.draw(screen)
         if self.target:
-            dist = math.sqrt((self.target[0] - self.pos[0]) * (self.target[0] - self.pos[0]))
+            dist = math.sqrt(
+                (self.target[0] - self.pos[0]) * (self.target[0] - self.pos[0])
+            )
             if dist < 10:
-                pygame.draw.rect(screen, config.WHITE, (
-                    self.pos[0] + 20, self.pos[1] - 40, self.nom_label.get_width() + 20,
-                    self.nom_label.get_height() + 10),
-                                 border_radius=3)
+                pygame.draw.rect(
+                    screen,
+                    config.WHITE,
+                    (
+                        self.pos[0] + 20,
+                        self.pos[1] - 40,
+                        self.nom_label.get_width() + 20,
+                        self.nom_label.get_height() + 10,
+                    ),
+                    border_radius=3,
+                )
                 screen.blit(self.nom_label, (self.pos[0] + 30, self.pos[1] - 35))
         # pygame.draw.rect(screen,config.WHITE,self.get_rect(),2)
         if self.state == LEFT:

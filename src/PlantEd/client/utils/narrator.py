@@ -13,15 +13,15 @@ END_LINE = pygame.USEREVENT + 2
 
 class Voicebox:
     def __init__(
-            self,
-            pos: tuple[int, int],
-            voiceline: Sound,
-            written_lines: Surface,
-            queue_voicebox: callable,
-            condition: callable = None,
-            condition_time: callable = None,
-            condition_parameter_time: int = None
-            ):
+        self,
+        pos: tuple[int, int],
+        voiceline: Sound,
+        written_lines: Surface,
+        queue_voicebox: callable,
+        condition: callable = None,
+        condition_time: callable = None,
+        condition_parameter_time: int = None,
+    ):
         self.pos = pos
         self.voiceline = voiceline
         self.written_lines = written_lines
@@ -47,7 +47,7 @@ class Voicebox:
                 self.hide_timer += dt * 2
             else:
                 self.hide_timer = 1
-        delta_x = self.written_lines.get_width()*0.9 * (1 - self.hide_timer)
+        delta_x = self.written_lines.get_width() * 0.9 * (1 - self.hide_timer)
         self.x = 10 - delta_x
         if not self.played:
             if self.handle_conditions():
@@ -70,18 +70,22 @@ class Voicebox:
             self.hide = True
         if e.type == pygame.MOUSEMOTION:
             if pygame.Rect(
-                    self.x, self.pos[1] - self.written_lines.get_height(),
-                    self.written_lines.get_width(), self.written_lines.get_height()
-                    ).collidepoint(pygame.mouse.get_pos()):
+                self.x,
+                self.pos[1] - self.written_lines.get_height(),
+                self.written_lines.get_width(),
+                self.written_lines.get_height(),
+            ).collidepoint(pygame.mouse.get_pos()):
                 self.hover = True
             else:
                 self.hover = False
 
         if e.type == pygame.MOUSEBUTTONDOWN:
             if pygame.Rect(
-                    self.x, self.pos[1] - self.written_lines.get_height(),
-                    self.written_lines.get_width(), self.written_lines.get_height()
-                    ).collidepoint(pygame.mouse.get_pos()):
+                self.x,
+                self.pos[1] - self.written_lines.get_height(),
+                self.written_lines.get_width(),
+                self.written_lines.get_height(),
+            ).collidepoint(pygame.mouse.get_pos()):
                 self.toggle_hide()
 
     def draw(self, screen):
@@ -89,14 +93,17 @@ class Voicebox:
             pygame.draw.rect(
                 screen,
                 config.WHITE,
-                (self.x, self.pos[1] - self.written_lines.get_height(),
-                 self.written_lines.get_width(), self.written_lines.get_height()),
-                width=3
-                )
+                (
+                    self.x,
+                    self.pos[1] - self.written_lines.get_height(),
+                    self.written_lines.get_width(),
+                    self.written_lines.get_height(),
+                ),
+                width=3,
+            )
         screen.blit(
-            self.written_lines,
-            (self.x, self.pos[1] - self.written_lines.get_height()))
-
+            self.written_lines, (self.x, self.pos[1] - self.written_lines.get_height())
+        )
 
     def toggle_hide(self):
         # 850 to the left
@@ -105,13 +112,13 @@ class Voicebox:
 
 class Narrator:
     def __init__(
-            self,
-            pos: tuple[int, int],
-            environment: Environment,
-            plant: Plant,
-            img_size: tuple[int, int] = (100, 100),
-            width: int = 100,
-            font=None
+        self,
+        pos: tuple[int, int],
+        environment: Environment,
+        plant: Plant,
+        img_size: tuple[int, int] = (100, 100),
+        width: int = 100,
+        font=None,
     ):
         self.pos = pos
         self.img_size = img_size
@@ -160,20 +167,24 @@ class Narrator:
             voiceboxes.append(
                 Voicebox(
                     pos=self.pos,
-                    voiceline=self.asset_handler.sfx(f"attenborough/{index_lines_to_play[i]}.mp3"),
+                    voiceline=self.asset_handler.sfx(
+                        f"attenborough/{index_lines_to_play[i]}.mp3"
+                    ),
                     written_lines=surface_written_lines,
                     queue_voicebox=self.queue_voicebox,
                     condition_time=self.check_date,
-                    condition_parameter_time=talking_times[i]
-                    )
+                    condition_parameter_time=talking_times[i],
                 )
+            )
 
         # make seed box
         surface_written_lines = None
         for lines in all_written_lines:
             if lines["tag"] == "seed":
                 written_lines_seed = lines["lines"]
-                surface_written_lines_seed = self.build_written_lines(written_lines_seed)
+                surface_written_lines_seed = self.build_written_lines(
+                    written_lines_seed
+                )
                 voiceboxes.append(
                     Voicebox(
                         pos=self.pos,
@@ -181,11 +192,13 @@ class Narrator:
                         written_lines=surface_written_lines_seed,
                         queue_voicebox=self.queue_voicebox,
                         condition=self.check_seed_bought,
-                        )
                     )
+                )
             if lines["tag"] == "branch":
                 written_lines_branch = lines["lines"]
-                surface_written_lines_branch = self.build_written_lines(written_lines_branch)
+                surface_written_lines_branch = self.build_written_lines(
+                    written_lines_branch
+                )
                 voiceboxes.append(
                     Voicebox(
                         pos=self.pos,
@@ -193,11 +206,13 @@ class Narrator:
                         written_lines=surface_written_lines_branch,
                         queue_voicebox=self.queue_voicebox,
                         condition=self.check_branch_bought,
-                        )
                     )
+                )
             if lines["tag"] == "leaf":
                 written_lines_leaf = lines["lines"]
-                surface_written_lines_leaf = self.build_written_lines(written_lines_leaf)
+                surface_written_lines_leaf = self.build_written_lines(
+                    written_lines_leaf
+                )
                 voiceboxes.append(
                     Voicebox(
                         pos=self.pos,
@@ -205,11 +220,13 @@ class Narrator:
                         written_lines=surface_written_lines_leaf,
                         queue_voicebox=self.queue_voicebox,
                         condition=self.check_leaf_bought,
-                        )
                     )
+                )
             if lines["tag"] == "root":
                 written_lines_root = lines["lines"]
-                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                surface_written_lines_root = self.build_written_lines(
+                    written_lines_root
+                )
                 voiceboxes.append(
                     Voicebox(
                         pos=self.pos,
@@ -217,12 +234,14 @@ class Narrator:
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
                         condition=self.check_root_bought,
-                        )
                     )
+                )
 
             if lines["tag"] == "water":
                 written_lines_root = lines["lines"]
-                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                surface_written_lines_root = self.build_written_lines(
+                    written_lines_root
+                )
                 voiceboxes.append(
                     Voicebox(
                         pos=self.pos,
@@ -230,12 +249,14 @@ class Narrator:
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
                         condition=self.check_water_pool_empty,
-                        )
                     )
+                )
 
             if lines["tag"] == "nutrient":
                 written_lines_root = lines["lines"]
-                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                surface_written_lines_root = self.build_written_lines(
+                    written_lines_root
+                )
                 voiceboxes.append(
                     Voicebox(
                         pos=self.pos,
@@ -243,12 +264,14 @@ class Narrator:
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
                         condition=self.check_nitrate_intake_zero,
-                        )
                     )
+                )
 
             if lines["tag"] == "warning":
                 written_lines_root = lines["lines"]
-                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                surface_written_lines_root = self.build_written_lines(
+                    written_lines_root
+                )
                 voiceboxes.append(
                     Voicebox(
                         pos=self.pos,
@@ -256,12 +279,14 @@ class Narrator:
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
                         condition=self.check_no_growth,
-                        )
                     )
+                )
 
             if lines["tag"] == "bloom":
                 written_lines_root = lines["lines"]
-                surface_written_lines_root = self.build_written_lines(written_lines_root)
+                surface_written_lines_root = self.build_written_lines(
+                    written_lines_root
+                )
                 voiceboxes.append(
                     Voicebox(
                         pos=self.pos,
@@ -269,8 +294,8 @@ class Narrator:
                         written_lines=surface_written_lines_root,
                         queue_voicebox=self.queue_voicebox,
                         condition=self.check_bloom,
-                        )
                     )
+                )
 
         return voiceboxes
 
@@ -312,7 +337,10 @@ class Narrator:
 
     def check_no_growth(self) -> bool:
         if self.used_fluxes is not None:
-            if self.used_fluxes["starch_in_used"] <= 0 and self.used_fluxes["photon_used"] <= 0:
+            if (
+                self.used_fluxes["starch_in_used"] <= 0
+                and self.used_fluxes["photon_used"] <= 0
+            ):
                 self.low_growth_counter += 1
                 return False
         return False
@@ -389,10 +417,18 @@ class Narrator:
         box_surface: Surface = Surface((rect_width, rect_height), pygame.SRCALPHA)
         box_surface.fill((0, 0, 0, 150))
 
-        box_surface.blit(self.asset_handler.img("professor.PNG", self.img_size), (10, 10))
+        box_surface.blit(
+            self.asset_handler.img("professor.PNG", self.img_size), (10, 10)
+        )
         font_height = self.font.get_height()
         for i, line in enumerate(lines):
-            box_surface.blit(self.font.render(line, True, config.WHITE), (self.img_size[0] + self.img_size[0]/5, self.margin + i * font_height))
+            box_surface.blit(
+                self.font.render(line, True, config.WHITE),
+                (
+                    self.img_size[0] + self.img_size[0] / 5,
+                    self.margin + i * font_height,
+                ),
+            )
 
         return box_surface
 

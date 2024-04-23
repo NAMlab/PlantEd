@@ -20,7 +20,8 @@ from PlantEd.client.utils.button import (
     SliderGroup,
     Arrow_Button,
     ButtonArray,
-    NegativeSlider, Button,
+    NegativeSlider,
+    Button,
 )
 
 """
@@ -38,26 +39,27 @@ Below: 4 Organs, Production
 
 class UI:
     def __init__(
-            self,
-            screen_size: tuple[int, int],
-            plant: Plant,
-            narrator: Narrator,
-            camera: Camera,
-            sound_control: SoundControl,
-            quit=None
+        self,
+        screen_size: tuple[int, int],
+        plant: Plant,
+        narrator: Narrator,
+        camera: Camera,
+        sound_control: SoundControl,
+        quit=None,
     ):
         self.screen_width = screen_size[0]
         self.screen_height = screen_size[1]
-        self.center_w = screen_size[0]/2
-        self.center_h = screen_size[1]/2
+        self.center_w = screen_size[0] / 2
+        self.center_h = screen_size[1] / 2
         self.margin = 10
 
         self.asset_handler = AssetHandler.instance()
         self.name = config.load_options()["name"]
-        self.name_label = self.asset_handler.FONT_24.render(self.name, True, config.BLACK)
+        self.name_label = self.asset_handler.FONT_24.render(
+            self.name, True, config.BLACK
+        )
         self.plant = plant
         self.narrator = narrator
-
 
         self.humidity = 0
         self.temperature = 0
@@ -78,14 +80,22 @@ class UI:
         self.label_root = self.asset_handler.FONT_24.render("Root", True, (0, 0, 0))
         self.label_starch = self.asset_handler.FONT_24.render("Starch", True, (0, 0, 0))
         self.label_water = self.asset_handler.FONT_24.render("Water", True, (0, 0, 0))
-        self.label_producing = self.asset_handler.FONT_24.render("producing", True, config.GREEN_DARK)
+        self.label_producing = self.asset_handler.FONT_24.render(
+            "producing", True, config.GREEN_DARK
+        )
         self.label_producing = pygame.transform.rotate(self.label_producing, 90)
-        self.label_consuming = self.asset_handler.FONT_24.render("consuming", True, config.RED)
+        self.label_consuming = self.asset_handler.FONT_24.render(
+            "consuming", True, config.RED
+        )
         self.label_consuming = pygame.transform.rotate(self.label_consuming, 90)
 
-        self.s = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
+        self.s = pygame.Surface(
+            (self.screen_width, self.screen_height), pygame.SRCALPHA
+        )
 
-        self.infobox_manager = InfoBoxManager(screen_size=(self.screen_width, self.screen_height))
+        self.infobox_manager = InfoBoxManager(
+            screen_size=(self.screen_width, self.screen_height)
+        )
         self.infobox_manager.from_dict(config.load_infoboxes())
         self.sliders = []
         self.button_sprites = pygame.sprite.Group()
@@ -94,10 +104,10 @@ class UI:
         self.animations = []
 
         # layout positions
-        self.production_topleft = (self.screen_width/200, self.screen_height/10)
-        self.plant_details_topleft = (self.screen_width/200, self.screen_height/50)
+        self.production_topleft = (self.screen_width / 200, self.screen_height / 10)
+        self.plant_details_topleft = (self.screen_width / 200, self.screen_height / 50)
 
-        '''self.drain_starch_particle = ParticleSystem(
+        """self.drain_starch_particle = ParticleSystem(
             20,
             spawn_box=Rect(
                 self.production_topleft[0] + 530,
@@ -129,12 +139,12 @@ class UI:
 
         self.particle_systems.append(self.drain_starch_particle)
         #self.particle_systems.append(self.open_stomata_particle_in)
-        self.particle_systems.append(self.open_stomata_particle_out)'''
+        self.particle_systems.append(self.open_stomata_particle_out)"""
 
         self.button_sprites.add(
             Arrow_Button(
                 self.center_w - 100,
-                self.screen_height/11,
+                self.screen_height / 11,
                 200,
                 50,
                 [self.sound_control.play_select_sfx, self.camera.move_up],
@@ -146,8 +156,8 @@ class UI:
         sfx_mute_icon = self.asset_handler.img("sfx.png", (35, 35))
         self.button_sprites.add(
             ToggleButton(
-                self.screen_width/64,
-                self.screen_height - self.screen_height/11,
+                self.screen_width / 64,
+                self.screen_height - self.screen_height / 11,
                 50,
                 50,
                 [self.sound_control.play_toggle_sfx, self.narrator.toggle_mute],
@@ -156,14 +166,14 @@ class UI:
                 border_w=3,
                 border_radius=25,
                 cross=True,
-                cross_size=(10, 10, 40, 40)
+                cross_size=(10, 10, 40, 40),
             )
         )
 
         self.button_sprites.add(
             Arrow_Button(
                 self.center_w - 100,
-                self.screen_height - self.screen_height/11,
+                self.screen_height - self.screen_height / 11,
                 200,
                 50,
                 [self.sound_control.play_select_sfx, self.camera.move_down],
@@ -176,8 +186,8 @@ class UI:
         # init speed control
         speed_options = [
             RadioButton(
-                self.screen_width/16,
-                self.screen_height - self.screen_height/12,
+                self.screen_width / 16,
+                self.screen_height - self.screen_height / 12,
                 32,
                 32,
                 [self.gametime.play],
@@ -186,8 +196,8 @@ class UI:
                 image=self.asset_handler.img("normal_speed.PNG"),
             ),
             RadioButton(
-                self.screen_width/16 + button_margin,
-                self.screen_height - self.screen_height/12,
+                self.screen_width / 16 + button_margin,
+                self.screen_height - self.screen_height / 12,
                 32,
                 32,
                 [self.gametime.faster],
@@ -196,8 +206,8 @@ class UI:
                 image=self.asset_handler.img("fast_speed.PNG"),
             ),
             RadioButton(
-                self.screen_width/16 + button_margin*2,
-                self.screen_height - self.screen_height/12,
+                self.screen_width / 16 + button_margin * 2,
+                self.screen_height - self.screen_height / 12,
                 32,
                 32,
                 [self.gametime.fastest],
@@ -212,7 +222,7 @@ class UI:
         speed_options[0].button_down = True
 
         self.button_array = ButtonArray(
-            (self.screen_width-480, self.margin, 30, 30),
+            (self.screen_width - 480, self.margin, 30, 30),
             12,
             2,
             5,
@@ -221,20 +231,22 @@ class UI:
             start_color=(250, 250, 110),
             end_color=(42, 72, 88),
             border_w=2,
-            select_sound=self.sound_control.play_select_sfx
+            select_sound=self.sound_control.play_select_sfx,
         )
         self.button_array.toggle_all()
 
-        self.button_sprites.add(Button(
-            x=self.screen_width/5.5,
-            y=self.screen_height - self.screen_height/12,
-            w=100,
-            h=32,
-            callbacks=[self.toggle_pause],
-            text="Menu",
-            font=self.asset_handler.FONT_24,
-            border_w=2
-            ))
+        self.button_sprites.add(
+            Button(
+                x=self.screen_width / 5.5,
+                y=self.screen_height - self.screen_height / 12,
+                w=100,
+                h=32,
+                callbacks=[self.toggle_pause],
+                text="Menu",
+                font=self.asset_handler.FONT_24,
+                border_w=2,
+            )
+        )
 
         self.preset_day = {
             "type": "day",
@@ -267,7 +279,9 @@ class UI:
         self.leaf_slider.set_percentage(self.active_preset["leaf_slider"])
         self.stem_slider.set_percentage(self.active_preset["stem_slider"])
         self.root_slider.set_percentage(self.active_preset["root_slider"])
-        self.starch_slider.set_percentage((self.active_preset["starch_slider"]) / 2 + 50)
+        self.starch_slider.set_percentage(
+            (self.active_preset["starch_slider"]) / 2 + 50
+        )
 
     def toggle_pause(self):
         self.pause = not self.pause
@@ -295,7 +309,6 @@ class UI:
 
         self.hover.handle_event(e)
         self.button_array.handle_event(e)
-
 
         for button in self.button_sprites:
             # all button_sprites handle their events
@@ -350,10 +363,9 @@ class UI:
                 (0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT),
                 8,
             )
-        '''if self.plant.danger_mode:
-            screen.blit(self.danger_box, (self.screen_width-self.danger_box, 750))'''
+        """if self.plant.danger_mode:
+            screen.blit(self.danger_box, (self.screen_width-self.danger_box, 750))"""
         self.hover.draw(screen)
-
 
     def set_stomata_automation(self, hours):
         self.stomata_hours = hours
@@ -375,24 +387,24 @@ class UI:
 
     def open_stomata(self):
         self.plant.organs[0].stomata_open = True
-        #self.open_stomata_particle_in.activate()
-        #self.open_stomata_particle_out.activate()
+        # self.open_stomata_particle_in.activate()
+        # self.open_stomata_particle_out.activate()
 
     def close_stomata(self):
         self.plant.organs[0].stomata_open = False
-        #self.open_stomata_particle_in.deactivate()
-        #self.open_stomata_particle_out.deactivate()
+        # self.open_stomata_particle_in.deactivate()
+        # self.open_stomata_particle_out.deactivate()
 
     def draw_ui(self, screen):
         self.s.fill((0, 0, 0, 0))
         self.draw_plant_details(self.s)
         self.draw_clock(self.s)
         self.draw_production(self.s)
-        #self.draw_used_fluxes(self.s)
+        # self.draw_used_fluxes(self.s)
         self.infobox_manager.draw(self.s)
         screen.blit(self.s, (0, 0))
 
-    '''def draw_used_fluxes(self, screen):
+    """def draw_used_fluxes(self, screen):
         x = 1500
         y = 900
         width = 300
@@ -437,7 +449,7 @@ class UI:
         #pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*4, 10 + width, height), border_radius=3)
         pygame.draw.rect(screen, config.YELLOW, (x, y + (height+margin)*4, 10 + width * photon_used, height))
         pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (x, y + (height+margin)*4, 10 + width, height), width=2, border_radius=3)
-        '''
+        """
 
     def draw_plant_details(self, s, factor=100):
         # details
@@ -448,10 +460,12 @@ class UI:
         )
 
         # biomass
-        #biomass_text = self.asset_handler.FONT.render("Mass:", True, (0, 0, 0))
-        #s.blit(biomass_text, dest=(topleft[0] + 10, topleft[1] + 6))
+        # biomass_text = self.asset_handler.FONT.render("Mass:", True, (0, 0, 0))
+        # s.blit(biomass_text, dest=(topleft[0] + 10, topleft[1] + 6))
         biomass = self.asset_handler.FONT_24.render(
-            "{:.2f} x10⁻² gDW".format(self.plant.get_biomass() * factor), True, (0, 0, 0)
+            "{:.2f} x10⁻² gDW".format(self.plant.get_biomass() * factor),
+            True,
+            (0, 0, 0),
         )  # title
         s.blit(
             biomass,
@@ -464,7 +478,7 @@ class UI:
         pygame.draw.circle(s, config.WHITE, (topleft[0] + 20, topleft[1] + 20), 30, 3)
         icon_name = self.options.get("icon_name")
         icon = self.asset_handler.img(f"animal_icons/{icon_name}.PNG", (60, 60))
-        self.s.blit(icon, (topleft[0]-10, topleft[1]-10))
+        self.s.blit(icon, (topleft[0] - 10, topleft[1] - 10))
 
     def get_day_time(self):
         ticks = self.gametime.get_time()
@@ -481,7 +495,9 @@ class UI:
         output_string = "Day {0}/35 {1:02}:{2:02}".format(
             days + 10, int(hours), int(minutes)
         )
-        clock_text = self.asset_handler.FONT_24.render(output_string, True, config.BLACK)
+        clock_text = self.asset_handler.FONT_24.render(
+            output_string, True, config.BLACK
+        )
         pygame.draw.rect(
             s,
             config.WHITE,
@@ -496,7 +512,9 @@ class UI:
         humidity_label = self.asset_handler.FONT_24.render(
             "{:.0f} %".format(self.humidity), True, config.BLACK
         )
-        temperature_label = self.asset_handler.FONT_24.render("{:.0f} °C".format(self.temperature), True, config.BLACK)
+        temperature_label = self.asset_handler.FONT_24.render(
+            "{:.0f} °C".format(self.temperature), True, config.BLACK
+        )
 
         s.blit(
             humidity_label,
@@ -513,9 +531,7 @@ class UI:
         self.music_label = self.asset_handler.FONT_36.render(
             "Music", True, config.WHITE
         )
-        self.sfx_label = self.asset_handler.FONT_36.render(
-            "SFX", True, config.WHITE
-        )
+        self.sfx_label = self.asset_handler.FONT_36.render("SFX", True, config.WHITE)
         self.narator_label = self.asset_handler.FONT_36.render(
             "Narator", True, config.WHITE
         )
@@ -525,17 +541,23 @@ class UI:
         )
         self.pause_button_resume = Button(
             self.center_w - 250,
-            self.screen_height - self.screen_height/4,
+            self.screen_height - self.screen_height / 4,
             200,
             50,
-            [self.sound_control.play_select_sfx, self.apply_options, self.sound_control.reload_options, self.narrator.reload_options, self.resume],
+            [
+                self.sound_control.play_select_sfx,
+                self.apply_options,
+                self.sound_control.reload_options,
+                self.narrator.reload_options,
+                self.resume,
+            ],
             self.asset_handler.FONT_28,
             "RESUME",
-            border_w=2
+            border_w=2,
         )
         self.pause_button_exit = Button(
             self.center_w + 50,
-            self.screen_height - self.screen_height/4,
+            self.screen_height - self.screen_height / 4,
             200,
             50,
             [self.quit],
@@ -565,6 +587,7 @@ class UI:
             percent=self.options["sfx_volume"] * 100,
             active=True,
         )
+
     def set_random_name(self):
         name = config.randomize_name()
         options = config.load_options()
@@ -574,7 +597,9 @@ class UI:
     def apply_options(self):
         config.write_options(self.get_options())
         self.name = config.load_options()["name"]
-        self.name_label = self.asset_handler.FONT_24.render(self.name, True, config.BLACK)
+        self.name_label = self.asset_handler.FONT_24.render(
+            self.name, True, config.BLACK
+        )
         self.options = config.load_options()
 
     def get_options(self):
@@ -598,7 +623,10 @@ class UI:
                 topleft[1] + 40,
                 100,
                 100,
-                [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_leaf],
+                [
+                    self.sound_control.play_select_organs_sfx,
+                    self.plant.set_target_organ_leaf,
+                ],
                 self.asset_handler.FONT_24,
                 image=self.asset_handler.img("leaf_small.PNG", (100, 100)),
             ),
@@ -607,7 +635,10 @@ class UI:
                 topleft[1] + 40,
                 100,
                 100,
-                [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_stem],
+                [
+                    self.sound_control.play_select_organs_sfx,
+                    self.plant.set_target_organ_stem,
+                ],
                 self.asset_handler.FONT_24,
                 image=self.asset_handler.img("stem_small.PNG", (100, 100)),
             ),
@@ -616,7 +647,10 @@ class UI:
                 topleft[1] + 40,
                 100,
                 100,
-                [self.sound_control.play_select_organs_sfx, self.plant.set_target_organ_root],
+                [
+                    self.sound_control.play_select_organs_sfx,
+                    self.plant.set_target_organ_root,
+                ],
                 self.asset_handler.FONT_24,
                 image=self.asset_handler.img("root_deep.PNG", (100, 100)),
             ),
@@ -673,28 +707,41 @@ class UI:
 
         s.blit(
             self.pause_label,
-            (self.screen_width / 2 - self.pause_label.get_width() / 2, self.screen_height / 10),
+            (
+                self.screen_width / 2 - self.pause_label.get_width() / 2,
+                self.screen_height / 10,
+            ),
         )
 
         pygame.draw.rect(
             s,
             config.WHITE,
-            (self.screen_width / 2 - 300, self.screen_height/3.4, 600, 430),
+            (self.screen_width / 2 - 300, self.screen_height / 3.4, 600, 430),
             border_radius=3,
-            width=1)
+            width=1,
+        )
 
         s.blit(
             self.music_label,
-            (self.screen_width / 2 - self.music_label.get_width() / 2 - 150,
-             self.screen_height / 3))
+            (
+                self.screen_width / 2 - self.music_label.get_width() / 2 - 150,
+                self.screen_height / 3,
+            ),
+        )
         s.blit(
             self.narator_label,
-            (self.screen_width / 2 - self.narator_label.get_width() / 2 - 0,
-             self.screen_height / 3))
+            (
+                self.screen_width / 2 - self.narator_label.get_width() / 2 - 0,
+                self.screen_height / 3,
+            ),
+        )
         s.blit(
             self.sfx_label,
-            (self.screen_width / 2 - self.sfx_label.get_width() / 2 + 150,
-             self.screen_height / 3))
+            (
+                self.screen_width / 2 - self.sfx_label.get_width() / 2 + 150,
+                self.screen_height / 3,
+            ),
+        )
 
         self.pause_button_exit.draw(s)
         self.pause_button_resume.draw(s)
@@ -703,15 +750,13 @@ class UI:
         self.music_slider.draw(s)
 
     def draw_organ_detail_temp(
-            self, s, organ: Organ, pos, label, show_amount=True, factor=1
+        self, s, organ: Organ, pos, label, show_amount=True, factor=1
     ):
         topleft = pos
         pygame.draw.rect(
             s, config.WHITE, (topleft[0], topleft[1], 100, 30), border_radius=3
         )
-        s.blit(
-            label, dest=(topleft[0] + 50 - label.get_width() / 2, topleft[1])
-        )
+        s.blit(label, dest=(topleft[0] + 50 - label.get_width() / 2, topleft[1]))
 
         if show_amount:
             pygame.draw.circle(
@@ -747,7 +792,11 @@ class UI:
             border_radius=3,
         )
         maximum_growable_mass = organ.get_maximum_growable_mass()
-        relative_mass = organ.get_mass() / maximum_growable_mass if maximum_growable_mass is not 0 else 1
+        relative_mass = (
+            organ.get_mass() / maximum_growable_mass
+            if maximum_growable_mass is not 0
+            else 1
+        )
         width = min(int(exp_width / 1 * relative_mass), exp_width)
         pygame.draw.rect(
             s,
@@ -771,16 +820,10 @@ class UI:
             ),
         )
 
-
     def draw_production(self, s):
         topleft = self.production_topleft
         # headbox
-        self.draw_organ_detail_temp(
-            s,
-            self.plant.organs[0],
-            topleft,
-            self.label_leaf
-        )
+        self.draw_organ_detail_temp(s, self.plant.organs[0], topleft, self.label_leaf)
         self.draw_organ_detail_temp(
             s,
             self.plant.organs[1],
@@ -799,21 +842,44 @@ class UI:
         growth_blocked = False
         if self.plant.organs[0].blocked_growth:
             growth_blocked = True
-            pygame.draw.rect(s, config.RED, (topleft[0], topleft[1], 100, 370), border_radius=3, width=3)
+            pygame.draw.rect(
+                s,
+                config.RED,
+                (topleft[0], topleft[1], 100, 370),
+                border_radius=3,
+                width=3,
+            )
         if self.plant.organs[1].blocked_growth:
             growth_blocked = True
-            pygame.draw.rect(s, config.RED, (topleft[0]+110, topleft[1], 100, 370), border_radius=3, width=3)
+            pygame.draw.rect(
+                s,
+                config.RED,
+                (topleft[0] + 110, topleft[1], 100, 370),
+                border_radius=3,
+                width=3,
+            )
         if self.plant.organs[2].blocked_growth:
             growth_blocked = True
-            pygame.draw.rect(s, config.RED, (topleft[0]+220, topleft[1], 100, 370), border_radius=3, width=3)
+            pygame.draw.rect(
+                s,
+                config.RED,
+                (topleft[0] + 220, topleft[1], 100, 370),
+                border_radius=3,
+                width=3,
+            )
 
         if growth_blocked:
-            label = self.asset_handler.FONT_24.render("GROWTH BLOCKED: Buy new organs to grow", True,
-                                                         config.BLACK)
+            label = self.asset_handler.FONT_24.render(
+                "GROWTH BLOCKED: Buy new organs to grow", True, config.BLACK
+            )
             width = label.get_width() + 10
             height = label.get_height() + 10
-            pygame.draw.rect(s, config.WHITE_TRANSPARENT, (topleft[0], topleft[1] + 380, width, height),
-                             border_radius=3)
+            pygame.draw.rect(
+                s,
+                config.WHITE_TRANSPARENT,
+                (topleft[0], topleft[1] + 380, width, height),
+                border_radius=3,
+            )
             s.blit(label, (topleft[0] + 5, topleft[1] + 385))
 
         # WATER
@@ -842,11 +908,20 @@ class UI:
         pygame.draw.rect(
             s,
             config.BLUE,
-            (topleft[0], topleft[1] + 40, int(width * self.plant.water_pool/self.plant.max_water_pool), 30),
+            (
+                topleft[0],
+                topleft[1] + 40,
+                int(width * self.plant.water_pool / self.plant.max_water_pool),
+                30,
+            ),
             border_radius=3,
         )  # exp
         text_water_pool = self.asset_handler.FONT_16.render(
-            "{:.1f}/{:.1f} MMol".format(self.plant.water_pool / 1000, self.plant.max_water_pool / 1000), True, (0, 0, 0)
+            "{:.1f}/{:.1f} MMol".format(
+                self.plant.water_pool / 1000, self.plant.max_water_pool / 1000
+            ),
+            True,
+            (0, 0, 0),
         )
         s.blit(
             text_water_pool,
@@ -898,10 +973,7 @@ class UI:
                 self.label_producing,
                 dest=(
                     topleft[0] + 100,
-                    topleft[1]
-                    + 150
-                    + 100
-                    - self.label_producing.get_height() / 2,
+                    topleft[1] + 150 + 100 - self.label_producing.get_height() / 2,
                 ),
             )
         else:
@@ -909,9 +981,6 @@ class UI:
                 self.label_consuming,
                 dest=(
                     topleft[0] + 100,
-                    topleft[1]
-                    + 150
-                    + 100
-                    - self.label_consuming.get_height() / 2,
+                    topleft[1] + 150 + 100 - self.label_consuming.get_height() / 2,
                 ),
             )

@@ -26,7 +26,12 @@ NITRATE_FILL_CELL = 50  # mikromol
 
 
 def hex_color_to_float(hex_color):
-    float_color = [hex_color[0] / 255, hex_color[1] / 255, hex_color[2] / 255, hex_color[3] / 255]
+    float_color = [
+        hex_color[0] / 255,
+        hex_color[1] / 255,
+        hex_color[2] / 255,
+        hex_color[3] / 255,
+    ]
     return float_color
 
 
@@ -122,7 +127,7 @@ first_names = [
     "Witty",
     "Gleeful",
     "Zesty",
-    "Spry"
+    "Spry",
 ]
 
 last_names = [
@@ -168,7 +173,7 @@ last_names = [
     "Dizzydoo",
     "Giggleblitz",
     "Quirky",
-    "Wobblewhiz"
+    "Wobblewhiz",
 ]
 
 
@@ -178,10 +183,10 @@ def randomize_name():
     return first_name + " " + last_name
 
 
-'''def apply_volume(options):
+"""def apply_volume(options):
     volume = options["effects"]
     for sound in assets._sound_library:
-        sound.set_volume(volume)'''
+        sound.set_volume(volume)"""
 
 FREE_SPOT = 00
 BASE_SPOT = 10

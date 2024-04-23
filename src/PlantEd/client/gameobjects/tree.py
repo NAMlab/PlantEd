@@ -48,9 +48,7 @@ class Tree:
 
     def darken_single_image(self, image, alpha):
         ghost_image = image.copy()
-        ghost_image.fill(
-            (0, 0, 0, alpha), special_flags=pygame.BLEND_RGBA_MULT
-        )
+        ghost_image.fill((0, 0, 0, alpha), special_flags=pygame.BLEND_RGBA_MULT)
         shaded_image = image.copy()
         shaded_image.blit(ghost_image, (0, 0))
         return shaded_image

@@ -25,12 +25,12 @@ class WeatherSimulator:
     """
 
     def __init__(
-            self,
-            data: pd.DataFrame,
-            temp_bins: int = 50,
-            hum_bins: int = 50,
-            precip_bins: int = 100,
-            seed: float = None
+        self,
+        data: pd.DataFrame,
+        temp_bins: int = 50,
+        hum_bins: int = 50,
+        precip_bins: int = 100,
+        seed: float = None,
     ):
         super().__init__()
         if seed is None:
@@ -89,24 +89,22 @@ class WeatherSimulator:
         start_temp = float(data["temp 2m avg"][0])
         start_hum = float(data["humidity"][0])
         start_precip = float(data["precipitation"][0])
-        self.states.append(
-            weather_state(
-                start_temp,
-                start_hum,
-                start_precip
-            )
-        )
+        self.states.append(weather_state(start_temp, start_hum, start_precip))
 
         self.curr_temp_bin = int((start_temp - self.temp_min) / self.temp_step)
         self.curr_hum_bin = int(start_hum / self.hum_step)
         self.curr_precip_bin = int(start_precip / self.precip_step)
-        self.curr_state: tuple = (self.curr_temp_bin, self.curr_hum_bin, self.curr_precip_bin)
+        self.curr_state: tuple = (
+            self.curr_temp_bin,
+            self.curr_hum_bin,
+            self.curr_precip_bin,
+        )
 
         self.simulate(24 * 45)
 
     def simulate(
-            self,
-            end_hour: int,
+        self,
+        end_hour: int,
     ):
         """
         Computes the weather up to the specified hour.
@@ -122,13 +120,7 @@ class WeatherSimulator:
             curr_hum = self.curr_hum_bin * self.hum_step
             curr_precip = self.curr_precip_bin * self.precip_step
 
-            self.states.append(
-                weather_state(
-                    curr_temp,
-                    curr_hum,
-                    curr_precip
-                )
-            )
+            self.states.append(weather_state(curr_temp, curr_hum, curr_precip))
 
             next_state_probs = self.transitions.get(self.curr_state, {})
             next_state_probs = {
@@ -141,7 +133,9 @@ class WeatherSimulator:
 
             # Update current state
             self.curr_state = next_state
-            self.curr_temp_bin, self.curr_hum_bin, self.curr_precip_bin = self.curr_state
+            self.curr_temp_bin, self.curr_hum_bin, self.curr_precip_bin = (
+                self.curr_state
+            )
 
     def get_weather_state(self, time: int) -> weather_state:
         if len(self.states) > time:

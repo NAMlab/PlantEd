@@ -5,8 +5,12 @@ from operator import itemgetter
 import random
 import numpy as np
 
-from PlantEd.constants import TRICKLE_AMOUNT, MAX_WATER_PER_CELL, \
-    WATER_MIKROMOL_PER_GRAM, WATER_MIKROMOL_PER_LITER
+from PlantEd.constants import (
+    TRICKLE_AMOUNT,
+    MAX_WATER_PER_CELL,
+    WATER_MIKROMOL_PER_GRAM,
+    WATER_MIKROMOL_PER_LITER,
+)
 
 # normal plant intake 83 (flux)
 
@@ -24,6 +28,7 @@ logger = logging.getLogger(__name__)
 #
 # acess grid like this grid[x,y]
 
+
 class MetaboliteGrid:
     """
     The soil is split into a grid of cells. Each cell holds water, can be drained and filled.
@@ -34,15 +39,14 @@ class MetaboliteGrid:
     """
 
     def __init__(
-            self,
-            grid_size: tuple[int, int] = (20, 6),
-            max_metabolite_cell: int = MAX_WATER_PER_CELL,
-            preset_fill_amount: int = 0,
+        self,
+        grid_size: tuple[int, int] = (20, 6),
+        max_metabolite_cell: int = MAX_WATER_PER_CELL,
+        preset_fill_amount: int = 0,
     ):
         self.grid_size: tuple[int, int] = grid_size
         self.grid: np.ndarray = np.full(grid_size, fill_value=preset_fill_amount)
         self.max_metabolite_cell = max_metabolite_cell
-
 
     def __str__(self) -> str:
         string = str(self.grid)
@@ -78,8 +82,10 @@ class MetaboliteGrid:
         if rain > 0:
             # in mirkomol per second
             visual_pleasing_factor = 10
-            rain_per_cell = float(((rain / 3600) * WATER_MIKROMOL_PER_LITER) / self.grid.shape[1])
-            self.grid[:, 0] += int((rain_per_cell/visual_pleasing_factor) * time_in_s)
+            rain_per_cell = float(
+                ((rain / 3600) * WATER_MIKROMOL_PER_LITER) / self.grid.shape[1]
+            )
+            self.grid[:, 0] += int((rain_per_cell / visual_pleasing_factor) * time_in_s)
 
     def available_absolute(self, root_grid: np.ndarray) -> int:
 
@@ -88,11 +94,19 @@ class MetaboliteGrid:
 
         if sum < 0:
             logger.error(
-                "The calculated absolute available value based on the occurrence of the metabolite in the soil and root is negative. Check the grid itself and the root.")
+                "The calculated absolute available value based on the occurrence of the metabolite in the soil and root is negative. Check the grid itself and the root."
+            )
 
         return sum
 
-    def available_relative_mm(self, time_seconds: int, g_root: float, v_max: float, k_m: float, root_grid: np.ndarray):
+    def available_relative_mm(
+        self,
+        time_seconds: int,
+        g_root: float,
+        v_max: float,
+        k_m: float,
+        root_grid: np.ndarray,
+    ):
         """
         This method calculates the usable metabolites in [mMol] / ([gram] * [s]. Either the calculated value is limited
         by the metabolites available in the soil or by the maximum uptake per second,
@@ -110,15 +124,21 @@ class MetaboliteGrid:
         """
         if any(x < 0 for x in [time_seconds, g_root, v_max, k_m]):
             logger.error(
-                f"One of the parameters is contrary to expectations, negative. Parameters: {time_seconds} s, {g_root} g, {v_max} mMol/(g*s), k_m mMol, ")
+                f"One of the parameters is contrary to expectations, negative. Parameters: {time_seconds} s, {g_root} g, {v_max} mMol/(g*s), k_m mMol, "
+            )
 
         amount_absolute = self.available_absolute(root_grid=root_grid)
-        max_uptake_per_second = amount_absolute / (time_seconds * g_root)  # based on availability
+        max_uptake_per_second = amount_absolute / (
+            time_seconds * g_root
+        )  # based on availability
 
-        theoretical_uptake_per_second = (v_max * amount_absolute) / (k_m + amount_absolute)  # based on MM
+        theoretical_uptake_per_second = (v_max * amount_absolute) / (
+            k_m + amount_absolute
+        )  # based on MM
 
         logger.info(
-            f"Calculated max uptake based on the soil as {max_uptake_per_second} and based on the Michaelis-Menten equation is {theoretical_uptake_per_second} ")
+            f"Calculated max uptake based on the soil as {max_uptake_per_second} and based on the Michaelis-Menten equation is {theoretical_uptake_per_second} "
+        )
 
         return min(max_uptake_per_second, theoretical_uptake_per_second)
 
@@ -130,11 +150,15 @@ class MetaboliteGrid:
 
         n_cells2drain_from = (available_water_grid > 0).sum()
 
-        average_cell_drain = amount / n_cells2drain_from if n_cells2drain_from != 0 else 0
+        average_cell_drain = (
+            amount / n_cells2drain_from if n_cells2drain_from != 0 else 0
+        )
 
         # iterates over all cells ordered by key
         # => here from the cell with the lowest concentration to the highest concentration
-        for (x, y), value in sorted(np.ndenumerate(available_water_grid), key=itemgetter(1), reverse=False):
+        for (x, y), value in sorted(
+            np.ndenumerate(available_water_grid), key=itemgetter(1), reverse=False
+        ):
             if value == 0:
                 continue
             if value < average_cell_drain:
@@ -176,7 +200,9 @@ class MetaboliteGrid:
             for y in reversed(range(1, self.grid.shape[1])):
                 upper_cell_content = self.grid[x, y - 1]
                 if upper_cell_content > 0:
-                    take_from_upper_cell = (0.005 * dt) + (TRICKLE_AMOUNT * upper_cell_content * dt)
+                    take_from_upper_cell = (0.005 * dt) + (
+                        TRICKLE_AMOUNT * upper_cell_content * dt
+                    )
                     # check if zero in upper cell
                     delta_trickle = upper_cell_content - take_from_upper_cell
                     if delta_trickle <= 0:
@@ -185,8 +211,10 @@ class MetaboliteGrid:
                         take_from_upper_cell = take_from_upper_cell - abs(delta_trickle)
                     else:
                         self.grid[x, y - 1] -= take_from_upper_cell
-                    self.grid[x, y] = min(MAX_WATER_PER_CELL, take_from_upper_cell + self.grid[x, y])
-        self.grid[:,5] = 0
+                    self.grid[x, y] = min(
+                        MAX_WATER_PER_CELL, take_from_upper_cell + self.grid[x, y]
+                    )
+        self.grid[:, 5] = 0
 
     def to_dict(self):
         dic = {}

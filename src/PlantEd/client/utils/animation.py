@@ -22,7 +22,10 @@ class Animation:
     def start(self, pos=None, center=True):
         if pos:
             if center:
-                pos = (pos[0] - self.images[0].get_width() / 2, pos[1] - self.images[0].get_height() / 2 - 50)
+                pos = (
+                    pos[0] - self.images[0].get_width() / 2,
+                    pos[1] - self.images[0].get_height() / 2 - 50,
+                )
             self.pos = pos
         self.running = True
 
@@ -47,7 +50,9 @@ class Animation:
             screen.blit(self.image, self.pos)
 
     @staticmethod
-    def generate_rising_animation(text=None, font=None, color=config.RED, image=None, move_up=-3):
+    def generate_rising_animation(
+        text=None, font=None, color=config.RED, image=None, move_up=-3
+    ):
         images = []
         frames = 15
         width = 64
@@ -64,8 +69,12 @@ class Animation:
             scaleable_surface = image
 
         currency_minus_one_surface = pygame.Surface(
-            (width + increment * frames, height + increment * frames - move_up * frames * 2),
-            pygame.SRCALPHA)
+            (
+                width + increment * frames,
+                height + increment * frames - move_up * frames * 2,
+            ),
+            pygame.SRCALPHA,
+        )
         center_w = currency_minus_one_surface.get_width() / 2
         center_h = currency_minus_one_surface.get_height() / 2
 
@@ -75,16 +84,23 @@ class Animation:
                 tmp_s, (width + increment * i, height + increment * i)
             )
             currency_minus_one_surface.fill((255, 255, 255, 0))
-            currency_minus_one_surface.blit(tmp_s, (
-                center_w - tmp_s.get_width() / 2, center_h - tmp_s.get_height() / 2 + move_up * i))
+            currency_minus_one_surface.blit(
+                tmp_s,
+                (
+                    center_w - tmp_s.get_width() / 2,
+                    center_h - tmp_s.get_height() / 2 + move_up * i,
+                ),
+            )
             addable_s = currency_minus_one_surface.copy()
             images.append(addable_s)
         return images
 
     @staticmethod
-    def generate_counter(start_number: int, end_number: int, resolution: int, font, color=config.WHITE) -> list[pygame.Surface]:
+    def generate_counter(
+        start_number: int, end_number: int, resolution: int, font, color=config.WHITE
+    ) -> list[pygame.Surface]:
         images = []
-        delta = int((end_number - start_number)/10)
+        delta = int((end_number - start_number) / 10)
         for n in range(0, delta):
-            images.append(font.render("{}".format(start_number + n*10), True, color))
+            images.append(font.render("{}".format(start_number + n * 10), True, color))
         return images

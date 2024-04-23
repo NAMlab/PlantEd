@@ -9,7 +9,7 @@ from PlantEd.client.utils.animation import Animation
 
 class Bug:
     def __init__(
-            self, pos, bounding_rect, images, camera, image=None, speed=1, play_clicked=None
+        self, pos, bounding_rect, images, camera, image=None, speed=1, play_clicked=None
     ):
         self.pos = pos
         self.bounding_rect = bounding_rect
@@ -85,7 +85,7 @@ class Bug:
         self.rotate_images()
 
     def draw(self, screen):
-        #pygame.draw.rect(screen, config.WHITE, self.bounding_rect, 2)
+        # pygame.draw.rect(screen, config.WHITE, self.bounding_rect, 2)
         if self.animation:
             screen.blit(
                 self.animation.image,
@@ -109,7 +109,5 @@ class Bug:
         x = image.get_width() / 2
         y = image.get_height() / 2
         rotated_image = pygame.transform.rotate(image, angle)
-        new_rect = rotated_image.get_rect(
-            center=image.get_rect(center=(x, y)).center
-        )
+        new_rect = rotated_image.get_rect(center=image.get_rect(center=(x, y)).center)
         return rotated_image, new_rect

@@ -8,9 +8,9 @@ from PlantEd.constants import MAXIMUM_ROOT_BIOMASS_GRAM, ROOT_GRID_SIZE
 
 class RootGenerator:
     def __init__(
-            self,
-            start_pos: tuple[int, int] = (10, 0),
-            delta_mass_to_get_grid: float = MAXIMUM_ROOT_BIOMASS_GRAM/20
+        self,
+        start_pos: tuple[int, int] = (10, 0),
+        delta_mass_to_get_grid: float = MAXIMUM_ROOT_BIOMASS_GRAM / 20,
     ):
         self.start_pos = start_pos
         self.delta_mass_to_get_grid = delta_mass_to_get_grid
@@ -27,7 +27,7 @@ class RootGenerator:
                 "tries": 9,
                 "mass_factor": 0.7,
                 "n_segments": 6,
-                "stop_upward": True
+                "stop_upward": True,
             },
             {
                 "length": 0.05,  # factor of screen_height
@@ -36,7 +36,7 @@ class RootGenerator:
                 "tries": 4,
                 "mass_factor": 0.35,
                 "n_segments": 4,
-                "stop_upward": True
+                "stop_upward": True,
             },
             {
                 "length": 0.01,
@@ -45,8 +45,8 @@ class RootGenerator:
                 "tries": 3,
                 "mass_factor": 0.05,
                 "n_segments": 3,
-                "stop_upward": False
-            }
+                "stop_upward": False,
+            },
         ]
 
     def to_dict(self, root_ids: list[int]) -> dict:
@@ -58,21 +58,27 @@ class RootGenerator:
         return {
             "start_pos": self.start_pos,
             "root_grid_size": self.root_grid_size,
-            "roots": [[root.to_dict() for root in root_list] for root_list in root_lists_to_send]
+            "roots": [
+                [root.to_dict() for root in root_list]
+                for root_list in root_lists_to_send
+            ],
         }
 
     def get_matrix_at_mass(self, mass_list: list[float]) -> np.array:
         combined_grid = self.current_grid
 
-        if sum(mass_list) - self.current_grid_mass > self.delta_mass_to_get_grid or self.current_grid is None:
+        if (
+            sum(mass_list) - self.current_grid_mass > self.delta_mass_to_get_grid
+            or self.current_grid is None
+        ):
             combined_grid = np.zeros(self.root_grid_size)
             for x in range(self.root_grid_size[0]):
                 for y in range(self.root_grid_size[1]):
                     for grid, mass in zip(self.root_grids, mass_list):
                         if grid[x, y] <= mass and grid[x, y] != -1:
                             combined_grid[x, y] = 1
-            #print(f"for a mass of: {mass_list}")
-            #print(f"the grid looks like: {combined_grid}")
+            # print(f"for a mass of: {mass_list}")
+            # print(f"the grid looks like: {combined_grid}")
             self.current_grid = combined_grid
             self.current_grid_mass = sum(mass_list)
         return combined_grid
@@ -91,14 +97,14 @@ class RootGenerator:
             root.add_mass_to_root_grid(self.root_grids[id])
 
     def generate_root(
-            self,
-            root_id=None,
-            root_list=None,
-            tier=0,
-            start_mass=0.0,
-            end_mass=None,
-            direction=(0, 1),
-            start_pos=None,
+        self,
+        root_id=None,
+        root_list=None,
+        tier=0,
+        start_mass=0.0,
+        end_mass=None,
+        direction=(0, 1),
+        start_pos=None,
     ):
         if end_mass is None:
             end_mass = MAXIMUM_ROOT_BIOMASS_GRAM + start_mass
@@ -114,7 +120,8 @@ class RootGenerator:
             tries=self.root_classes[tier]["tries"],
             gravity_effect=self.root_classes[tier]["gravity_factor"],
             start_mass=start_mass,
-            end_mass=start_mass + (end_mass - start_mass) * self.root_classes[tier]["mass_factor"],
+            end_mass=start_mass
+            + (end_mass - start_mass) * self.root_classes[tier]["mass_factor"],
             start_pos=start_pos,
             length=self.root_classes[tier]["length"] * self.root_grid_size[0],
             direction=direction,
@@ -137,18 +144,18 @@ class RootGenerator:
         return root_list
 
     def draw(self, screen, mass):
+        """for grid in self.root_grids:
+        n, m = grid.shape
+        for x in range(n):
+            for y in range(m):
+                if grid[x, y] > 0:
+                    pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (
+                        x / n * self.resolution[0], y / m * self.resolution[1], self.resolution[0] / n,
+                        self.resolution[1] / m))
 
-        '''for grid in self.root_grids:
-            n, m = grid.shape
-            for x in range(n):
-                for y in range(m):
-                    if grid[x, y] > 0:
-                        pygame.draw.rect(screen, config.WHITE_TRANSPARENT, (
-                            x / n * self.resolution[0], y / m * self.resolution[1], self.resolution[0] / n,
-                            self.resolution[1] / m))
-
-                        mass_label = self.FONT_24.render(f"{grid[x, y]:.2f}", True, config.BLACK)
-                        screen.blit(mass_label, (x/n*self.resolution[0], y/m*self.resolution[1]))'''
+                    mass_label = self.FONT_24.render(f"{grid[x, y]:.2f}", True, config.BLACK)
+                    screen.blit(mass_label, (x/n*self.resolution[0], y/m*self.resolution[1]))
+        """
 
         for root_list in self.roots:
             for root in root_list:
@@ -158,19 +165,19 @@ class RootGenerator:
 
 class RootStructure:
     def __init__(
-            self,
-            root_id: int,
-            tier: int,
-            tries: int,
-            gravity_effect: float,
-            start_mass: float,
-            end_mass: float,
-            start_pos: tuple[float, float],
-            length: float,
-            direction: tuple[float, float],
-            n_branches: int = 0,
-            n_segments: int = 5,
-            stop_upward: bool = True,
+        self,
+        root_id: int,
+        tier: int,
+        tries: int,
+        gravity_effect: float,
+        start_mass: float,
+        end_mass: float,
+        start_pos: tuple[float, float],
+        length: float,
+        direction: tuple[float, float],
+        n_branches: int = 0,
+        n_segments: int = 5,
+        stop_upward: bool = True,
     ):
         self.root_id = root_id
         self.tier = tier
@@ -199,7 +206,7 @@ class RootStructure:
             "start_mass": self.start_mass,
             "end_mass": self.end_mass,
             "segments_t": self.segments_t,
-            "segments": self.segments
+            "segments": self.segments,
         }
 
     def add_mass_to_root_grid(self, root_grid) -> np.array:
@@ -207,9 +214,9 @@ class RootStructure:
 
         for i in range(1, len(self.segments)):
             x1 = self.segments[i - 1][0]
-            y1 = (self.segments[i - 1][1])
+            y1 = self.segments[i - 1][1]
             x2 = self.segments[i][0]
-            y2 = (self.segments[i][1])
+            y2 = self.segments[i][1]
 
             prev_t = self.segments_t[i - 1]
             next_t = self.segments_t[i]
@@ -246,7 +253,9 @@ class RootStructure:
                 next_pos = self.segments[i]
                 previous_pos = self.segments[i - 1]
                 previous_segment_t = self.segments_t[i - 1]
-                percentage = (t_branch - previous_segment_t) / (segment_t - previous_segment_t)
+                percentage = (t_branch - previous_segment_t) / (
+                    segment_t - previous_segment_t
+                )
                 x = (next_pos[0] - previous_pos[0]) * percentage + previous_pos[0]
                 y = (next_pos[1] - previous_pos[1]) * percentage + previous_pos[1]
                 pos_at_t = (x, y)
@@ -266,14 +275,19 @@ class RootStructure:
                 previous_direction=self.direction,
                 gravity_effect=self.gravity_effect,
                 num_tries=self.tries,
-                stop_upwards=self.stop_upward)
+                stop_upwards=self.stop_upward,
+            )
             random_point = (random_direction[0] * length, random_direction[1] * length)
 
-            next_pos = (random_point[0] + previous_pos[0], random_point[1] + previous_pos[1])
+            next_pos = (
+                random_point[0] + previous_pos[0],
+                random_point[1] + previous_pos[1],
+            )
             self.segments.append(next_pos)
 
             previous_pos = next_pos
             t_sum_previous += delta_t
+
 
 def get_ortogonal(v1):
     flip = random.randint(0, 1) * 2 - 1
@@ -281,19 +295,25 @@ def get_ortogonal(v1):
     return orthogonal_vector
 
 
-def add_vector(vector_a: tuple[float, float], vector_b: tuple[float, float]) -> tuple[float, float]:
+def add_vector(
+    vector_a: tuple[float, float], vector_b: tuple[float, float]
+) -> tuple[float, float]:
     return vector_a[0] + vector_b[0], vector_a[1] + vector_b[1]
 
 
-def semi_random_vector(previous_direction: tuple[float, float], gravity_effect: float, num_tries: int,
-                       stop_upwards: bool = False) -> Union[None, tuple[float, float]]:
+def semi_random_vector(
+    previous_direction: tuple[float, float],
+    gravity_effect: float,
+    num_tries: int,
+    stop_upwards: bool = False,
+) -> Union[None, tuple[float, float]]:
     # Normalize the desired direction
     gravity_vector = (0, gravity_effect)
     previous_direction = normalize_vector(previous_direction)
     desired_direction = add_vector(previous_direction, gravity_vector)
     # Initialize variables to keep track of the closest vector and its angle difference
     closest_vector = None
-    min_angle_diff = float('inf')
+    min_angle_diff = float("inf")
 
     # Iterate for the specified number of tries
     for _ in range(num_tries):
@@ -319,14 +339,20 @@ def normalize_vector(vector: tuple[float, float]) -> tuple[float, float]:
     return vector[0] / length, vector[1] / length if length != 0 else [0, 0]
 
 
-def angle_between_vectors(vec1: tuple[float, float], vec2: tuple[float, float]) -> float:
+def angle_between_vectors(
+    vec1: tuple[float, float], vec2: tuple[float, float]
+) -> float:
     dot_product = vec1[0] * vec2[0] + vec1[1] * vec2[1]
-    magnitude_product = math.sqrt(vec1[0] ** 2 + vec1[1] ** 2) * math.sqrt(vec2[0] ** 2 + vec2[1] ** 2)
+    magnitude_product = math.sqrt(vec1[0] ** 2 + vec1[1] ** 2) * math.sqrt(
+        vec2[0] ** 2 + vec2[1] ** 2
+    )
     angle = math.acos(dot_product / magnitude_product)
     return angle
 
 
-def get_direction_from_points(point_a: tuple[float, float], point_b: tuple[float, float]) -> tuple[float, float]:
+def get_direction_from_points(
+    point_a: tuple[float, float], point_b: tuple[float, float]
+) -> tuple[float, float]:
     x = point_b[0] - point_a[0]
     y = point_b[1] - point_a[1]
     return normalize_vector((x, y))

@@ -31,9 +31,7 @@ class Hover_Message:
         for i in range(len(lines)):
             self.font.render("ls", True, config.BLACK)
             label = self.font.render("{}".format(lines[i]), True, config.BLACK)
-            self.w = (
-                label.get_width() if self.w < label.get_width() else self.w
-            )
+            self.w = label.get_width() if self.w < label.get_width() else self.w
             labels.append(label)
         self.w += 2 * self.margin
         pygame.draw.rect(
@@ -54,7 +52,7 @@ class Hover_Message:
     def handle_event(self, e):
         if e.type == pygame.MOUSEBUTTONDOWN:
             self.timer = 1.5
-            #self.hover_surface.fill((0, 0, 0, 0))
+            # self.hover_surface.fill((0, 0, 0, 0))
         if e.type == pygame.MOUSEMOTION:
             self.timer = 1.5
             self.hover_surface.fill((0, 0, 0, 0))

@@ -16,10 +16,11 @@ data_dir = fileDir.parent
 # (ctypes.windll.user32.GetSystemMetrics(0),
 # ctypes.windll.user32.GetSystemMetrics(1))
 
+
 @Singleton
 class AssetHandler:
     def __init__(self):
-        #pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        # pygame.display.set_mode((1, 1), pygame.NOFRAME)
         pygame.font.init()
         self._image_library: dict[Tuple[str, Optional[Tuple[int, int]]], Surface] = {}
         self._sound_library = {}

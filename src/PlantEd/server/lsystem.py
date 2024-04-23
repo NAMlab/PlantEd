@@ -38,20 +38,20 @@ Following branches or segments are stored in a list of branches.
 
 class Letter:
     def __init__(
-            self,
-            id: int,
-            root_class: int,
-            tier: int,
-            dir: tuple[float, float],
-            max_length: float,
-            mass_start: float,
-            mass_end: float,
-            max_branches: int = None,
-            branches: list = [],
-            t: float = None,
-            branching_t: list[float] = None,
-            length: float = 0,
-            pos: tuple[float, float] = (0, 0)
+        self,
+        id: int,
+        root_class: int,
+        tier: int,
+        dir: tuple[float, float],
+        max_length: float,
+        mass_start: float,
+        mass_end: float,
+        max_branches: int = None,
+        branches: list = [],
+        t: float = None,
+        branching_t: list[float] = None,
+        length: float = 0,
+        pos: tuple[float, float] = (0, 0),
     ):
         self.id: int = id
         self.tier: int = tier
@@ -95,9 +95,7 @@ class Letter:
             start_pos[1] + self.dir[1] * self.length,
         )
         # pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
-        pygame.draw.line(
-            screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier
-        )
+        pygame.draw.line(screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier)
         for branch in self.branches:
             next_start_pos = (
                 start_pos[0] + self.dir[0] * branch.t * self.length,
@@ -109,7 +107,7 @@ class Letter:
     def draw_scaled(self, screen, start_pos, scaling_factor):
         import pygame
 
-        start_pos = (start_pos[0]*scaling_factor, start_pos[1]*scaling_factor)
+        start_pos = (start_pos[0] * scaling_factor, start_pos[1] * scaling_factor)
 
         if self.id == 300:
             self.pos = start_pos
@@ -118,9 +116,7 @@ class Letter:
             start_pos[1] + self.dir[1] * (self.length * scaling_factor),
         )
         # pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
-        pygame.draw.line(
-            screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier
-        )
+        pygame.draw.line(screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier)
         for branch in self.branches:
             next_start_pos = (
                 start_pos[0] + self.dir[0] * branch.t * self.length * scaling_factor,
@@ -139,13 +135,9 @@ class Letter:
             start_pos[0] + self.dir[0] * self.length,
             start_pos[1] + self.dir[1] * self.length,
         )
-        pygame.draw.line(
-            screen, (255, 255, 255), start_pos, end_pos, 7 - self.tier
-        )
+        pygame.draw.line(screen, (255, 255, 255), start_pos, end_pos, 7 - self.tier)
         # pygame.draw.line(screen, (0, 0, 0), start_pos, end_pos, 7 - self.tier)
-        pygame.draw.line(
-            screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier
-        )
+        pygame.draw.line(screen, (180, 170, 148), start_pos, end_pos, 5 - self.tier)
         for branch in self.branches:
             next_start_pos = (
                 start_pos[0] + self.dir[0] * branch.t * self.length,
@@ -203,18 +195,22 @@ branching can no longer happen.
 
 class LSystem:
     def __init__(
-            self,
-            root_grid: np.ndarray,
-            water_grid_pos: tuple[float, float],
-            directions: list[tuple[float, float]] = [],
-            positions: list[tuple[float, float]] = None,
-            mass: float = 0,
+        self,
+        root_grid: np.ndarray,
+        water_grid_pos: tuple[float, float],
+        directions: list[tuple[float, float]] = [],
+        positions: list[tuple[float, float]] = None,
+        mass: float = 0,
     ):
         self.root_grid: np.ndarray = root_grid
         self.water_grid_pos: tuple[float, float] = water_grid_pos
-        self.positions: list[tuple[float, float]] = positions if positions is not None else []
+        self.positions: list[tuple[float, float]] = (
+            positions if positions is not None else []
+        )
         self.first_letters: list[Letter] = []
-        self.directions: list[tuple[float, float]] = directions  # if directions is not None else []
+        self.directions: list[tuple[float, float]] = (
+            directions  # if directions is not None else []
+        )
         self.root_classes: list[list[dict]] = root_classes
         for dir in directions:
             self.first_letters.append(self.create_root(dir, mass))
@@ -239,12 +235,16 @@ class LSystem:
         return True
 
     def to_dict(self) -> dict:
-        dic = {"root_grid": self.root_grid.tolist(),
-               "water_grid_pos": self.water_grid_pos,
-               "positions": self.positions,
-               "directions": self.directions,
-               "root_classes": self.root_classes,
-               "first_letters": [first_letter.to_dict() for first_letter in self.first_letters]}
+        dic = {
+            "root_grid": self.root_grid.tolist(),
+            "water_grid_pos": self.water_grid_pos,
+            "positions": self.positions,
+            "directions": self.directions,
+            "root_classes": self.root_classes,
+            "first_letters": [
+                first_letter.to_dict() for first_letter in self.first_letters
+            ],
+        }
         return dic
 
     """
@@ -253,8 +253,14 @@ class LSystem:
     fully grown before the next one can grow
     """
 
-    def create_root(self, dir: tuple[float, float] = None, mass: float = 0, root_class: int = 0, tier: int = None,
-                    t: float = None):
+    def create_root(
+        self,
+        dir: tuple[float, float] = None,
+        mass: float = 0,
+        root_class: int = 0,
+        tier: int = None,
+        t: float = None,
+    ):
         dir = dir if dir is not None else (0, 1)
         next_tier = tier if tier else 0
         dic = self.root_classes[root_class][next_tier]
@@ -267,7 +273,7 @@ class LSystem:
         branching_duration = dic["duration"] / 100 * 65
         apex_duration = dic["duration"] / 100 * 30
 
-        #print(f"STARTING MASS: {mass}, BASAL END: {mass + basal_duration} END MASS: {mass + basal_duration + branching_duration + apex_duration}")
+        # print(f"STARTING MASS: {mass}, BASAL END: {mass + basal_duration} END MASS: {mass + basal_duration + branching_duration + apex_duration}")
 
         apex = Letter(
             id=300,
@@ -323,8 +329,8 @@ class LSystem:
         # mass_per_letter = mass/max(0,len(self.first_letters))
 
         for letter in self.first_letters:
-            resolution_mass = MAXIMUM_ROOT_BIOMASS_GRAM/10
-            n_steps = min(int(mass/resolution_mass), 1)
+            resolution_mass = MAXIMUM_ROOT_BIOMASS_GRAM / 10
+            n_steps = min(int(mass / resolution_mass), 1)
             delta_mass = mass / n_steps
             for i in range(n_steps):
                 self.apply_rules(letter, delta_mass)
@@ -398,16 +404,13 @@ class LSystem:
             else:
                 root_class = 1
         self.positions.append(pos)
-        self.first_letters.append(
-            self.create_root(dir, mass, root_class=root_class)
-        )
+        self.first_letters.append(self.create_root(dir, mass, root_class=root_class))
 
     def update_letter_length(self, letter, mass):
         if mass > letter.mass_start:
             letter.length = letter.max_length * min(
                 1,
-                (mass - letter.mass_start)
-                / (letter.mass_end - letter.mass_start),
+                (mass - letter.mass_start) / (letter.mass_end - letter.mass_start),
             )
 
     def get_random_dir(self, tries, growth_dir=None, down=(0, 1)):
@@ -427,7 +430,7 @@ class LSystem:
                 angle_growth_xy = self.angle_between(growth_dir, (x, y))
                 angle_growth_dir = self.angle_between(growth_dir, dir)
             if (angle_down_xy + angle_growth_xy * 3) < (
-                    angle_down_dir + angle_growth_dir * 3
+                angle_down_dir + angle_growth_dir * 3
             ):
                 dir = (x, y)
             # if self.angle_between(down, (x, y)) < self.angle_between(down, dir):  # downward directions get promoted
@@ -484,10 +487,12 @@ class DictToRoot:
         positions: list[tuple[float, float]] = dic["positions"]
 
         # mass: float = dic["mass"]
-        root_system = LSystem(root_grid=root_grid,
-                              water_grid_pos=water_grid_pos,
-                              directions=directions,
-                              positions=positions)
+        root_system = LSystem(
+            root_grid=root_grid,
+            water_grid_pos=water_grid_pos,
+            directions=directions,
+            positions=positions,
+        )
 
         first_letters = dic["first_letters"]
         # root_system.apexes = dic["apexes"]
@@ -514,6 +519,19 @@ class DictToRoot:
         t = dic_letter["t"]
         pos = dic_letter["pos"]
         dir = dic_letter["dir"]
-        letter = Letter(id, root_class, tier, dir, max_length, mass_start, mass_end, max_branches, branches, t,
-                        branching_t, length, pos)
+        letter = Letter(
+            id,
+            root_class,
+            tier,
+            dir,
+            max_length,
+            mass_start,
+            mass_end,
+            max_branches,
+            branches,
+            t,
+            branching_t,
+            length,
+            pos,
+        )
         return letter

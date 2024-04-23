@@ -48,14 +48,13 @@ class ParticleExplosion:
 
 class Particle:
     def __init__(
-            self,
-            pos: tuple[float, float],
-            vel: tuple[float, float],
-            size: float,
-            gravity: float = 0,
-            braking: float = 0,
-            lifetime: float = -1,
-
+        self,
+        pos: tuple[float, float],
+        vel: tuple[float, float],
+        size: float,
+        gravity: float = 0,
+        braking: float = 0,
+        lifetime: float = -1,
     ):
         self.pos = pos
         self.vel = vel
@@ -66,32 +65,26 @@ class Particle:
         self.dead = False
 
     def move(self, dt):
-        self.vel = (
-            self.vel[0],
-            self.vel[1] + (self.gravity * dt)
-        )
-        self.pos = (
-            self.pos[0] + self.vel[0] * dt,
-            self.pos[1] + self.vel[1] * dt
-        )
+        self.vel = (self.vel[0], self.vel[1] + (self.gravity * dt))
+        self.pos = (self.pos[0] + self.vel[0] * dt, self.pos[1] + self.vel[1] * dt)
 
 
 class ParticleSystem:
     def __init__(
-            self,
-            max_particles: int,
-            spawn_box: pygame.Rect,
-            boundary_box: pygame.Rect = None,
-            vel: tuple[float, float] = (0,0),
-            spread: tuple[float, float] = (0, 0),
-            color: tuple[int, int, int] = (0, 0, 0),
-            size: float = 10,
-            gravity: float = 0,
-            braking: float = 0,
-            lifetime: float = -1,
-            once: bool = False,
-            size_over_lifetime: bool = False,
-            active: bool = False
+        self,
+        max_particles: int,
+        spawn_box: pygame.Rect,
+        boundary_box: pygame.Rect = None,
+        vel: tuple[float, float] = (0, 0),
+        spread: tuple[float, float] = (0, 0),
+        color: tuple[int, int, int] = (0, 0, 0),
+        size: float = 10,
+        gravity: float = 0,
+        braking: float = 0,
+        lifetime: float = -1,
+        once: bool = False,
+        size_over_lifetime: bool = False,
+        active: bool = False,
     ):
         self.max_particles = max_particles
         self.spawn_box = spawn_box
@@ -117,36 +110,46 @@ class ParticleSystem:
     def generate_particle(self):
         pos = (
             self.spawn_box[0] + self.spawn_box[2] * random.random(),
-            self.spawn_box[1] + self.spawn_box[3] * random.random()
+            self.spawn_box[1] + self.spawn_box[3] * random.random(),
         )
         vel = (
             self.vel[0] + self.spread[0] * random.random(),
             self.vel[1] + self.spread[1] * random.random(),
         )
 
-        self.particles.append(Particle(
-            pos=pos,
-            vel=vel,
-            size=self.size,
-            gravity=self.gravity,
-            braking=self.braking,
-            lifetime=self.lifetime,
-        ))
+        self.particles.append(
+            Particle(
+                pos=pos,
+                vel=vel,
+                size=self.size,
+                gravity=self.gravity,
+                braking=self.braking,
+                lifetime=self.lifetime,
+            )
+        )
 
     def check_boundary(self, pos: tuple[float, float]) -> bool:
         in_bounds = True
         if not self.boundary_box:
             return in_bounds
-        if not(self.boundary_box[0] < pos[0] < (self.boundary_box[0] + self.boundary_box[2])):
+        if not (
+            self.boundary_box[0]
+            < pos[0]
+            < (self.boundary_box[0] + self.boundary_box[2])
+        ):
             in_bounds = False
-        if not(self.boundary_box[1] < pos[1] < (self.boundary_box[1] + self.boundary_box[3])):
+        if not (
+            self.boundary_box[1]
+            < pos[1]
+            < (self.boundary_box[1] + self.boundary_box[3])
+        ):
             in_bounds = False
         return in_bounds
 
     def update(self, dt):
         if len(self.particles) < self.max_particles and self.active:
             if self.once:
-                for i in range(self.max_particles-len(self.particles)):
+                for i in range(self.max_particles - len(self.particles)):
                     self.generate_particle()
                     self.deactivate()
             else:
@@ -169,9 +172,11 @@ class ParticleSystem:
                 else:
                     self.reset_particle(particle)
 
-        #alive_particles = filter(lambda dead: not dead, self.particles)
-        #self.particles = list(alive_particles)
-        self.particles = [particle for particle in self.particles if particle.dead is not True]
+        # alive_particles = filter(lambda dead: not dead, self.particles)
+        # self.particles = list(alive_particles)
+        self.particles = [
+            particle for particle in self.particles if particle.dead is not True
+        ]
 
     def reset_particle(self, particle):
         if not self.active:
@@ -180,7 +185,7 @@ class ParticleSystem:
         # move particle to new spawn and reset its values
         particle.pos = (
             self.spawn_box[0] + self.spawn_box[2] * random.random(),
-            self.spawn_box[1] + self.spawn_box[3] * random.random()
+            self.spawn_box[1] + self.spawn_box[3] * random.random(),
         )
         particle.vel = (
             self.vel[0] + self.spread[0] * random.random(),
@@ -194,9 +199,11 @@ class ParticleSystem:
                 continue
             size = particle.size
             if self.size_over_lifetime:
-                size = particle.lifetime/self.lifetime * particle.size
+                size = particle.lifetime / self.lifetime * particle.size
             pygame.draw.circle(screen, self.color, particle.pos, size)
-'''
+
+
+"""
 
 class Inwards_Particle_System(ParticleSystem):
     def __init__(
@@ -269,4 +276,4 @@ class Inwards_Particle_System(ParticleSystem):
         ]
         if not self.once:
             self.particle_counter = len(self.particles)
-'''
+"""

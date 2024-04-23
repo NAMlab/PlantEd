@@ -9,7 +9,18 @@ from PlantEd.data.assets import AssetHandler
 
 
 class Hive:
-    def __init__(self, pos, image_size, screen_size, amount, plant, camera, spawn_rate, play_hive_clicked, play_bee_clicked):
+    def __init__(
+        self,
+        pos,
+        image_size,
+        screen_size,
+        amount,
+        plant,
+        camera,
+        spawn_rate,
+        play_hive_clicked,
+        play_bee_clicked,
+    ):
         self.pos = pos
         self.image_size = image_size
         self.screen_size = screen_size
@@ -58,7 +69,10 @@ class Hive:
             Bee(
                 pos=pos,
                 bounding_rect=pygame.Rect(
-                    0, 0, self.screen_size[0], self.screen_size[1] - self.screen_size[1]/5
+                    0,
+                    0,
+                    self.screen_size[0],
+                    self.screen_size[1] - self.screen_size[1] / 5,
                 ),
                 images=[
                     self.asset_handler.img("bee/{}.PNG".format(i), (64, 64))
@@ -66,7 +80,7 @@ class Hive:
                 ],
                 camera=self.camera,
                 hive_pos=self.pos,
-                play_bee_clicked=self.play_bee_clicked
+                play_bee_clicked=self.play_bee_clicked,
             )
         )
 
@@ -119,7 +133,7 @@ class Bee:
         image=None,
         speed=4,
         lifetime=20,
-        play_bee_clicked=None
+        play_bee_clicked=None,
     ):
         self.pos = pos
         self.bounding_rect = bounding_rect
@@ -129,7 +143,7 @@ class Bee:
         self.animation = Animation(self.images, 0.1)
         self.speed = speed
         self.lifetime = lifetime
-        self.play_bee_clicked=play_bee_clicked
+        self.play_bee_clicked = play_bee_clicked
         self.rect = self.images[0].get_rect()
         self.dir = (0, 0)
         self.target = None
@@ -146,10 +160,7 @@ class Bee:
                 self.death_timer -= dt
             else:
                 self.death_timer = 0
-        if (
-            self.lifetime <= 0
-            and not self.return_home and not self.dead
-        ):
+        if self.lifetime <= 0 and not self.return_home and not self.dead:
             self.set_target_home()
         else:
             self.lifetime -= dt
@@ -180,7 +191,7 @@ class Bee:
     def kill(self, rect):
         if rect.collidepoint(self.pos):
             self.target = None
-            self.dir = (0,-1)
+            self.dir = (0, -1)
             self.death_timer = 2
             self.dead = True
 

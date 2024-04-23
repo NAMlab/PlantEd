@@ -17,7 +17,7 @@ class Card:
         keywords="",
         frames=15,
         margin=10,
-        play_select_sfx=None
+        play_select_sfx=None,
     ):
         self.pos = pos
         self.asset_handler = AssetHandler.instance()
@@ -117,9 +117,7 @@ class Card:
         h_decrement = int((h_card * self.increase) / frames)
 
         surface = pygame.Surface((w, h_card), pygame.SRCALPHA)
-        pygame.draw.rect(
-            surface, config.BLACK, (0, 0, w, h_card), border_radius=5
-        )
+        pygame.draw.rect(surface, config.BLACK, (0, 0, w, h_card), border_radius=5)
         pygame.draw.rect(
             surface, config.WHITE, (0, 0, w, h_card), width=2, border_radius=5
         )

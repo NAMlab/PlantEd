@@ -23,9 +23,7 @@ class Cubic_Tree:
         self.branches[0].grow()
 
     def to_dict(self) -> dict:
-        cubic_dict = {
-            "branches": [branch.to_dict() for branch in self.branches]
-        }
+        cubic_dict = {"branches": [branch.to_dict() for branch in self.branches]}
         return cubic_dict
 
     def grow(self, branch):
@@ -56,17 +54,31 @@ class Cubic_Tree:
         if mouse_pos[0] - point[0] < 0:
             points = [
                 point,
-                [point[0] - int(self.screen_size[0]/40), point[1] - int(self.screen_size[1]/40)],
-                [point[0] - int(self.screen_size[0]/20), point[1] - int(self.screen_size[1]/15)],
+                [
+                    point[0] - int(self.screen_size[0] / 40),
+                    point[1] - int(self.screen_size[1] / 40),
+                ],
+                [
+                    point[0] - int(self.screen_size[0] / 20),
+                    point[1] - int(self.screen_size[1] / 15),
+                ],
             ]
         else:
             points = [
                 point,
-                [point[0] + int(self.screen_size[0] / 40), point[1] - int(self.screen_size[1] / 40)],
-                [point[0] + int(self.screen_size[0] / 20), point[1] - int(self.screen_size[1] / 15)],
+                [
+                    point[0] + int(self.screen_size[0] / 40),
+                    point[1] - int(self.screen_size[1] / 40),
+                ],
+                [
+                    point[0] + int(self.screen_size[0] / 20),
+                    point[1] - int(self.screen_size[1] / 15),
+                ],
             ]
         self.branches[0].free_spots[highlight[2]] = config.BRANCH_SPOT
-        self.branches.append(Cubic(points, id=len(self.branches), screen_size=self.screen_size))
+        self.branches.append(
+            Cubic(points, id=len(self.branches), screen_size=self.screen_size)
+        )
 
     def handle_event(self, e):
         for branch in self.branches:
@@ -115,7 +127,16 @@ class Cubic_Tree:
 
 
 class Cubic:
-    def __init__(self, points, id, screen_size: tuple[int, int], color=config.GREEN, res=10, width=15, max_points=8):
+    def __init__(
+        self,
+        points,
+        id,
+        screen_size: tuple[int, int],
+        color=config.GREEN,
+        res=10,
+        width=15,
+        max_points=8,
+    ):
         self.screen_size = screen_size
         self.mass = START_STEM_BIOMASS_GRAM
         self.maximum_mass = MAXIMUM_STEM_BIOMASS_GRAM
@@ -154,9 +175,7 @@ class Cubic:
         return list(zip(y_new, x_new))
 
     def to_dict(self) -> dict:
-        branch_dict = {
-            "branch": self.points
-        }
+        branch_dict = {"branch": self.points}
         return branch_dict
 
     def grow(self, point=None):
@@ -164,15 +183,16 @@ class Cubic:
         self.drag = False
         if not point:
             point = [
-                self.points[-1][0] + random.randint(0, int(self.screen_size[1]/20)) - 40,
-                self.points[-1][1] - int(self.screen_size[1]/20),
+                self.points[-1][0]
+                + random.randint(0, int(self.screen_size[1] / 20))
+                - 40,
+                self.points[-1][1] - int(self.screen_size[1] / 20),
             ]
         self.points.append(point)
         self.offsets = self.points.copy()
         self.free_spots.append(config.FREE_SPOT)
         self.new_curve = self.get_curve()
         self.growth_percentage = 0
-
 
     def get_rects(self):
         rects = []
@@ -191,11 +211,11 @@ class Cubic:
             self.interpolated = []
             for i in range(len(self.curve)):
                 x = (
-                            self.new_curve[i + 1][0] - self.curve[i][0]
-                    ) * self.growth_percentage + self.curve[i][0]
+                    self.new_curve[i + 1][0] - self.curve[i][0]
+                ) * self.growth_percentage + self.curve[i][0]
                 y = (
-                            self.new_curve[i + 1][1] - self.curve[i][1]
-                    ) * self.growth_percentage + self.curve[i][1]
+                    self.new_curve[i + 1][1] - self.curve[i][1]
+                ) * self.growth_percentage + self.curve[i][1]
                 self.interpolated.append((x, y))
                 self.growth_percentage += dt / 50
             self.interpolated.append(self.curve[-1])
@@ -246,21 +266,11 @@ class Cubic:
         if self.free_spots[id] == config.BRANCH_SPOT:
             return False
 
-        x_dist = (
-                self.points[id][0]
-                - self.offsets[id][0]
-                + pos[0]
-                - self.points[id][0]
-        )
-        y_dist = (
-                self.points[id][1]
-                - self.offsets[id][1]
-                + pos[1]
-                - self.points[id][1]
-        )
+        x_dist = self.points[id][0] - self.offsets[id][0] + pos[0] - self.points[id][0]
+        y_dist = self.points[id][1] - self.offsets[id][1] + pos[1] - self.points[id][1]
 
         dist = math.sqrt(x_dist * x_dist + y_dist * y_dist)
-        if dist > self.screen_size[1]/15:
+        if dist > self.screen_size[1] / 15:
             return False
         return True
 
@@ -279,7 +289,7 @@ class Cubic:
     def draw(self, screen, highlighted):
         if self.drag:
             pygame.draw.circle(
-                screen, config.WHITE, self.offsets[self.id], self.screen_size[1]/15, 2
+                screen, config.WHITE, self.offsets[self.id], self.screen_size[1] / 15, 2
             )
         if self.growth_percentage < 1:
             points = self.interpolated
@@ -341,11 +351,11 @@ class Cubic:
 
 class Beziere:
     def __init__(
-            self,
-            list_of_points: List[Tuple[float, float]],
-            color=config.GREEN,
-            res=100,
-            width=10,
+        self,
+        list_of_points: List[Tuple[float, float]],
+        color=config.GREEN,
+        res=100,
+        width=10,
     ):
         """
         list_of_points: Control points in the xy plane on which to interpolate. These
@@ -384,7 +394,7 @@ class Beziere:
         # self.update(0)
 
     def basis_function(
-            self, t: float, list_of_points: List[Tuple[float, float]], degree: int
+        self, t: float, list_of_points: List[Tuple[float, float]], degree: int
     ):
         """
         The basis function determines the weight of each control point at time t.
@@ -401,15 +411,13 @@ class Beziere:
         output_values: List[float] = []
         for i in range(len(list_of_points)):
             # basis function for each i
-            output_values.append(
-                comb(degree, i) * ((1 - t) ** (degree - i)) * (t ** i)
-            )
+            output_values.append(comb(degree, i) * ((1 - t) ** (degree - i)) * (t**i))
         # the basis must sum up to 1 for it to produce a valid Bezier curve.
         # assert round(sum(output_values), 5) == 1
         return output_values
 
     def bezier_curve_function(
-            self, t: float, list_of_points: List[Tuple[float, float]], degree: int
+        self, t: float, list_of_points: List[Tuple[float, float]], degree: int
     ) -> Tuple[float, float]:
         """
         The function to produce the values of the Bezier curve at time t.
@@ -437,7 +445,7 @@ class Beziere:
         return (x, y)
 
     def list_at_resolution(
-            self, list_of_points: List[Tuple[float, float]], degree: int
+        self, list_of_points: List[Tuple[float, float]], degree: int
     ):
         """
         This function gets x and y of bezier_curve_function at all resolution points
@@ -449,9 +457,7 @@ class Beziere:
         for i in range(0, self.resolution + 1):
             t = i / self.resolution
             assert 0 <= t <= 1, "Time t must be between 0 and 1."
-            points.append(
-                self.bezier_curve_function(t, list_of_points, degree)
-            )
+            points.append(self.bezier_curve_function(t, list_of_points, degree))
         return points
 
     # add dt
@@ -475,8 +481,7 @@ class Beziere:
 
             dist = math.sqrt(
                 (self.list_of_points[-2][0] - self.list_of_points[-1][0]) ** 2
-                + (self.list_of_points[-2][1] - self.list_of_points[-1][1])
-                ** 2
+                + (self.list_of_points[-2][1] - self.list_of_points[-1][1]) ** 2
             )
 
             x = math.sin(dist) * (target_x - self.list_of_points[-2][0])
@@ -554,7 +559,7 @@ class Beziere:
 
             # for i in range(0,len(self.list_of_points)):
             height_multiplicator = (
-                    1 - self.list_of_points[i][1] / config.SCREEN_HEIGHT
+                1 - self.list_of_points[i][1] / config.SCREEN_HEIGHT
             )  # used as mass
             # calculate a to get v over dt to get x,y
             a_x = sum_forces_x / height_multiplicator
@@ -576,19 +581,11 @@ class Beziere:
             old_point = self.bezier_curve_function(
                 t, self.last_point_list, len(self.last_point_list) - 1
             )
-            new_point = self.bezier_curve_function(
-                t, self.list_of_points, self.degree
-            )
-            x = (
-                        new_point[0] - old_point[0]
-                ) * self.growth_percentage + old_point[0]
-            y = (
-                        new_point[1] - old_point[1]
-                ) * self.growth_percentage + old_point[1]
+            new_point = self.bezier_curve_function(t, self.list_of_points, self.degree)
+            x = (new_point[0] - old_point[0]) * self.growth_percentage + old_point[0]
+            y = (new_point[1] - old_point[1]) * self.growth_percentage + old_point[1]
         else:
-            return self.bezier_curve_function(
-                t, self.list_of_points, self.degree
-            )
+            return self.bezier_curve_function(t, self.list_of_points, self.degree)
         return (x, y)
 
     def get_current_points_to_draw(self):
@@ -596,20 +593,18 @@ class Beziere:
             old_points = self.list_at_resolution(
                 self.last_point_list, len(self.last_point_list) - 1
             )
-            new_points = self.list_at_resolution(
-                self.list_of_points, self.degree
-            )
+            new_points = self.list_at_resolution(self.list_of_points, self.degree)
             # draw new points
             # pygame.draw.lines(screen, (255, 255, 255), False, new_points)
 
             interpolated_points = []
             for i in range(0, len(old_points)):
                 x = (
-                            new_points[i][0] - old_points[i][0]
-                    ) * self.growth_percentage + old_points[i][0]
+                    new_points[i][0] - old_points[i][0]
+                ) * self.growth_percentage + old_points[i][0]
                 y = (
-                            new_points[i][1] - old_points[i][1]
-                    ) * self.growth_percentage + old_points[i][1]
+                    new_points[i][1] - old_points[i][1]
+                ) * self.growth_percentage + old_points[i][1]
                 interpolated_points.append((x, y))
             # pygame.draw.lines(screen, (0,255,0), False, interpolated_points, 5)
             self.points_to_draw = interpolated_points

@@ -23,11 +23,11 @@ class Water_Grid:
     """
 
     def __init__(
-            self,
-            pos: tuple[int, int],
-            screen_size: [int, int],
-            grid_size: tuple[int, int] = (20, 6),
-            max_water_cell: int = MAX_WATER_PER_CELL
+        self,
+        pos: tuple[int, int],
+        screen_size: [int, int],
+        grid_size: tuple[int, int] = (20, 6),
+        max_water_cell: int = MAX_WATER_PER_CELL,
     ):
         self.pos = pos
         self.screen_size = screen_size
@@ -40,8 +40,11 @@ class Water_Grid:
         self.base_waters: list[Base_water] = []
         self.max_water_cell = max_water_cell
 
-        self.offset_grid: ndarray = np.random.randint(0, self.screen_size[1] / 11,
-                                                      (2, MAX_DROPS_TO_DRAW, grid_size[0], grid_size[1]))
+        self.offset_grid: ndarray = np.random.randint(
+            0,
+            self.screen_size[1] / 11,
+            (2, MAX_DROPS_TO_DRAW, grid_size[0], grid_size[1]),
+        )
         self.grid_screen = pygame.Surface(self.screen_size, pygame.SRCALPHA)
 
     def update(self, dt):
@@ -58,7 +61,10 @@ class Water_Grid:
             dt (float): ticks between last call
             pos (tuple[int, int]): position of watering can
         """
-        if not self.water_grid[int(pos[0] / (self.screen_size[1] / 10)), 0] > self.max_water_cell:
+        if (
+            not self.water_grid[int(pos[0] / (self.screen_size[1] / 10)), 0]
+            > self.max_water_cell
+        ):
             self.water_grid[int(pos[0] / (self.screen_size[1] / 10)), 0] += rate * dt
             self.poured_cells[int(pos[0] / (self.screen_size[1] / 10))] += rate * dt
 
@@ -70,9 +76,7 @@ class Water_Grid:
             for i in range(len(poured_cells)):
                 if poured_cells[i] > 0:
                     poured_cells[i] = poured_cells[i] / poured_sum
-            poured_cells = {
-                "cells": poured_cells.tolist()
-            }
+            poured_cells = {"cells": poured_cells.tolist()}
             self.poured_cells.fill(0)
             return poured_cells
         else:
@@ -107,10 +111,10 @@ class Water_Grid:
 
     def draw(self, screen):
         """
-            draws a grid of size width i : shape(0)-1, height j : shape(1)
-            each cell contains k drops that vary in color
-            the offset_grid provides random offsets for size: i,j and k drops in x and y dimensions
-            """
+        draws a grid of size width i : shape(0)-1, height j : shape(1)
+        each cell contains k drops that vary in color
+        the offset_grid provides random offsets for size: i,j and k drops in x and y dimensions
+        """
         for base_water in self.base_waters:
             base_water.draw(screen)
         # self.grid_screen.fill((0,0,0,0))
@@ -135,7 +139,9 @@ class Water_Grid:
                         radius=min(10, int(cell / (self.max_water_cell / 5) + 5)),
                     )
 
-                    n_drops = min(MAX_DROPS_TO_DRAW, int(cell / (self.max_water_cell / 20)))
+                    n_drops = min(
+                        MAX_DROPS_TO_DRAW, int(cell / (self.max_water_cell / 20))
+                    )
                     for k in range(0, n_drops):
                         offset_x = self.offset_grid[0, k, i, j]
                         offset_y = self.offset_grid[1, k, i, j]
@@ -156,14 +162,14 @@ class Base_water:
     """
 
     def __init__(
-            self,
-            n_dots: int,
-            base_height: int,
-            width: int,
-            y: int,
-            color: tuple[int, int, int],
-            line_color: tuple[int, int, int] = None,
-            line_width: int = 5,
+        self,
+        n_dots: int,
+        base_height: int,
+        width: int,
+        y: int,
+        color: tuple[int, int, int],
+        line_color: tuple[int, int, int] = None,
+        line_width: int = 5,
     ):
         self.gametime = GameTime.instance()
         self.width = width
@@ -200,10 +206,10 @@ class Base_water:
 
             for i in range(1, len(self.dots) - 1):
                 self.dots[i][1] = self.y - (
-                        self.base_height
-                        + self.base_height
-                        * 0.1
-                        * math.sin(math.radians(10 * deg + angle_offset * i))
+                    self.base_height
+                    + self.base_height
+                    * 0.1
+                    * math.sin(math.radians(10 * deg + angle_offset * i))
                 )
 
     def draw(self, screen):

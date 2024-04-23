@@ -24,7 +24,6 @@ class Server:
         self.game = None
         return response
 
-
     def update(self, message) -> dict:
         # Update Plant, Environment, Water grid etc.
         game_state = self.game.update(message)

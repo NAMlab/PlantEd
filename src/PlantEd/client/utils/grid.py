@@ -10,11 +10,11 @@ MAX_TO_DRAW: int = 20
 
 class Grid:
     def __init__(
-            self,
-            pos: tuple[int, int],
-            screen_size: tuple[int, int],
-            grid_size: tuple[int, int] = (20, 6),
-            max_cell: int = MAX_NITRATE_PER_CELL
+        self,
+        pos: tuple[int, int],
+        screen_size: tuple[int, int],
+        grid_size: tuple[int, int] = (20, 6),
+        max_cell: int = MAX_NITRATE_PER_CELL,
     ):
 
         self.pos = pos
@@ -23,7 +23,9 @@ class Grid:
         self.max_cell = max_cell
         self.cells_to_fill = None
 
-        self.offset_grid: ndarray = np.random.randint(0, self.screen_size[1]/11, (2, MAX_TO_DRAW, grid_size[0], grid_size[1]))
+        self.offset_grid: ndarray = np.random.randint(
+            0, self.screen_size[1] / 11, (2, MAX_TO_DRAW, grid_size[0], grid_size[1])
+        )
         self.grid_screen = pygame.Surface(self.screen_size, pygame.SRCALPHA)
 
     def fertilize(self, cells_to_fill):
@@ -31,9 +33,7 @@ class Grid:
 
     def pop_cells_to_add(self) -> dict:
         if self.cells_to_fill is not None:
-            dict_cells_to_fill = {
-                "cells": self.cells_to_fill
-            }
+            dict_cells_to_fill = {"cells": self.cells_to_fill}
             self.cells_to_fill = None
             return dict_cells_to_fill
         else:
@@ -41,10 +41,10 @@ class Grid:
 
     def draw(self, screen):
         """
-            draws a grid of size width i : shape(0)-1, height j : shape(1)
-            each cell contains k drops that vary in color
-            the offset_grid provides random offsets for size: i,j and k drops in x and y dimensions
-            """
+        draws a grid of size width i : shape(0)-1, height j : shape(1)
+        each cell contains k drops that vary in color
+        the offset_grid provides random offsets for size: i,j and k drops in x and y dimensions
+        """
         for i in range(0, self.grid.shape[0] - 1):
             for j in range(0, self.grid.shape[1]):
                 cell = self.grid[i, j]
@@ -57,10 +57,12 @@ class Grid:
                         # color variations
                         color=(90, 40 + int(offset_x / 4), 10 + int(offset_y / 4)),
                         center=(
-                            self.pos[0] + i * self.screen_size[1]/10 + offset_x,
-                            self.pos[1] + j * self.screen_size[1]/10 + offset_y,
+                            self.pos[0] + i * self.screen_size[1] / 10 + offset_x,
+                            self.pos[1] + j * self.screen_size[1] / 10 + offset_y,
                         ),
-                        radius=min(15, int(cell / (self.max_cell / 5) + int(offset_x/10))),
+                        radius=min(
+                            15, int(cell / (self.max_cell / 5) + int(offset_x / 10))
+                        ),
                     )
 
                     n_drops = min(MAX_TO_DRAW, int(cell / (self.max_cell / 20)))
@@ -72,8 +74,10 @@ class Grid:
                             # color variations
                             color=(100, 40 + int(offset_x / 4), 20 + int(offset_y / 4)),
                             center=(
-                                self.pos[0] + i * self.screen_size[1]/10 + offset_x,
-                                self.pos[1] + j * self.screen_size[1]/10 + offset_y,
+                                self.pos[0] + i * self.screen_size[1] / 10 + offset_x,
+                                self.pos[1] + j * self.screen_size[1] / 10 + offset_y,
                             ),
-                            radius=min(10, int(cell / (self.max_cell / 5) + int(offset_x/20))),
+                            radius=min(
+                                10, int(cell / (self.max_cell / 5) + int(offset_x / 20))
+                            ),
                         )

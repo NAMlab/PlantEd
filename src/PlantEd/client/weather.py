@@ -19,6 +19,7 @@ class Environment:
 
     Ideally the environment should handle nitrate, co2 and photon too
     """
+
     def __init__(
         self,
         screen_size: tuple[int, int],
@@ -31,12 +32,22 @@ class Environment:
         self.gametime = GameTime.instance()
         self.asset_handler = AssetHandler.instance()
         self.water_grid = water_grid
-        self.s = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
+        self.s = pygame.Surface(
+            (self.screen_width, self.screen_height), pygame.SRCALPHA
+        )
         self.sun_pos_spline: list[tuple[float, float]] = Beziere(
-            list_of_points=[(-1*self.screen_width/10, self.screen_height-self.screen_height/5),
-                            (self.screen_width/2, -1*self.screen_height/5),
-                            (self.screen_width + self.screen_width/10, self.screen_height - self.screen_height/5)],
-            res=SUN_POS_SPLINE_RES
+            list_of_points=[
+                (
+                    -1 * self.screen_width / 10,
+                    self.screen_height - self.screen_height / 5,
+                ),
+                (self.screen_width / 2, -1 * self.screen_height / 5),
+                (
+                    self.screen_width + self.screen_width / 10,
+                    self.screen_height - self.screen_height / 5,
+                ),
+            ],
+            res=SUN_POS_SPLINE_RES,
         ).points_to_draw
 
         self.sunpos: tuple[float, float] = (0, 0)
@@ -46,35 +57,39 @@ class Environment:
             images=[
                 self.asset_handler.img(
                     path="gif_rain/frame_{index}_delay-0.05s.png".format(index=i),
-                    size=(self.screen_width/2, self.screen_width/2)
+                    size=(self.screen_width / 2, self.screen_width / 2),
                 )
                 for i in range(0, 21)
             ],
             duration=1,
-            pos=(self.screen_width/4, 0),
-            running=False
+            pos=(self.screen_width / 4, 0),
+            running=False,
         )
 
         self.shadow_map: ndarray
-
 
         self.temperature: int = 0
         self.humidity: int = 0
         self.precipitation: float = 0
 
         self.sun: pygame.Surface = self.asset_handler.img("sun/sun.PNG", (256, 256))
-        self.cloud: pygame.Surface = self.asset_handler.img("clouds/cloud_0.PNG", (402, 230))
-        self.cloud_dark: pygame.Surface = self.asset_handler.img("clouds/cloud_dark_0.PNG", (402, 230))
+        self.cloud: pygame.Surface = self.asset_handler.img(
+            "clouds/cloud_0.PNG", (402, 230)
+        )
+        self.cloud_dark: pygame.Surface = self.asset_handler.img(
+            "clouds/cloud_dark_0.PNG", (402, 230)
+        )
 
-        self.soil_surface = self.asset_handler.img("soil.PNG", (self.screen_width, self.screen_height/2*3))
-
+        self.soil_surface = self.asset_handler.img(
+            "soil.PNG", (self.screen_width, self.screen_height / 2 * 3)
+        )
 
     def update(self, dt):
         """
-                Update the current values for temperature, humidity and precipitation
-                Handle the rain effect and respecting rain rate to fill the ground with water
-                Temperature and humidity are represented in UI and affect transpiration
-                """
+        Update the current values for temperature, humidity and precipitation
+        Handle the rain effect and respecting rain rate to fill the ground with water
+        Temperature and humidity are represented in UI and affect transpiration
+        """
         if self.precipitation > 0:
             self.rain_animation.running = True
             self.water_grid.activate_rain()
@@ -89,9 +104,7 @@ class Environment:
             self.sunpos = self.sun_pos_spline[(int(day_time * SUN_POS_SPLINE_RES) - 1)]
             self.plant.organs[1].sunpos = self.sunpos
 
-    def calc_shadowmap(
-        self, leaves, sun_dir=(0.5, 1), resolution=10, max_shadow=5
-    ):
+    def calc_shadowmap(self, leaves, sun_dir=(0.5, 1), resolution=10, max_shadow=5):
         """
         Return: a grid (ndarray) of integers that represent shadow across the screen,
                 resolution (int) to reduce calculation time
@@ -124,9 +137,9 @@ class Environment:
                     # delta_x for angle
                     delta_x = (j * resolution - bottom_left[1]) * sun_dir_x
                     if (
-                            i * resolution > bottom_left[0] + delta_x
-                            and i * resolution < bottom_right[0] + delta_x
-                            and j * resolution > bottom_left[1]
+                        i * resolution > bottom_left[0] + delta_x
+                        and i * resolution < bottom_right[0] + delta_x
+                        and j * resolution > bottom_left[1]
                     ):
                         shadow_map[i, j] += (
                             1 if shadow_map[i, j] < max_shadow else max_shadow
@@ -160,9 +173,13 @@ class Environment:
         sun_intensity = self.get_sun_intensity()
 
         if sun_intensity > 0:
-            color = self.get_color_mixed(config.BACKGROUND_ORANGE, config.BACKGROUND_BLUE, sun_intensity)
+            color = self.get_color_mixed(
+                config.BACKGROUND_ORANGE, config.BACKGROUND_BLUE, sun_intensity
+            )
         else:
-            color = self.get_color_mixed(config.BACKGROUND_ORANGE, config.BLACK, abs(sun_intensity))
+            color = self.get_color_mixed(
+                config.BACKGROUND_ORANGE, config.BLACK, abs(sun_intensity)
+            )
         self.s.fill(color)
         day_time = self.get_day_time_t()
         if day_time > 0 and day_time < 1:
@@ -186,7 +203,7 @@ class Environment:
         )
 
     def draw_foreground(self, screen):
-        screen.blit(self.soil_surface, (0, -1*self.screen_height/7.7))
+        screen.blit(self.soil_surface, (0, -1 * self.screen_height / 7.7))
         self.rain_animation.draw(screen)
 
     def get_day_time(self) -> (int, float, float):
@@ -208,8 +225,9 @@ class Environment:
         -1 represents night, 0 dusk and dawn, 1 noon
         Todo check if copy of get_day_time_t
         """
-        return (
-            np.sin((2 * np.pi) * ((self.gametime.get_time() / (1000 * 60 * 60 * 24)) - (8 / 24)))
+        return np.sin(
+            (2 * np.pi)
+            * ((self.gametime.get_time() / (1000 * 60 * 60 * 24)) - (8 / 24))
         )  # get time since start, convert to 0..1, 6 min interval
 
     def get_day_time_t(self):
@@ -218,6 +236,5 @@ class Environment:
         -1 represents night, 0 dusk and dawn, 1 noon
         """
         return (
-                ((self.gametime.get_time() / (1000 * 60 * 60 * 24)) + 0.5 - 0.333)
-                % 1
+            ((self.gametime.get_time() / (1000 * 60 * 60 * 24)) + 0.5 - 0.333) % 1
         ) * 2 - 1

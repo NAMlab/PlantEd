@@ -30,15 +30,15 @@ class Client:
                         "seed_percent": 0,
                         "starch_percent": -10,
                         "stomata": False,
-                    }
+                    },
                 }
                 await websocket.send(json.dumps(game_state))
                 response = await websocket.recv()
                 print(" --> Received response, updating state")
-                #plant.state = plant.state + 1
+                # plant.state = plant.state + 1
                 request_running = False
 
-    '''async def send_and_get_response(self):
+    """async def send_and_get_response(self):
         global request_running
         if not request_running:
             async with websockets.connect("ws://localhost:8765") as websocket:
@@ -67,4 +67,4 @@ class Client:
                 # print(response)
                 #print(" --> Received response, updating state")
                 request_running = False
-                self.data = response'''
+                self.data = response"""

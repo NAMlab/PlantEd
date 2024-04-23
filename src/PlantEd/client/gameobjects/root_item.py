@@ -7,13 +7,13 @@ from PlantEd.client.utils.particle import ParticleSystem
 
 class Root_Item:
     def __init__(
-            self,
-            screen_size: tuple[int, int],
-            callback: callable,
-            plant,
-            check_refund: callable,
-            finalize_shop_transaction: callable,
-            cost=1
+        self,
+        screen_size: tuple[int, int],
+        callback: callable,
+        plant,
+        check_refund: callable,
+        finalize_shop_transaction: callable,
+        cost=1,
     ):  # take from config
 
         self.screen_size = screen_size
@@ -60,7 +60,7 @@ class Root_Item:
         self.active = True
 
     def get_validation_rect(self):
-        y = self.screen_size[1]/1.15 + self.plant.camera.offset_y
+        y = self.screen_size[1] / 1.15 + self.plant.camera.offset_y
         return Rect(0, y, self.screen_size[0], self.screen_size[1])
 
     def deactivate(self):
@@ -76,12 +76,8 @@ class Root_Item:
             )
             # length = math.sqrt((plant_x-mouse_pos[0])**2+(plant_y-mouse_pos[1])**2)
             if self.get_validation_rect().collidepoint(mouse_pos):
-                pygame.draw.line(
-                    screen, config.WHITE, (plant_x, plant_y), mouse_pos, 3
-                )
+                pygame.draw.line(screen, config.WHITE, (plant_x, plant_y), mouse_pos, 3)
                 pygame.draw.circle(screen, config.WHITE, mouse_pos, 10)
             else:
-                pygame.draw.line(
-                    screen, config.GRAY, (plant_x, plant_y), mouse_pos, 3
-                )
+                pygame.draw.line(screen, config.GRAY, (plant_x, plant_y), mouse_pos, 3)
                 pygame.draw.circle(screen, config.GRAY, mouse_pos, 10)

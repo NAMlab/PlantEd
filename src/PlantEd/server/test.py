@@ -27,7 +27,7 @@ async def send_and_get_response(plant):
                     "seed_percent": 0,
                     "starch_percent": -10,
                     "stomata": False,
-                }
+                },
             }
             await websocket.send(json.dumps(game_state))
             response = await websocket.recv()
@@ -43,9 +43,12 @@ async def main():
     print("Starting game loop...")
     while True:
         timer.tick(30)
-        print("Currently in frame " + str(frame) + ". Plant state = " + str(plant.state))
+        print(
+            "Currently in frame " + str(frame) + ". Plant state = " + str(plant.state)
+        )
         frame = frame + 1
         task = asyncio.create_task(send_and_get_response(plant))
         await asyncio.sleep(0)
+
 
 asyncio.run(main())

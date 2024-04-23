@@ -2,6 +2,7 @@
 Loop through a set of sounds on demand via callback
 Use options to set volumes
 """
+
 import os
 import random
 from pathlib import Path
@@ -14,6 +15,7 @@ from PlantEd.data.assets import AssetHandler
 
 fileDir = Path(__file__)
 data_dir = fileDir.parent
+
 
 class SoundControl:
     def __init__(self):
@@ -31,15 +33,21 @@ class SoundControl:
         self.snail_sfx = self.fill_sfx_array(config.SNAIL_SFX_PATH, self.sfx_volume)
         self.bug_sfx = self.fill_sfx_array(config.BUG_SFX_PATH, self.sfx_volume)
         self.select_sfx = self.fill_sfx_array(config.SELECT_SFX_PATH, self.sfx_volume)
-        #self.confirm_sfx = self.fill_sfx_array(config.CONFIRM_SFX_PATH, self.sfx_volume)
+        # self.confirm_sfx = self.fill_sfx_array(config.CONFIRM_SFX_PATH, self.sfx_volume)
         self.buy_sfx = self.fill_sfx_array(config.BUY_SFX_PATH, self.sfx_volume)
         self.alert_sfx = self.fill_sfx_array(config.ALERT_SFX_PATH, self.sfx_volume)
         self.error_sfx = self.fill_sfx_array(config.ERROR_SFX_PATH, self.sfx_volume)
         self.toggle_sfx = self.fill_sfx_array(config.TOGGLE_SFX_PATH, self.sfx_volume)
         self.loose_sfx = self.fill_sfx_array(config.LOOSE_SFX_PATH, self.sfx_volume)
-        self.select_organs_sfx = self.fill_sfx_array(config.ORGANS_SFX_PATH, self.sfx_volume)
-        self.hive_clicked_sfx = self.fill_sfx_array(config.HIVE_SFX_PATH, self.sfx_volume)
-        self.watering_can_sfx = self.fill_sfx_array(config.WATERING_CAN, self.sfx_volume)
+        self.select_organs_sfx = self.fill_sfx_array(
+            config.ORGANS_SFX_PATH, self.sfx_volume
+        )
+        self.hive_clicked_sfx = self.fill_sfx_array(
+            config.HIVE_SFX_PATH, self.sfx_volume
+        )
+        self.watering_can_sfx = self.fill_sfx_array(
+            config.WATERING_CAN, self.sfx_volume
+        )
         self.nitrogen_sfx = self.fill_sfx_array(config.NITROGEN, self.sfx_volume)
         self.level_up_sfx = self.fill_sfx_array(config.LEVEL_UP, self.sfx_volume)
         self.spraycan_sfx = self.fill_sfx_array(config.SPRAYCAN, self.sfx_volume)
@@ -75,6 +83,7 @@ class SoundControl:
     def play_start_sfx(self):
         i = int(random.random() * len(self.start_sfx))
         self.start_sfx[i].play()
+
     def play_bee_sfx(self):
         i = int(random.random() * len(self.bee_sfx))
         self.bee_sfx[i].play()
@@ -128,7 +137,7 @@ class SoundControl:
         self.level_up_sfx[i].play()
 
     def play_watering_can_sfx(self):
-        #i = int(random.random() * len(self.hive_clicked_sfx))
+        # i = int(random.random() * len(self.hive_clicked_sfx))
         self.watering_can_sfx[0].play(-1)
 
     def stop_watering_can_sfx(self):

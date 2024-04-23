@@ -6,14 +6,14 @@ from PlantEd.constants import ROOT_GRID_SIZE
 
 class RootStructureSmall:
     def __init__(
-            self,
-            id: int,
-            start_mass: float,
-            end_mass: float,
-            segments_t: list[float],
-            segments: list[tuple[float, float]],
-            resolution: tuple[int, int] = None,
-            start_pos: tuple[float, float] = (0, 0)
+        self,
+        id: int,
+        start_mass: float,
+        end_mass: float,
+        segments_t: list[float],
+        segments: list[tuple[float, float]],
+        resolution: tuple[int, int] = None,
+        start_pos: tuple[float, float] = (0, 0),
     ):
         self.id = id
         self.grid_size = ROOT_GRID_SIZE
@@ -35,28 +35,54 @@ class RootStructureSmall:
                     next_pos = self.segments[i]
                     previous_pos = self.segments[i - 1]
                     previous_segment_t = self.segments_t[i - 1]
-                    percentage_segment = (percentage - previous_segment_t) / (segment_t - previous_segment_t)
-                    x = (((next_pos[0] - previous_pos[0]) * percentage_segment + previous_pos[0]) * self.resolution[0] / n)
-                    y = (((next_pos[1] - previous_pos[1]) * percentage_segment + previous_pos[1]) * self.resolution[1] / m) + self.start_pos[1]
+                    percentage_segment = (percentage - previous_segment_t) / (
+                        segment_t - previous_segment_t
+                    )
+                    x = (
+                        (
+                            (next_pos[0] - previous_pos[0]) * percentage_segment
+                            + previous_pos[0]
+                        )
+                        * self.resolution[0]
+                        / n
+                    )
+                    y = (
+                        (
+                            (next_pos[1] - previous_pos[1]) * percentage_segment
+                            + previous_pos[1]
+                        )
+                        * self.resolution[1]
+                        / m
+                    ) + self.start_pos[1]
                     end_pos = (x, y)
                     points_to_draw.append(end_pos)
                     break
                 else:
                     points_to_draw.append(
-                        ((self.segments[i][0] * self.resolution[0] / n), (self.segments[i][1] * self.resolution[1] / m) + self.start_pos[1]))
+                        (
+                            (self.segments[i][0] * self.resolution[0] / n),
+                            (self.segments[i][1] * self.resolution[1] / m)
+                            + self.start_pos[1],
+                        )
+                    )
         else:
             points_to_draw = []
             for i, segment_t in enumerate(self.segments_t):
                 points_to_draw.append(
-                    ((self.segments[i][0] * self.resolution[0] / n), (self.segments[i][1] * self.resolution[1] / m) + self.start_pos[1]))
-        pygame.draw.lines(screen, color=config.WHITE, closed=False, points=points_to_draw, width=5)
+                    (
+                        (self.segments[i][0] * self.resolution[0] / n),
+                        (self.segments[i][1] * self.resolution[1] / m)
+                        + self.start_pos[1],
+                    )
+                )
+        pygame.draw.lines(
+            screen, color=config.WHITE, closed=False, points=points_to_draw, width=5
+        )
 
 
 class RootDrawer:
     def __init__(
-            self,
-            resolution: tuple[int, int],
-            start_pos: tuple[float, float] = (0, 0)
+        self, resolution: tuple[int, int], start_pos: tuple[float, float] = (0, 0)
     ):
         self.resolution = resolution
         self.start_pos = start_pos
@@ -87,7 +113,7 @@ class RootDrawer:
                         segments_t=root_server["segments_t"],
                         segments=root_server["segments"],
                         start_pos=self.start_pos,
-                        resolution=self.resolution
+                        resolution=self.resolution,
                     )
                 )
             self.roots.append(root_list_client)

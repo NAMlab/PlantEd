@@ -15,26 +15,26 @@ clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
 # calling `group.update()` and `group.draw(screen)`.
 class Button(pygame.sprite.Sprite):
     def __init__(
-            self,
-            x,
-            y,
-            w,
-            h,
-            callbacks,
-            font=None,
-            text="",
-            button_color=WHITE_TRANSPARENT,
-            text_color=BLACK,
-            image=None,
-            border_w=None,
-            post_hover_message=None,
-            hover_message=None,
-            hover_message_image=None,
-            button_sound=None,
-            active=True,
-            offset=(0, 0),
-            callback_var=None,
-            play_confirm=None,
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        font=None,
+        text="",
+        button_color=WHITE_TRANSPARENT,
+        text_color=BLACK,
+        image=None,
+        border_w=None,
+        post_hover_message=None,
+        hover_message=None,
+        hover_message_image=None,
+        button_sound=None,
+        active=True,
+        offset=(0, 0),
+        callback_var=None,
+        play_confirm=None,
     ):
         super().__init__()
         self.posted = False
@@ -156,25 +156,25 @@ class Button(pygame.sprite.Sprite):
 
 class Button_Once(pygame.sprite.Sprite):
     def __init__(
-            self,
-            x,
-            y,
-            w,
-            h,
-            callbacks,
-            font=None,
-            text="",
-            button_color=WHITE_TRANSPARENT,
-            text_color=BLACK,
-            image=None,
-            border_w=None,
-            post_hover_message=None,
-            hover_message=None,
-            hover_message_image=None,
-            button_sound=None,
-            active=True,
-            offset=(0, 0),
-            callback_var=None,
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        font=None,
+        text="",
+        button_color=WHITE_TRANSPARENT,
+        text_color=BLACK,
+        image=None,
+        border_w=None,
+        post_hover_message=None,
+        hover_message=None,
+        hover_message_image=None,
+        button_sound=None,
+        active=True,
+        offset=(0, 0),
+        callback_var=None,
     ):
         super().__init__()
         self.posted = False
@@ -296,24 +296,24 @@ class Button_Once(pygame.sprite.Sprite):
 
 class Arrow_Button(pygame.sprite.Sprite):
     def __init__(
-            self,
-            x,
-            y,
-            w,
-            h,
-            callbacks,
-            arrow_dir,
-            font=None,
-            text="",
-            arrow_color=WHITE,
-            border_w=None,
-            post_hover_message=None,
-            hover_message=None,
-            hover_message_image=None,
-            button_sound=None,
-            active=True,
-            offset=(0, 0),
-            callback_var=None,
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        arrow_dir,
+        font=None,
+        text="",
+        arrow_color=WHITE,
+        border_w=None,
+        post_hover_message=None,
+        hover_message=None,
+        hover_message_image=None,
+        button_sound=None,
+        active=True,
+        offset=(0, 0),
+        callback_var=None,
     ):
         super().__init__()
         self.posted = False
@@ -422,7 +422,7 @@ class Arrow_Button(pygame.sprite.Sprite):
         self.button_down = False
         if post_hover_message and hover_message:
             self.posted = False
-            hover_message = font.render(hover_message, True, (0,0,0))
+            hover_message = font.render(hover_message, True, (0, 0, 0))
             w = hover_message.get_width() + 10
             if self.hover_message_image:
                 w += hover_message_image.get_width() + 10
@@ -491,24 +491,24 @@ class Arrow_Button(pygame.sprite.Sprite):
 
 class ToggleButton(pygame.sprite.Sprite):
     def __init__(
-            self,
-            x,
-            y,
-            w,
-            h,
-            callback,
-            font=None,
-            text="",
-            button_color=WHITE_TRANSPARENT,
-            text_color=BLACK,
-            image=None,
-            border_w=None,
-            border_radius=None,
-            pressed=False,
-            fixed=False,
-            vertical=False,
-            cross=False,
-            cross_size=None
+        self,
+        x,
+        y,
+        w,
+        h,
+        callback,
+        font=None,
+        text="",
+        button_color=WHITE_TRANSPARENT,
+        text_color=BLACK,
+        image=None,
+        border_w=None,
+        border_radius=None,
+        pressed=False,
+        fixed=False,
+        vertical=False,
+        cross=False,
+        cross_size=None,
     ):
         super().__init__()
         self.fixed = fixed
@@ -522,19 +522,19 @@ class ToggleButton(pygame.sprite.Sprite):
             self.button_image,
             button_color,
             self.button_image.get_rect(),
-            border_radius=self.border_radius
+            border_radius=self.border_radius,
         )
         pygame.draw.rect(
             self.hover_image,
             button_color,
             self.hover_image.get_rect(),
-            border_radius=self.border_radius
+            border_radius=self.border_radius,
         )
         pygame.draw.rect(
             self.clicked_image,
             button_color,
             self.clicked_image.get_rect(),
-            border_radius=self.border_radius
+            border_radius=self.border_radius,
         )
 
         if image:
@@ -549,17 +549,25 @@ class ToggleButton(pygame.sprite.Sprite):
             WHITE_TRANSPARENT,
             self.hover_image.get_rect(),
             self.border_w,
-            border_radius=self.border_radius
+            border_radius=self.border_radius,
         )
         if cross:
             if not cross_size:
                 cross_size = (0, 0, w, h)
 
             pygame.draw.line(
-                self.clicked_image, WHITE, (cross_size[0], cross_size[1]), (cross_size[2], cross_size[3]), self.border_w
+                self.clicked_image,
+                WHITE,
+                (cross_size[0], cross_size[1]),
+                (cross_size[2], cross_size[3]),
+                self.border_w,
             )
             pygame.draw.line(
-                self.clicked_image, WHITE, (cross_size[0], cross_size[2]), (cross_size[2], cross_size[1]), self.border_w
+                self.clicked_image,
+                WHITE,
+                (cross_size[0], cross_size[2]),
+                (cross_size[2], cross_size[1]),
+                self.border_w,
             )
         else:
             pygame.draw.rect(
@@ -629,21 +637,21 @@ class ToggleButton(pygame.sprite.Sprite):
 # image size has to be = w,h
 class RadioButton(pygame.sprite.Sprite):
     def __init__(
-            self,
-            x,
-            y,
-            w,
-            h,
-            callbacks,
-            font=None,
-            text="",
-            button_color=WHITE_TRANSPARENT,
-            text_color=BLACK,
-            image=None,
-            border_w=None,
-            target=None,
-            callback_var=None,
-            border_radius=0,
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        font=None,
+        text="",
+        button_color=WHITE_TRANSPARENT,
+        text_color=BLACK,
+        image=None,
+        border_w=None,
+        target=None,
+        callback_var=None,
+        border_radius=0,
     ):
         super().__init__()
         self.callback_var = callback_var
@@ -735,17 +743,17 @@ class RadioButton(pygame.sprite.Sprite):
 # image size has to be = w,h
 class DoubleRadioButton(pygame.sprite.Sprite):
     def __init__(
-            self,
-            x,
-            y,
-            w,
-            h,
-            callbacks,
-            button_color=WHITE_TRANSPARENT,
-            border_w=None,
-            callback_var=None,
-            border_radius=0,
-            preset=None,
+        self,
+        x,
+        y,
+        w,
+        h,
+        callbacks,
+        button_color=WHITE_TRANSPARENT,
+        border_w=None,
+        callback_var=None,
+        border_radius=0,
+        preset=None,
     ):
         super().__init__()
         self.w = w
@@ -823,9 +831,7 @@ class DoubleRadioButton(pygame.sprite.Sprite):
         self.button_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
         self.hover_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
         self.clicked_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
-        self.hover_selected_image = pygame.Surface(
-            (self.w, self.h), pygame.SRCALPHA
-        )
+        self.hover_selected_image = pygame.Surface((self.w, self.h), pygame.SRCALPHA)
 
         pygame.draw.rect(
             self.button_image,
@@ -950,7 +956,7 @@ class DoubleRadioButton(pygame.sprite.Sprite):
 
 class OptionBox:
     def __init__(
-            self, x, y, w, h, color, highlight_color, font, option_list, selected=0
+        self, x, y, w, h, color, highlight_color, font, option_list, selected=0
     ):
         self.color = color
         self.highlight_color = highlight_color
@@ -978,9 +984,7 @@ class OptionBox:
                 rect.y += (i + 1) * self.rect.height
                 pygame.draw.rect(
                     surf,
-                    self.highlight_color
-                    if i == self.active_option
-                    else self.color,
+                    self.highlight_color if i == self.active_option else self.color,
                     rect,
                 )
                 msg = self.font.render(text, 1, (0, 0, 0))
@@ -1022,19 +1026,19 @@ class OptionBox:
 # Todo include slider to mouse offset when clicked to avoid jumping
 class Slider:
     def __init__(
-            self,
-            rect,
-            font=None,
-            slider_size=None,
-            organ=None,
-            plant=None,
-            color=None,
-            slider_color=None,
-            callback=None,
-            percent=0,
-            active=True,
-            visible=True,
-            activate_callback_on_drag=False
+        self,
+        rect,
+        font=None,
+        slider_size=None,
+        organ=None,
+        plant=None,
+        color=None,
+        slider_color=None,
+        callback=None,
+        percent=0,
+        active=True,
+        visible=True,
+        activate_callback_on_drag=False,
     ):
         super().__init__()
         self.color = color if color else (255, 255, 255, 128)
@@ -1076,9 +1080,7 @@ class Slider:
         return 100 - percent
 
     def get_slider_rect_global(self):
-        return pygame.Rect(
-            self.x, self.y + self.slider_y, self.slider_w, self.slider_h
-        )
+        return pygame.Rect(self.x, self.y + self.slider_y, self.slider_w, self.slider_h)
 
     def get_slider_rect_local(self):
         return pygame.Rect(0, self.slider_y, self.slider_w, self.slider_h)
@@ -1107,9 +1109,9 @@ class Slider:
             return
         if not slider_color:
             slider_color = self.slider_color
-        #slider_color = (
+        # slider_color = (
         #    self.slider_color if self.active else (150, 150, 150, 128)
-        #)
+        # )
         w = self.w if self.w >= self.slider_w else self.slider_w
         border = pygame.Surface((w, self.h), pygame.SRCALPHA)
         # line
@@ -1129,10 +1131,8 @@ class Slider:
         if self.font is not None:
             msg = self.font.render(
                 "{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0)
-                )
-            border.blit(
-                msg, msg.get_rect(center=self.get_slider_rect_local().center)
-                )
+            )
+            border.blit(msg, msg.get_rect(center=self.get_slider_rect_local().center))
         screen.blit(border, (self.x, self.y))
 
     def handle_event(self, event):
@@ -1155,30 +1155,31 @@ class Slider:
             if self.drag:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
                 self.slider_y = (
-                        clamp(
-                            pygame.mouse.get_pos()[1]-self.slider_h/2,
-                            self.y,
-                            self.y - self.slider_h + self.h,
-                        )
-                        - self.y
+                    clamp(
+                        pygame.mouse.get_pos()[1] - self.slider_h / 2,
+                        self.y,
+                        self.y - self.slider_h + self.h,
+                    )
+                    - self.y
                 )
                 if self.activate_callback_on_drag:
                     self.callback(self)
 
+
 class NegativeSlider:
     def __init__(
-            self,
-            rect,
-            font,
-            slider_size,
-            organ=None,
-            plant=None,
-            color=None,
-            slider_color=None,
-            callback=None,
-            percent=0,
-            active=True,
-            visible=True,
+        self,
+        rect,
+        font,
+        slider_size,
+        organ=None,
+        plant=None,
+        color=None,
+        slider_color=None,
+        callback=None,
+        percent=0,
+        active=True,
+        visible=True,
     ):
         super().__init__()
         self.color = color if color else (255, 255, 255, 128)
@@ -1213,9 +1214,7 @@ class NegativeSlider:
         return (50 - percent) * 2
 
     def get_slider_rect_global(self):
-        return pygame.Rect(
-            self.x, self.y + self.slider_y, self.slider_w, self.slider_h
-        )
+        return pygame.Rect(self.x, self.y + self.slider_y, self.slider_w, self.slider_h)
 
     def get_slider_rect_local(self):
         return pygame.Rect(0, self.slider_y, self.slider_w, self.slider_h)
@@ -1230,7 +1229,7 @@ class NegativeSlider:
     # can subtract negative numbers -> add
     def sub_percentage(self, percent):
         if self.get_percentage() < 0:
-            return - percent
+            return -percent
         # slider is in positive area
         delta = self.get_percentage() - percent
         if delta < 0:
@@ -1247,9 +1246,9 @@ class NegativeSlider:
     def draw(self, screen, slider_color):
         if not self.visible:
             return
-        #slider_color = (
+        # slider_color = (
         #    self.slider_color if self.active else (150, 150, 150, 128)
-        #)
+        # )
         w = self.w if self.w >= self.slider_w else self.slider_w
         border = pygame.Surface((w, self.h), pygame.SRCALPHA)
         # line
@@ -1275,12 +1274,8 @@ class NegativeSlider:
 
         # draw slider
         pygame.draw.rect(border, slider_color, self.get_slider_rect_local())
-        msg = self.font.render(
-            "{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0)
-        )
-        border.blit(
-            msg, msg.get_rect(center=self.get_slider_rect_local().center)
-        )
+        msg = self.font.render("{:02.0f}".format(self.get_percentage()), 1, (0, 0, 0))
+        border.blit(msg, msg.get_rect(center=self.get_slider_rect_local().center))
         screen.blit(border, (self.x, self.y))
 
     def handle_event(self, event):
@@ -1303,12 +1298,12 @@ class NegativeSlider:
             if self.drag:
                 # clamp the slider pos between min y and max, subtract slider_h/2 to not clip
                 self.slider_y = (
-                        clamp(
-                            pygame.mouse.get_pos()[1],
-                            self.y,
-                            self.y - self.slider_h + self.h,
-                        )
-                        - self.y
+                    clamp(
+                        pygame.mouse.get_pos()[1],
+                        self.y,
+                        self.y - self.slider_h + self.h,
+                    )
+                    - self.y
                 )
 
 
@@ -1349,13 +1344,13 @@ class SliderGroup:
                 # excess will be negative
                 # weird to sub a negative negative -> add?
                 excess = slider.sub_percentage(-delta_each_slider)
-                delta -= (delta_each_slider - excess)
+                delta -= delta_each_slider - excess
                 if excess != 0:
                     available_sliders.remove(slider)
             tries = tries - 1
 
 
-'''
+"""
 
 
         # @slider: slider that changed
@@ -1379,21 +1374,21 @@ class SliderGroup:
                     extra = s.sub_percentage(delta)
                     if extra > 0:
                         self.sliders_zero.append(s)
-'''
+"""
 
 
 class Textbox:
     def __init__(
-            self,
-            x,
-            y,
-            w,
-            h,
-            font,
-            text="name",
-            background_color=(240, 240, 240, 180),
-            highlight_color=(255, 255, 255),
-            textcolor=(0, 0, 0),
+        self,
+        x,
+        y,
+        w,
+        h,
+        font,
+        text="name",
+        background_color=(240, 240, 240, 180),
+        highlight_color=(255, 255, 255),
+        textcolor=(0, 0, 0),
     ):
         self.x = x
         self.y = y
@@ -1452,9 +1447,7 @@ class Textbox:
                 self.cursor_timer = 0
 
     def draw(self, screen):
-        pygame.draw.rect(
-            screen, self.background_color, self.rect, border_radius=3
-        )
+        pygame.draw.rect(screen, self.background_color, self.rect, border_radius=3)
 
         # pygame.draw.rect(screen, self.border_color, self.rect, border_radius=3, width=3)
         screen.blit(
@@ -1469,13 +1462,8 @@ class Textbox:
                 screen.blit(
                     self.cursor,
                     (
-                        self.x
-                        + self.w / 2
-                        + self.render_text.get_width() / 2
-                        + 1,
-                        self.y
-                        + self.h / 2
-                        - self.render_text.get_height() / 2,
+                        self.x + self.w / 2 + self.render_text.get_width() / 2 + 1,
+                        self.y + self.h / 2 - self.render_text.get_height() / 2,
                     ),
                 )
             pygame.draw.line(
@@ -1498,18 +1486,18 @@ class Textbox:
 
 class ButtonArray:
     def __init__(
-            self,
-            rect,
-            amount,
-            resolution,
-            margin,
-            callback,
-            set_hover_message,
-            border_w=5,
-            pressed=False,
-            start_color=None,
-            end_color=None,
-            select_sound=None,
+        self,
+        rect,
+        amount,
+        resolution,
+        margin,
+        callback,
+        set_hover_message,
+        border_w=5,
+        pressed=False,
+        start_color=None,
+        end_color=None,
+        select_sound=None,
     ):
         self.asset_handler = AssetHandler.instance()
         self.toggle_buttons = []
@@ -1523,8 +1511,12 @@ class ButtonArray:
         self.hover_message = "Select wich hours to open or close the plants stomata. *Hot days increase transpiration. Try closing them to save water"
         self.gradient = None
         if start_color and end_color:
-            gradient_early = self.get_color_gradient(end_color, start_color, int(amount / 2))
-            gradient_late = self.get_color_gradient(start_color, end_color, int((amount / 2) + 0.5))
+            gradient_early = self.get_color_gradient(
+                end_color, start_color, int(amount / 2)
+            )
+            gradient_late = self.get_color_gradient(
+                start_color, end_color, int((amount / 2) + 0.5)
+            )
             self.gradient = gradient_early + gradient_late
         set_all_width = 50
 
@@ -1602,10 +1594,7 @@ class ButtonArray:
         self.callback(self.get_bool_list())
 
     def get_bool_list(self):
-        return [
-            True if button.button_down else False
-            for button in self.toggle_buttons
-        ]
+        return [True if button.button_down else False for button in self.toggle_buttons]
 
     def press_all(self):
         for button in self.toggle_buttons:
@@ -1627,10 +1616,13 @@ class ButtonArray:
 
         gradient = []
         for i in range(iterations):
-            gradient.append((
-                start_color[0] - r_delta * i,
-                start_color[1] - g_delta * i,
-                start_color[2] - b_delta * i))
+            gradient.append(
+                (
+                    start_color[0] - r_delta * i,
+                    start_color[1] - g_delta * i,
+                    start_color[2] - b_delta * i,
+                )
+            )
         return gradient
 
     def draw(self, screen):

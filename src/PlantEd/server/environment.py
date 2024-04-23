@@ -5,8 +5,12 @@ import pandas as pd
 from scipy import integrate
 
 from PlantEd.grid import MetaboliteGrid
-from PlantEd.constants import MAX_WATER_PER_CELL, MAX_NITRATE_PER_CELL, WATERING_CAN_AMOUNT, \
-    NITRATE_FERTILIZE_AMOUNT
+from PlantEd.constants import (
+    MAX_WATER_PER_CELL,
+    MAX_NITRATE_PER_CELL,
+    WATERING_CAN_AMOUNT,
+    NITRATE_FERTILIZE_AMOUNT,
+)
 from PlantEd.server.weather import WeatherSimulator
 
 fileDir = Path(__file__)
@@ -17,10 +21,15 @@ class Environment:
     def __init__(self, start_time, scenario):
         self.time = start_time  # seconds
         self.peak_photon = scenario["photon_peak"]
-        self.water_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_WATER_PER_CELL,
-                                                         preset_fill_amount=MAX_WATER_PER_CELL / 20)
-        self.nitrate_grid: MetaboliteGrid = MetaboliteGrid(max_metabolite_cell=MAX_NITRATE_PER_CELL,
-                                                           preset_fill_amount=MAX_NITRATE_PER_CELL * (scenario["nitrate_percent"] / 100))
+        self.water_grid: MetaboliteGrid = MetaboliteGrid(
+            max_metabolite_cell=MAX_WATER_PER_CELL,
+            preset_fill_amount=MAX_WATER_PER_CELL / 20,
+        )
+        self.nitrate_grid: MetaboliteGrid = MetaboliteGrid(
+            max_metabolite_cell=MAX_NITRATE_PER_CELL,
+            preset_fill_amount=MAX_NITRATE_PER_CELL
+            * (scenario["nitrate_percent"] / 100),
+        )
         # Todo balancing
         self.nitrate_grid.add2cell(0.5, 8, 0)
         self.nitrate_grid.add2cell(1, 9, 0)
@@ -28,33 +37,32 @@ class Environment:
 
         df_weather: pd.DataFrame = pd.read_csv(script_dir / scenario["filename"])
         self.weather: WeatherSimulator = WeatherSimulator(
-            data=df_weather,
-            seed=scenario["weather_seed"]
+            data=df_weather, seed=scenario["weather_seed"]
         )
 
     def update(self, delta_t):
         weather_state = self.weather.get_weather_state(int(self.time / 3600))
         self.water_grid.rain_like_increase(delta_t, weather_state.precipitation)
         for i in range(10):
-            self.water_grid.trickle(delta_t/10)
+            self.water_grid.trickle(delta_t / 10)
 
         self.time += delta_t
 
     def increase_water_grid(self, increase_water_grid):
         cells_to_fill = increase_water_grid["cells"]
         for i in range(len(cells_to_fill)):
-            self.water_grid.add2cell(cells_to_fill[i]*WATERING_CAN_AMOUNT, i, 0)
+            self.water_grid.add2cell(cells_to_fill[i] * WATERING_CAN_AMOUNT, i, 0)
 
     def increase_nitrate_grid(self, increase_nitrate_grid):
         cells_to_fill = increase_nitrate_grid["cells"]
         for cell in cells_to_fill:
-            self.nitrate_grid.add2cell(cell[2]*NITRATE_FERTILIZE_AMOUNT, cell[0], cell[1])
+            self.nitrate_grid.add2cell(
+                cell[2] * NITRATE_FERTILIZE_AMOUNT, cell[0], cell[1]
+            )
 
     def micromol_photon_per_square_meter(self, start, end):
         # maximum photon * 0..1 depending on time spent in sunlight
-        return self.peak_photon * self.get_sun_intensity_for_duration(
-            start, end
-        )
+        return self.peak_photon * self.get_sun_intensity_for_duration(start, end)
 
     def get_sun_intensity_for_duration(self, start, end):
         start = start / (3600 * 24)
@@ -69,9 +77,7 @@ class Environment:
         -1 represents night, 0 dusk and dawn, 1 noon
         Todo check if copy of get_day_time_t
         """
-        return (
-            np.sin((2 * np.pi) * ((self.time / (60 * 60 * 24)) - (8 / 24)))
-        )
+        return np.sin((2 * np.pi) * ((self.time / (60 * 60 * 24)) - (8 / 24)))
 
     def to_dict(self) -> dict:
         weather_state = self.weather.get_weather_state(int(self.time / 3600))
@@ -82,7 +88,7 @@ class Environment:
             "precipitation": weather_state.precipitation,
             "nitrate_grid": self.nitrate_grid.grid.tolist(),
             "water_grid": self.water_grid.grid.tolist(),
-            "sun_intensity": self.get_sun_intensity()
+            "sun_intensity": self.get_sun_intensity(),
             # "water_grid_size": self.water_grid.grid_size,
         }
         return dic

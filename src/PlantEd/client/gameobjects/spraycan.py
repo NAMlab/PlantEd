@@ -8,18 +8,19 @@ from PlantEd.client.utils.particle import ParticleSystem
 
 
 class Spraycan:
-    def __init__(self,
-                 pos,
-                 amount,
-                 image_active,
-                 image_inactive,
-                 camera: Camera,
-                 check_refund: callable,
-                 finalize_shop_transaction: callable,
-                 cost: int,
-                 callbacks=[],
-                 play_sound=None
-                 ):  # take from config
+    def __init__(
+        self,
+        pos,
+        amount,
+        image_active,
+        image_inactive,
+        camera: Camera,
+        check_refund: callable,
+        finalize_shop_transaction: callable,
+        cost: int,
+        callbacks=[],
+        play_sound=None,
+    ):  # take from config
         self.pos = pos
         self.image_active = image_active
         self.image_inactive = image_inactive
@@ -30,7 +31,7 @@ class Spraycan:
         self.cost = cost
         self.default_amount = amount
         self.amount = amount
-        self.hitbox = pygame.Rect(self.pos[0]-125,self.pos[1]-25,150,150)
+        self.hitbox = pygame.Rect(self.pos[0] - 125, self.pos[1] - 25, 150, 150)
         self.max_amount = amount
         self.callbacks = callbacks
         self.play_sound = play_sound
@@ -54,9 +55,7 @@ class Spraycan:
         self.pos = pygame.mouse.get_pos()
         self.active = True
         pygame.mouse.set_visible(False)
-        self.can_particle_system.spawn_box = Rect(
-            self.pos[0], self.pos[1], 0, 0
-        )
+        self.can_particle_system.spawn_box = Rect(self.pos[0], self.pos[1], 0, 0)
 
     def deactivate(self):
         self.image = self.image_inactive
@@ -91,7 +90,9 @@ class Spraycan:
             x, y = pygame.mouse.get_pos()
             self.pos = (x, y)
             self.can_particle_system.spawn_box = Rect(x, y, 0, 0)
-            self.hitbox = pygame.Rect(self.pos[0] - 125, self.pos[1]-25-self.camera.offset_y, 150, 150)
+            self.hitbox = pygame.Rect(
+                self.pos[0] - 125, self.pos[1] - 25 - self.camera.offset_y, 150, 150
+            )
 
     def draw(self, screen):
         self.can_particle_system.draw(screen)

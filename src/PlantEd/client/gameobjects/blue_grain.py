@@ -8,17 +8,19 @@ from PlantEd.constants import NITRATE_FERTILIZE_AMOUNT
 from PlantEd.data.assets import AssetHandler
 from PlantEd.client.utils.particle import ParticleSystem
 
+
 class Blue_grain:
-    def __init__(self,
-                 screen_size: tuple[int, int],
-                 pos,
-                 check_refund: callable,
-                 finalize_shop_transaction: callable,
-                 cost: int,
-                 amount: int = NITRATE_FERTILIZE_AMOUNT,
-                 play_sound=None,
-                 nitrate_grid=None
-                 ):
+    def __init__(
+        self,
+        screen_size: tuple[int, int],
+        pos,
+        check_refund: callable,
+        finalize_shop_transaction: callable,
+        cost: int,
+        amount: int = NITRATE_FERTILIZE_AMOUNT,
+        play_sound=None,
+        nitrate_grid=None,
+    ):
         self.screen_size = screen_size
         self.asset_handler = AssetHandler.instance()
         self.image = self.asset_handler.img("blue_grain_bag.PNG", (128, 128))
@@ -33,9 +35,7 @@ class Blue_grain:
         self.particle_system = ParticleSystem(
             80,
             spawn_box=Rect(self.pos[0], self.pos[1], 50, 50),
-            boundary_box=Rect(
-                0, 0, self.screen_size[0], self.screen_size[1]
-            ),
+            boundary_box=Rect(0, 0, self.screen_size[0], self.screen_size[1]),
             lifetime=2,
             size=10,
             color=config.NITRATE_BROWN,
@@ -71,21 +71,23 @@ class Blue_grain:
             if self.check_refund(self.pos, self.cost):
                 self.deactivate()
                 return
-            self.particle_system.spawn_box = Rect(
-                self.pos[0], self.pos[1], 20, 20
-            )
+            self.particle_system.spawn_box = Rect(self.pos[0], self.pos[1], 20, 20)
             self.play_sound()
             self.particle_system.deactivate()
             self.particle_system.activate()
             if self.nitrate_grid is not None:
-                lower_limit_grid = max(0, int(self.pos[0]/(self.screen_size[0]/10))+3)
-                upper_limit_grid = max(0, int(self.pos[0]/(self.screen_size[0]/10))+8)
+                lower_limit_grid = max(
+                    0, int(self.pos[0] / (self.screen_size[0] / 10)) + 3
+                )
+                upper_limit_grid = max(
+                    0, int(self.pos[0] / (self.screen_size[0] / 10)) + 8
+                )
                 print(f"LOWER IM: {lower_limit_grid}, UPPER LIM: {upper_limit_grid}")
                 # (x,y,value)
                 cells_to_fill = []
                 for i in range(lower_limit_grid, upper_limit_grid):
                     n_cells = upper_limit_grid - lower_limit_grid
-                    cells_to_fill.append((i, 0, 1/n_cells))
+                    cells_to_fill.append((i, 0, 1 / n_cells))
                 self.nitrate_grid.fertilize(cells_to_fill)
             self.deactivate()
 

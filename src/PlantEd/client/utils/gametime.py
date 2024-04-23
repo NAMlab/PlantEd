@@ -51,9 +51,7 @@ class GameTime:
         self.currenttime = self.starttime
         self.GAMESPEED = 360
         self.paused_speed = -1
-        self.timediff = (
-            0  # used to add sped up or slowed time to the current time
-        )
+        self.timediff = 0  # used to add sped up or slowed time to the current time
         self.deltatime = self.starttime  # tmp time for states
         self.set_speed(self.GAMESPEED)
 
@@ -62,9 +60,7 @@ class GameTime:
         self.currenttime = self.starttime
         self.GAMESPEED = 360
         self.paused_speed = -1
-        self.timediff = (
-            0  # used to add sped up or slowed time to the current time
-        )
+        self.timediff = 0  # used to add sped up or slowed time to the current time
         self.deltatime = self.starttime  # tmp time for states
         self.set_speed(self.GAMESPEED)
 
@@ -113,5 +109,3 @@ class GameTime:
         hours = ticks / hour
 
         return hours
-
-

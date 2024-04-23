@@ -7,6 +7,7 @@ Functions that create Constraints are:
     get_ndaph_atp
     create_objective
 """
+
 from contextlib import suppress
 from itertools import product
 from pathlib import Path
@@ -22,14 +23,10 @@ from sympy import Add
 # from PlantEd.server.plant.plant import Plant
 
 FILE = (
-    Path(__file__)
-    .resolve()
-    .parent.joinpath("outputs", "non_negative_metabolites.txt")
+    Path(__file__).resolve().parent.joinpath("outputs", "non_negative_metabolites.txt")
 )
 
-CONSTRAINTS = [
-    f"{i}_{j}" for i, j in list(product(range(0, 5), range(0, 5)))
-] + ["5_5"]
+CONSTRAINTS = [f"{i}_{j}" for i, j in list(product(range(0, 5), range(0, 5)))] + ["5_5"]
 
 
 METABOLITES: List[str] = [
@@ -218,14 +215,12 @@ def update_ngam(model: Model, reaction: str) -> None:
 
     try:
         forced_ATP: float = (
-            0.0049 * model.reactions.get_by_id("Photon_tx").upper_bound
-            + 2.7851
+            0.0049 * model.reactions.get_by_id("Photon_tx").upper_bound + 2.7851
         )
         msg = ""
     except KeyError:
         forced_ATP = (
-            0.0049 * model.reactions.get_by_id("Photon_tx_leaf").upper_bound
-            + 2.7851
+            0.0049 * model.reactions.get_by_id("Photon_tx_leaf").upper_bound + 2.7851
         )
         msg = "multi_"
 
@@ -264,9 +259,7 @@ def get_ndaph_atp(model: Model, nadph: str, atpase: str) -> Constraint:
     return cons
 
 
-def update_stoichiometry(
-    reaction: Reaction, left: float = 1.0, right: float = 1.0
-):
+def update_stoichiometry(reaction: Reaction, left: float = 1.0, right: float = 1.0):
     """
     Updates given reactions with given left and right coefficients. Both
     coefficients must be positive.
@@ -286,9 +279,7 @@ def update_stoichiometry(
     reaction.add_metabolites(metabolites, combine=False)
 
 
-def _normalize_reactions(
-    transfers: DictList, left: float = 1.0, right: float = 1.0
-):
+def _normalize_reactions(transfers: DictList, left: float = 1.0, right: float = 1.0):
     """
     This function modifies each reaction in the transfers list taking the
     size of the organs into consideration.
@@ -311,9 +302,7 @@ stem_leaf: Optional[DictList] = None
 leaf_seed: Optional[DictList] = None
 
 
-def normalize(
-    model: Model, root: float, stem: float, leaf: float, seed: float
-):
+def normalize(model: Model, root: float, stem: float, leaf: float, seed: float):
     """
     Main function to normalize PlantED model. The non-model argument are
     the values that represents the size of the organ.
@@ -334,7 +323,7 @@ def normalize(
 
     _normalize_reactions(root_stem, root, stem)
     _normalize_reactions(stem_leaf, stem, leaf)
-    _normalize_reactions(leaf_seed, leaf, seed) # ToDo leaf to seed or stem to seed
+    _normalize_reactions(leaf_seed, leaf, seed)  # ToDo leaf to seed or stem to seed
 
 
 def create_objective(model: Model, direction: str = "max") -> Objective:
@@ -412,28 +401,28 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
 #     """
 #     Updates the corresponding constraints for the multi objective in the model
 #     with given rate of the objective.
-# 
+#
 #     Due to current limitations, old constraints have to be removed and new
 #     constraints have to be added. Additionally, bounds are limited in case
 #     that the rate would be 0.
 #     """
 #     if model.objective.name != "multi_objective":
 #         raise Exception("Multi-objective was not found in the model")
-# 
+#
 #     root = growth_percentages.root
 #     stem = growth_percentages.stem
 #     leaf = growth_percentages.leaf
 #     starch = growth_percentages.starch
 #     seed = growth_percentages.flower
-# 
+#
 #     ORGANS = root + stem + leaf + seed
-# 
+#
 #     # FIXME: For the time being there is no way to change the attribute
 #     for name in CONSTRAINTS:
 #         con: Constraint = model.constraints.get(name)
 #         if con:
 #             model.remove_cons_vars([con])
-# 
+#
 #     reactions = [
 #         model.reactions.get_by_id("Biomass_tx_root"),
 #         model.reactions.get_by_id("Biomass_tx_stem"),
@@ -441,21 +430,21 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
 #         model.reactions.get_by_id("Biomass_tx_seed"),
 #         model.reactions.get_by_id("Starch_out_tx_stem"),
 #     ]
-# 
+#
 #     expr: List[Add] = [Add(rxn.flux_expression) for rxn in reactions]
-# 
+#
 #     args = [root, stem, leaf, seed, starch]
-# 
+#
 #     graph = [bool(i) for i in args]
-# 
+#
 #     cons: List[Constraint] = list()
-# 
+#
 #     start = -1
 #     for i, node in enumerate(graph):
 #         # TODO: Add bounds from COBRApy configuration
 #         if node:
 #             reactions[i].bounds = (0, 1000)
-# 
+#
 #             # NOTE: only create if there is at least 1 organ beside starch
 #             if i == 4 and sum(graph[:-1]) >= 1:
 #                 con = model.problem.Constraint(
@@ -467,7 +456,7 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
 #                 )
 #                 cons.append(con)
 #                 break
-# 
+#
 #             if start != -1:
 #                 con = model.problem.Constraint(
 #                     args[i] * expr[start] - args[start] * expr[i],
@@ -476,11 +465,11 @@ def create_objective(model: Model, direction: str = "max") -> Objective:
 #                     name=f"{start}_{i}",
 #                 )
 #                 cons.append(con)
-# 
+#
 #             start = i
-# 
+#
 #         else:
 #             reactions[i].bounds = (0, 0)
-# 
+#
 #     if cons:
 #         model.add_cons_vars(cons)

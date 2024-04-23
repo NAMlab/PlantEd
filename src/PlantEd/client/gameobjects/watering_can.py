@@ -10,19 +10,19 @@ from PlantEd.client.utils.gametime import GameTime
 
 class Watering_can:
     def __init__(
-            self,
-            pos,
-            image_active,
-            image_inactive,
-            check_refund: callable,
-            finalize_shop_transaction: callable,
-            cost: int,
-            water_grid: Water_Grid = None,
-            amount: int = config.WATERING_CAN_AMOUNT,
-            active=False,
-            callback=None,
-            play_sound=None,
-            stop_sound=None
+        self,
+        pos,
+        image_active,
+        image_inactive,
+        check_refund: callable,
+        finalize_shop_transaction: callable,
+        cost: int,
+        water_grid: Water_Grid = None,
+        amount: int = config.WATERING_CAN_AMOUNT,
+        active=False,
+        callback=None,
+        play_sound=None,
+        stop_sound=None,
     ):  # take from config
         self.gametime = GameTime.instance()
         self.pos = (pos[0] - 20, pos[1] - 120)
