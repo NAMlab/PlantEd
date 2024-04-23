@@ -1,4 +1,6 @@
 .gitignore
+LICENSE
+README.md
 pyproject.toml
 .github/workflows/tests.yml
 src/PlantEd/config.py
@@ -10,9 +12,6 @@ src/PlantEd.egg-info/dependency_links.txt
 src/PlantEd.egg-info/entry_points.txt
 src/PlantEd.egg-info/requires.txt
 src/PlantEd.egg-info/top_level.txt
-src/PlantEd/PlantEd_Schule_V4/PlantEd/_internal/PlantEd/data/assets.py
-src/PlantEd/PlantEd_Schule_V4/PlantEd/_internal/PlantEd/data/sound_control.py
-src/PlantEd/PlantEd_Schule_V4/PlantEd/_internal/certifi/py.typed
 src/PlantEd/client/camera.py
 src/PlantEd/client/client.py
 src/PlantEd/client/game.py
@@ -28,6 +27,7 @@ src/PlantEd/client/gameobjects/bug.py
 src/PlantEd/client/gameobjects/infobox_manager.py
 src/PlantEd/client/gameobjects/level_card.py
 src/PlantEd/client/gameobjects/plant.py
+src/PlantEd/client/gameobjects/root_drawer.py
 src/PlantEd/client/gameobjects/root_item.py
 src/PlantEd/client/gameobjects/shop.py
 src/PlantEd/client/gameobjects/snail.py
@@ -53,6 +53,7 @@ src/PlantEd/server/game.py
 src/PlantEd/server/helpers.py
 src/PlantEd/server/lsystem.py
 src/PlantEd/server/plant.py
+src/PlantEd/server/root_generator.py
 src/PlantEd/server/run_until_it_breaks.py
 src/PlantEd/server/server.py
 src/PlantEd/server/test.py
