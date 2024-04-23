@@ -1,8 +1,8 @@
-import unittest
+import pytest
 import requests
 
 
-class TestConnectivityScoring(unittest.TestCase):
+class TestConnectivityScoring():
     def test_server_connectivity(self):
         try:
             # Attempt to ping the server
@@ -12,7 +12,3 @@ class TestConnectivityScoring(unittest.TestCase):
         except requests.RequestException as e:
             # Handle the case where the server is not reachable
             print(f"Failed to connect to the server: {e}")
-
-
-if __name__ == '__main__':
-    unittest.main()

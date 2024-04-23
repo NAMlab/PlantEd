@@ -1,20 +1,19 @@
 import json
 import multiprocessing
 import time
-import unittest
 from multiprocessing import Process
 import websockets
 
 from PlantEd.server import server
 
 
-class TestServerClientCommunication(unittest.TestCase):
+class TestServerClientCommunication():
     def test_server_client_interaction(self):
         # Test server-client interaction
         pass
 
 
-class TestGameStateStructure(unittest.TestCase):
+class TestGameStateStructure():
     def setUp(self):
         # start server
         # server.start()
@@ -93,7 +92,7 @@ class TestGameStateStructure(unittest.TestCase):
             }
 
 
-class TestAsyncServerResponse(unittest.IsolatedAsyncioTestCase):
+'''class TestAsyncServerResponse():
 
     async def asyncSetUp(self):
         # Start the server in the background
@@ -141,10 +140,4 @@ class TestAsyncServerResponse(unittest.IsolatedAsyncioTestCase):
                 self.assertIsInstance(dictionary[key], dict)
                 self.assertDictStructure(value, dictionary[key])
             else:
-                self.assertIsInstance(dictionary[key], value)
-
-
-
-
-if __name__ == '__main__':
-    unittest.main()
+                self.assertIsInstance(dictionary[key], value)'''

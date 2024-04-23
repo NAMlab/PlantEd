@@ -1,7 +1,5 @@
-import unittest
 
-
-class TestBackendCalculations(unittest.TestCase):
+class TestBackendCalculations():
     def test_player_movement(self):
         # Test player movement calculations
         assert True
@@ -13,7 +11,3 @@ class TestBackendCalculations(unittest.TestCase):
     def test_scoring(self):
         # Test scoring mechanism
         pass
-
-
-if __name__ == '__main__':
-    unittest.main()
