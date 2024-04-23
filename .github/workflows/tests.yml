@@ -19,4 +19,3 @@ jobs:
     - name: Testing
       run: |
         python -m pytest tests
-        python -m codecov
