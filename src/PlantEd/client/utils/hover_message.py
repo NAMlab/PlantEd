@@ -4,13 +4,15 @@ from PlantEd import config
 
 
 class Hover_Message:
-    def __init__(self, font, line_height, margin):
+    def __init__(self, font, line_height, margin, screen_width, screen_height):
         self.rect = None
         self.font = font
         self.line_height = line_height
         self.margin = margin
+        self.screen_width = screen_width
+        self.screen_height = screen_height
         self.hover_surface = pygame.Surface(
-            (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA
+            (self.screen_width, self.screen_height), pygame.SRCALPHA
         )
         self.timer = 1
         self.w = 0
@@ -60,5 +62,5 @@ class Hover_Message:
     def draw(self, screen):
         if self.timer <= 0:
             x, y = pygame.mouse.get_pos()
-            x -= self.w if x + self.w > config.SCREEN_WIDTH else 0
+            x -= self.w if x + self.w > self.screen_width else 0
             screen.blit(self.hover_surface, (x, y))

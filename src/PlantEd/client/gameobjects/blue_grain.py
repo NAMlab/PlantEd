@@ -1,9 +1,8 @@
 import pygame
 from pygame import Rect
-from pygame.locals import *
+from pygame.locals import MOUSEMOTION, MOUSEBUTTONDOWN
 
 from PlantEd import config
-from PlantEd.config import NITRATE_FILL_CELL
 from PlantEd.constants import NITRATE_FERTILIZE_AMOUNT
 from PlantEd.data.assets import AssetHandler
 from PlantEd.client.utils.particle import ParticleSystem

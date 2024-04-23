@@ -120,8 +120,7 @@ class RootGenerator:
             tries=self.root_classes[tier]["tries"],
             gravity_effect=self.root_classes[tier]["gravity_factor"],
             start_mass=start_mass,
-            end_mass=start_mass
-            + (end_mass - start_mass) * self.root_classes[tier]["mass_factor"],
+            end_mass=start_mass + (end_mass - start_mass) * self.root_classes[tier]["mass_factor"],
             start_pos=start_pos,
             length=self.root_classes[tier]["length"] * self.root_grid_size[0],
             direction=direction,

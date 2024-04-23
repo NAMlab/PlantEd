@@ -159,8 +159,7 @@ class Plant:
             else:
                 branch.mass += delta_each_branch
             if (
-                branch.spots < (branch.mass / BRANCH_MASS_PER_SPOT + BRANCH_SPOTS_BASE)
-                and branch.spots <= BRANCH_SPOTS_TOTAL
+                branch.spots < (branch.mass / BRANCH_MASS_PER_SPOT + BRANCH_SPOTS_BASE) and branch.spots <= BRANCH_SPOTS_TOTAL
             ):
                 branch.spots += 1
 

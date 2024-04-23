@@ -2,8 +2,6 @@
 # Taken and adapted from https://github.com/NAMlab/PlantEd-AI/blob/main/src/planted_env.py
 import csv
 import sys
-import os
-import glob
 import asyncio
 import json
 import websockets

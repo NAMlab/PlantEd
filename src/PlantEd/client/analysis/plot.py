@@ -1,10 +1,5 @@
 import matplotlib.pyplot as plt
-import numpy
-import numpy as np
-import pandas as pd
 import pygame
-
-from PlantEd.data import assets
 
 
 def generate_png_from_vec(
@@ -106,8 +101,6 @@ def generate_big_plot(df, path_to_logs=None):
 if __name__ == "__main__":
     import pandas
 
-    path = "~/PlantEd/src/PlantEd/client/data/finished_games/Sunny Gigglezap1702900252.9989524"
+    path = "~/PlantEd/src/PlantEd/client/data/finished_games"
     df = pandas.read_csv("63.csv")
     generate_big_plot(df, path)
-
-# def make_subplot(plot, vec, time, name, color, xlabel, ylabel) -> plt.Subplot:

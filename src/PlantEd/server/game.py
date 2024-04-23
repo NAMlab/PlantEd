@@ -1,9 +1,6 @@
 import os
 import time
 
-import numpy as np
-import pandas
-
 from PlantEd.client.analysis import scoring
 from PlantEd.client.analysis.logger import Log
 from PlantEd.constants import (

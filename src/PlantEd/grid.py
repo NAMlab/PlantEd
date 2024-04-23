@@ -2,13 +2,11 @@ from __future__ import annotations
 import json
 import logging
 from operator import itemgetter
-import random
 import numpy as np
 
 from PlantEd.constants import (
     TRICKLE_AMOUNT,
     MAX_WATER_PER_CELL,
-    WATER_MIKROMOL_PER_GRAM,
     WATER_MIKROMOL_PER_LITER,
 )
 

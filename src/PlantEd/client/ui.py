@@ -1,15 +1,12 @@
-from typing import Tuple
 import pygame
 from pygame import Rect, KEYDOWN, K_ESCAPE
 
 from PlantEd import config
 from PlantEd.client.gameobjects.infobox_manager import InfoBoxManager
-from PlantEd.client.utils.icon_handler import IconHandler
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.camera import Camera
 from PlantEd.client.gameobjects.plant import Plant, Organ
 from PlantEd.client.utils.gametime import GameTime
-from PlantEd.client.utils.particle import ParticleSystem
 from PlantEd.client.utils.narrator import Narrator
 from PlantEd.client.utils.hover_message import Hover_Message
 from PlantEd.data.assets import AssetHandler
@@ -28,12 +25,9 @@ from PlantEd.client.utils.button import (
 UI: set up all UI elements, update them, link them to functions
 @param  scale:size UI dynamically
         Components may differ from level to level --> should be set by file
-            Dict active groups for: Organs plus Sliders, Starch deposit, Organ Detail
-            
-            
+        Dict active groups for: Organs plus Sliders, Starch deposit, Organ Detail              
 Topleft: Stats Bar              Init positions, , labels, Update Value Labels
 Below: 4 Organs, Production
-            
 """
 
 
@@ -65,7 +59,14 @@ class UI:
         self.temperature = 0
         self.gametime = GameTime.instance()
 
-        self.hover = Hover_Message(self.asset_handler.FONT_24, 30, 5)
+        self.hover = Hover_Message(
+            font=self.asset_handler.FONT_24,
+            line_height=30,
+            margin=5,
+            screen_width=self.screen_width,
+            screen_height=self.screen_height
+        )
+
         self.camera = camera
         self.sound_control = sound_control
         self.quit = quit
@@ -794,7 +795,7 @@ class UI:
         maximum_growable_mass = organ.get_maximum_growable_mass()
         relative_mass = (
             organ.get_mass() / maximum_growable_mass
-            if maximum_growable_mass is not 0
+            if maximum_growable_mass != 0
             else 1
         )
         width = min(int(exp_width / 1 * relative_mass), exp_width)

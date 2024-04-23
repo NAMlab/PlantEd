@@ -1,9 +1,0 @@
-numpy
-cobra
-sympy
-websockets
-dataclasses-json
-pygame
-scipy
-matplotlib
-requests

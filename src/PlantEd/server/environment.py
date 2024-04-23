@@ -27,8 +27,7 @@ class Environment:
         )
         self.nitrate_grid: MetaboliteGrid = MetaboliteGrid(
             max_metabolite_cell=MAX_NITRATE_PER_CELL,
-            preset_fill_amount=MAX_NITRATE_PER_CELL
-            * (scenario["nitrate_percent"] / 100),
+            preset_fill_amount=MAX_NITRATE_PER_CELL * (scenario["nitrate_percent"] / 100),
         )
         # Todo balancing
         self.nitrate_grid.add2cell(0.5, 8, 0)

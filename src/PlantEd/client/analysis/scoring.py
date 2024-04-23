@@ -1,5 +1,4 @@
 import requests
-import json
 import pandas as pd
 
 
@@ -47,4 +46,4 @@ def get_csv(id):
 
 # https://planted.ipk-gatersleben.de/highscores/logs/
 # https://planted.ipk-gatersleben.de/highscores/highscores.json
-# clear scores and delete all log files: https://planted.ipk-gatersleben.de/highscores/clearscores.php
+# clear and delete: https://planted.ipk-gatersleben.de/highscores/clearscores.php

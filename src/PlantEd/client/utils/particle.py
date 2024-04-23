@@ -1,5 +1,5 @@
-import pygame, random
-from pygame import Rect
+import pygame
+import random
 
 """
 With a set list of particle systems, once can be activated at a time.

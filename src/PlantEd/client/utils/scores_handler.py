@@ -36,7 +36,6 @@ class PlayerScore:
         height = self.image.get_height()
         surface = pygame.Surface((self.width, height))
         center_height = height / 2
-        center_width = self.width / 2
         surface.blit(self.image, (0, 0))
         surface.blit(
             name_label,

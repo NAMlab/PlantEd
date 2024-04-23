@@ -1,6 +1,6 @@
 import pygame
 from pygame import Rect
-from pygame.locals import *
+from pygame.locals import MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP
 
 from PlantEd import config
 from PlantEd.client.gameobjects.water_reservoir import Water_Grid

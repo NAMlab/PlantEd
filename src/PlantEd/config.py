@@ -1,21 +1,14 @@
 import json
 import random
 from pathlib import Path
-import pygame
-
-from PlantEd.data.assets import AssetHandler
 
 # seconds per simulation
 resolution = 360
 # until end of game
 MAX_DAYS = 35
 
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
-
 SUN_POS_SPLINE_RES: int = 10000
 
-PLANT_POS = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - SCREEN_HEIGHT / 5)
 
 # todo move somewhere else
 # WATERING CAN AMOUNT

@@ -7,7 +7,7 @@ import pygame
 
 import math
 from pygame import Rect
-from pygame.locals import *
+from pygame.locals import MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP
 import numpy as np
 
 from PlantEd import config
@@ -18,7 +18,6 @@ from PlantEd.constants import START_SUM_BIOMASS_GRAM
 from PlantEd.data.assets import AssetHandler
 from PlantEd.data.sound_control import SoundControl
 from PlantEd.client.gameobjects.shop import FloatingShop
-from PlantEd.server.lsystem import DictToRoot
 from PlantEd.client.utils.particle import ParticleSystem
 from PlantEd.client.utils.spline import Cubic_Tree, Cubic
 
@@ -39,14 +38,6 @@ class Plant:
         asset_handler = AssetHandler.instance()
         options = config.load_options()
         screen_size = options["aspect_ratio"]
-        pivot_pos = [
-            (286, 113),
-            (76, 171),
-            (254, 78),
-            (19, 195),
-            (271, 114),
-            (47, 114),
-        ]
         leaves = [
             (asset_handler.img("leaves/{index}.PNG".format(index=i)))
             for i in range(0, 6)
@@ -78,7 +69,6 @@ class Plant:
         plant.organs[1].curve = Cubic_Tree(branches=branches, screen_size=screen_size)
 
         roots = plant_dict["root"].items()
-        root_mass = sum(root[1] for root in roots)
         plant.organs[2].roots = roots
         # todo make root_drawer to and from dict to also draw roots for the endscreen
         """if plant_dict["root"]["ls"] is not None:
@@ -457,12 +447,12 @@ class Leaf(Organ):
         self.new_leaves = 0
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONUP:
+        if event.type == MOUSEBUTTONUP:
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     self.callback()
         if self.target:
-            if event.type == pygame.MOUSEMOTION:
+            if event.type == MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
                 rects = self.get_rect()
                 for i in range(len(rects)):
@@ -583,7 +573,6 @@ class Leaf(Organ):
         for system in self.particle_systems:
             system.update(dt)
         for i in range(0, len(self.leaves)):
-            box = self.particle_systems[i].spawn_box
             size = self.leaves[i]["image"].get_size()
             offset_x = self.leaves[i]["offset_x"]
             offset_y = self.leaves[i]["offset_y"]
@@ -896,7 +885,7 @@ class Stem(Organ):
 
     def handle_event(self, event):
         self.curve.handle_event(event)
-        if event.type == pygame.MOUSEMOTION:
+        if event.type == MOUSEMOTION:
             x, y = pygame.mouse.get_pos()
             y -= self.camera.offset_y
             point, branch_id, point_id = self.curve.find_closest((x, y), True)
@@ -909,7 +898,7 @@ class Stem(Organ):
             else:
                 self.highlight = None
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
             rects = self.get_rect()
             if rects is not None:
@@ -934,7 +923,7 @@ class Stem(Organ):
                     if self.check_refund((x, y), self.flower_cost):
                         self.flower.can_add_flower = False
 
-        if event.type == pygame.MOUSEBUTTONUP:
+        if event.type == MOUSEBUTTONUP:
             if self.can_add_branch and self.dist_to_stem < 50:
                 if self.highlight:
                     self.add_branch(pygame.mouse.get_pos(), self.highlight)
@@ -1084,7 +1073,7 @@ class Flower(Organ):
         self.new_flowers = 0
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONUP:
+        if event.type == MOUSEBUTTONUP:
             for rect in self.get_rect():
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     self.callback()

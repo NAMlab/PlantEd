@@ -10,10 +10,8 @@ src/PlantEd.egg-info/PKG-INFO
 src/PlantEd.egg-info/SOURCES.txt
 src/PlantEd.egg-info/dependency_links.txt
 src/PlantEd.egg-info/entry_points.txt
-src/PlantEd.egg-info/requires.txt
 src/PlantEd.egg-info/top_level.txt
 src/PlantEd/client/camera.py
-src/PlantEd/client/client.py
 src/PlantEd/client/game.py
 src/PlantEd/client/start.py
 src/PlantEd/client/ui.py
@@ -21,6 +19,7 @@ src/PlantEd/client/weather.py
 src/PlantEd/client/analysis/logger.py
 src/PlantEd/client/analysis/plot.py
 src/PlantEd/client/analysis/scoring.py
+src/PlantEd/client/dist/start/_internal/certifi/py.typed
 src/PlantEd/client/gameobjects/bee.py
 src/PlantEd/client/gameobjects/blue_grain.py
 src/PlantEd/client/gameobjects/bug.py
@@ -47,6 +46,9 @@ src/PlantEd/client/utils/scores_handler.py
 src/PlantEd/client/utils/spline.py
 src/PlantEd/data/assets.py
 src/PlantEd/data/sound_control.py
+src/PlantEd/dist/PlantEd/_internal/PlantEd/data/assets.py
+src/PlantEd/dist/PlantEd/_internal/PlantEd/data/sound_control.py
+src/PlantEd/dist/PlantEd/_internal/certifi/py.typed
 src/PlantEd/server/dynamic_model.py
 src/PlantEd/server/environment.py
 src/PlantEd/server/game.py
@@ -58,6 +60,3 @@ src/PlantEd/server/run_until_it_breaks.py
 src/PlantEd/server/server.py
 src/PlantEd/server/test.py
 src/PlantEd/server/weather.py
-src/PlantEd/tests/connectivity/test_connnectivity_scoring.py
-src/PlantEd/tests/integration/test_server_client_communication.py
-src/PlantEd/tests/unit/test_backend_calculations.py

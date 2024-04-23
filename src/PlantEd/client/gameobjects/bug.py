@@ -3,7 +3,6 @@ import math
 import pygame
 import numpy as np
 
-from PlantEd import config
 from PlantEd.client.utils.animation import Animation
 
 

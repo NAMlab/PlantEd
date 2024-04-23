@@ -4,7 +4,7 @@ from scipy.interpolate import CubicSpline
 from scipy.special import comb
 import pygame
 import math
-from pygame.locals import *
+from pygame.locals import MOUSEBUTTONUP, MOUSEMOTION, MOUSEBUTTONDOWN
 import numpy as np
 
 from PlantEd import config

@@ -3,7 +3,6 @@ from typing import List
 import random
 import pygame
 
-from PlantEd import config
 from PlantEd.client.utils.animation import Animation
 from PlantEd.data.assets import AssetHandler
 

@@ -7,10 +7,9 @@ from datetime import datetime
 from typing import List
 
 import numpy as np
-import pandas
 import pygame
 import websockets
-from pygame.locals import *
+from pygame.locals import KEYDOWN, Rect, K_ESCAPE, QUIT
 
 from PlantEd import config
 from PlantEd.client.analysis import scoring, plot
@@ -36,21 +35,17 @@ from PlantEd.client.gameobjects.plant import Plant
 from PlantEd.client.gameobjects.shop import (
     Shop,
     Shop_Item,
-    FloatingShopItem,
-    FloatingShop,
 )
 from PlantEd.client.gameobjects.snail import SnailSpawner
 from PlantEd.client.gameobjects.tree import Tree
 from PlantEd.client.gameobjects.water_reservoir import Water_Grid, Base_water
 from PlantEd.client.ui import UI
 from PlantEd.client.utils.animation import Animation
-from PlantEd.client.utils.button import Button, Slider, Textbox
+from PlantEd.client.utils.button import Button, Slider
 from PlantEd.client.utils.gametime import GameTime
 from PlantEd.client.utils.narrator import Narrator
 from PlantEd.client.utils.particle import ParticleSystem, ParticleExplosion
 from PlantEd.client.weather import Environment
-from PlantEd.server.lsystem import DictToRoot
-from PlantEd.server.root_generator import RootGenerator
 
 GROWTH = 26
 WIN = pygame.USEREVENT + 1
@@ -67,7 +62,9 @@ class OptionsScene:
         self.sound_control = SoundControl()
         self.asset_handler = AssetHandler.instance()
         self.icon_handler = IconHandler(
-            pos=(0, 50), sound_control=self.sound_control, image_size=(100, 100)
+            pos=(0, 50),
+            sound_control=self.sound_control,
+            image_size=(100, 100)
         )
         self.option_label = self.asset_handler.MENU_TITLE.render(
             "Options", True, config.WHITE
@@ -137,7 +134,6 @@ class OptionsScene:
         config.write_options(options)
 
     def init_labels(self):
-        center_w, center_h = config.SCREEN_WIDTH / 2, config.SCREEN_HEIGHT / 2
 
         pygame.draw.line(
             self.label_surface,

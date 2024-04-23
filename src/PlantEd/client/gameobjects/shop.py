@@ -20,12 +20,10 @@ from PlantEd.client.gameobjects.spraycan import Spraycan
 from PlantEd.client.gameobjects.water_reservoir import Water_Grid
 from PlantEd.client.gameobjects.watering_can import Watering_can
 from PlantEd.client.utils.animation import Animation
-from PlantEd.client.utils.button import Button
 
 """
 shop holds items and interfaces actions to consumables
 holds green thumbs, checks if buyable
-
 shopitems have action and button and cost
 """
 
@@ -418,7 +416,6 @@ class Shop:
         if len(self.shop_items) <= 0:
             return
         width = self.rect[2]
-        height = self.rect[3]
         img_width = self.shop_items[0].image.get_width()
         columns = int(width / (img_width + self.margin * 2))
         if columns <= 0:
@@ -439,14 +436,6 @@ class Shop:
                         self.rect[0],
                         self.rect[1],
                     )
-        # self.buy_button.x = self.rect[2] - self.margin * 2 - 64
-        # self.buy_button.y = self.rect[3] - self.margin - 64
-
-    def add_shop_item(self, shop_item):
-        self.shop_items.append(shop_item)
-        for item in self.shop_items:
-            item.shop_items = self.shop_items
-        self.init_layout()
 
     def add_shop_item(self, keywords):
         for keyword in keywords:

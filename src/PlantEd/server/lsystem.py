@@ -188,7 +188,7 @@ Roots consist of basal, branching ans apex
 All three segments can grow. The branching part is also able to grow branches.
 When doing so, it will create a new segment and pick a new semi-random direction.
 Initial roots can bew small, medium and long. Each type has a different architecture.
-Root tiers describe the degree of each branch. Once the lowest tier has been reached, 
+Root tiers describe the degree of each branch. Once the lowest tier has been reached,
 branching can no longer happen.
 """
 
@@ -249,10 +249,9 @@ class LSystem:
 
     """
     Make a root of basal, branching and apex letters
-    Duration is staggered. Therefore each segment has to be 
+    Duration is staggered. Therefore each segment has to be
     fully grown before the next one can grow
     """
-
     def create_root(
         self,
         dir: tuple[float, float] = None,
