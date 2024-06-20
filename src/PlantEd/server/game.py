@@ -86,7 +86,7 @@ class Game:
         self.resolution = resolution
         self.green_thumbs = green_thumbs
         self.time_left_from_last_simulation = 0  # seconds
-        self.plant = Plant(ground_grid_resolution=(20, 6))
+        self.plant = Plant()
         self.environment = Environment(
             start_time=self.time, scenario=scenarios[level_name]
         )

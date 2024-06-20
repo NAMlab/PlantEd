@@ -50,7 +50,7 @@ class Seed:
 
 
 class Plant:
-    def __init__(self, ground_grid_resolution):
+    def __init__(self):
         self.leafs: list[Leaf] = [Leaf(0, START_LEAF_BIOMASS_GRAM)]
         self.branches: list[Branch] = [
             Branch(0, START_STEM_BIOMASS_GRAM, BRANCH_SPOTS_BASE)
@@ -93,36 +93,41 @@ class Plant:
         leaf_mass = sum([leaf.mass for leaf in self.leafs])
         return leaf_mass
 
-    def update_leaf_mass(self, delta_leaf_mass):
+    def update_leaf_mass(self, delta_leaf_mass) -> float:
         if delta_leaf_mass <= 0 or len(self.leafs) <= 0:
-            return
+            return delta_leaf_mass
         growable_leafs = []
         for leaf in self.leafs:
             if leaf.mass < MAXIMUM_LEAF_BIOMASS_GRAM:
                 growable_leafs.append(leaf)
         n_leafs_to_grow = len(growable_leafs)
         if n_leafs_to_grow <= 0:
-            return
+            return delta_leaf_mass
         delta_each_leaf = delta_leaf_mass / n_leafs_to_grow
         growable_leafs.sort(key=lambda leaf: leaf.mass)
-        for leaf in growable_leafs:
+        for leaf in reversed(growable_leafs):
             if leaf.mass + delta_each_leaf > MAXIMUM_LEAF_BIOMASS_GRAM:
+                overflow_mass = abs(MAXIMUM_LEAF_BIOMASS_GRAM - (leaf.mass + delta_each_leaf))
                 leaf.mass = MAXIMUM_LEAF_BIOMASS_GRAM
-                overflow_mass = MAXIMUM_LEAF_BIOMASS_GRAM - leaf.mass + delta_each_leaf
                 n_leafs_to_grow -= 1
                 if n_leafs_to_grow <= 0:
+                    delta_leaf_mass = delta_leaf_mass - delta_each_leaf + overflow_mass
                     break
-                delta_each_leaf = (delta_leaf_mass + overflow_mass) / n_leafs_to_grow
+                delta_leaf_mass = delta_leaf_mass - delta_each_leaf + overflow_mass
+                delta_each_leaf = delta_leaf_mass / n_leafs_to_grow
             else:
                 leaf.mass += delta_each_leaf
+                delta_leaf_mass -= delta_each_leaf
+        return delta_leaf_mass
 
     def get_leaf_mass_to_grow(self) -> float:
         leaf_mass_to_grow = MAXIMUM_LEAF_BIOMASS_GRAM * len(self.leafs) - self.leaf_mass
         return leaf_mass_to_grow
 
     def create_new_leaf(self):
-        id: int = len(self.leafs)
-        self.leafs.append(Leaf(id, 0))
+        if self.get_free_spots() > 0:
+            id: int = len(self.leafs)
+            self.leafs.append(Leaf(id, 0))
 
     ######################################################################
     # STEM OPERATIONS
@@ -134,34 +139,32 @@ class Plant:
 
     def update_stem_mass(self, delta_stem_mass):
         if delta_stem_mass <= 0 or len(self.branches) <= 0:
-            return
+            return delta_stem_mass
         growable_branches = []
         for branch in self.branches:
             if branch.mass < MAXIMUM_STEM_BIOMASS_GRAM:
                 growable_branches.append(branch)
         n_branches_to_grow = len(growable_branches)
         if n_branches_to_grow <= 0:
-            return
+            return delta_stem_mass
         delta_each_branch = delta_stem_mass / n_branches_to_grow
         growable_branches.sort(key=lambda branch: branch.mass)
-        for branch in growable_branches:
+        for branch in reversed(growable_branches):
             if branch.mass + delta_each_branch > MAXIMUM_STEM_BIOMASS_GRAM:
+                overflow_mass = abs(MAXIMUM_STEM_BIOMASS_GRAM - (branch.mass + delta_each_branch))
                 branch.mass = MAXIMUM_STEM_BIOMASS_GRAM
-                overflow_mass = (
-                    MAXIMUM_STEM_BIOMASS_GRAM - branch.mass + delta_each_branch
-                )
                 n_branches_to_grow -= 1
                 if n_branches_to_grow <= 0:
+                    delta_stem_mass = delta_stem_mass - delta_each_branch + overflow_mass
                     break
-                delta_each_branch = (
-                    delta_stem_mass + overflow_mass
-                ) / n_branches_to_grow
+                delta_stem_mass = delta_stem_mass - delta_each_branch + overflow_mass
+                delta_each_branch = delta_stem_mass / n_branches_to_grow
             else:
                 branch.mass += delta_each_branch
-            if (
-                branch.spots < (branch.mass / BRANCH_MASS_PER_SPOT + BRANCH_SPOTS_BASE) and branch.spots <= BRANCH_SPOTS_TOTAL
-            ):
+                delta_stem_mass -= delta_each_branch
+            if (branch.spots < (branch.mass / BRANCH_MASS_PER_SPOT + BRANCH_SPOTS_BASE) and branch.spots <= BRANCH_SPOTS_TOTAL):
                 branch.spots += 1
+        return delta_stem_mass
 
     def get_free_spots(self) -> int:
         spots = sum(branch.spots for branch in self.branches)
@@ -174,8 +177,9 @@ class Plant:
         return MAXIMUM_STEM_BIOMASS_GRAM * len(self.branches) - self.stem_mass
 
     def create_new_branch(self):
-        id: int = len(self.branches)
-        self.branches.append(Branch(id, 0, BRANCH_SPOTS_BASE))
+        if self.get_free_spots() > 0:
+            id: int = len(self.branches)
+            self.branches.append(Branch(id, 0, BRANCH_SPOTS_BASE))
 
     ######################################################################
     # ROOT OPERATIONS
@@ -187,27 +191,31 @@ class Plant:
 
     def update_root_mass(self, delta_root_mass):
         if delta_root_mass <= 0 or len(self.roots) <= 0:
-            return
+            return delta_root_mass
         growable_roots = []
         for root in self.roots:
             if root.mass < MAXIMUM_ROOT_BIOMASS_GRAM:
                 growable_roots.append(root)
         n_roots_to_grow = len(growable_roots)
         if n_roots_to_grow <= 0:
-            return
+            return delta_root_mass
         delta_each_root = delta_root_mass / n_roots_to_grow
         growable_roots.sort(key=lambda root: root.mass)
-        for root in growable_roots:
+        for root in reversed(growable_roots):
             if root.mass + delta_each_root > MAXIMUM_ROOT_BIOMASS_GRAM:
+                overflow_mass = abs(MAXIMUM_ROOT_BIOMASS_GRAM - (root.mass + delta_each_root))
                 root.mass = MAXIMUM_ROOT_BIOMASS_GRAM
-                overflow_mass = MAXIMUM_ROOT_BIOMASS_GRAM - root.mass + delta_each_root
                 n_roots_to_grow -= 1
                 if n_roots_to_grow <= 0:
+                    delta_root_mass = delta_root_mass - delta_each_root + overflow_mass
                     break
-                delta_each_root = (delta_root_mass + overflow_mass) / n_roots_to_grow
+                delta_root_mass = delta_root_mass - delta_each_root + overflow_mass
+                delta_each_root = delta_root_mass / n_roots_to_grow
 
             else:
                 root.mass += delta_each_root
+                delta_root_mass -= delta_each_root
+        return delta_root_mass
 
     def get_root_mass_to_grow(self) -> float:
         return MAXIMUM_ROOT_BIOMASS_GRAM * len(self.roots) - self.root_mass
@@ -234,33 +242,38 @@ class Plant:
 
     def update_seed_mass(self, delta_seed_mass):
         if delta_seed_mass <= 0 or len(self.seeds) <= 0:
-            return
+            return delta_seed_mass
         growable_seeds = []
         for seed in self.seeds:
             if seed.mass < MAXIMUM_SEED_BIOMASS_GRAM:
                 growable_seeds.append(seed)
         n_seeds_to_grow = len(growable_seeds)
         if n_seeds_to_grow <= 0:
-            return
+            return delta_seed_mass
         delta_each_seed = delta_seed_mass / n_seeds_to_grow
         growable_seeds.sort(key=lambda seed: seed.mass)
-        for seed in growable_seeds:
+        for seed in reversed(growable_seeds):
             if seed.mass + delta_each_seed > MAXIMUM_SEED_BIOMASS_GRAM:
+                overflow_mass = abs(MAXIMUM_SEED_BIOMASS_GRAM - (seed.mass + delta_each_seed))
                 seed.mass = MAXIMUM_SEED_BIOMASS_GRAM
-                overflow_mass = MAXIMUM_SEED_BIOMASS_GRAM - seed.mass + delta_each_seed
                 n_seeds_to_grow -= 1
                 if n_seeds_to_grow <= 0:
+                    delta_seed_mass = delta_seed_mass - delta_each_seed + overflow_mass
                     break
-                delta_each_seed = (delta_seed_mass + overflow_mass) / n_seeds_to_grow
+                delta_seed_mass = delta_seed_mass - delta_each_seed + overflow_mass
+                delta_each_seed = delta_seed_mass / n_seeds_to_grow
             else:
                 seed.mass += delta_each_seed
+                delta_seed_mass -= delta_each_seed
+        return delta_seed_mass
 
     def get_seed_mass_to_grow(self) -> float:
         return MAXIMUM_SEED_BIOMASS_GRAM * len(self.seeds) - self.seed_mass
 
     def create_new_seed(self):
-        id: int = len(self.seeds)
-        self.seeds.append(Seed(id, 0))
+        if self.get_free_spots() > 0:
+            id: int = len(self.seeds)
+            self.seeds.append(Seed(id, 0))
 
     def to_json(self) -> str:
         """
@@ -352,7 +365,7 @@ class Plant:
         Method that calculates the maximum extractable starch from the pool.
         This is done on the basis of a time period and the mass of the
         organ that has access to this reservoir. The value calculated
-        here corresponds to the `upper_bound` within a
+        here corresponds to the `upper_bound`
         The unit is micromol / (second * gram_of_organ).
         Args:
             percentage: The slider value of starch consumption UI
@@ -363,6 +376,8 @@ class Plant:
         """
 
         # Pool usage factors (see constants.py)
+        # the initial starch pool could be higher than the max --> ensure there is an upper limit
+        # and diminishing consumption upon reaching lower pool
         value = min(
             self.starch_pool * PERCENT_OF_POOL_USABLE_PER_SIMULATION_STEP,
             self.max_starch_pool * PERCENT_OF_MAX_POOL_USABLE_PER_SIMULATION_STEP,
@@ -409,6 +424,7 @@ class Plant:
         weather_state,
         stomata_open: bool,
     ):
+        #Todo move to constants
         K = 291.18
         RH = weather_state.humidity
         T = weather_state.temperature

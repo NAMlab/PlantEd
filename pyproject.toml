@@ -9,13 +9,6 @@ description = "Server Client Application of the game PlantEd"
 readme = "README.md"
 requires-python = ">=3.10"
 
-# pyproject.toml
-[tool.pytest.ini_options]
-minversion = "6.0"
-testpaths = [
-    "tests",
-]
-
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python"
@@ -49,3 +42,10 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 mypkg = ["*.PNG", "*.mp3", "*.png", "JPG", "jpg"]
+
+# pyproject.toml
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests",
+]
