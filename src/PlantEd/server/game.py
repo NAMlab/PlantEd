@@ -113,38 +113,37 @@ class Game:
 
         for action, content in message["shop_actions"].items():
             if content is not None:
-                match action:
-                    case ("buy_watering_can"):
-                        if self.green_thumbs - WATERING_CAN_COST >= 0:
-                            self.environment.increase_water_grid(content)
-                            self.green_thumbs -= WATERING_CAN_COST
-                    case "buy_nitrate":
-                        if self.green_thumbs - NITRATE_COST >= 0:
-                            self.environment.increase_nitrate_grid(content)
-                            self.green_thumbs -= NITRATE_COST
-                    case "buy_root":
-                        for target in content["directions"]:
-                            if self.green_thumbs - ROOT_COST >= 0:
-                                self.plant.create_new_root(target)
-                                self.green_thumbs -= ROOT_COST
-                    case "buy_branch":
-                        for i in range(content):
-                            if self.green_thumbs - BRANCH_COST >= 0:
-                                if self.plant.get_free_spots() > 0:
-                                    self.plant.create_new_branch()
-                                    self.green_thumbs -= BRANCH_COST
-                    case "buy_leaf":
-                        for i in range(content):
-                            if self.green_thumbs - LEAF_COST >= 0:
-                                if self.plant.get_free_spots() > 0:
-                                    self.plant.create_new_leaf()
-                                    self.green_thumbs -= LEAF_COST
-                    case "buy_seed":
-                        for i in range(content):
-                            if self.green_thumbs - FLOWER_COST >= 0:
-                                if self.plant.get_free_spots() > 0:
-                                    self.plant.create_new_seed()
-                                    self.green_thumbs -= FLOWER_COST
+                if action == "buy_watering_can":
+                    if self.green_thumbs - WATERING_CAN_COST >= 0:
+                        self.environment.increase_water_grid(content)
+                        self.green_thumbs -= WATERING_CAN_COST
+                elif action == "buy_nitrate":
+                    if self.green_thumbs - NITRATE_COST >= 0:
+                        self.environment.increase_nitrate_grid(content)
+                        self.green_thumbs -= NITRATE_COST
+                elif action == "buy_root":
+                    for target in content["directions"]:
+                        if self.green_thumbs - ROOT_COST >= 0:
+                            self.plant.create_new_root(target)
+                            self.green_thumbs -= ROOT_COST
+                elif action == "buy_branch":
+                    for i in range(content):
+                        if self.green_thumbs - BRANCH_COST >= 0:
+                            if self.plant.get_free_spots() > 0:
+                                self.plant.create_new_branch()
+                                self.green_thumbs -= BRANCH_COST
+                elif action == "buy_leaf":
+                    for i in range(content):
+                        if self.green_thumbs - LEAF_COST >= 0:
+                            if self.plant.get_free_spots() > 0:
+                                self.plant.create_new_leaf()
+                                self.green_thumbs -= LEAF_COST
+                elif action == "buy_seed":
+                    for i in range(content):
+                        if self.green_thumbs - FLOWER_COST >= 0:
+                            if self.plant.get_free_spots() > 0:
+                                self.plant.create_new_seed()
+                                self.green_thumbs -= FLOWER_COST
 
         for i in range(n_simulations):
             self.plant.update(self.resolution)
@@ -175,6 +174,7 @@ class Game:
 
         # Todo make for new roots
         nitrate_available_mm = self.environment.nitrate_grid.available_relative_mm(delta_t, self.plant.root_mass, Vmax, Km, self.plant.get_root_grid())
+        water_available = self.environment.water_grid.available_absolute(self.plant.get_root_grid())
 
         self.log.append_model_row(
             time=self.time,
@@ -182,7 +182,7 @@ class Game:
             sun_intensity=self.environment.get_sun_intensity(),
             humidity=weather_state[1],
             precipitation=weather_state[2],
-            accessible_water=self.environment.water_grid.available_absolute(self.plant.get_root_grid()),
+            accessible_water=water_available,
             accessible_nitrate=nitrate_available_mm,
             leaf_biomass=self.plant.leaf_mass,
             stem_biomass=self.plant.stem_mass,
@@ -202,7 +202,7 @@ class Game:
             n_roots=len(self.plant.roots),
             n_seeds=len(self.plant.seeds),
             green_thumbs=self.green_thumbs,
-            open_spots=growth_percentages["stomata"],
+            open_spots=self.plant.get_free_spots(),
             action=actions,
             )
 
@@ -216,6 +216,7 @@ class Game:
             "green_thumbs": self.green_thumbs,
             "used_fluxes": self.model.used_fluxes,
             "nitrate_available": nitrate_available_mm,
+            "water_available": water_available,
             "gametime": self.time
             }
 
